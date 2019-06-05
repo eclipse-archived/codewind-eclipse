@@ -1,0 +1,20 @@
+language: java
+
+jdk:
+  - openjdk8
+  - oraclejdk8
+
+cache:
+  - dev/target_platform/
+  - dev/ant_build/eclipse_sdk/
+
+script:
+  - export TERM=dumb    # simple gradle output
+  - cd dev/
+  - ./gradlew -s
+  - ls ant_build/artifacts/*.zip
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change

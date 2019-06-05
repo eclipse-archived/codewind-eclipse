@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="lib" path="lib/engine.io-client-1.0.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/socket.io-client-1.0.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/okhttp-3.8.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/okio-1.13.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/org.json_1.0.0.v201011060100.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>

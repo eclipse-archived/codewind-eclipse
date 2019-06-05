@@ -1,0 +1,32 @@
+<!--
+    Copyright (c) 2018, 2019 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v2.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v20.html
+
+    Contributors:
+        IBM Corporation - initial API and implementation
+-->
+
+<ivy-settings>
+  <settings defaultResolver="cwResolver" />
+  
+  <!--'Artifactory Realm' is the realm used by Artifactory so don't change it.-->
+  <credentials realm="Artifactory Realm" host="${artifactory_download_server}" username="${artifactory_download_user}"
+		passwd="${artifactory_download_apikey}" />
+
+  <resolvers>
+    <chain name="cwResolver" returnFirst="true" >  
+        <ibiblio name="maven2" m2compatible="true"/>         
+    </chain>
+  </resolvers>
+
+  <modules>
+    <module organisation="dev" name="ivy-bootstrapping" resolver="cwResolver" />
+  </modules>
+  
+  <modules>
+    <module organisation="dev" name="prereq.published" resolver="cwResolver"/>
+  </modules>
+</ivy-settings>

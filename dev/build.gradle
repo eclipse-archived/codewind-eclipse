@@ -1,0 +1,55 @@
+/*******************************************************************************
+ * Copyright (c) 2019 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v20.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+defaultTasks 'buildAll'
+
+def projDir = projectDir.getAbsolutePath()
+def buildlibFolder = file(projDir + '/ant_build/lib')
+def updateSiteFile = file(projDir + '/ant_build/lib/wdt-updatesite_0.0.2_v.20131018_1700.jar')
+
+task downloadUpdateSiteJar(type: Download) {
+    println("Downloading update site jar")
+	if (!buildlibFolder.exists()) {
+	    buildlibFolder.mkdir()
+	}
+	sourceUrl='https://github.com/OpenLiberty/open-liberty-tools/blob/19003_master/dev/ant_build/lib/wdt-updatesite_0.0.2_v.20131018_1700.jar?raw=true'
+	// sourceUrl = 'https://github.com/OpenLiberty/open-liberty-tools/blob/cab4b22d90366bad12b6719c296bb7f3940a6b00/dev/ant_build/lib/wdt-updatesite_0.0.2_v.20131018_1700.jar'
+	target=updateSiteFile
+}
+
+class Download extends DefaultTask {
+    @Input
+    String sourceUrl
+
+    @OutputFile
+    File target
+
+    @TaskAction
+    void download() {
+        ant.get(src: sourceUrl, dest: target)
+    }
+}
+
+task buildAll(type: GradleBuild) {
+    buildFile = 'buildAll.gradle'
+}
+
+buildAll.dependsOn downloadUpdateSiteJar

@@ -1,0 +1,7 @@
+*.class
+/bin
+/build
+/depcache
+/dist
+/lib
+/about.mappings

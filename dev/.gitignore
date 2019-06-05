@@ -1,0 +1,8 @@
+.metadata/
+.gradle/
+target_platform/
+tools.image/
+**/tools.pii.package
+org.eclipse.codewind*/**/build/
+ant_build/buildLabel.properties
+ant_build/target_platform.tar.gz

@@ -1,0 +1,70 @@
+<!--
+    Copyright (c) 2018, 2019 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v2.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v20.html
+
+    Contributors:
+        IBM Corporation - initial API and implementation
+-->
+
+<project name="cw_build" default="generateOpenCWUpdateSite">
+    <property name="level_tag" value="0.1"/>
+    <property name="delegate.build.dir" location="${basedir}/../" />
+    <property name="disable.run.executeMetatypeValidation" value="true"/>
+    <property name="disable.run.unzipIfixReleaseZip" value="true"/>
+    <property name="javac.source.file.encoding" value="Cp1252" />
+    <property name="tools.image" value="true" />
+
+    <dirname property="cw_build.basedir" file="${ant.file.cw_build}" />
+
+    <import file="${cw_build.basedir}/resources/build_imports/liberty-macros.xml" />
+    <import file="${cw_build.basedir}/resources/build_imports/liberty-all.xml" />
+    <import file="${cw_build.basedir}/cw_imports.xml"/>
+    <import file="${cw_build.basedir}/cw_test_imports.xml"/>
+    <import file="${cw_build.basedir}/prereqs/prereqs.xml" />
+
+     <target name="getCWBuildLabel" depends="createBuildLabelFile">
+          <loadproperties srcFile="${cw_build.basedir}/buildLabel.properties"/>
+          <echo>Build label is "${buildLabel}"</echo>
+     </target>
+
+    <target name="checkBuildLabelFile" >
+        <available file="${cw_build.basedir}/buildLabel.properties" property="buildLabel.present"/>
+    </target>
+
+    <target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present">
+    <!--target name="createBuildLabelFile"-->
+        <tstamp>
+              <format property="buildLabel" pattern="yyyyMMdd_HHmm" timezone="UTC"/>
+        </tstamp>
+
+        <propertyfile file="${cw_build.basedir}/buildLabel.properties" comment="Creating buildlabel.propertiess">
+              <entry key="buildLabel" value="${buildLabel}"/>
+        </propertyfile>
+    </target>
+
+    <target name="compile" depends="getCWBuildLabel, preparePrereqsIvy" unless="${env.skip_compile_cw}">
+        <echo message="Build label is ${buildLabel}"/>
+        <antcall target="liberty-all.compile" />
+        <echo message="cw_imports.generateCWSuppliersUpdateSite call"/>
+        <antcall target="cw_imports.generateCWSuppliersUpdateSite"/>
+    </target>
+
+    <property name="artifacts.dir" value="${cw_build.basedir}/artifacts"/>
+    <mkdir dir="${artifacts.dir}"/>
+
+    <target name="generateOpenCWUpdateSite" depends="getCWBuildLabel" unless="${env.skip_generate_cw}">
+        <echo message="Build label is ${buildLabel}"/>
+
+        <antcall target="cw_imports.generateCWSuppliersUpdateSiteRestore"/>
+
+        <antcall target="cw_imports.generateCWUpdateSite"/>
+        <!-- <antcall target="cw_test_imports.generateCWTestUpdateSite"/> -->
+
+        <echo message="Delete tools.image"/>
+        <delete dir="${cw_build.basedir}/tools.image" failonerror="false"/>
+    </target>
+
+</project>

@@ -193,6 +193,30 @@ public class Messages extends NLS {
 	public static String NewProjectPage_CodewindConnectError;
 	public static String NewProjectPage_TemplateListError;
 	
+	public static String AppOverviewEditorCreateError;
+	public static String AppOverviewEditorPartName;
+	public static String AppOverviewEditorGeneralSection;
+	public static String AppOverviewEditorLanguageEntry;
+	public static String AppOverviewEditorLocationEntry;
+	public static String AppOverviewEditorContainerIdEntry;
+	public static String AppOverviewEditorStatusEntry;
+	public static String AppOverviewEditorStatusEnabled;
+	public static String AppOverviewEditorStatusDisabled;
+	public static String AppOverviewEditorProjectSettingsSection;
+	public static String AppOverviewEditorAppUrlEntry;
+	public static String AppOverviewEditorAppPortEntry;
+	public static String AppOverviewEditorDebugPortEntry;
+	public static String AppOverviewEditorEditProjectSettings;
+	public static String AppOverviewEditorBuildSection;
+	public static String AppOverviewEditorAutoBuildEntry;
+	public static String AppOverviewEditorAutoBuildOn;
+	public static String AppOverviewEditorAutoBuildOff;
+	public static String AppOverviewEditorLastBuildEntry;
+	public static String AppOverviewEditorLastImageBuildEntry;
+	public static String AppOverviewEditorProjectNeverBuilt;
+	public static String AppOverviewEditorImageNeverBuilt;
+	public static String AppOverviewEditorNotAvailable;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

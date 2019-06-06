@@ -11,13 +11,15 @@
 
 package org.eclipse.codewind.test;
 
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 
 public class SpringAutoBuildTest extends BaseAutoBuildTest {
 
 	static {
 		projectName = "springautobuildtest";
-		projectType = new ProjectType(ProjectType.TYPE_SPRING, ProjectType.LANGUAGE_JAVA);
+		projectType = ProjectType.TYPE_SPRING;
+		projectLanguage = ProjectLanguage.LANGUAGE_JAVA;
 		relativeURL = "/v1";
 		srcPath = "src/main/java/application/rest/v1/Example.java";
 		text1 = "Congratulations";

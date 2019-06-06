@@ -25,15 +25,16 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.codewind.core.internal.HttpUtil;
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IPath;
@@ -81,7 +82,7 @@ public class CodewindConnection {
 		
 		JSONObject env = getEnvData(this.baseUrl);
 
-		this.versionStr = getMCVersion(env);
+		this.versionStr = getCodewindVersion(env);
 
 //		if (UNKNOWN_VERSION.equals(versionStr)) {
 //			onInitFail(NLS.bind(Messages.Connection_ErrConnection_VersionUnknown,
@@ -154,7 +155,7 @@ public class CodewindConnection {
 		return new JSONObject(envResponse);
 	}
 
-	private static String getMCVersion(JSONObject env) {
+	private static String getCodewindVersion(JSONObject env) {
 		if (!env.has(CoreConstants.KEY_ENV_VERSION)) {
 			Logger.logError("Missing version from env data"); //$NON-NLS-1$
 			return UNKNOWN_VERSION;
@@ -529,7 +530,7 @@ public class CodewindConnection {
 		if (!projectIdInPath) {
 			buildPayload.put(CoreConstants.KEY_PROJECT_ID, app.projectID);
 		}
-		buildPayload.put(CoreConstants.KEY_PROJECT_TYPE, app.projectType.type);
+		buildPayload.put(CoreConstants.KEY_PROJECT_TYPE, app.projectType.getId());
 		
 		HttpResult result = HttpUtil.post(url, buildPayload);
 		if (!result.isGoodResponse) {
@@ -559,7 +560,7 @@ public class CodewindConnection {
 		if (!projectIdInPath) {
 			buildPayload.put(CoreConstants.KEY_PROJECT_ID, app.projectID);
 		}
-		buildPayload.put(CoreConstants.KEY_PROJECT_TYPE, app.projectType.type);
+		buildPayload.put(CoreConstants.KEY_PROJECT_TYPE, app.projectType.getId());
 		buildPayload.put(CoreConstants.KEY_AUTO_GENERATE, true);
 		
 		HttpResult result = HttpUtil.post(url, buildPayload);
@@ -605,7 +606,7 @@ public class CodewindConnection {
 		return templates;
 	}
 	
-	public ProjectType requestProjectValidate(String path) throws JSONException, IOException {
+	public ProjectInfo requestProjectValidate(String path) throws JSONException, IOException {
 		String endpoint = CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_VALIDATE;
 		URI uri = baseUrl.resolve(endpoint);
 		JSONObject createProjectPayload = new JSONObject();
@@ -620,7 +621,7 @@ public class CodewindConnection {
 				JSONObject typeJson = resultJson.getJSONObject(CoreConstants.KEY_RESULT);
 				String language = typeJson.getString(CoreConstants.KEY_LANGUAGE);
 				String projectType = typeJson.getString(CoreConstants.KEY_PROJECT_TYPE);
-				return new ProjectType(projectType, language);
+				return new ProjectInfo(projectType, language);
 			}
 			return null;
 		}
@@ -656,7 +657,7 @@ public class CodewindConnection {
 		payload.put(CoreConstants.KEY_PATH, CoreUtil.getContainerPath(path));
 		payload.put(CoreConstants.KEY_LANGUAGE, language);
 		if (projectType == null) {
-			projectType = ProjectType.getType(language);
+			projectType = ProjectType.getTypeFromLanguage(language).getId();
 		}
 		if (projectType != null) {
 			payload.put(CoreConstants.KEY_PROJECT_TYPE, projectType);
@@ -712,7 +713,7 @@ public class CodewindConnection {
 		// Reset any cached information in case it has changed
 		try {
 			JSONObject envData = getEnvData(baseUrl);
-			String version = getMCVersion(envData);
+			String version = getCodewindVersion(envData);
 			if (UNKNOWN_VERSION.equals(versionStr)) {
 				Logger.logError("Failed to get the Codewind version after reconnect");
 				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_VersionUnknown, CoreConstants.REQUIRED_CODEWIND_VERSION);
@@ -779,11 +780,11 @@ public class CodewindConnection {
 	
 	public void requestProjectCreate(ProjectType type, String name)
 			throws JSONException, IOException {
-		if (type.isType(ProjectType.TYPE_LIBERTY)) {
+		if (type == ProjectType.TYPE_LIBERTY) {
 			requestMicroprofileProjectCreate(name);
-		} else if (type.isType(ProjectType.TYPE_SPRING)) {
+		} else if (type == ProjectType.TYPE_SPRING) {
 			requestSpringProjectCreate(name);
-		} else if (type.isType(ProjectType.TYPE_NODEJS)) {
+		} else if (type == ProjectType.TYPE_NODEJS) {
 			requestNodeProjectCreate(name);
 		} else {
 			Logger.log("Creation of projects with type " + type + " is not supported.");  //$NON-NLS-1$ //$NON-NLS-2$

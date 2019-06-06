@@ -18,6 +18,7 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.json.JSONArray;
@@ -78,7 +79,12 @@ public class CodewindApplicationFactory {
 			if (projectID == null) {
 				for (String id : connection.getAppIds()) {
 					if (!idSet.contains(id)) {
+						CodewindApplication app = connection.getAppByID(id);
 						connection.removeApp(id);
+						if (app != null) {
+							CoreUtil.removeApplication(app);
+							app.dispose();
+						}
 					}
 				}
 			}
@@ -96,19 +102,20 @@ public class CodewindApplicationFactory {
 			String name = appJso.getString(CoreConstants.KEY_NAME);
 			String id = appJso.getString(CoreConstants.KEY_PROJECT_ID);
 
-			ProjectType type = ProjectType.UNKNOWN_TYPE;
+			ProjectType type = ProjectType.TYPE_UNKNOWN;
+			ProjectLanguage language = ProjectLanguage.LANGUAGE_UNKNOWN;
 			try {
 				String typeStr = appJso.getString(CoreConstants.KEY_PROJECT_TYPE);
 				String languageStr = appJso.getString(CoreConstants.KEY_LANGUAGE);
-				type = new ProjectType(typeStr, languageStr);
-			}
-			catch(JSONException e) {
+				type = ProjectType.getType(typeStr);
+				language = ProjectLanguage.getLanguage(languageStr);
+			} catch(JSONException e) {
 				Logger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 			}
 
 			String loc = appJso.getString(CoreConstants.KEY_LOC_DISK);
 			
-			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, loc);
+			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, loc);
 			
 			updateApp(app, appJso);
 			return app;
@@ -164,6 +171,20 @@ public class CodewindApplicationFactory {
 				}
 				app.setBuildStatus(buildStatus, detail);
 			}
+
+			if (appJso.has(CoreConstants.KEY_LAST_BUILD)) {
+				long timestamp = appJso.getLong(CoreConstants.KEY_LAST_BUILD);
+				app.setLastBuild(timestamp);
+			}
+			
+			if (appJso.has(CoreConstants.KEY_APP_IMAGE_LAST_BUILD)) {
+				String timestamp = appJso.getString(CoreConstants.KEY_APP_IMAGE_LAST_BUILD);
+				try {
+					app.setLastImageBuild(Long.parseLong(timestamp));
+				} catch (NumberFormatException e) {
+					Logger.logError("Error parsing the app image last build value: " + timestamp, e);
+				}
+			}
 			
 			// Get the container id
 			String containerId = null;
@@ -184,9 +205,7 @@ public class CodewindApplicationFactory {
 							httpPortNum = CoreUtil.parsePort(httpPort);
 						}
 					}
-					if (httpPortNum != -1) {
-						app.setHttpPort(httpPortNum);
-					}
+					app.setHttpPort(httpPortNum);
 	
 					int debugPortNum = -1;
 					if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {

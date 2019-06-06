@@ -13,12 +13,12 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.util.List;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -91,21 +91,27 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					newConnection.requestProjectCreate(info, name);
+					ProjectLanguage language = ProjectLanguage.getLanguage(info.getLanguage());
 					String type = null;
-					if (ProjectType.LANGUAGE_JAVA.equals(info.getLanguage())) {
-						if (info.getLabel().toLowerCase().contains("spring")) {
-							type = "spring";
-						} else if (info.getLabel().toLowerCase().contains("microprofile")) {
-							type = "liberty";
-						} else {
+					switch(language) {
+						case LANGUAGE_JAVA:
+							if (info.getLabel().toLowerCase().contains("spring")) {
+								type = "spring";
+							} else if (info.getLabel().toLowerCase().contains("microprofile")) {
+								type = "liberty";
+							} else {
+								type = "docker";
+							}
+							break;
+						case LANGUAGE_NODEJS:
+							type = "nodejs";
+							break;
+						case LANGUAGE_SWIFT:
+							type = "swift";
+							break;
+						default:
 							type = "docker";
-						}
-					} else if (ProjectType.LANGUAGE_NODEJS.equals(info.getLanguage())) {
-						type = "nodejs";
-					} else if (ProjectType.LANGUAGE_SWIFT.equals(info.getLanguage())) {
-						type = "swift";
-					} else {
-						type = "docker";
+							break;
 					}
 					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
 					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {

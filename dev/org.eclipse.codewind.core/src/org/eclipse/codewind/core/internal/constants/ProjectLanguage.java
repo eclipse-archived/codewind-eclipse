@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,22 +11,18 @@
 
 package org.eclipse.codewind.core.internal.constants;
 
-/**
- * Type and language of a project.
- */
-public enum ProjectType {
+public enum ProjectLanguage {
+	LANGUAGE_JAVA("java", "Java"),
+	LANGUAGE_NODEJS("nodejs", "Node.js"),
+	LANGUAGE_SWIFT("swift", "Swift"),
+	LANGUAGE_PYTHON("python", "Python"),
+	LANGUAGE_GO("go", "Go"),
+	LANGUAGE_UNKNOWN("unknown", "Unknown");
 	
-	TYPE_LIBERTY("liberty", "MicroProfile / Java EE"),
-	TYPE_SPRING("spring", "Spring"),
-	TYPE_SWIFT("swift", "Swift"),
-	TYPE_NODEJS("nodejs", "Node.js"),
-	TYPE_DOCKER("docker", "Docker"),
-	TYPE_UNKNOWN("unknown", "Unknown");
-
 	private final String id;
 	private final String displayName;
 	
-	private ProjectType(String id, String displayName) {
+	private ProjectLanguage(String id, String displayName) {
 		this.id = id;
 		this.displayName = displayName;
 	}
@@ -39,28 +35,26 @@ public enum ProjectType {
 		return displayName;
 	}
 	
-	public static ProjectType getType(String name) {
-		for (ProjectType type : ProjectType.values()) {
-			if (type.id.equals(name)) {
-				return type;
+	public static ProjectLanguage getLanguage(String name) {
+		for (ProjectLanguage language : ProjectLanguage.values()) {
+			if (language.id.equals(name)) {
+				return language;
 			}
 		}
-		return TYPE_UNKNOWN;
+		return LANGUAGE_UNKNOWN;
 	}
 	
-	public static ProjectType getTypeFromLanguage(String language) {
-		ProjectLanguage lang = ProjectLanguage.getLanguage(language);
-		switch(lang) {
+	public String getMetricsRoot() {
+		switch(this) {
 			case LANGUAGE_NODEJS:
-				return TYPE_NODEJS;
+				return "appmetrics-dash";
 			case LANGUAGE_SWIFT:
-				return TYPE_SWIFT;
-			case LANGUAGE_PYTHON:
-				return TYPE_DOCKER;
-			case LANGUAGE_GO:
-				return TYPE_DOCKER;
+				return "swiftmetrics-dash";
+			case LANGUAGE_JAVA:
+				return "javametrics-dash";
 			default:
 				return null;
 		}
 	}
-}
+
+};

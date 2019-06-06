@@ -91,6 +91,6 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
     }
     
     public boolean showAction() {
-    	return app != null && app.getMetricsAvailable() && app.projectType.getMetricsRoot() != null;
+    	return app != null && app.getMetricsAvailable() && app.projectLanguage.getMetricsRoot() != null;
     }
 }

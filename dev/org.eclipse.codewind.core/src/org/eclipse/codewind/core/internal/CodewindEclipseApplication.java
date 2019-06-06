@@ -22,6 +22,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.launch.CodewindLaunchConfigDelegate;
 import org.eclipse.codewind.core.internal.messages.Messages;
@@ -78,10 +79,10 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	// Debug launch, null if not debugging
 	private ILaunch launch = null;
 
-	CodewindEclipseApplication(CodewindConnection connection,
-			String id, String name, ProjectType projectType, String pathInWorkspace)
+	CodewindEclipseApplication(CodewindConnection connection, String id, String name,
+			ProjectType projectType, ProjectLanguage language, String pathInWorkspace)
 					throws MalformedURLException {
-		super(connection, id, name, projectType, pathInWorkspace);
+		super(connection, id, name, projectType, language, pathInWorkspace);
 	}
 	
 	public synchronized boolean hasAppConsole() {
@@ -167,7 +168,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					if (app.projectType.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+					if (app.projectLanguage == ProjectLanguage.LANGUAGE_JAVA) {
 						ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID);
 				        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
@@ -177,7 +178,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			            app.setLaunch(launch);
 			            return Status.OK_STATUS;
 					} else {
-						IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(app.projectType.language);
+						IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(app.projectLanguage);
 						if (launcher != null) {
 							return launcher.launchDebugger(app);
 						}
@@ -215,11 +216,11 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	}
 	
 	public boolean canAttachDebugger() {
-		if (projectType.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+		if (projectLanguage == ProjectLanguage.LANGUAGE_JAVA) {
 			IDebugTarget debugTarget = getDebugTarget();
 			return (debugTarget == null || debugTarget.isDisconnected());
 		} else {
-			IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(projectType.language);
+			IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(projectLanguage);
 			if (launcher != null) {
 				return launcher.canAttachDebugger(this);
 			}
@@ -331,7 +332,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	@Override
 	public boolean supportsDebug() {
 		// Only supported for certain project types
-		if (projectType.isType(ProjectType.TYPE_LIBERTY) || projectType.isType(ProjectType.TYPE_SPRING) || projectType.isType(ProjectType.TYPE_NODEJS)) {
+		if (projectType == ProjectType.TYPE_LIBERTY || projectType == ProjectType.TYPE_SPRING || projectType == ProjectType.TYPE_NODEJS) {
 			// And only if the project supports it
 			ProjectCapabilities capabilities = getProjectCapabilities();
 			return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();

@@ -21,6 +21,7 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
@@ -293,38 +294,11 @@ public class CodewindSocket {
 			return;
 		}
 		
-		app.setEnabled(true);
-		
-		// Update container id
-		String containerId = null;
-		if (event.has(CoreConstants.KEY_CONTAINER_ID)) {
-		    containerId = event.getString(CoreConstants.KEY_CONTAINER_ID);
-		}
-		app.setContainerId(containerId);
-	
-        // Update ports
-        JSONObject portsObj = event.getJSONObject(CoreConstants.KEY_PORTS);
+		CodewindApplicationFactory.updateApp(app, event);
 
-        if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_PORT)) {
-        	int port = CoreUtil.parsePort(portsObj.getString(CoreConstants.KEY_EXPOSED_PORT));
-    		app.setHttpPort(port);
-        } else {
-        	Logger.logError("No http port on project changed event for: " + app.name); //$NON-NLS-1$
-        }
-
-		if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {
-			int debugPort = CoreUtil.parsePort(portsObj.getString(CoreConstants.KEY_EXPOSED_DEBUG_PORT));
-			app.setDebugPort(debugPort);
-			if (StartMode.DEBUG_MODES.contains(app.getStartMode()) && debugPort != -1) {
-				app.reconnectDebugger();
-			}
-		} else {
-			app.setDebugPort(-1);
-		}
-		
-		if (event.has(CoreConstants.KEY_AUTO_BUILD)) {
-			boolean autoBuild = event.getBoolean(CoreConstants.KEY_AUTO_BUILD);
-			app.setAutoBuild(autoBuild);
+		// Reconnect debugger if necessary
+		if (StartMode.DEBUG_MODES.contains(app.getStartMode()) && app.getDebugPort() != -1) {
+			app.reconnectDebugger();
 		}
 		
 		CoreUtil.updateApplication(app);
@@ -360,23 +334,7 @@ public class CodewindSocket {
 			return;
 		}
 		
-		app.setEnabled(true);
-		
-		if (event.has(CoreConstants.KEY_APP_STATUS)) {
-			String appStatus = event.getString(CoreConstants.KEY_APP_STATUS);
-			app.setAppStatus(appStatus);
-		}
-
-		// Update build status if the project is not started or starting.
-		if (event.has(CoreConstants.KEY_BUILD_STATUS)) {
-			String buildStatus = event.getString(CoreConstants.KEY_BUILD_STATUS);
-			String detail = ""; //$NON-NLS-1$
-			if (event.has(CoreConstants.KEY_DETAILED_BUILD_STATUS)) {
-				detail = event.getString(CoreConstants.KEY_DETAILED_BUILD_STATUS);
-			}
-			app.setBuildStatus(buildStatus, detail);
-		}
-		
+		CodewindApplicationFactory.updateApp(app, event);
 		CoreUtil.updateApplication(app);
 	}
 
@@ -439,8 +397,8 @@ public class CodewindSocket {
 			Logger.logError("No application found for project being closed: " + projectID); //$NON-NLS-1$
 			return;
 		}
-		app.setEnabled(false);
-		CoreUtil.updateConnection(connection);
+		app.connection.refreshApps(app.projectID);
+		CoreUtil.updateApplication(app);
 	}
 
 	private void onProjectDeletion(JSONObject event) throws JSONException {
@@ -450,7 +408,7 @@ public class CodewindSocket {
 			Logger.logError("No application found for project being deleted: " + projectID); //$NON-NLS-1$
 			return;
 		}
-		CoreUtil.updateConnection(connection);
+		CoreUtil.removeApplication(app);
 		app.dispose();
 	}
 
@@ -559,13 +517,13 @@ public class CodewindSocket {
 	
 	private boolean supportsQuickFix(CodewindApplication app, String type, String filename) {
 		// The regenerate job only works in certain cases so only show the quickfix in the working cases
-		if (!CoreConstants.VALUE_TYPE_MISSING.equals(type) || app.projectType.isType(ProjectType.TYPE_DOCKER)) {
+		if (!CoreConstants.VALUE_TYPE_MISSING.equals(type) || app.projectType == ProjectType.TYPE_DOCKER) {
 			return false;
 		}
 		if (CoreConstants.DOCKERFILE.equals(filename)) {
 			return true;
 		}
-		if (app.projectType.isType(ProjectType.TYPE_LIBERTY) && CoreConstants.DOCKERFILE_BUILD.equals(filename)) {
+		if (app.projectType == ProjectType.TYPE_LIBERTY && CoreConstants.DOCKERFILE_BUILD.equals(filename)) {
 			return true;
 		}
 		return false;

@@ -18,10 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.codewind.core.internal.HttpUtil;
-import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
+import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
@@ -30,11 +30,12 @@ import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.Condition;
 import org.eclipse.codewind.test.util.ImportUtil;
-import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.core.resources.IMarker;
@@ -67,6 +68,7 @@ public abstract class BaseTest extends TestCase {
 	
 	protected static String projectName;
 	protected static ProjectType projectType;
+	protected static ProjectLanguage projectLanguage;
 	protected static String relativeURL;
 	protected static String srcPath;
 	
@@ -81,7 +83,7 @@ public abstract class BaseTest extends TestCase {
         CodewindConnectionManager.add(connection);
         
         // Create a new microprofile project
-        createProject(projectType, projectName);
+        createProject(projectType, projectLanguage, projectName);
         
         // Wait for the project to be created
         assertTrue("The application " + projectName + " should be created", CodewindUtil.waitForProject(connection, projectName, 300, 5));
@@ -250,18 +252,18 @@ public abstract class BaseTest extends TestCase {
 		return null;
 	}
 	
-	protected void createProject(ProjectType type, String name) throws IOException, JSONException {
+	protected void createProject(ProjectType type, ProjectLanguage language, String name) throws IOException, JSONException {
 		ProjectTemplateInfo templateInfo = null;
 		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
 		for (ProjectTemplateInfo template : templates) {
-			if (type.language.equals(template.getLanguage())) {
-				if (type.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+			if (language.getId().equals(template.getLanguage())) {
+				if (language == ProjectLanguage.LANGUAGE_JAVA) {
 					String label = template.getLabel();
-					if (type.isType(ProjectType.TYPE_LIBERTY) && label.toLowerCase().contains("microprofile")) {
+					if (type == ProjectType.TYPE_LIBERTY && label.toLowerCase().contains("microprofile")) {
 						templateInfo = template;
 						break;
 					}
-					if (type.isType(ProjectType.TYPE_SPRING) && label.toLowerCase().contains("spring")) {
+					if (type == ProjectType.TYPE_SPRING && label.toLowerCase().contains("spring")) {
 						templateInfo = template;
 						break;
 					}
@@ -273,7 +275,7 @@ public abstract class BaseTest extends TestCase {
 		}
 		assertNotNull("No template found that matches the project type: " + projectType, templateInfo);
 		connection.requestProjectCreate(templateInfo, name);
-		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, type.language, type.type);
+		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, language.getId(), type.getId());
 
 	}
 

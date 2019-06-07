@@ -22,6 +22,7 @@ import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.core.runtime.IPath;
@@ -36,6 +37,7 @@ public class CodewindApplication {
 	public final String projectID, name, host;
 	public final IPath fullLocalPath;
 	public final ProjectType projectType;
+	public final ProjectLanguage projectLanguage;
 
 	
 	private String contextRoot;	// can be null
@@ -50,6 +52,9 @@ public class CodewindApplication {
 	private String action;
 	private List<ProjectLogInfo> logInfos = new ArrayList<ProjectLogInfo>();
 	private boolean metricsAvailable = false;
+	private long lastBuild = -1;
+	private long lastImageBuild = -1;
+	
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -59,18 +64,19 @@ public class CodewindApplication {
 	// An httpPort of -1 indicates the app is not started - could be building or disabled.
 	private int httpPort = -1, debugPort = -1;
 
-	CodewindApplication(CodewindConnection connection,
-			String id, String name, ProjectType projectType, String pathInWorkspace)
+	CodewindApplication(CodewindConnection connection, String id, String name, 
+			ProjectType projectType, ProjectLanguage projectLanguage, String pathInWorkspace)
 					throws MalformedURLException {
 
 		this.connection = connection;
 		this.projectID = id;
 		this.name = name;
 		this.projectType = projectType;
+		this.projectLanguage = projectLanguage;
 		this.host = connection.baseUrl.getHost();
 
-		// The connection.localWorkspacePath will end in /microclimate-workspace
-		// and the path passed here will start with /microclimate-workspace, so here we fix the duplication.
+		// The connection.localWorkspacePath will end with the workspace folder
+		// and the path passed here will start with the workspace folder, so here we fix the duplication.
 		this.fullLocalPath = CoreUtil.appendPathWithoutDupe(connection.getWorkspacePath(), pathInWorkspace);
 
 		this.startMode = StartMode.RUN;
@@ -137,6 +143,11 @@ public class CodewindApplication {
 		if (reenabled) {
 			connection.refreshApps(projectID);
 			CoreUtil.updateApplication(this);
+		} else if (!enabled) {
+			// Reset fields that are only valid when the app is enabled
+			setHttpPort(-1);
+			setDebugPort(-1);
+			setContainerId(null);
 		}
 	}
 	
@@ -200,7 +211,7 @@ public class CodewindApplication {
 	
 	public URL getMetricsUrl() {
 		try {
-			return new URL(getBaseUrl(), projectType.getMetricsRoot());
+			return new URL(getBaseUrl(), projectLanguage.getMetricsRoot());
 		} catch (MalformedURLException e) {
 			Logger.logError("An error occurred trying to construct the application metrics URL", e);
 		}
@@ -269,11 +280,27 @@ public class CodewindApplication {
 	}
 
 	public boolean hasBuildLog() {
-		return (!projectType.isType(ProjectType.TYPE_NODEJS));
+		return (projectType != ProjectType.TYPE_NODEJS);
 	}
 	
 	public synchronized boolean getMetricsAvailable() {
 		return metricsAvailable;
+	}
+	
+	public synchronized void setLastBuild(long timestamp) {
+		lastBuild = timestamp;
+	}
+	
+	public synchronized long getLastBuild() {
+		return lastBuild;
+	}
+	
+	public synchronized void setLastImageBuild(long timestamp) {
+		lastImageBuild = timestamp;
+	}
+	
+	public synchronized long getLastImageBuild() {
+		return lastImageBuild;
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

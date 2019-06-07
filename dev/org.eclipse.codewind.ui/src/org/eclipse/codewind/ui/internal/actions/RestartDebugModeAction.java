@@ -12,10 +12,10 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppState;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -79,7 +79,7 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
         
         // Check for a project for Java applications only since currently this is the only
         // language that can be debugged within Eclipse
-        if (app.projectType.isLanguage(ProjectType.LANGUAGE_JAVA)) {
+        if (app.projectLanguage == ProjectLanguage.LANGUAGE_JAVA) {
 	        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
 	        // Check if the project has been imported into Eclipse. If not, offer to import it.
 	        if (project == null || !project.exists()) {

@@ -71,6 +71,8 @@ public class CoreConstants {
 			KEY_APP_STATUS = "appStatus",
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
+			KEY_LAST_BUILD = "lastbuild",
+			KEY_APP_IMAGE_LAST_BUILD = "appImageLastBuild",
 			KEY_PORTS = "ports",
 			KEY_EXPOSED_PORT = "exposedPort",
 			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",

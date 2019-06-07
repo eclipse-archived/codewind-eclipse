@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -14,9 +14,10 @@ package org.eclipse.codewind.ui.internal.actions;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -84,7 +85,7 @@ public class ContainerShellAction implements IObjectActionDelegate {
         
         // The command varies depending on the application type
         String command = "bash"; //$NON-NLS-1$
-        if (app.projectType.isType(ProjectType.TYPE_DOCKER) && app.projectType.isLanguage(ProjectType.LANGUAGE_PYTHON)) {
+        if (app.projectType == ProjectType.TYPE_DOCKER && app.projectLanguage == ProjectLanguage.LANGUAGE_PYTHON) {
         	command = "sh"; //$NON-NLS-1$
         }
 

@@ -313,5 +313,10 @@
 	        icon="icons/codewind.ico"
 	        class="org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorPart"/>
 	</extension>
+	
+	<extension point="org.eclipse.ui.elementFactories">
+		<factory id="org.eclipse.codewind.ui.editors.appOverviewEditorInputFactory"
+			class="org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorInputFactory"/>
+	</extension>
 
 </plugin>

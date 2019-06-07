@@ -14,6 +14,7 @@ package org.eclipse.codewind.core.internal;
 import java.net.URI;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 
 /**
@@ -30,8 +31,8 @@ public class CodewindObjectFactory {
 	}
 	
 	public static CodewindApplication createCodewindApplication(CodewindConnection connection,
-			String id, String name, ProjectType projectType, String pathInWorkspace) throws Exception {
-		return new CodewindEclipseApplication(connection, id, name, projectType, pathInWorkspace);
+			String id, String name, ProjectType projectType, ProjectLanguage language, String pathInWorkspace) throws Exception {
+		return new CodewindEclipseApplication(connection, id, name, projectType, language, pathInWorkspace);
 	}
 
 }

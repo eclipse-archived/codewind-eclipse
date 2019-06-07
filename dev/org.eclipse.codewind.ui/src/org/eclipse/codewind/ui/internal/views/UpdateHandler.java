@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,6 @@ import java.util.HashMap;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.IUpdateHandler;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.swt.widgets.Display;
 
 /**
  * Update handler registered on the Codewind core plug-in in order to keep
@@ -45,16 +44,23 @@ public class UpdateHandler implements IUpdateHandler {
 		synchronized(appListeners) {
 			AppUpdateListener listener = appListeners.get(app.projectID);
 			if (listener != null) {
-				Display.getDefault().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						listener.update(app);
-					}
-				});
+				listener.update(app);
 			}
 		}
 	}
 	
+	@Override
+	public void removeApplication(CodewindApplication app) {
+		ViewHelper.refreshCodewindExplorerView(app.connection);
+		ViewHelper.expandConnection(app.connection);
+		synchronized(appListeners) {
+			AppUpdateListener listener = appListeners.get(app.projectID);
+			if (listener != null) {
+				listener.remove(app);
+			}
+		}
+	}
+
 	public void addAppUpdateListener(String projectID, AppUpdateListener listener) {
 		synchronized(appListeners) {
 			appListeners.put(projectID, listener);
@@ -69,6 +75,7 @@ public class UpdateHandler implements IUpdateHandler {
 	
 	public interface AppUpdateListener {
 		public void update(CodewindApplication app);
+		public void remove(CodewindApplication app);
 	}
 
 }

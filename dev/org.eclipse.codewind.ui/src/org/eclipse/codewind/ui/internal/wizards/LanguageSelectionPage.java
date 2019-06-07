@@ -13,6 +13,8 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.constants.ProjectInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -30,8 +32,8 @@ public class LanguageSelectionPage extends WizardPage {
 
 	private CodewindConnection connection = null;
 	private IProject project = null;
-	private String language = null;
-	private String type = null;
+	private ProjectType type = null;
+	private ProjectLanguage language = null;
 
 	protected LanguageSelectionPage(CodewindConnection connection, IProject project) {
 		super(Messages.SelectLanguagePageName);
@@ -51,8 +53,6 @@ public class LanguageSelectionPage extends WizardPage {
         composite.setLayout(layout);
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        ProjectType projectType = getProjectType();
-        
         Text languageLabel = new Text(composite, SWT.READ_ONLY);
         languageLabel.setText(Messages.SelectLanguagePageLanguageLabel);
         languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
@@ -89,8 +89,8 @@ public class LanguageSelectionPage extends WizardPage {
 				item.setChecked(!item.getChecked());
 			}
     		if (item != null && item.getChecked()) {
-    			language = (String)item.getData();
-    			if (ProjectType.LANGUAGE_JAVA.equals(language)) {
+    			language = (ProjectLanguage)item.getData();
+    			if (language == ProjectLanguage.LANGUAGE_JAVA) {
 		        	typeLabel.setVisible(true);
 		        	typeTable.setVisible(true);
     			} else {
@@ -121,7 +121,7 @@ public class LanguageSelectionPage extends WizardPage {
 				item.setChecked(!item.getChecked());
 			}
     		if (item != null && item.getChecked()) {
-    			type = (String)item.getData();
+    			type = (ProjectType)item.getData();
 	        } else {
 	        	type = null;
 	        }
@@ -131,14 +131,15 @@ public class LanguageSelectionPage extends WizardPage {
     	typeLabel.setVisible(false);
     	typeTable.setVisible(false);
 
-    	if (projectType != null) {
-    		language = projectType.language;
-    		type = projectType.type;
+    	ProjectInfo projectInfo = getProjectInfo();
+    	if (projectInfo != null) {
+    		language = projectInfo.language;
+    		type = projectInfo.type;
     		TableItem item = getItem(languageTable, language);
     		if (item != null) {
     			item.setChecked(true);
     		}
-    		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
+    		if (language == ProjectLanguage.LANGUAGE_JAVA) {
     			item = getItem(typeTable, type);
         		if (item != null) {
         			item.setChecked(true);
@@ -152,7 +153,7 @@ public class LanguageSelectionPage extends WizardPage {
 		setControl(composite);
 	}
 	
-	private TableItem getItem(Table table, String data) {
+	private TableItem getItem(Table table, Object data) {
 		for (TableItem item : table.getItems()) {
 			if (data.equals(item.getData())) {
 				return item;
@@ -162,10 +163,10 @@ public class LanguageSelectionPage extends WizardPage {
 	}
 	
 	public boolean canFinish() {
-		if (language == null || ProjectType.UNKNOWN.equals(language)) {
+		if (language == null || language == ProjectLanguage.LANGUAGE_UNKNOWN) {
 			return false;
 		}
-		if (ProjectType.LANGUAGE_JAVA.equals(language)) {
+		if (language == ProjectLanguage.LANGUAGE_JAVA) {
 			return type != null;
 		}
 		return true;
@@ -173,33 +174,33 @@ public class LanguageSelectionPage extends WizardPage {
 	
 	private void fillLanguageTable(Table languageTable) {
 		TableItem item = new TableItem(languageTable, SWT.NONE);
-		item.setText("Go");
-		item.setData(ProjectType.LANGUAGE_GO);
+		item.setText(ProjectLanguage.LANGUAGE_GO.getDisplayName());
+		item.setData(ProjectLanguage.LANGUAGE_GO);
 		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText("Java");
-		item.setData(ProjectType.LANGUAGE_JAVA);
+		item.setText(ProjectLanguage.LANGUAGE_JAVA.getDisplayName());
+		item.setData(ProjectLanguage.LANGUAGE_JAVA);
 		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText("Node.js");
-		item.setData(ProjectType.LANGUAGE_NODEJS);
+		item.setText(ProjectLanguage.LANGUAGE_NODEJS.getDisplayName());
+		item.setData(ProjectLanguage.LANGUAGE_NODEJS);
 		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText("Python");
-		item.setData(ProjectType.LANGUAGE_PYTHON);
+		item.setText(ProjectLanguage.LANGUAGE_PYTHON.getDisplayName());
+		item.setData(ProjectLanguage.LANGUAGE_PYTHON);
 		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON));
 		item = new TableItem(languageTable, SWT.NONE);
-		item.setText("Swift");
-		item.setData(ProjectType.LANGUAGE_SWIFT);
+		item.setText(ProjectLanguage.LANGUAGE_SWIFT.getDisplayName());
+		item.setData(ProjectLanguage.LANGUAGE_SWIFT);
 		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON));
 	}
 	
 	private void fillTypeTable(Table typeTable) {
 		TableItem item = new TableItem(typeTable, SWT.NONE);
-		item.setText("Liberty");
+		item.setText(ProjectType.TYPE_LIBERTY.getDisplayName());
 		item.setData(ProjectType.TYPE_LIBERTY);
 		item = new TableItem(typeTable, SWT.NONE);
-		item.setText("Spring");
+		item.setText(ProjectType.TYPE_SPRING.getDisplayName());
 		item.setData(ProjectType.TYPE_SPRING);
 		item = new TableItem(typeTable, SWT.NONE);
 		item.setText("Other");
@@ -214,24 +215,24 @@ public class LanguageSelectionPage extends WizardPage {
 		return connection;
 	}
 	
-	public String getLanguage() {
+	public ProjectLanguage getLanguage() {
 		return language;
 	}
 	
-	public String getType() {
+	public ProjectType getType() {
 		if (type != null) {
 			return type;
 		}
-		if (ProjectType.LANGUAGE_NODEJS.equals(language)) {
-			return "nodejs";
+		if (language == ProjectLanguage.LANGUAGE_NODEJS) {
+			return ProjectType.TYPE_NODEJS;
 		}
-		if (ProjectType.LANGUAGE_SWIFT.equals(language)) {
-			return "swift";
+		if (language == ProjectLanguage.LANGUAGE_SWIFT) {
+			return ProjectType.TYPE_SWIFT;
 		}
-        return "docker";
+        return ProjectType.TYPE_DOCKER;
 	}
 	
-	private ProjectType getProjectType() {
+	private ProjectInfo getProjectInfo() {
 		if (connection == null || project == null) {
 			return null;
 		}

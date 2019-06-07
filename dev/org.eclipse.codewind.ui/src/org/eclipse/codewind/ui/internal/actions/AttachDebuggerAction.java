@@ -14,7 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppState;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -41,7 +41,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication) obj;
-            	if (app.projectType.isLanguage(ProjectType.LANGUAGE_NODEJS)) {
+            	if (app.projectLanguage == ProjectLanguage.LANGUAGE_NODEJS) {
             		this.setText(Messages.LaunchDebugSessionLabel);
             	} else {
             		this.setText(Messages.AttachDebuggerLabel);

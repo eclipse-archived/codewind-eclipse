@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -9,18 +9,16 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.codewind.core.internal;
+package org.eclipse.codewind.core.internal.constants;
 
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-
-public interface IUpdateHandler {
+public class ProjectInfo {
 	
-	public void updateAll();
+	public final ProjectType type;
+	public final ProjectLanguage language;
 	
-	public void updateConnection(CodewindConnection connection);
-	
-	public void updateApplication(CodewindApplication application);
-	
-	public void removeApplication(CodewindApplication application);
+	public ProjectInfo(String type, String language) {
+		this.type = ProjectType.getType(type);
+		this.language = ProjectLanguage.getLanguage(language);
+	}
 
 }

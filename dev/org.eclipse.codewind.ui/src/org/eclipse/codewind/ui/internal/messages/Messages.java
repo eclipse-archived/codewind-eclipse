@@ -216,6 +216,9 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorProjectNeverBuilt;
 	public static String AppOverviewEditorImageNeverBuilt;
 	public static String AppOverviewEditorNotAvailable;
+	public static String AppOverviewEditorOpenSettingsErrorTitle;
+	public static String AppOverviewEditorOpenSettingsErrorMsg;
+	public static String AppOverviewEditorOpenSettingsNotFound;
 	
 	static {
 		// initialize resource bundle

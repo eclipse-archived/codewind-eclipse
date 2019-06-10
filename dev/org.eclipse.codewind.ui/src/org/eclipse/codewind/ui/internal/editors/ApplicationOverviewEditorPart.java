@@ -22,7 +22,14 @@ import org.eclipse.codewind.ui.internal.actions.EnableDisableAutoBuildAction;
 import org.eclipse.codewind.ui.internal.actions.EnableDisableProjectAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
@@ -39,15 +46,22 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.ManagedForm;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
+import org.eclipse.ui.ide.FileStoreEditorInput;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.EditorPart;
 
 public class ApplicationOverviewEditorPart extends EditorPart {
+	
+	private static final String SETTINGS_FILE = ".cw-settings";
+	private static final String JSON_EDITOR_ID = "org.eclipse.wst.json.ui.JSONEditor";
 	
 	private Composite contents;
 	private String appName;
@@ -290,6 +304,46 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        editButton = new Button(composite, SWT.PUSH);
 	        editButton.setText(Messages.AppOverviewEditorEditProjectSettings);
 	        editButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+	        editButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					CodewindApplication app = getApp();
+					if (app == null) {
+						// Should not happen
+						Logger.logError("Trying to open the settings file from the overview page but the app is not found with name: " + appName + ", and project id: " + projectID); //$NON-NLS-1$  //$NON-NLS-2$
+						return;
+					}
+					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+					if (project != null && project.isAccessible()) {
+						IFile file = project.getFile(SETTINGS_FILE);
+						if (file != null && file.exists()) {
+							try {
+								IDE.openEditor(page, file, JSON_EDITOR_ID);
+							} catch (PartInitException e) {
+								Logger.logError("Error trying to open project settings file: " + file, e); //$NON-NLS-1$
+								MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenSettingsErrorTitle, NLS.bind(Messages.AppOverviewEditorOpenSettingsErrorMsg, e));
+							}
+							return;
+						}
+					}
+					// Try using an external file
+					IPath path = app.fullLocalPath.append(SETTINGS_FILE);
+					if (path.toFile().exists()) {
+						IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
+						FileStoreEditorInput input = new FileStoreEditorInput(fileStore);
+						try {
+							IDE.openEditor(page, input, JSON_EDITOR_ID);
+						} catch (PartInitException e) {
+							Logger.logError("Error trying to open project settings file: " + path.toOSString(), e); //$NON-NLS-1$
+							MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenSettingsErrorTitle, NLS.bind(Messages.AppOverviewEditorOpenSettingsErrorMsg, e));
+						}
+						return;
+					}
+					Logger.logError("Failed to open project settings file for project: " + appName + ", with id: " + projectID); //$NON-NLS-1$ //$NON-NLS-2$
+					MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenSettingsErrorTitle, Messages.AppOverviewEditorOpenSettingsNotFound);
+				}
+	        });
 		}
 		
 		public void update(CodewindApplication app) {

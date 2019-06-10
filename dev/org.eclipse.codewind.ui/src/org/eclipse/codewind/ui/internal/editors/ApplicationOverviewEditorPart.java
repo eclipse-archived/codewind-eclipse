@@ -218,10 +218,13 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private class GeneralSection {
 		
-		private final StringEntry languageString;
-		private final StringEntry locationString;
-		private final StringEntry containerIdString;
-		private final BooleanEntry statusBoolean;
+		private final StringEntry languageEntry;
+		private final StringEntry locationEntry;
+		private final StringEntry appURLEntry;
+		private final StringEntry hostAppPortEntry;
+		private final StringEntry hostDebugPortEntry;
+		private final StringEntry containerIdEntry;
+		private final BooleanEntry statusEntry;
 		
 		public GeneralSection(Composite parent, FormToolkit toolkit) {
 			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
@@ -241,13 +244,19 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        toolkit.paintBordersFor(composite);
 	        section.setClient(composite);
 	        
-	        languageString = new StringEntry(composite, Messages.AppOverviewEditorLanguageEntry);
-	        new Label(composite, SWT.NONE);
-	        locationString = new StringEntry(composite, Messages.AppOverviewEditorLocationEntry);
-	        new Label(composite, SWT.NONE);
-	        containerIdString = new StringEntry(composite, Messages.AppOverviewEditorContainerIdEntry);
-	        new Label(composite, SWT.NONE);
-	        statusBoolean = new BooleanEntry(composite, Messages.AppOverviewEditorStatusEntry, null,
+	        languageEntry = new StringEntry(composite, Messages.AppOverviewEditorLanguageEntry);
+	        addSpacer(composite);
+	        locationEntry = new StringEntry(composite, Messages.AppOverviewEditorLocationEntry);
+	        addSpacer(composite);
+	        appURLEntry = new StringEntry(composite, Messages.AppOverviewEditorAppUrlEntry);
+	        addSpacer(composite);
+	        hostAppPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostAppPortEntry);
+	        addSpacer(composite);
+	        hostDebugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostDebugPortEntry);
+	        addSpacer(composite);
+	        containerIdEntry = new StringEntry(composite, Messages.AppOverviewEditorContainerIdEntry);
+	        addSpacer(composite);
+	        statusEntry = new BooleanEntry(composite, Messages.AppOverviewEditorStatusEntry, null,
 	        		Messages.AppOverviewEditorStatusEnabled, Messages.AppOverviewEditorStatusDisabled, (value) -> {
 	        	CodewindApplication app = getApp();
 	        	if (app == null) {
@@ -260,10 +269,13 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 		
 		public void update(CodewindApplication app) {
-			languageString.setValue(app.projectLanguage.getDisplayName(), true);
-			locationString.setValue(app.fullLocalPath.toOSString(), true);
-			containerIdString.setValue(app.isAvailable() ? app.getContainerId() : null, true);
-			statusBoolean.setValue(app.isAvailable(), true);
+			languageEntry.setValue(app.projectLanguage.getDisplayName(), true);
+			locationEntry.setValue(app.fullLocalPath.toOSString(), true);
+			appURLEntry.setValue(app.isAvailable() && app.getBaseUrl() != null ? app.getBaseUrl().toString() : null, true);
+			hostAppPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);
+			hostDebugPortEntry.setValue(app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null, true);
+			containerIdEntry.setValue(app.isAvailable() ? app.getContainerId() : null, true);
+			statusEntry.setValue(app.isAvailable(), true);
 		}
 		
 		public void enableWidgets(boolean enable) {
@@ -272,7 +284,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	}
 	
 	private class ProjectSettingsSection {
-		private final StringEntry appURLEntry;
+		private final StringEntry contextRootEntry;
 		private final StringEntry appPortEntry;
 		private final StringEntry debugPortEntry;
 		private final Button editButton;
@@ -295,10 +307,10 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        toolkit.paintBordersFor(composite);
 	        section.setClient(composite);
 	        
-	        appURLEntry = new StringEntry(composite, Messages.AppOverviewEditorAppUrlEntry);
-	        new Label(composite, SWT.NONE);
+	        contextRootEntry = new StringEntry(composite, Messages.AppOverviewEditorContextRootEntry);
+	        addSpacer(composite);
 	        appPortEntry = new StringEntry(composite, Messages.AppOverviewEditorAppPortEntry);
-	        new Label(composite, SWT.NONE);
+	        addSpacer(composite);
 	        debugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorDebugPortEntry);
 	        
 	        editButton = new Button(composite, SWT.PUSH);
@@ -347,9 +359,9 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 		
 		public void update(CodewindApplication app) {
-			appURLEntry.setValue(app.isAvailable() && app.getBaseUrl() != null ? app.getBaseUrl().toString() : null, true);
-			appPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);
-			debugPortEntry.setValue(app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null, true);
+			contextRootEntry.setValue(app.getContextRoot() != null ? app.getContextRoot() : "/", true); //$NON-NLS-1$
+			appPortEntry.setValue(app.getContainerAppPort(), true);
+			debugPortEntry.setValue(app.getContainerDebugPort(), true);
 		}
 		
 		public void enableWidgets(boolean enable) {
@@ -389,9 +401,9 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        	}
 	        	EnableDisableAutoBuildAction.enableDisableAutoBuild(app, value);
 	        });
-	        new Label(composite, SWT.NONE);
+	        addSpacer(composite);
 	        lastBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastBuildEntry);
-	        new Label(composite, SWT.NONE);
+	        addSpacer(composite);
 	        lastImageBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastImageBuildEntry);
 		}
 		
@@ -420,6 +432,10 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		// Temporary - improve by showing how long ago the build happened
 		Date date = new Date(timestamp);
 		return date.toLocaleString();
+	}
+	
+	private void addSpacer(Composite composite) {
+		new Label(composite, SWT.NONE);
 	}
 
 	private class StringEntry {

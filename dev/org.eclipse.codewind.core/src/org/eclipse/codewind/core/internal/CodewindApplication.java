@@ -63,6 +63,9 @@ public class CodewindApplication {
 	// These are set by the CodewindSocket so we have to make sure the reads and writes are synchronized
 	// An httpPort of -1 indicates the app is not started - could be building or disabled.
 	private int httpPort = -1, debugPort = -1;
+	
+	// Container ports
+	private String containerAppPort = null, containerDebugPort = null;
 
 	CodewindApplication(CodewindConnection connection, String id, String name, 
 			ProjectType projectType, ProjectLanguage projectLanguage, String pathInWorkspace)
@@ -126,6 +129,10 @@ public class CodewindApplication {
 		} catch (MalformedURLException e) {
 			Logger.logError("An error occurred updating the base url with the new context root: " + contextRoot, e);
 		}
+	}
+	
+	public synchronized String getContextRoot() {
+		return this.contextRoot;
 	}
 	
 	public synchronized void setStartMode(StartMode startMode) {
@@ -328,6 +335,22 @@ public class CodewindApplication {
 		Logger.log("Invalidate ports for " + name); //$NON-NLS-1$
 		httpPort = -1;
 		debugPort = -1;
+	}
+	
+	public synchronized void setContainerAppPort(String port) {
+		this.containerAppPort = port;
+	}
+	
+	public synchronized String getContainerAppPort() {
+		return this.containerAppPort;
+	}
+	
+	public synchronized void setContainerDebugPort(String port) {
+		this.containerDebugPort = port;
+	}
+	
+	public synchronized String getContainerDebugPort() {
+		return this.containerDebugPort;
 	}
 
 	/**

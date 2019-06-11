@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -126,7 +127,6 @@ public class ProjectSelectionPage extends WizardPage {
 				if (event.getChecked()) {
 					projectList.setCheckedElements(new Object[] {event.getElement()});
 					project = (IProject) event.getElement();
-					wizard.setProject(project);
 				} else {
 					project = null;
 				}
@@ -141,6 +141,13 @@ public class ProjectSelectionPage extends WizardPage {
 	@Override
 	public boolean canFlipToNextPage() {
 		return canFinish();
+	}
+
+	@Override
+	public IWizardPage getNextPage() {
+		// Set the project so the next page has it.
+		wizard.setProject(project);
+		return super.getNextPage();
 	}
 
 	public boolean canFinish() {

@@ -13,7 +13,11 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.navigator.CommonActionProvider;
+import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 
@@ -27,6 +31,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
 	private UnbindProjectAction unbindProjectAction;
+	private OpenAppDoubleClickAction openAppDoubleClickAction;
 //	private DeleteProjectAction deleteProjectAction;
 	
     @Override
@@ -38,6 +43,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
         unbindProjectAction = new UnbindProjectAction(selProvider);
+        openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
 //        deleteProjectAction = new DeleteProjectAction(selProvider);
     }
     
@@ -60,4 +66,29 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	
     }
 
+	@Override
+	public void fillActionBars(IActionBars actionBars) {
+		super.fillActionBars(actionBars);
+		actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, openAppDoubleClickAction);
+	}
+
+	private static class OpenAppDoubleClickAction extends SelectionProviderAction {
+		private final OpenAppAction actionDelegate;
+
+		public OpenAppDoubleClickAction(ISelectionProvider selectionProvider) {
+			super(selectionProvider, "");
+			actionDelegate = new OpenAppAction();
+			selectionChanged(getStructuredSelection());
+		}
+
+		@Override
+		public void selectionChanged(IStructuredSelection sel) {
+			actionDelegate.selectionChanged(this, sel);
+		}
+
+		@Override
+		public void run() {
+			actionDelegate.run(this);
+		}
+	}
 }

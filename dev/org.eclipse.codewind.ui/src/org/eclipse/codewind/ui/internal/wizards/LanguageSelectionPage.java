@@ -34,6 +34,10 @@ public class LanguageSelectionPage extends WizardPage {
 	private IProject project = null;
 	private ProjectType type = null;
 	private ProjectLanguage language = null;
+	private Text languageLabel = null;
+	private Table languageTable = null;
+	private Text typeLabel = null;
+	private Table typeTable = null;
 
 	protected LanguageSelectionPage(CodewindConnection connection, IProject project) {
 		super(Messages.SelectLanguagePageName);
@@ -53,25 +57,25 @@ public class LanguageSelectionPage extends WizardPage {
         composite.setLayout(layout);
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        Text languageLabel = new Text(composite, SWT.READ_ONLY);
+        languageLabel = new Text(composite, SWT.READ_ONLY);
         languageLabel.setText(Messages.SelectLanguagePageLanguageLabel);
         languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
         languageLabel.setBackground(composite.getBackground());
         languageLabel.setForeground(composite.getForeground());
         
-        Table languageTable = new Table (composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+        languageTable = new Table (composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
     	fillLanguageTable(languageTable);
     	languageTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
     	
-        Text typeLabel = new Text(composite, SWT.READ_ONLY);
+        typeLabel = new Text(composite, SWT.READ_ONLY);
         typeLabel.setText(Messages.SelectLanguagePageProjectTypeLabel);
         typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
         typeLabel.setBackground(composite.getBackground());
         typeLabel.setForeground(composite.getForeground());
         
-    	Table typeTable = new Table(composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-    	fillTypeTable(typeTable);
-    	typeTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+        typeTable = new Table(composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+        fillTypeTable(typeTable);
+        typeTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
     	
     	languageTable.addListener(SWT.Selection, event -> {
     		TableItem item = null;
@@ -131,23 +135,7 @@ public class LanguageSelectionPage extends WizardPage {
     	typeLabel.setVisible(false);
     	typeTable.setVisible(false);
 
-    	ProjectInfo projectInfo = getProjectInfo();
-    	if (projectInfo != null) {
-    		language = projectInfo.language;
-    		type = projectInfo.type;
-    		TableItem item = getItem(languageTable, language);
-    		if (item != null) {
-    			item.setChecked(true);
-    		}
-    		if (language == ProjectLanguage.LANGUAGE_JAVA) {
-    			item = getItem(typeTable, type);
-        		if (item != null) {
-        			item.setChecked(true);
-    				typeLabel.setVisible(true);
-        			typeTable.setVisible(true);
-        		}
-    		}
-    	}
+    	updateTables();
 
     	languageTable.setFocus();
 		setControl(composite);
@@ -209,6 +197,7 @@ public class LanguageSelectionPage extends WizardPage {
 	
 	public void setProject(IProject project) {
 		this.project = project;
+		updateTables();
 	}
 	
 	public CodewindConnection getConnection() {
@@ -232,15 +221,37 @@ public class LanguageSelectionPage extends WizardPage {
         return ProjectType.TYPE_DOCKER;
 	}
 	
-	private ProjectInfo getProjectInfo() {
+	private void updateTables() {
+		ProjectInfo projectInfo = getProjectInfo();
+		if (projectInfo != null) {
+			language = projectInfo.language;
+			type = projectInfo.type;
+			TableItem item = getItem(languageTable, language);
+			if (item != null) {
+				item.setChecked(true);
+			}
+			if (language == ProjectLanguage.LANGUAGE_JAVA) {
+				item = getItem(typeTable, type);
+				if (item != null) {
+					item.setChecked(true);
+					typeLabel.setVisible(true);
+					typeTable.setVisible(true);
+				}
+			}
+		}
+	}
+
+	ProjectInfo getProjectInfo() {
 		if (connection == null || project == null) {
 			return null;
 		}
+
 		try {
 			return connection.requestProjectValidate(project.getLocation().toFile().getAbsolutePath());
 		} catch (Exception e) {
-			Logger.logError("Could not get the project type because validate failed for project: " + project.getName()); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to get the project type for project: " + project.getName(), e); //$NON-NLS-1$
 		}
+
 		return null;
 	}
 	

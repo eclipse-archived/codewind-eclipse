@@ -10,8 +10,8 @@ pipeline {
       kind: Pod
       spec:
       containers:
-          - name: php
-            image: php:7.2.10-alpine
+          - name: ubuntu
+            image: eclipsecbi/ubuntu-gtk3-metacity:18.10-gtk3.24
             command:
             - cat
             tty: true
@@ -32,11 +32,20 @@ pipeline {
     }
     
     stages {
+	    def javaHome
+	    
+	    stage('Preparation') {
+	        cleanWs()
+	        javaHome = tool 'oracle-jdk8-latest'
+	    }
+	    
         stage('Build') {
             steps {
                 script {
 
                     sh 'echo "Starting codewind-eclipse build..."'
+                    sh 'export JAVA_HOME=${javaHome}'
+                    sh 'export PATH=$JAVA_HOME/bin:$PATH'
                         
                     def sys_info = sh(script: "uname -a", returnStdout: true).trim()
                     println("System information: ${sys_info}")

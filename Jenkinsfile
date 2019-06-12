@@ -31,17 +31,13 @@ pipeline {
         skipStagesAfterUnstable()
     }
     
-    tools {
-        jdk 'oracle-jdk8-latest'
-    }
-    
     stages {
 
         stage('Build') {
             steps {
                 script {
 
-                    sh 'echo "Starting codewind-eclipse build..."'
+                    println("Starting codewind-eclipse build...")
                         
                     def sys_info = sh(script: "uname -a", returnStdout: true).trim()
                     println("System information: ${sys_info}")

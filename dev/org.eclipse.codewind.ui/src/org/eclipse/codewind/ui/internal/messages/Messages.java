@@ -73,6 +73,9 @@ public class Messages extends NLS {
 	public static String DeactivateActionTimeout;
 	public static String BindActionLabel;
 	public static String UnbindActionLabel;
+	public static String UnbindActionTitle;
+	public static String UnbindActionMessage;
+	public static String UnbindActionJobTitle;
 	public static String UnbindActionError;
 	
 	public static String BindProjectErrorTitle;
@@ -125,11 +128,6 @@ public class Messages extends NLS {
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
 	public static String LaunchDebugSessionLabel;
-	public static String DeleteProjectLabel;
-	public static String DeleteProjectTitle;
-	public static String DeleteProjectMessage;
-	public static String DeleteProjectJobTitle;
-	public static String DeleteProjectErrorMsg;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
 	public static String RefreshConnectionJobLabel;

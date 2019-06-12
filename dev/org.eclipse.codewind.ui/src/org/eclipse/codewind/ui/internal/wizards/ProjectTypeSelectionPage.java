@@ -209,11 +209,19 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	
 	public ProjectType getType() {
 		// Type should not be null since the page cannot finish until a type is selected
+		if (type == null) {
+			Logger.logError("The project type is null on the project type selection page");
+			return ProjectType.TYPE_UNKNOWN;
+		}
 		return type;
 	}
 	
 	public ProjectLanguage getLanguage() {
 		// Type should not be null since the page cannot finish until a type is selected
+		if (type == null) {
+			Logger.logError("The project type is null on the project type selection page");
+			return ProjectLanguage.LANGUAGE_UNKNOWN;
+		}
 		switch(type) {
 			case TYPE_LIBERTY:
 			case TYPE_SPRING:

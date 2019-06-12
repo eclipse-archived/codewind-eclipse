@@ -6,7 +6,6 @@ pipeline {
     tools {
         maven 'apache-maven-latest'
         jdk 'oracle-jdk8-latest'
-        gradle 'gradle-latest'
     }
     
     options {
@@ -30,8 +29,6 @@ pipeline {
                     sh '''
                         java -version
                         which java
-                        gradle -version
-                        which gradle
                         mvn -version
                     '''
                     

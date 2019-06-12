@@ -3,10 +3,10 @@
 pipeline {
 	agent {
     
-    kubernetes {
+	kubernetes {        
       label 'codewind-agent-pod'
       yaml """
-		apiVersion: v1
+      apiVersion: v1
 		kind: Pod
 		spec:
 		  containers:

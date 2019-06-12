@@ -31,22 +31,26 @@ pipeline {
         skipStagesAfterUnstable()
     }
     
+    tools {
+        jdk 'oracle-jdk8-latest'
+    }
+    
     stages {
 
         stage('Build') {
             steps {
-                def javaHome
-                javaHome = tool 'oracle-jdk8-latest'
                 script {
 
                     sh 'echo "Starting codewind-eclipse build..."'
-                    sh 'export JAVA_HOME=${javaHome}'
-                    sh 'export PATH=$JAVA_HOME/bin:$PATH'
                         
                     def sys_info = sh(script: "uname -a", returnStdout: true).trim()
                     println("System information: ${sys_info}")
+                    
+                    sh '''
+                        java -version
+                    '''
                         
-                      dir('dev') { sh './gradlew' }
+                     dir('dev') { sh './gradlew' }
                 }
             }
         }        

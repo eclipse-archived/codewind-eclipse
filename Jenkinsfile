@@ -32,15 +32,11 @@ pipeline {
     }
     
     stages {
-	    def javaHome
-	    
-	    stage('Preparation') {
-	        cleanWs()
-	        javaHome = tool 'oracle-jdk8-latest'
-	    }
-	    
+
         stage('Build') {
             steps {
+                def javaHome
+                javaHome = tool 'oracle-jdk8-latest'
                 script {
 
                     sh 'echo "Starting codewind-eclipse build..."'

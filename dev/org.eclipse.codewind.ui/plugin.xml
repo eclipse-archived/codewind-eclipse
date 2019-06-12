@@ -144,7 +144,7 @@
 				id="org.eclipse.codewind.ui.openApplication"
 				enablesFor="1"
 				menubarPath="group.open"
-				icon="%OPEN_BROWSER_ICON_PATH"
+				icon="%OPEN_APP_ICON_PATH"
 				label="%ACTION_OPEN_APP"
 				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction"/>
 			<action
@@ -237,6 +237,14 @@
 				toolbarPath="group.top" 
 				icon="%DEBUG_ICON_PATH"
 				class="org.eclipse.codewind.ui.internal.actions.RestartDebugModeAction">
+			</action>
+			<action
+				id="org.eclipse.codewind.ui.openApplication"
+				label="%ACTION_OPEN_APP"
+				menubarPath="group.open"
+				toolbarPath="group.open"
+				icon="%OPEN_APP_ICON_PATH"
+				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction">
 			</action>
 		</viewContribution>
 	</extension>

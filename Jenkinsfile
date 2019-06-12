@@ -5,6 +5,8 @@ pipeline {
     
     tools {
         maven 'apache-maven-latest'
+        jdk 'jdk1.8.0-latest'
+        go 'go-latest'
     }
     
     options {
@@ -26,7 +28,6 @@ pipeline {
                     println("JAVE_HOME: ${JAVA_HOME}")
                     
                     sh '''
-                        ls -la /opt/java
                         java -version
                         which java
                     '''

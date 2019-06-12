@@ -5,7 +5,6 @@ pipeline {
     
     tools {
         maven 'apache-maven-latest'
-        jdk 'oracle-jdk8-latest'
     }
     
     options {
@@ -28,11 +27,12 @@ pipeline {
                     
                     sh '''
                         ls -la ${JAVA_HOME}
+                        export JAVA_HOME=${JAVA_HOME}/jre
                         java -version
-                        which java
+                        which java    
                     '''
-                    
-                     dir('dev') { sh './gradlew --stacktrace' }
+                    println("JAVE_HOME: ${JAVA_HOME}")
+                    dir('dev') { sh './gradlew --stacktrace' }
                 }
             }
         }        

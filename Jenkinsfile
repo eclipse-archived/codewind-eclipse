@@ -7,7 +7,7 @@ pipeline {
       label 'codewind-agent-pod'
       yaml """
       apiVersion: v1
-        kind: Pod
+      kind: Pod
         spec:
           containers:
           - name: maven

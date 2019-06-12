@@ -3,6 +3,11 @@
 pipeline {
     agent any
     
+    tools {
+        maven 'apache-maven-latest'
+        jdk 'adoptopenjdk-hotspot-jdk8-latest'
+    }
+    
     options {
         timestamps() 
         skipStagesAfterUnstable()
@@ -24,12 +29,9 @@ pipeline {
                     sh '''
                         java -version
                         which java
-                        export JAVA_HOME=/opt/java/openjdk
                     '''
                     
-                    println("JAVE_HOME: ${JAVA_HOME}")
-                    
-                     dir('dev') { sh './gradlew' }
+                     dir('dev') { sh './gradlew --stacktrace' }
                 }
             }
         }        

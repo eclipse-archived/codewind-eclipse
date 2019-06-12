@@ -63,7 +63,7 @@ public class ProjectSelectionPage extends WizardPage {
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         
         Text projectLabel = new Text(composite, SWT.READ_ONLY);
-        projectLabel.setText(Messages.SelectLanguagePageProjectTypeLabel);
+        projectLabel.setText(Messages.SelectProjectPageChooseProjectLabel);
         projectLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
         projectLabel.setBackground(composite.getBackground());
         projectLabel.setForeground(composite.getForeground());

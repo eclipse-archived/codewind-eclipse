@@ -12,9 +12,14 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
@@ -53,12 +58,20 @@ public class UnbindProjectAction extends SelectionProviderAction {
 			return;
 		}
 		
-		try {
-			app.connection.requestProjectUnbind(app.projectID);
-		} catch (Exception e) {
-			Logger.logError("Error requesting application remove: " + app.name, e); //$NON-NLS-1$
-			CoreUtil.openDialog(true, NLS.bind(Messages.UnbindActionError, app.name), e.getMessage());
-			return;
+		if (CoreUtil.openConfirmDialog(Messages.UnbindActionTitle, NLS.bind(Messages.UnbindActionMessage, app.name))) {
+			Job job = new Job(NLS.bind(Messages.UnbindActionJobTitle, app.name)) {
+    			@Override
+    			protected IStatus run(IProgressMonitor monitor) {
+    				try {
+    					app.connection.requestProjectUnbind(app.projectID);
+    					return Status.OK_STATUS;
+    				} catch (Exception e) {
+    					Logger.logError("Error requesting application remove: " + app.name, e); //$NON-NLS-1$
+    					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.UnbindActionError, app.name), e);
+    				}
+    			}
+    		};
+    		job.schedule();
 		}
 	}
 }

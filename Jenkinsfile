@@ -5,8 +5,8 @@ pipeline {
     
     tools {
         maven 'apache-maven-latest'
-        jdk 'jdk1.8.0-latest'
-        go 'go-latest'
+        jdk 'oracle-jdk8-latest'
+        gradle 'gradle-latest'
     }
     
     options {
@@ -30,6 +30,9 @@ pipeline {
                     sh '''
                         java -version
                         which java
+                        gradle -version
+                        which gradle
+                        mvn -version
                     '''
                     
                      dir('dev') { sh './gradlew --stacktrace' }

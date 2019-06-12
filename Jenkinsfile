@@ -5,7 +5,6 @@ pipeline {
     
     tools {
         maven 'apache-maven-latest'
-        jdk 'adoptopenjdk-hotspot-jdk8-latest'
     }
     
     options {

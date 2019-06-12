@@ -27,9 +27,9 @@ pipeline {
                     println("JAVE_HOME: ${JAVA_HOME}")
                     
                     sh '''
+                        ls -la ${JAVA_HOME}
                         java -version
                         which java
-                        mvn -version
                     '''
                     
                      dir('dev') { sh './gradlew --stacktrace' }

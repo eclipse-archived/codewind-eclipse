@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-public class LanguageSelectionPage extends WizardPage {
+public class ProjectTypeSelectionPage extends WizardPage {
 
 	private CodewindConnection connection = null;
 	private IProject project = null;
@@ -39,10 +39,10 @@ public class LanguageSelectionPage extends WizardPage {
 	private Text typeLabel = null;
 	private Table typeTable = null;
 
-	protected LanguageSelectionPage(CodewindConnection connection, IProject project) {
-		super(Messages.SelectLanguagePageName);
-		setTitle(Messages.SelectLanguagePageTitle);
-		setDescription(Messages.SelectLanguagePageDescription);
+	protected ProjectTypeSelectionPage(CodewindConnection connection, IProject project) {
+		super(Messages.SelectProjectTypePageName);
+		setTitle(Messages.SelectProjectTypePageTitle);
+		setDescription(Messages.SelectProjectTypePageDescription);
 		this.connection = connection;
 		this.project = project;
 	}
@@ -56,19 +56,9 @@ public class LanguageSelectionPage extends WizardPage {
         layout.verticalSpacing = 7;
         composite.setLayout(layout);
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-        languageLabel = new Text(composite, SWT.READ_ONLY);
-        languageLabel.setText(Messages.SelectLanguagePageLanguageLabel);
-        languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-        languageLabel.setBackground(composite.getBackground());
-        languageLabel.setForeground(composite.getForeground());
         
-        languageTable = new Table (composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-    	fillLanguageTable(languageTable);
-    	languageTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-    	
         typeLabel = new Text(composite, SWT.READ_ONLY);
-        typeLabel.setText(Messages.SelectLanguagePageProjectTypeLabel);
+        typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
         typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
         typeLabel.setBackground(composite.getBackground());
         typeLabel.setForeground(composite.getForeground());
@@ -76,38 +66,16 @@ public class LanguageSelectionPage extends WizardPage {
         typeTable = new Table(composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
         fillTypeTable(typeTable);
         typeTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-    	
-    	languageTable.addListener(SWT.Selection, event -> {
-    		TableItem item = null;
-    		if (event.detail == SWT.CHECK) {
-				item = (TableItem)event.item;
-				if (item.getChecked()) {
-					for (TableItem it : languageTable.getItems()) {
-						if (it != item) {
-							it.setChecked(false);
-						}
-					}
-				}
-			} else {
-				item = (TableItem)event.item;
-				item.setChecked(!item.getChecked());
-			}
-    		if (item != null && item.getChecked()) {
-    			language = (ProjectLanguage)item.getData();
-    			if (language == ProjectLanguage.LANGUAGE_JAVA) {
-		        	typeLabel.setVisible(true);
-		        	typeTable.setVisible(true);
-    			} else {
-    				typeLabel.setVisible(false);
-    				typeTable.setVisible(false);
-    			}
-	        } else {
-	        	language = null;
-	        	typeLabel.setVisible(false);
-				typeTable.setVisible(false);
-	        }
-    		getWizard().getContainer().updateButtons();
-    	});
+
+        languageLabel = new Text(composite, SWT.READ_ONLY);
+        languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
+        languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+        languageLabel.setBackground(composite.getBackground());
+        languageLabel.setForeground(composite.getForeground());
+        
+        languageTable = new Table (composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+    	fillLanguageTable(languageTable);
+    	languageTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
     	
     	typeTable.addListener(SWT.Selection, event -> {
     		TableItem item = null;
@@ -126,18 +94,50 @@ public class LanguageSelectionPage extends WizardPage {
 			}
     		if (item != null && item.getChecked()) {
     			type = (ProjectType)item.getData();
+    			if (type == ProjectType.TYPE_DOCKER) {
+    				languageLabel.setVisible(true);
+    				languageTable.setVisible(true);
+    			} else {
+    				languageLabel.setVisible(false);
+    				languageTable.setVisible(false);
+    			}
 	        } else {
 	        	type = null;
+	        	languageLabel.setVisible(false);
+				languageTable.setVisible(false);
 	        }
     		getWizard().getContainer().updateButtons();
     	});
 
-    	typeLabel.setVisible(false);
-    	typeTable.setVisible(false);
+    	languageTable.addListener(SWT.Selection, event -> {
+    		TableItem item = null;
+    		if (event.detail == SWT.CHECK) {
+				item = (TableItem)event.item;
+				if (item.getChecked()) {
+					for (TableItem it : languageTable.getItems()) {
+						if (it != item) {
+							it.setChecked(false);
+						}
+					}
+				}
+			} else {
+				item = (TableItem)event.item;
+				item.setChecked(!item.getChecked());
+			}
+    		if (item != null && item.getChecked()) {
+    			language = (ProjectLanguage)item.getData();
+	        } else {
+	        	language = null;
+	        }
+    		getWizard().getContainer().updateButtons();
+    	});
+ 
+    	languageLabel.setVisible(false);
+    	languageTable.setVisible(false);
 
     	updateTables();
 
-    	languageTable.setFocus();
+    	typeTable.setFocus();
 		setControl(composite);
 	}
 	
@@ -151,11 +151,8 @@ public class LanguageSelectionPage extends WizardPage {
 	}
 	
 	public boolean canFinish() {
-		if (language == null || language == ProjectLanguage.LANGUAGE_UNKNOWN) {
+		if (type == null || type == ProjectType.TYPE_UNKNOWN) {
 			return false;
-		}
-		if (language == ProjectLanguage.LANGUAGE_JAVA) {
-			return type != null;
 		}
 		return true;
 	}
@@ -191,7 +188,13 @@ public class LanguageSelectionPage extends WizardPage {
 		item.setText(ProjectType.TYPE_SPRING.getDisplayName());
 		item.setData(ProjectType.TYPE_SPRING);
 		item = new TableItem(typeTable, SWT.NONE);
-		item.setText("Other");
+		item.setText(ProjectType.TYPE_NODEJS.getDisplayName());
+		item.setData(ProjectType.TYPE_NODEJS);
+		item = new TableItem(typeTable, SWT.NONE);
+		item.setText(ProjectType.TYPE_SWIFT.getDisplayName());
+		item.setData(ProjectType.TYPE_SWIFT);
+		item = new TableItem(typeTable, SWT.NONE);
+		item.setText(ProjectType.TYPE_DOCKER.getDisplayName());
 		item.setData(ProjectType.TYPE_DOCKER);
 	}
 	
@@ -204,39 +207,45 @@ public class LanguageSelectionPage extends WizardPage {
 		return connection;
 	}
 	
-	public ProjectLanguage getLanguage() {
-		return language;
-	}
-	
 	public ProjectType getType() {
-		if (type != null) {
-			return type;
-		}
-		if (language == ProjectLanguage.LANGUAGE_NODEJS) {
-			return ProjectType.TYPE_NODEJS;
-		}
-		if (language == ProjectLanguage.LANGUAGE_SWIFT) {
-			return ProjectType.TYPE_SWIFT;
-		}
-        return ProjectType.TYPE_DOCKER;
+		// Type should not be null since the page cannot finish until a type is selected
+		return type;
 	}
 	
+	public ProjectLanguage getLanguage() {
+		// Type should not be null since the page cannot finish until a type is selected
+		switch(type) {
+			case TYPE_LIBERTY:
+			case TYPE_SPRING:
+				return ProjectLanguage.LANGUAGE_JAVA;
+			case TYPE_NODEJS:
+				return ProjectLanguage.LANGUAGE_NODEJS;
+			case TYPE_SWIFT:
+				return ProjectLanguage.LANGUAGE_SWIFT;
+			default:
+				if (language == null) {
+					return ProjectLanguage.LANGUAGE_UNKNOWN;
+				}
+				return language;
+		}
+	}
+
 	private void updateTables() {
 		ProjectInfo projectInfo = getProjectInfo();
 		if (projectInfo != null) {
-			language = projectInfo.language;
 			type = projectInfo.type;
-			TableItem item = getItem(languageTable, language);
+			language = projectInfo.language;
+			TableItem item = getItem(typeTable, type);
 			if (item != null) {
 				item.setChecked(true);
 			}
-			if (language == ProjectLanguage.LANGUAGE_JAVA) {
-				item = getItem(typeTable, type);
+			if (type == ProjectType.TYPE_DOCKER) {
+				item = getItem(languageTable, language);
 				if (item != null) {
 					item.setChecked(true);
-					typeLabel.setVisible(true);
-					typeTable.setVisible(true);
 				}
+				languageLabel.setVisible(true);
+				languageTable.setVisible(true);
 			}
 		}
 	}

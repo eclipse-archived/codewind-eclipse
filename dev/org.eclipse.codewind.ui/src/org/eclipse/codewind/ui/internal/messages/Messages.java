@@ -84,17 +84,17 @@ public class Messages extends NLS {
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
 	
-	public static String SelectLanguagePageName;
-	public static String SelectLanguagePageTitle;
-	public static String SelectLanguagePageDescription;
-	public static String SelectLanguagePageLanguageLabel;
-	public static String SelectLanguagePageProjectTypeLabel;
-	public static String SelectProjectPageFilterText;
+	public static String SelectProjectTypePageName;
+	public static String SelectProjectTypePageTitle;
+	public static String SelectProjectTypePageDescription;
+	public static String SelectProjectTypePageProjectTypeLabel;
+	public static String SelectProjectTypePageLanguageLabel;
 	
 	public static String SelectProjectPageName;
 	public static String SelectProjectPageTitle;
 	public static String SelectProjectPageDescription;
 	public static String SelectProjectPageChooseProjectLabel;
+	public static String SelectProjectPageFilterText;
 	
 	public static String RestartInDebugMode;
 	public static String RestartInRunMode;

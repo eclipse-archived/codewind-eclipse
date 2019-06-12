@@ -29,7 +29,7 @@ import org.eclipse.ui.IWorkbench;
 public class BindProjectWizard extends Wizard implements INewWizard {
 
 	private ProjectSelectionPage projectPage;
-	private LanguageSelectionPage languagePage;
+	private ProjectTypeSelectionPage projectTypePage;
 	
 	private final CodewindConnection connection;
 	private IProject project = null;
@@ -67,13 +67,13 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectPage = new ProjectSelectionPage(this, connection);
 			addPage(projectPage);
 		}
-		languagePage = new LanguageSelectionPage(connection, project);
-		addPage(languagePage);
+		projectTypePage = new ProjectTypeSelectionPage(connection, project);
+		addPage(projectTypePage);
 	}
 
 	@Override
 	public boolean canFinish() {
-		boolean canFinish = languagePage.canFinish();
+		boolean canFinish = projectTypePage.canFinish();
 		if (projectPage != null) {
 			canFinish &= projectPage.canFinish();
 		}
@@ -99,7 +99,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), languagePage.getLanguage().getId(), languagePage.getType().getId());
+					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), projectTypePage.getLanguage().getId(), projectTypePage.getType().getId());
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e); //$NON-NLS-1$
@@ -113,8 +113,8 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	}
 	
 	public void setProject(IProject project) {
-		if (languagePage != null) {
-			languagePage.setProject(project);
+		if (projectTypePage != null) {
+			projectTypePage.setProject(project);
 		}
 	}
 }

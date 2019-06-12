@@ -26,8 +26,7 @@ pipeline {
                     println("JAVE_HOME: ${JAVA_HOME}")
                     
                     sh '''
-                        ls -la /opt/tools
-                        ls -la /opt/tools/java
+                        ls -la /opt/java
                         java -version
                         which java
                     '''

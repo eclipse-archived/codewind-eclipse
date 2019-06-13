@@ -45,8 +45,8 @@ pipeline {
               println("Deploying codewind-eclipse...")
               sh '''
               		ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
-           			  ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
-           			  scp -r /home/jenkins/workspace/ewind-eclipse_enableJenkinsBuild/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
+           			ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
+         			scp -r /home/jenkins/workspace/ewind-eclipse_enableJenkinsBuild/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
               '''
             }
           }

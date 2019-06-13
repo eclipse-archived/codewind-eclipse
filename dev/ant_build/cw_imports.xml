@@ -159,6 +159,38 @@
             </copy> -->
 
     </target>
+	
+	  
+	
+	<target name="eclipse.signfeaturejars">
+		<echo message="Signing ${focusedJar}"/>
+		
+		<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
+    		<arg value="--output"/>
+    	    <arg value="${sourceDir}/features/${filename}"/>
+    	    <arg value="--form"/>
+    	    <arg value="file=@${filename}"/>
+    	    <arg value="--silent"/>
+    	    <arg value="--show-error"/>
+    	    <arg value="--fail"/>
+    	    <arg value="http://build.eclipse.org:31338/sign"/>
+	   	</exec>
+	</target>
+	
+	<target name="eclipse.signpluginjars">
+		<echo message="Signing ${focusedJar}"/>
+		
+		<exec dir="${local.workspace}/tools.image/update/plugins" executable="curl">
+    		<arg value="--output"/>
+    	    <arg value="${sourceDir}/plugins/${filename}"/>
+    	    <arg value="--form"/>
+    	    <arg value="file=@${filename}"/>
+    	    <arg value="--silent"/>
+    	    <arg value="--show-error"/>
+    	    <arg value="--fail"/>
+    	    <arg value="http://build.eclipse.org:31338/sign"/>
+	   	</exec>		
+	</target>
 
     <target name="generateCWSuppliersUpdateSiteRestore" depends="setCWUpdateSiteProperties">
 
@@ -168,6 +200,7 @@
             <mkdir dir="${sourceDir}/features"/>
 
             <!-- Copy build (signed if disable.run.signjar=false) result content -->
+    		<!--
                 <copy todir="${sourceDir}/features" overwrite="true" verbose="true">
                     <fileset dir="${local.workspace}/tools.image/update/features">
                         <include name="**/*.jar"/>
@@ -179,7 +212,19 @@
                         <include name="**/*.jar"/>
                     </fileset>
                 </copy>
-
+			-->
+    		<foreach target="eclipse.signfeaturejars" param="focusedJar">
+    			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
+    		    	<include name="**/*.jar"/>
+    		    </fileset>
+    		</foreach>
+    	
+    		<foreach target="eclipse.signpluginjars" param="focusedJar">
+    	    	<fileset dir="${local.workspace}/tools.image/update/plugins" casesensitive="yes">
+    	    		<include name="**/*.jar"/>
+    	    	</fileset>
+    	   	</foreach>
+    		
             <!-- copy com.ibm.ws.kernel.feature.resolver_*.jar into suppliers dir  -->
             <!-- <move todir="${sourceDir}/suppliers/update-site/plugins" overwrite="true" verbose="true">
                 <fileset dir="${local.workspace}/tools.image/update/plugins">

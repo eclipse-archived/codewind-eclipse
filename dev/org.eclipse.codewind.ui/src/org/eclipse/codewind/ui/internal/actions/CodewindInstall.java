@@ -34,21 +34,16 @@ import org.eclipse.swt.widgets.Shell;
 
 
 public class CodewindInstall {
-	
-	private static final String CODEWIND_NOT_INSTALLED = "Codewind is not installed";
-	
+		
 	public static boolean isCodewindInstalled() throws InvocationTargetException {
 						
 			try {
 				ProcessResult result = InstallUtil.statusCodewind();
 
-				String resultOutput = result.getOutput().replace("\n", "").replace("\r", "");		
-				String isCodewindInstalled = resultOutput;
-					
-				if (isCodewindInstalled.equals(CODEWIND_NOT_INSTALLED)) {
-					return true;
-				} else {
+				if (result.getExitValue() == 0) {
 					return false;
+				} else {
+					return true;
 				}
 				
 			} catch (IOException e) {
@@ -121,7 +116,7 @@ public class CodewindInstall {
 	public static void startingCodewind() { 
 
 		try {
-			Job job = new Job(Messages.StartingCodewindJobLabel) {
+			Job job = new Job(Messages.InstalledCodewindJobLabel) {
 			    @Override
 				protected IStatus run(IProgressMonitor monitor) {
 
@@ -133,14 +128,12 @@ public class CodewindInstall {
 							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "There was a problem trying to start Codewind: " + result.getError());
 						}
 						
-						if (result.getExitValue() == 0) {
-							Display.getDefault().asyncExec(new Runnable() {
-					               public void run() {
-					            	   promptUserAfterInstall();
-					               }
-					            });
-						}
-						
+						Display.getDefault().asyncExec(new Runnable() {
+							public void run() {
+								promptUserAfterInstall();
+					        }
+					    });
+					 
 					} catch (IOException e) {
 						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "An error occurred trying to start Codewind.", e);
 					} catch (TimeoutException e) {

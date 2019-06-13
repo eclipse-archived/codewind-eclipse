@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.PlatformUtil.OperatingSystem;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -50,7 +51,7 @@ public class InstallUtil {
 	private static final String REMOVE_CMD = "remove";
 	
 	public static ProcessResult startCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
-		SubMonitor mon = SubMonitor.convert(monitor, "Starting Codewind", 100);
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.StartCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			process = runInstaller(START_CMD);
@@ -64,7 +65,7 @@ public class InstallUtil {
 	}
 	
 	public static ProcessResult stopCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
-		SubMonitor mon = SubMonitor.convert(monitor, "Stopping Codewind", 100);
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
 		    process = runInstaller(STOP_ALL_CMD);
@@ -78,7 +79,7 @@ public class InstallUtil {
 	}
 	
 	public static ProcessResult installCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
-		SubMonitor mon = SubMonitor.convert(monitor, "Installing Codewind", 100);
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.InstallCodewindJobLabel, 100);
 		Process process = null;
 		try {
 		    process = runInstaller(INSTALL_DEV_CMD);
@@ -92,7 +93,7 @@ public class InstallUtil {
 	}
 	
 	public static ProcessResult removeCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
-		SubMonitor mon = SubMonitor.convert(monitor, "Removing Codewind docker images", 100);
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.RemovingCodewindJobLabel, 100);
 		Process process = null;
 		try {
 		    process = runInstaller(REMOVE_CMD);

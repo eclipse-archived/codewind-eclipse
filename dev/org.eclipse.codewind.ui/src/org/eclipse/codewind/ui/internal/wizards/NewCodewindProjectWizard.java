@@ -66,7 +66,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 	    Shell result = display.getActiveShell();
 
 		try {
-			if (!CodewindInstall.isCodewindInstalled()) {
+			if (CodewindInstall.isCodewindInstalled()) {
 				 setWindowTitle(Messages.NewProjectPage_ShellTitle);
 				 newProjectPage = new NewCodewindProjectPage(connection, templateList);
 				 addPage(newProjectPage);

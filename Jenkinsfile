@@ -1,11 +1,33 @@
 #!groovy​
 
 pipeline {
-    agent any
+    agent {
+    
+      kubernetes {        
+        label 'codewind-agent-pod'
+        yaml """
+        apiVersion: v1
+        kind: Pod
+        spec:
+        containers:
+            - name: fedora
+              image: eclipsecbi/ufedora-gtk3-mutter:29-gtk3.24
+              command:
+              - cat
+              tty: true
+              resources:
+                limits:
+                  memory: "2Gi"
+                  cpu: "1"
+                requests:
+                  memory: "2Gi"
+                  cpu: "1"
+          """
+      }
+    }
     
     tools {
         maven 'apache-maven-latest'
-        gradle 'gradle-latest'
         jdk 'oracle-jdk8-latest'
     }
     
@@ -28,10 +50,9 @@ pipeline {
                     sh '''
                         java -version
                         which java    
-                        gradle --version
-                        which gradle
+                        mvn -v
                     '''
-                    dir('dev') { sh './gradle --stacktrace' }
+                    dir('dev') { sh './gradlew --stacktrace' }
                 }
             }
         }        

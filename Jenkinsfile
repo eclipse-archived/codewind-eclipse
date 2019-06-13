@@ -50,7 +50,6 @@ pipeline {
                     sh '''
                         java -version
                         which java    
-                        mvn -v
                     '''
                     dir('dev') { sh './gradlew --stacktrace' }
                 }

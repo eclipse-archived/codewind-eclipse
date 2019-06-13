@@ -196,9 +196,6 @@
 
             <echo>Call generateCWSuppliersUpdateSiteRestore...</echo>
 
-            <mkdir dir="${local.workspace}/tools.image/update/features"/>
-            <mkdir dir="${sourceDir}/features"/>
-
             <!-- Copy build (signed if disable.run.signjar=false) result content -->
     		<!--
                 <copy todir="${sourceDir}/features" overwrite="true" verbose="true">
@@ -213,18 +210,19 @@
                     </fileset>
                 </copy>
 			-->
-    		<for param="focusedJar">
+    		<for param="focusedFilePath">
     			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
     		    	<include name="**/*.jar"/>
     		    </fileset>
     			<sequential>
-    				<echo message="Signing @{focusedJar}"/>
-    						
+    				<propertyregex override="yes" property="focusedFile" input="@{focusedFilePath}" regexp=".:\\.+\\(\w+).+" replace="\1"/>
+
+    				<echo message="Signing ${focusedFile}"/>
     						<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
     				    		<arg value="--output"/>
-    				    	    <arg value="${sourceDir}/features/@{focusedJar}"/>
+    				    	    <arg value="${local.workspace}/tools.image/update/features/${focusedFile}"/>
     				    	    <arg value="--form"/>
-    				    	    <arg value="file=@{focusedJar}"/>
+    				    	    <arg value="file=@${focusedFile}"/>
     				    	    <arg value="--silent"/>
     				    	    <arg value="--show-error"/>
     				    	    <arg value="--fail"/>

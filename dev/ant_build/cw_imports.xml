@@ -213,18 +213,26 @@
                     </fileset>
                 </copy>
 			-->
-    		<foreach target="eclipse.signfeaturejars" param="focusedJar">
+    		<for param="focusedJar">
     			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
     		    	<include name="**/*.jar"/>
     		    </fileset>
-    		</foreach>
+    			<sequential>
+    				<echo message="Signing @{focusedJar}"/>
+    						
+    						<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
+    				    		<arg value="--output"/>
+    				    	    <arg value="${sourceDir}/features/@{focusedJar}"/>
+    				    	    <arg value="--form"/>
+    				    	    <arg value="file=@{focusedJar}"/>
+    				    	    <arg value="--silent"/>
+    				    	    <arg value="--show-error"/>
+    				    	    <arg value="--fail"/>
+    				    	    <arg value="http://build.eclipse.org:31338/sign"/>
+    					   	</exec>
+    			</sequential>
+    		</for>
     	
-    		<foreach target="eclipse.signpluginjars" param="focusedJar">
-    	    	<fileset dir="${local.workspace}/tools.image/update/plugins" casesensitive="yes">
-    	    		<include name="**/*.jar"/>
-    	    	</fileset>
-    	   	</foreach>
-    		
             <!-- copy com.ibm.ws.kernel.feature.resolver_*.jar into suppliers dir  -->
             <!-- <move todir="${sourceDir}/suppliers/update-site/plugins" overwrite="true" verbose="true">
                 <fileset dir="${local.workspace}/tools.image/update/plugins">

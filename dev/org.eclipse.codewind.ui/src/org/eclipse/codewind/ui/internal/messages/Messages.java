@@ -78,6 +78,14 @@ public class Messages extends NLS {
 	public static String UnbindActionJobTitle;
 	public static String UnbindActionError;
 	
+	public static String InstallCodewindJobLabel;
+	public static String StartingCodewindJobLabel;
+	public static String RemovingCodewindJobLabel;
+	public static String InstalledCodewindJobLabel;
+	public static String InstallCodewindDialogTitle;
+	public static String InstallCodewindDialogMessage;
+	public static String InstallCodewindAfterDialogMessage;
+	
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;
 	public static String BindProjectAlreadyExistsError;

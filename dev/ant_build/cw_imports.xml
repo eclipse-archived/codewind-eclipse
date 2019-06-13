@@ -213,17 +213,17 @@
                     </fileset>
                 </copy>
 			-->
-    		<foreach param="focusedJar">
+    		<contrib:foreach target="eclipse.signfeaturejars" param="focusedJar">
     			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
     		    	<include name="**/*.jar"/>
     		    </fileset>
-    		</foreach>
+    		</contrib:foreach>
     	
-    		<foreach param="focusedJar">
+    		<contrib:foreach target="eclipse.signpluginjars" param="focusedJar">
     	    	<fileset dir="${local.workspace}/tools.image/update/plugins" casesensitive="yes">
     	    		<include name="**/*.jar"/>
     	    	</fileset>
-    	   	</foreach>
+    	   	</contrib:foreach>
     		
             <!-- copy com.ibm.ws.kernel.feature.resolver_*.jar into suppliers dir  -->
             <!-- <move todir="${sourceDir}/suppliers/update-site/plugins" overwrite="true" verbose="true">

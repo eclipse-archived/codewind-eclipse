@@ -210,19 +210,19 @@
                     </fileset>
                 </copy>
 			-->
-    		<for param="focusedFilePath">
+    		<for param="feature.path">
     			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
     		    	<include name="**/*.jar"/>
     		    </fileset>
     			<sequential>
-    				<propertyregex override="yes" property="focusedFile" input="@{focusedFilePath}" regexp=".:\\.+\\(\w+).+" replace="\1"/>
+    				<propertyregex override="true" property="feature.file" input="@{feature.path}" regexp="([^/]+)$"  replace="\0"/>
 
-    				<echo message="Signing ${focusedFile}"/>
+    				<echo message="Signing ${feature.file}"/>
     						<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
     				    		<arg value="--output"/>
-    				    	    <arg value="${local.workspace}/tools.image/update/features/${focusedFile}"/>
+    				    	    <arg value="${local.workspace}/tools.image/update/features/${feature.file}"/>
     				    	    <arg value="--form"/>
-    				    	    <arg value="file=@${focusedFile}"/>
+    				    	    <arg value="file=@${feature.file}"/>
     				    	    <arg value="--silent"/>
     				    	    <arg value="--show-error"/>
     				    	    <arg value="--fail"/>
@@ -230,6 +230,28 @@
     					   	</exec>
     			</sequential>
     		</for>
+    	
+			<for param="plugin.path">
+				<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
+			    	<include name="**/*.jar"/>
+			    </fileset>
+				<sequential>
+					<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  replace="\0"/>
+	
+					<echo message="Signing ${plugin.file}"/>
+							<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
+					    		<arg value="--output"/>
+					    	    <arg value="${local.workspace}/tools.image/update/features/${plugin.file}"/>
+					    	    <arg value="--form"/>
+					    	    <arg value="file=@${plugin.file}"/>
+					    	    <arg value="--silent"/>
+					    	    <arg value="--show-error"/>
+					    	    <arg value="--fail"/>
+					    	    <arg value="http://build.eclipse.org:31338/sign"/>
+						   	</exec>
+				</sequential>
+			</for>
+    	
     	
             <!-- copy com.ibm.ws.kernel.feature.resolver_*.jar into suppliers dir  -->
             <!-- <move todir="${sourceDir}/suppliers/update-site/plugins" overwrite="true" verbose="true">

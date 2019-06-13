@@ -309,16 +309,23 @@ public class CodewindConnection {
 		}
 	}
 
-	public CodewindApplication removeApp(String projectID) {
+	public void removeApp(String projectID) {
+		CodewindApplication app = null;
 		synchronized(appMap) {
-			return appMap.remove(projectID);
+			app = appMap.remove(projectID);
+		}
+		if (app != null) {
+			CoreUtil.removeApplication(app);
+			app.dispose();
+		} else {
+			Logger.logError("No application found for project being deleted: " + projectID); //$NON-NLS-1$
 		}
 	}
 
 	/**
 	 * @return The app with the given ID, if it exists in this Codewind instance, else null.
 	 */
-	public synchronized CodewindApplication getAppByID(String projectID) {
+	public CodewindApplication getAppByID(String projectID) {
 		synchronized(appMap) {
 			return appMap.get(projectID);
 		}

@@ -403,13 +403,7 @@ public class CodewindSocket {
 
 	private void onProjectDeletion(JSONObject event) throws JSONException {
 		String projectID = event.getString(CoreConstants.KEY_PROJECT_ID);
-		CodewindApplication app = connection.removeApp(projectID);
-		if (app == null) {
-			Logger.logError("No application found for project being deleted: " + projectID); //$NON-NLS-1$
-			return;
-		}
-		CoreUtil.removeApplication(app);
-		app.dispose();
+		connection.removeApp(projectID);
 	}
 
 	public void registerSocketConsole(SocketConsole console) {

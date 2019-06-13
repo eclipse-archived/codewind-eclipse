@@ -79,12 +79,7 @@ public class CodewindApplicationFactory {
 			if (projectID == null) {
 				for (String id : connection.getAppIds()) {
 					if (!idSet.contains(id)) {
-						CodewindApplication app = connection.getAppByID(id);
 						connection.removeApp(id);
-						if (app != null) {
-							CoreUtil.removeApplication(app);
-							app.dispose();
-						}
 					}
 				}
 			}

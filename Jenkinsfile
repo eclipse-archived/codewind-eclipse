@@ -4,6 +4,7 @@ pipeline {
     agent any
     
     tools {
+    	ant 'apache-ant-latest'
         maven 'apache-maven-latest'
         jdk 'oracle-jdk8-latest'
     }

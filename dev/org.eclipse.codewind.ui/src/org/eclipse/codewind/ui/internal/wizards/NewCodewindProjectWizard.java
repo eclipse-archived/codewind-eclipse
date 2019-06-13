@@ -91,29 +91,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					newConnection.requestProjectCreate(info, name);
-					ProjectLanguage language = ProjectLanguage.getLanguage(info.getLanguage());
-					String type = null;
-					switch(language) {
-						case LANGUAGE_JAVA:
-							if (info.getLabel().toLowerCase().contains("spring")) {
-								type = "spring";
-							} else if (info.getLabel().toLowerCase().contains("microprofile")) {
-								type = "liberty";
-							} else {
-								type = "docker";
-							}
-							break;
-						case LANGUAGE_NODEJS:
-							type = "nodejs";
-							break;
-						case LANGUAGE_SWIFT:
-							type = "swift";
-							break;
-						default:
-							type = "docker";
-							break;
-					}
-					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
+					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), info.getProjectType());
 					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}

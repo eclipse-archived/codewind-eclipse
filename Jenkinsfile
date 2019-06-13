@@ -30,6 +30,7 @@ pipeline {
                         ls -la ${JAVA_HOME}
                         java -version
                         which java    
+                        ant -version
                     '''
                     println("JAVE_HOME: ${JAVA_HOME}")
                     dir('dev') { sh './gradlew --stacktrace' }

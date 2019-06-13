@@ -1,30 +1,7 @@
 #!groovy​
 
 pipeline {
-    agent {
-    
-      kubernetes {        
-        label 'codewind-agent-pod'
-        yaml """
-        apiVersion: v1
-        kind: Pod
-        spec:
-        containers:
-            - name: fedora
-              image: eclipsecbi/fedora-gtk3-mutter:29-gtk3.24
-              command:
-              - cat
-              tty: true
-              resources:
-                limits:
-                  memory: "2Gi"
-                  cpu: "1"
-                requests:
-                  memory: "2Gi"
-                  cpu: "1"
-          """
-      }
-    }
+    agent any
     
     tools {
         maven 'apache-maven-latest'
@@ -46,14 +23,32 @@ pipeline {
                         
                     def sys_info = sh(script: "uname -a", returnStdout: true).trim()
                     println("System information: ${sys_info}")
-                    println("JAVE_HOME: ${JAVA_HOME}")                   
+                    
+                    println("JAVE_HOME: ${JAVA_HOME}")
+                    
                     sh '''
+                        ls -la ${JAVA_HOME}
                         java -version
                         which java    
                     '''
+                    println("JAVE_HOME: ${JAVA_HOME}")
                     dir('dev') { sh './gradlew --stacktrace' }
+ 
+ 					
                 }
             }
-        }        
+        } 
+        
+        stage("Deploy") {
+            steps {
+                script {
+                    println("Deploying codewind-eclipse...")
+                    sh '''
+ 					              ssh codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
+           			        ssh codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
+           			        scp -r /home/jenkins/workspace/ewind-eclipse_enableJenkinsBuild/dev/ant_build/artifacts/* codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/snapshots
+           			    '''
+            }
+        }       
     }    
 }

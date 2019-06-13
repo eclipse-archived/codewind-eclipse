@@ -213,13 +213,13 @@
                     </fileset>
                 </copy>
 			-->
-    		<foreach target="eclipse.signfeaturejars" param="focusedJar">
+    		<foreach param="focusedJar">
     			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
     		    	<include name="**/*.jar"/>
     		    </fileset>
     		</foreach>
     	
-    		<foreach target="eclipse.signpluginjars" param="focusedJar">
+    		<foreach param="focusedJar">
     	    	<fileset dir="${local.workspace}/tools.image/update/plugins" casesensitive="yes">
     	    		<include name="**/*.jar"/>
     	    	</fileset>

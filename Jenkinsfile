@@ -5,6 +5,7 @@ pipeline {
     
     tools {
         maven 'apache-maven-latest'
+        gradle 'gradle-latest'
         jdk 'oracle-jdk8-latest'
     }
     
@@ -23,16 +24,14 @@ pipeline {
                         
                     def sys_info = sh(script: "uname -a", returnStdout: true).trim()
                     println("System information: ${sys_info}")
-                    
-                    println("JAVE_HOME: ${JAVA_HOME}")
-                    
+                    println("JAVE_HOME: ${JAVA_HOME}")                   
                     sh '''
-                        ls -la ${JAVA_HOME}
                         java -version
                         which java    
+                        gradle --version
+                        which gradle
                     '''
-                    println("JAVE_HOME: ${JAVA_HOME}")
-                    dir('dev') { sh './gradlew --stacktrace' }
+                    dir('dev') { sh './gradle --stacktrace' }
                 }
             }
         }        

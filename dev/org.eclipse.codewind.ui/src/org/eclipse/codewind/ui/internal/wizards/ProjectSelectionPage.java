@@ -134,6 +134,12 @@ public class ProjectSelectionPage extends WizardPage {
 			}
         });
         
+        if (projectList.getTable().getItemCount() == 1) {
+        	Object element = projectList.getElementAt(0);
+        	projectList.setChecked(element, true);
+        	project = (IProject) element;
+        }
+
         filterText.setFocus();
         setControl(composite);
 	}

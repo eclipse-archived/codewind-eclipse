@@ -11,7 +11,7 @@ pipeline {
         spec:
         containers:
             - name: fedora
-              image: eclipsecbi/ufedora-gtk3-mutter:29-gtk3.24
+              image: eclipsecbi/fedora-gtk3-mutter:29-gtk3.24
               command:
               - cat
               tty: true

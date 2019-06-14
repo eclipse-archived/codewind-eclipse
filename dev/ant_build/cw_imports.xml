@@ -172,12 +172,11 @@
 		    	<include name="**/*.jar"/>
 		    </fileset>
 			<sequential>
-				<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  replace="\0"/>
-				<echo message="plugin.path : ${plugin.path}"/>
+				<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  replace="\2"/>
 				<echo message="Signing plugin :  ${plugin.file}"/>
 				<exec dir="${local.workspace}/tools.image/update/plugins" executable="curl">
 		    		<arg value="--output"/>
-		    	    <arg value="${local.workspace}/tools.image/update/plugins/${plugin.file}"/>
+		    	    <arg value="${plugin.file}"/>
 		    	    <arg value="--form"/>
 		    	    <arg value="file=@${plugin.file}"/>
 		    	    <arg value="--silent"/>
@@ -195,13 +194,11 @@
 		    	<include name="**/*.jar"/>
 		    </fileset>
 			<sequential>
-				<propertyregex override="true" property="feature.file" input="@{feature.path}" regexp="([^/]+)$"  replace="\0"/>
-
-				<echo message="feature.path : ${feature.path}"/>
+				<propertyregex override="true" property="feature.file" input="@{feature.path}" regexp="([^/]+)$"  replace="\2"/>
 				<echo message="Signing feature :  ${feature.file}"/>
 				<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
 		    		<arg value="--output"/>
-		    	    <arg value="${local.workspace}/tools.image/update/features/${feature.file}"/>
+		    	    <arg value="${feature.file}"/>
 		    	    <arg value="--form"/>
 		    	    <arg value="file=@${feature.file}"/>
 		    	    <arg value="--silent"/>

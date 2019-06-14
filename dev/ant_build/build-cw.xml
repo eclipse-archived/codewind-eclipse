@@ -35,7 +35,6 @@
     </target>
 
     <target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present">
-    <!--target name="createBuildLabelFile"-->
         <tstamp>
               <format property="buildLabel" pattern="yyyyMMdd_HHmm" timezone="UTC"/>
         </tstamp>
@@ -61,8 +60,7 @@
         <antcall target="cw_imports.generateCWSuppliersUpdateSiteRestore"/>
 
         <antcall target="cw_imports.generateCWUpdateSite"/>
-        <!-- <antcall target="cw_test_imports.generateCWTestUpdateSite"/> -->
-
+        
         <echo message="Delete tools.image"/>
         <delete dir="${cw_build.basedir}/tools.image" failonerror="false"/>
     </target>

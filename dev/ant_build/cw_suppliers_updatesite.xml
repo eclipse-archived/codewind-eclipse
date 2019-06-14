@@ -10,7 +10,6 @@
 -->
 
 <project name="cw_suppliers_updatesite">	
-	<!--target name="doGenerateSuppliersUpdateSite"-->
 	<target name="generateSuppliersUpdateSite">
 		
 	    	<property name="gen.suppliers.updatesite.file" location="${basedir}/resources/cw_updatesite-properties/generateSuppliersP2Metadata.xml" />

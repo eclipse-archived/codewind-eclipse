@@ -81,7 +81,7 @@
             addIncludedFeatures="false">
 
             <!-- Add Main feature here -->
-            <category name="was4d"
+            <category name="Codewind"
                 label="Codewind"
                 description="Tools for working with Codewind applications in Eclipse">
 
@@ -148,43 +148,75 @@
 
    <target name="generateCWSuppliersUpdateSite" depends="setCWUpdateSiteProperties">
 
-            <echo>Call generateCWSuppliersUpdateSite...</echo>
-            <antcall target="generateSuppliersUpdateSite"/>
+        <echo>Call generateCWSuppliersUpdateSite...</echo>
+        <antcall target="generateSuppliersUpdateSite"/>
 
-            <!-- Copy com.ibm.ws.kernel.feature.resolver_*.jar into ${local.workspace}/tools.image/update/plugins to have them signed -->
-            <!-- <copy todir="${local.workspace}/tools.image/update/plugins" overwrite="true" verbose="true">
-                <fileset dir="${sourceDir}/plugins">
-                    <include name="com.ibm.ws.kernel.feature.resolver_*.jar"/>
-                </fileset>
-            </copy> -->
-
+   		<antcall target="eclipse.sign.jars"/>
     </target>
+	
+	<target name="eclipse.sign.jars">
 
+        <echo>Call eclipse.sign.jars ...</echo>
+		<for param="plugin.path">
+			<fileset dir="${local.workspace}/tools.image/update/plugins" casesensitive="yes">
+		    	<include name="**/*.jar"/>
+		    </fileset>
+			<sequential>
+				<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  select="\1"/>
+				<echo message="Signing plugin : ${plugin.file}"/>
+				<exec dir="${local.workspace}/tools.image/update/plugins" executable="curl">
+		    		<arg value="--output"/>
+		    	    <arg value="${plugin.file}"/>
+		    	    <arg value="--form"/>
+		    	    <arg value="file=@${plugin.file}"/>
+		    	    <arg value="--silent"/>
+		    	    <arg value="--show-error"/>
+		    	    <arg value="--fail"/>
+		    	    <arg value="http://build.eclipse.org:31338/sign"/>
+			   	</exec>
+			</sequential>
+		</for>
+	
+    	<for param="feature.path">
+			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
+		    	<include name="**/*.jar"/>
+		    </fileset>
+			<sequential>
+				<propertyregex override="true" property="feature.file" input="@{feature.path}" regexp="([^/]+)$"  select="\1"/>
+				<echo message="Signing feature : ${feature.file}"/>
+				<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
+		    		<arg value="--output"/>
+		    	    <arg value="${feature.file}"/>
+		    	    <arg value="--form"/>
+		    	    <arg value="file=@${feature.file}"/>
+		    	    <arg value="--silent"/>
+		    	    <arg value="--show-error"/>
+		    	    <arg value="--fail"/>
+		    	    <arg value="http://build.eclipse.org:31338/sign"/>
+			   	</exec>
+			</sequential>
+		</for>
+
+	</target>
+	
     <target name="generateCWSuppliersUpdateSiteRestore" depends="setCWUpdateSiteProperties">
 
             <echo>Call generateCWSuppliersUpdateSiteRestore...</echo>
+		
+			<mkdir dir="${local.workspace}/tools.image/update/features"/>
+		    <mkdir dir="${sourceDir}/features"/>
 
-            <mkdir dir="${local.workspace}/tools.image/update/features"/>
-            <mkdir dir="${sourceDir}/features"/>
-
-            <!-- Copy build (signed if disable.run.signjar=false) result content -->
-                <copy todir="${sourceDir}/features" overwrite="true" verbose="true">
-                    <fileset dir="${local.workspace}/tools.image/update/features">
-                        <include name="**/*.jar"/>
-                    </fileset>
-                </copy>
-
-                <copy todir="${sourceDir}/plugins" overwrite="true" verbose="true">
-                    <fileset dir="${local.workspace}/tools.image/update/plugins">
-                        <include name="**/*.jar"/>
-                    </fileset>
-                </copy>
-
-            <!-- copy com.ibm.ws.kernel.feature.resolver_*.jar into suppliers dir  -->
-            <!-- <move todir="${sourceDir}/suppliers/update-site/plugins" overwrite="true" verbose="true">
-                <fileset dir="${local.workspace}/tools.image/update/plugins">
-                    <include name="com.ibm.ws.kernel.feature.resolver_*.jar"/>
+            <copy todir="${sourceDir}/features" overwrite="true" verbose="true">
+                <fileset dir="${local.workspace}/tools.image/update/features">
+                    <include name="**/*.jar"/>
                 </fileset>
-            </move> -->
+            </copy>
+
+            <copy todir="${sourceDir}/plugins" overwrite="true" verbose="true">
+                <fileset dir="${local.workspace}/tools.image/update/plugins">
+                    <include name="**/*.jar"/>
+                </fileset>
+            </copy>
+
     </target>
 </project>

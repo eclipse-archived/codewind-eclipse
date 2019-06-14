@@ -172,7 +172,7 @@
 		    	<include name="**/*.jar"/>
 		    </fileset>
 			<sequential>
-				<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  replace="\1"/>
+				<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  select="\1"/>
 				<echo message="Signing plugin :  ${plugin.file}"/>
 				<exec dir="${local.workspace}/tools.image/update/plugins" executable="curl">
 		    		<arg value="--output"/>
@@ -194,7 +194,7 @@
 		    	<include name="**/*.jar"/>
 		    </fileset>
 			<sequential>
-				<propertyregex override="true" property="feature.file" input="@{feature.path}" regexp="([^/]+)$"  replace="\1"/>
+				<propertyregex override="true" property="feature.file" input="@{feature.path}" regexp="([^/]+)$"  select="\1"/>
 				<echo message="Signing feature :  ${feature.file}"/>
 				<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
 		    		<arg value="--output"/>

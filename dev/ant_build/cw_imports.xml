@@ -165,19 +165,19 @@
 	
 	  
 	
-	<target name="eclipse.sign.features">
+	<target name="eclipse.sign.plugins">
 		
 		<for param="plugin.path">
-			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
+			<fileset dir="${local.workspace}/tools.image/update/plugins" casesensitive="yes">
 		    	<include name="**/*.jar"/>
 		    </fileset>
 			<sequential>
 				<propertyregex override="true" property="plugin.file" input="@{plugin.path}" regexp="([^/]+)$"  replace="\0"/>
 				<echo message="plugin.path : ${plugin.path}"/>
 				<echo message="Signing plugin :  ${plugin.file}"/>
-				<exec dir="${local.workspace}/tools.image/update/features" executable="curl">
+				<exec dir="${local.workspace}/tools.image/update/plugins" executable="curl">
 		    		<arg value="--output"/>
-		    	    <arg value="${local.workspace}/tools.image/update/features/${plugin.file}"/>
+		    	    <arg value="${local.workspace}/tools.image/update/plugins/${plugin.file}"/>
 		    	    <arg value="--form"/>
 		    	    <arg value="file=@${plugin.file}"/>
 		    	    <arg value="--silent"/>
@@ -189,7 +189,7 @@
 		</for>
 	</target>
 	
-	<target name="eclipse.sign.plugins">
+	<target name="eclipse.sign.features">
 		<for param="feature.path">
 			<fileset dir="${local.workspace}/tools.image/update/features" casesensitive="yes">
 		    	<include name="**/*.jar"/>

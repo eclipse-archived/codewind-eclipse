@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.ui.internal.views;
 
-import org.eclipse.codewind.ui.internal.actions.CreateConnectionAction;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.navigator.CommonNavigator;
 import org.eclipse.ui.navigator.CommonViewer;
@@ -25,7 +24,6 @@ public class CodewindExplorerView extends CommonNavigator {
 
     @Override
     protected CommonViewer createCommonViewerObject(Composite parent) {
-    	CreateConnectionAction.setupConnection();
         CommonViewer viewer = super.createCommonViewerObject(parent);
         viewer.setAutoExpandLevel(2);
         return viewer;

@@ -11,8 +11,9 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
@@ -45,7 +46,7 @@ public class RefreshAction implements IObjectActionDelegate {
         IStructuredSelection sel = (IStructuredSelection) selection;
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
-            if (obj instanceof CodewindConnection || obj instanceof CodewindApplication) {
+            if (obj instanceof CodewindManager || obj instanceof CodewindConnection || obj instanceof CodewindApplication) {
             	codewindObject = obj;
             	action.setEnabled(true);
             	return;
@@ -56,7 +57,16 @@ public class RefreshAction implements IObjectActionDelegate {
 
     @Override
     public void run(IAction action) {
-        if (codewindObject instanceof CodewindConnection) {
+    	if (codewindObject instanceof CodewindManager) {
+    		Job job = new Job(Messages.RefreshCodewindJobLabel) {
+    			@Override
+    			protected IStatus run(IProgressMonitor monitor) {
+		        	ViewHelper.refreshCodewindExplorerView(codewindObject);
+		        	return Status.OK_STATUS;
+    			}
+    		};
+    		job.schedule();
+    	} else if (codewindObject instanceof CodewindConnection) {
         	final CodewindConnection connection = (CodewindConnection) codewindObject;
         	Job job = new Job(NLS.bind(Messages.RefreshConnectionJobLabel, connection.baseUrl.toString())) {
     			@Override

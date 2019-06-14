@@ -11,13 +11,17 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import java.util.List;
-
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
+import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.navigator.CommonActionProvider;
+import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 
@@ -26,21 +30,75 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class CodewindActionProvider extends CommonActionProvider {
 	
-	private CreateConnectionAction createConnectionAction;
+	private InstallerAction installUninstallAction;
+	private InstallerAction startStopAction;
+	private CodewindDoubleClickAction doubleClickAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
-        Shell shell = aSite.getViewSite().getShell();
-        createConnectionAction = new CreateConnectionAction(shell);
+        ISelectionProvider selProvider = aSite.getStructuredViewer();
+        installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
+        startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
+        doubleClickAction = new CodewindDoubleClickAction(selProvider);
     }
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
-    	List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
-    	if (connections == null || connections.isEmpty()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, createConnectionAction);
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
+    	InstallerStatus status = CodewindManager.getManager().getInstallerStatus(false);
+    	if (status.isInstalled()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
     	}
     }
+
+	@Override
+	public void fillActionBars(IActionBars actionBars) {
+		super.fillActionBars(actionBars);
+		actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, doubleClickAction);
+	}
+
+	private static class CodewindDoubleClickAction extends SelectionProviderAction {
+		
+		CodewindManager manager = null;
+		
+		public CodewindDoubleClickAction(ISelectionProvider selectionProvider) {
+			super(selectionProvider, "");
+			selectionChanged(getStructuredSelection());
+		}
+
+		@Override
+		public void selectionChanged(IStructuredSelection sel) {
+			if (sel.size() == 1) {
+				Object obj = sel.getFirstElement();
+				if (obj instanceof CodewindManager) {
+					manager = (CodewindManager) obj;
+					return;
+				}
+			}
+			manager = null;
+		}
+
+		@Override
+		public void run() {
+			if (manager != null) {
+				InstallerStatus status = manager.getInstallerStatus(false);
+				switch(status) {
+					case NOT_INSTALLED:
+						CodewindInstall.installCodewind(null);
+						break;
+					case INSTALLED:
+						CodewindInstall.startCodewind(null);
+						break;
+					case RUNNING:
+						ViewHelper.toggleExpansion(manager);
+						break;
+					default:
+						// do nothing
+						break;
+				}
+			}
+		}
+	}
 
 }

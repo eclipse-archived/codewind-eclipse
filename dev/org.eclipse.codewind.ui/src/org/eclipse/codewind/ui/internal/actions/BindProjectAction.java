@@ -13,12 +13,13 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -132,20 +133,18 @@ public class BindProjectAction implements IObjectActionDelegate {
 	
 	
 	private CodewindConnection setupConnection() {
-		CodewindConnection connection = null;
-		List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
-		if (connections != null && !connections.isEmpty()) {
-			connection = connections.get(0);
-		} else {
-			try {
-				// Will throw an Exception if fails
-				connection = CodewindConnectionManager.createConnection(CodewindConnectionManager.DEFAULT_CONNECTION_URL);
-			} catch(Exception e) {
-				Logger.log("Attempting to connect to Codewind failed: " + e.getMessage()); //$NON-NLS-1$
-			}
-		}
+		final CodewindManager manager = CodewindManager.getManager();
+		CodewindConnection connection = manager.getLocalConnection();
 		if (connection != null && connection.isConnected()) {
 			return connection;
+		}
+		InstallerStatus status = manager.getInstallerStatus(true);
+		if (status == InstallerStatus.RUNNING) {
+			return manager.createLocalConnection();
+		}
+		if (!status.isInstalled()) {
+			Logger.logError("In BindProjectAction run method and Codewind is not installed or has unknown status."); //$NON-NLS-1$
+			return null;
 		}
 		
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
@@ -156,6 +155,8 @@ public class BindProjectAction implements IObjectActionDelegate {
 					if (result.getExitValue() != 0) {
 						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + result.getError()); //$NON-NLS-1$
 					}
+					manager.createLocalConnection();
+					ViewHelper.refreshCodewindExplorerView(null);
 				} catch (IOException e) {
 					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
 				} catch (TimeoutException e) {
@@ -173,42 +174,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 			Logger.logError("Codewind start was interrupted", e); //$NON-NLS-1$
 			return null;
 		}
-		
-		// If there was a connection, check to see if it is connected to Codewind now
-		if (connection != null) {
-			for (int i = 0; i < 10; i++) {
-				if (connection.isConnected()) {
-					break;
-				}
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e1) {
-					// Ignore
-				}
-			}
-			if (!connection.isConnected()) {
-				Logger.logError("The connection at " + connection.baseUrl + " is not active."); //$NON-NLS-1$ //$NON-NLS-2$
-				return null;
-			}
-			return connection;
-		}
-		
-		// If there was no connection, try to create one
-		for (int i = 0; i < 10; i++) {
-			try {
-				connection = CodewindConnectionManager.createConnection(CodewindConnectionManager.DEFAULT_CONNECTION_URL);
-				break;
-			} catch (Exception e) {
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e1) {
-					// Ignore
-				}
-			}
-		}
-		if (connection == null) {
-			Logger.logError("Failed to connect to Codewind at: " + CodewindConnectionManager.DEFAULT_CONNECTION_URL); //$NON-NLS-1$
-		}
-		return connection;
+
+		return manager.getLocalConnection();
 	}
 }

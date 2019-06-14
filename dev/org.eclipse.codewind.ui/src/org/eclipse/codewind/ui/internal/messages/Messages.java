@@ -59,18 +59,27 @@ public class Messages extends NLS {
 	public static String StartBuildAction_AlreadyBuildingTitle;
 	public static String StartBuildAction_AlreadyBuildingMsg;
 	
+	public static String CodewindLabel;
+	public static String CodewindNotInstalledQualifier;
+	public static String CodewindNotStartedQualifier;
+	public static String CodewindRunningQualifier;
+	public static String CodewindErrorQualifier;
+	public static String CodewindNotInstalledMsg;
+	public static String CodewindNotStartedMsg;
+	public static String CodewindErrorMsg;
+	public static String CodewindNotInstalledLink;
+	public static String CodewindNotStartedLink;
+	public static String CodewindLocalProjects;
 	public static String CodewindConnectionLabel;
 	public static String CodewindDisconnected;
 	public static String CodewindProjectDisabled;
 	public static String CodewindConnectionNoProjects;
 	
-	public static String ActivateActionLabel;
-	public static String ActivateActionJobLabel;
-	public static String DeactivateActionLabel;
-	public static String DeactivateActionJobLabel;
-	public static String DeactivateActionErrorWithMsg;
-	public static String DeactivateActionError;
-	public static String DeactivateActionTimeout;
+	public static String InstallerActionInstallLabel;
+	public static String InstallerActionUninstallLabel;
+	public static String InstallerActionStartLabel;
+	public static String InstallerActionStopLabel;
+	
 	public static String BindActionLabel;
 	public static String UnbindActionLabel;
 	public static String UnbindActionTitle;
@@ -80,8 +89,8 @@ public class Messages extends NLS {
 	
 	public static String InstallCodewindJobLabel;
 	public static String StartingCodewindJobLabel;
+	public static String StoppingCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
-	public static String InstalledCodewindJobLabel;
 	public static String InstallCodewindDialogTitle;
 	public static String InstallCodewindDialogMessage;
 	public static String InstallCodewindAfterDialogMessage;
@@ -138,6 +147,7 @@ public class Messages extends NLS {
 	public static String LaunchDebugSessionLabel;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
+	public static String RefreshCodewindJobLabel;
 	public static String RefreshConnectionJobLabel;
 	public static String RefreshProjectJobLabel;
 	

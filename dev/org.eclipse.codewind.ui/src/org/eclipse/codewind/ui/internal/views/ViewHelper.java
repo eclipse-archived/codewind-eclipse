@@ -13,10 +13,11 @@ package org.eclipse.codewind.ui.internal.views;
 
 import java.util.List;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
@@ -38,7 +39,7 @@ public class ViewHelper {
 	}
 	
 	public static void refreshCodewindExplorerView(Object element) {
-		final Object obj = element == null ? ResourcesPlugin.getWorkspace().getRoot() : element;
+		final Object obj = element == null ? CodewindManager.getManager() : element;
         refreshNavigatorView(CodewindExplorerView.VIEW_ID, obj);
 	}
 	
@@ -56,12 +57,31 @@ public class ViewHelper {
 						CommonViewer viewer = ((CommonNavigator)view).getCommonViewer();
 				
 						if (!viewer.getExpandedState(connection)) {
-							viewer.expandToLevel(2);
+							viewer.expandToLevel(AbstractTreeViewer.ALL_LEVELS);
 						}
 		            }
 	 			}
 			});
 		}
+	}
+	
+	public static void toggleExpansion(Object element) {
+		final Object obj = element == null ? CodewindManager.getManager() : element;
+		Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+				IViewPart view = getViewPart(CodewindExplorerView.VIEW_ID);
+				if (view instanceof CommonNavigator) {
+					CommonViewer viewer = ((CommonNavigator)view).getCommonViewer();
+			
+					if (!viewer.getExpandedState(obj)) {
+						viewer.expandToLevel(obj, AbstractTreeViewer.ALL_LEVELS);
+					} else {
+						viewer.collapseToLevel(obj, AbstractTreeViewer.ALL_LEVELS);
+					}
+	            }
+ 			}
+		});
 	}
 	
     public static void openNavigatorView(String viewId) {
@@ -95,6 +115,7 @@ public class ViewHelper {
 		            if (part instanceof CommonNavigator) {
 		                CommonNavigator v = (CommonNavigator) part;
 		                v.getCommonViewer().refresh(element);
+		                v.getCommonViewer().expandToLevel(element, AbstractTreeViewer.ALL_LEVELS);
 		            }
 		        }
             }

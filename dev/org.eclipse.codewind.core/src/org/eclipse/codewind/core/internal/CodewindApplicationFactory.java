@@ -18,6 +18,7 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.json.JSONArray;
@@ -96,19 +97,20 @@ public class CodewindApplicationFactory {
 			String name = appJso.getString(CoreConstants.KEY_NAME);
 			String id = appJso.getString(CoreConstants.KEY_PROJECT_ID);
 
-			ProjectType type = ProjectType.UNKNOWN_TYPE;
+			ProjectType type = ProjectType.TYPE_UNKNOWN;
+			ProjectLanguage language = ProjectLanguage.LANGUAGE_UNKNOWN;
 			try {
 				String typeStr = appJso.getString(CoreConstants.KEY_PROJECT_TYPE);
 				String languageStr = appJso.getString(CoreConstants.KEY_LANGUAGE);
-				type = new ProjectType(typeStr, languageStr);
-			}
-			catch(JSONException e) {
+				type = ProjectType.getType(typeStr);
+				language = ProjectLanguage.getLanguage(languageStr);
+			} catch(JSONException e) {
 				Logger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 			}
 
 			String loc = appJso.getString(CoreConstants.KEY_LOC_DISK);
 			
-			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, loc);
+			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, loc);
 			
 			updateApp(app, appJso);
 			return app;
@@ -164,6 +166,20 @@ public class CodewindApplicationFactory {
 				}
 				app.setBuildStatus(buildStatus, detail);
 			}
+
+			if (appJso.has(CoreConstants.KEY_LAST_BUILD)) {
+				long timestamp = appJso.getLong(CoreConstants.KEY_LAST_BUILD);
+				app.setLastBuild(timestamp);
+			}
+			
+			if (appJso.has(CoreConstants.KEY_APP_IMAGE_LAST_BUILD)) {
+				String timestamp = appJso.getString(CoreConstants.KEY_APP_IMAGE_LAST_BUILD);
+				try {
+					app.setLastImageBuild(Long.parseLong(timestamp));
+				} catch (NumberFormatException e) {
+					Logger.logError("Error parsing the app image last build value: " + timestamp, e);
+				}
+			}
 			
 			// Get the container id
 			String containerId = null;
@@ -174,32 +190,40 @@ public class CodewindApplicationFactory {
 			
 			// Get the ports if they are available
 			try {
+				JSONObject portsObj = null;
 				if (appJso.has(CoreConstants.KEY_PORTS) && (appJso.get(CoreConstants.KEY_PORTS) instanceof JSONObject)) {
-					JSONObject portsObj = appJso.getJSONObject(CoreConstants.KEY_PORTS);
-	
-					int httpPortNum = -1;
-					if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_PORT)) {
-						String httpPort = portsObj.getString(CoreConstants.KEY_EXPOSED_PORT);
-						if (httpPort != null && !httpPort.isEmpty()) {
-							httpPortNum = CoreUtil.parsePort(httpPort);
-						}
-					}
-					if (httpPortNum != -1) {
-						app.setHttpPort(httpPortNum);
-					}
-	
-					int debugPortNum = -1;
-					if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {
-						String debugPort = portsObj.getString(CoreConstants.KEY_EXPOSED_DEBUG_PORT);
-						if (debugPort != null && !debugPort.isEmpty()) {
-							debugPortNum = CoreUtil.parsePort(debugPort);
-						}
-					}
-					app.setDebugPort(debugPortNum);
-
-				} else {
-					Logger.logError("No ports object on project info for application: " + app.name); //$NON-NLS-1$
+					portsObj = appJso.getJSONObject(CoreConstants.KEY_PORTS);
 				}
+	
+				int httpPortNum = -1;
+				if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_PORT)) {
+					String httpPort = portsObj.getString(CoreConstants.KEY_EXPOSED_PORT);
+					if (httpPort != null && !httpPort.isEmpty()) {
+						httpPortNum = CoreUtil.parsePort(httpPort);
+					}
+				}
+				app.setHttpPort(httpPortNum);
+				
+				String internalAppPort = null;
+				if (portsObj != null && portsObj.has(CoreConstants.KEY_INTERNAL_PORT)) {
+					internalAppPort = portsObj.getString(CoreConstants.KEY_INTERNAL_PORT);
+				}
+				app.setContainerAppPort(internalAppPort);
+
+				int debugPortNum = -1;
+				if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {
+					String debugPort = portsObj.getString(CoreConstants.KEY_EXPOSED_DEBUG_PORT);
+					if (debugPort != null && !debugPort.isEmpty()) {
+						debugPortNum = CoreUtil.parsePort(debugPort);
+					}
+				}
+				app.setDebugPort(debugPortNum);
+				
+				String internalDebugPort = null;
+				if (portsObj != null && portsObj.has(CoreConstants.KEY_INTERNAL_DEBUG_PORT)) {
+					internalDebugPort = portsObj.getString(CoreConstants.KEY_INTERNAL_DEBUG_PORT);
+				}
+				app.setContainerDebugPort(internalDebugPort);
 			} catch (Exception e) {
 				Logger.logError("Failed to get the ports for application: " + app.name, e); //$NON-NLS-1$
 			}

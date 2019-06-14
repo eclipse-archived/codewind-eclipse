@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -62,7 +63,7 @@ public class ProjectSelectionPage extends WizardPage {
         composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         
         Text projectLabel = new Text(composite, SWT.READ_ONLY);
-        projectLabel.setText(Messages.SelectLanguagePageProjectTypeLabel);
+        projectLabel.setText(Messages.SelectProjectPageChooseProjectLabel);
         projectLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
         projectLabel.setBackground(composite.getBackground());
         projectLabel.setForeground(composite.getForeground());
@@ -126,7 +127,6 @@ public class ProjectSelectionPage extends WizardPage {
 				if (event.getChecked()) {
 					projectList.setCheckedElements(new Object[] {event.getElement()});
 					project = (IProject) event.getElement();
-					wizard.setProject(project);
 				} else {
 					project = null;
 				}
@@ -134,6 +134,12 @@ public class ProjectSelectionPage extends WizardPage {
 			}
         });
         
+        if (projectList.getTable().getItemCount() == 1) {
+        	Object element = projectList.getElementAt(0);
+        	projectList.setChecked(element, true);
+        	project = (IProject) element;
+        }
+
         filterText.setFocus();
         setControl(composite);
 	}
@@ -141,6 +147,13 @@ public class ProjectSelectionPage extends WizardPage {
 	@Override
 	public boolean canFlipToNextPage() {
 		return canFinish();
+	}
+
+	@Override
+	public IWizardPage getNextPage() {
+		// Set the project so the next page has it.
+		wizard.setProject(project);
+		return super.getNextPage();
 	}
 
 	public boolean canFinish() {

@@ -13,7 +13,11 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.navigator.CommonActionProvider;
+import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 
@@ -27,7 +31,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
 	private UnbindProjectAction unbindProjectAction;
-//	private DeleteProjectAction deleteProjectAction;
+	private OpenAppDoubleClickAction openAppDoubleClickAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
@@ -38,7 +42,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
         unbindProjectAction = new UnbindProjectAction(selProvider);
-//        deleteProjectAction = new DeleteProjectAction(selProvider);
+        openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
     }
     
     @Override
@@ -56,8 +60,32 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openPerfMonitorAction);
     	}
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, unbindProjectAction);
-//    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, deleteProjectAction);
     	
     }
 
+	@Override
+	public void fillActionBars(IActionBars actionBars) {
+		super.fillActionBars(actionBars);
+		actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, openAppDoubleClickAction);
+	}
+
+	private static class OpenAppDoubleClickAction extends SelectionProviderAction {
+		private final OpenAppAction actionDelegate;
+
+		public OpenAppDoubleClickAction(ISelectionProvider selectionProvider) {
+			super(selectionProvider, "");
+			actionDelegate = new OpenAppAction();
+			selectionChanged(getStructuredSelection());
+		}
+
+		@Override
+		public void selectionChanged(IStructuredSelection sel) {
+			actionDelegate.selectionChanged(this, sel);
+		}
+
+		@Override
+		public void run() {
+			actionDelegate.run(this);
+		}
+	}
 }

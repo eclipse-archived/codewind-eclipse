@@ -90,6 +90,6 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
     }
     
     public boolean showAction() {
-    	return app != null;
+    	return app != null && app.getMetricsAvailable() && app.projectLanguage.getMetricsRoot() != null;
     }
 }

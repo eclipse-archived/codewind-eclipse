@@ -11,15 +11,17 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
@@ -30,6 +32,8 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -42,7 +46,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 	public NewCodewindProjectWizard() {
 		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
 		setHelpAvailable(false);
-		setNeedsProgressMonitor(true);
+		setNeedsProgressMonitor(true);		
 	}
 	
 	public NewCodewindProjectWizard(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
@@ -58,9 +62,24 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		setWindowTitle(Messages.NewProjectPage_ShellTitle);
-		newProjectPage = new NewCodewindProjectPage(connection, templateList);
-		addPage(newProjectPage);
+		Display display = Display.getDefault();
+	    Shell result = display.getActiveShell();
+
+		try {
+			if (CodewindInstall.isCodewindInstalled()) {
+				 setWindowTitle(Messages.NewProjectPage_ShellTitle);
+				 newProjectPage = new NewCodewindProjectPage(connection, templateList);
+				 addPage(newProjectPage);
+			} else {
+				result.close();
+				CodewindInstall.codewindInstallerDialog();
+			}
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+ 
+		
 	}
 
 	@Override
@@ -91,23 +110,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					newConnection.requestProjectCreate(info, name);
-					String type = null;
-					if (ProjectType.LANGUAGE_JAVA.equals(info.getLanguage())) {
-						if (info.getLabel().toLowerCase().contains("spring")) {
-							type = "spring";
-						} else if (info.getLabel().toLowerCase().contains("microprofile")) {
-							type = "liberty";
-						} else {
-							type = "docker";
-						}
-					} else if (ProjectType.LANGUAGE_NODEJS.equals(info.getLanguage())) {
-						type = "nodejs";
-					} else if (ProjectType.LANGUAGE_SWIFT.equals(info.getLanguage())) {
-						type = "swift";
-					} else {
-						type = "docker";
-					}
-					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), type);
+					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), info.getProjectType());
 					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}

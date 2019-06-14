@@ -21,6 +21,7 @@ public class ProjectTemplateInfo {
 	public static final String DESCRIPTION_KEY = "description";
 	public static final String URL_KEY = "url";
 	public static final String LANGUAGE_KEY = "language";
+	public static final String PROJECT_TYPE_KEY = "projectType";
 	
 	private JSONObject projectInfo;
 	
@@ -42,6 +43,10 @@ public class ProjectTemplateInfo {
 	
 	public String getUrl() {
 		return getString(URL_KEY);
+	}
+	
+	public String getProjectType() {
+		return getString(PROJECT_TYPE_KEY);
 	}
 	
 	private String getString(String key) {

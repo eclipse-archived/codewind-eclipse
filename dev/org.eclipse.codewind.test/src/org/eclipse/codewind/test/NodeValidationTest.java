@@ -13,6 +13,7 @@ package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
@@ -22,7 +23,8 @@ public class NodeValidationTest extends BaseValidationTest {
 
 	static {
 		projectName = "nodevalidationtest";
-		projectType = new ProjectType(ProjectType.TYPE_NODEJS, ProjectType.LANGUAGE_NODEJS);
+		projectType = ProjectType.TYPE_NODEJS;
+		projectLanguage = ProjectLanguage.LANGUAGE_NODEJS;
 		relativeURL = "/hello";
 		srcPath = "server/server.js";
 		text = "Hello World!";

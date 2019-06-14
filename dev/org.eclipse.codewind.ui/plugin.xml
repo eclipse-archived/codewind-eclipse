@@ -144,7 +144,7 @@
 				id="org.eclipse.codewind.ui.openApplication"
 				enablesFor="1"
 				menubarPath="group.open"
-				icon="%OPEN_BROWSER_ICON_PATH"
+				icon="%OPEN_APP_ICON_PATH"
 				label="%ACTION_OPEN_APP"
 				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction"/>
 			<action
@@ -238,6 +238,14 @@
 				icon="%DEBUG_ICON_PATH"
 				class="org.eclipse.codewind.ui.internal.actions.RestartDebugModeAction">
 			</action>
+			<action
+				id="org.eclipse.codewind.ui.openApplication"
+				label="%ACTION_OPEN_APP"
+				menubarPath="group.open"
+				toolbarPath="group.open"
+				icon="%OPEN_APP_ICON_PATH"
+				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction">
+			</action>
 		</viewContribution>
 	</extension>
 
@@ -312,6 +320,21 @@
 	        name="Application Overview"
 	        icon="icons/codewind.ico"
 	        class="org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorPart"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.elementFactories">
+		<factory id="org.eclipse.codewind.ui.editors.appOverviewEditorInputFactory"
+			class="org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorInputFactory"/>
+	</extension>
+	
+	<extension point="org.eclipse.core.contenttype.contentTypes">
+		<content-type  
+			id="org.eclipse.codewind.ui.editors.cwSettings" 
+			name="%CW_SETTINGS_CONTENT_TYPE" 
+			base-type="org.eclipse.wst.json.core.jsonsource"
+			file-names=".cw-settings">
+			<describer class=""/>
+		</content-type>
 	</extension>
 
 </plugin>

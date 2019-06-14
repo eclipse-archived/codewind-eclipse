@@ -183,6 +183,16 @@ public class CoreUtil {
 			handler.updateApplication(app);
 		}
 	}
+	
+	/**
+	 * Remove the application in the Codewind explorer view
+	 */
+	public static void removeApplication(CodewindApplication app) {
+		IUpdateHandler handler = CodewindCorePlugin.getUpdateHandler();
+		if (handler != null) {
+			handler.removeApplication(app);
+		}
+	}
 
     public static String getOSName() {
         return (String)System.getProperty("os.name");

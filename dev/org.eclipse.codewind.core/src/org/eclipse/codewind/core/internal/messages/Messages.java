@@ -64,6 +64,11 @@ public class Messages extends NLS {
 	
 	public static String RefreshResourceJobLabel;
 	public static String RefreshResourceError;
+	
+	public static String StartCodewindJobLabel;
+	public static String InstallCodewindJobLabel;
+	public static String StopCodewindJobLabel;
+	public static String RemovingCodewindJobLabel;
 
 	static {
 		// initialize resource bundle

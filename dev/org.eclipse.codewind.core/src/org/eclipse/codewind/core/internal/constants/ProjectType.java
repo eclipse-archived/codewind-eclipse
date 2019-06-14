@@ -14,72 +14,53 @@ package org.eclipse.codewind.core.internal.constants;
 /**
  * Type and language of a project.
  */
-public class ProjectType {
+public enum ProjectType {
 	
-	public static final String UNKNOWN = "unknown";
-	
-	public static final String TYPE_LIBERTY = "liberty";
-	public static final String TYPE_SPRING = "spring";
-	public static final String TYPE_SWIFT = "swift";
-	public static final String TYPE_NODEJS = "nodejs";
-	public static final String TYPE_DOCKER = "docker";
-	
-	public static final String LANGUAGE_JAVA = "java";
-	public static final String LANGUAGE_NODEJS = "nodejs";
-	public static final String LANGUAGE_SWIFT = "swift";
-	public static final String LANGUAGE_PYTHON = "python";
-	public static final String LANGUAGE_GO = "go";
-	
-	public static final ProjectType UNKNOWN_TYPE = new ProjectType(UNKNOWN, UNKNOWN);
-	
-	public final String type;
-	public final String language;
-	
-	public ProjectType(String type, String language) {
-		this.type = type;
-		this.language = language;
-	}
-	
-	public boolean isType(String type) {
-		return type != null && type.equals(this.type);
-	}
-	
-	public boolean isLanguage(String language) {
-		return language != null && language.equals(this.language);
-	}
+	TYPE_LIBERTY("liberty", "MicroProfile / Java EE"),
+	TYPE_SPRING("spring", "Spring"),
+	TYPE_SWIFT("swift", "Swift"),
+	TYPE_NODEJS("nodejs", "Node.js"),
+	TYPE_DOCKER("docker", "Docker"),
+	TYPE_UNKNOWN("unknown", "Unknown");
 
-	@Override
-	public String toString() {
-		return ("Project type: " + type + ", project language: " + language);
+	private final String id;
+	private final String displayName;
+	
+	private ProjectType(String id, String displayName) {
+		this.id = id;
+		this.displayName = displayName;
 	}
 	
-	public static String getType(String language) {
-		if (LANGUAGE_NODEJS.equals(language)) {
-			return TYPE_NODEJS;
-		}
-		if (LANGUAGE_SWIFT.equals(language)) {
-			return TYPE_SWIFT;
-		}
-		if (LANGUAGE_PYTHON.equals(language)) {
-			return TYPE_DOCKER;
-		}
-		if (LANGUAGE_GO.equals(language)) {
-			return TYPE_DOCKER;
-		}
-		return null;
+	public String getId() {
+		return id;
 	}
 	
-	public String getMetricsRoot() {
-		if (LANGUAGE_NODEJS.equals(language)) {
-			return "appmetrics-dash";
-		}
-		if (LANGUAGE_SWIFT.equals(language)) {
-			return "swiftmetrics-dash";
-		}
-		if (LANGUAGE_JAVA.equals(language)) {
-			return "javametrics-dash";
-		}
-		return null;
+	public String getDisplayName() {
+		return displayName;
 	}
-
+	
+	public static ProjectType getType(String name) {
+		for (ProjectType type : ProjectType.values()) {
+			if (type.id.equals(name)) {
+				return type;
+			}
+		}
+		return TYPE_UNKNOWN;
+	}
+	
+	public static ProjectType getTypeFromLanguage(String language) {
+		ProjectLanguage lang = ProjectLanguage.getLanguage(language);
+		switch(lang) {
+			case LANGUAGE_NODEJS:
+				return TYPE_NODEJS;
+			case LANGUAGE_SWIFT:
+				return TYPE_SWIFT;
+			case LANGUAGE_PYTHON:
+				return TYPE_DOCKER;
+			case LANGUAGE_GO:
+				return TYPE_DOCKER;
+			default:
+				return null;
+		}
+	}
 }

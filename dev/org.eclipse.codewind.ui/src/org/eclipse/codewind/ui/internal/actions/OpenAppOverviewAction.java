@@ -65,9 +65,7 @@ public class OpenAppOverviewAction implements IObjectActionDelegate {
 		try {
 			ApplicationOverviewEditorInput input = new ApplicationOverviewEditorInput(app);
 			IEditorPart part = page.openEditor(input, ApplicationOverviewEditorInput.EDITOR_ID);
-			if (part instanceof ApplicationOverviewEditorPart) {
-				((ApplicationOverviewEditorPart)part).update(app);
-			} else {
+			if (!(part instanceof ApplicationOverviewEditorPart)) {
 				// This should not happen
 				Logger.logError("Application overview editor part for the " + app.name + " application is the wrong type: " + part.getClass()); //$NON-NLS-1$  //$NON-NLS-2$
 			}

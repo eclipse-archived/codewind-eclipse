@@ -11,13 +11,15 @@
 
 package org.eclipse.codewind.test;
 
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 
 public class LibertyDebugTest extends BaseDebugTest {
 
 	static {
 		projectName = "libertydebugtest";
-		projectType = new ProjectType(ProjectType.TYPE_LIBERTY, ProjectType.LANGUAGE_JAVA);
+		projectType = ProjectType.TYPE_LIBERTY;
+		projectLanguage = ProjectLanguage.LANGUAGE_JAVA;
 		relativeURL = "/v1/example";
 		srcPath = "src/main/java/application/rest/v1/Example.java";
 		currentText = "Congratulations";

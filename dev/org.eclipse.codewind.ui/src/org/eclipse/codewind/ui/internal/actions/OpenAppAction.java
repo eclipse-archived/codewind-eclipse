@@ -13,9 +13,9 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import java.net.URL;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.action.IAction;
@@ -23,6 +23,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IObjectActionDelegate;
+import org.eclipse.ui.IViewActionDelegate;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -32,7 +34,7 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 /**
  * Action to open the application in a browser.
  */
-public class OpenAppAction implements IObjectActionDelegate {
+public class OpenAppAction implements IObjectActionDelegate, IViewActionDelegate {
 
     protected CodewindApplication app;
 
@@ -88,6 +90,11 @@ public class OpenAppAction implements IObjectActionDelegate {
 
 	@Override
 	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
+		// empty
+	}
+
+	@Override
+	public void init(IViewPart arg0) {
+		// empty
 	}
 }

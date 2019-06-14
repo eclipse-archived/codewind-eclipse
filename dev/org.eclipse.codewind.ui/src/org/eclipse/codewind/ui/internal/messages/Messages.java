@@ -73,7 +73,18 @@ public class Messages extends NLS {
 	public static String DeactivateActionTimeout;
 	public static String BindActionLabel;
 	public static String UnbindActionLabel;
+	public static String UnbindActionTitle;
+	public static String UnbindActionMessage;
+	public static String UnbindActionJobTitle;
 	public static String UnbindActionError;
+	
+	public static String InstallCodewindJobLabel;
+	public static String StartingCodewindJobLabel;
+	public static String RemovingCodewindJobLabel;
+	public static String InstalledCodewindJobLabel;
+	public static String InstallCodewindDialogTitle;
+	public static String InstallCodewindDialogMessage;
+	public static String InstallCodewindAfterDialogMessage;
 	
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;
@@ -84,17 +95,17 @@ public class Messages extends NLS {
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
 	
-	public static String SelectLanguagePageName;
-	public static String SelectLanguagePageTitle;
-	public static String SelectLanguagePageDescription;
-	public static String SelectLanguagePageLanguageLabel;
-	public static String SelectLanguagePageProjectTypeLabel;
-	public static String SelectProjectPageFilterText;
+	public static String SelectProjectTypePageName;
+	public static String SelectProjectTypePageTitle;
+	public static String SelectProjectTypePageDescription;
+	public static String SelectProjectTypePageProjectTypeLabel;
+	public static String SelectProjectTypePageLanguageLabel;
 	
 	public static String SelectProjectPageName;
 	public static String SelectProjectPageTitle;
 	public static String SelectProjectPageDescription;
 	public static String SelectProjectPageChooseProjectLabel;
+	public static String SelectProjectPageFilterText;
 	
 	public static String RestartInDebugMode;
 	public static String RestartInRunMode;
@@ -125,11 +136,6 @@ public class Messages extends NLS {
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
 	public static String LaunchDebugSessionLabel;
-	public static String DeleteProjectLabel;
-	public static String DeleteProjectTitle;
-	public static String DeleteProjectMessage;
-	public static String DeleteProjectJobTitle;
-	public static String DeleteProjectErrorMsg;
 	public static String refreshResourceJobLabel;
 	public static String RefreshResourceError;
 	public static String RefreshConnectionJobLabel;
@@ -192,6 +198,36 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ProjectCreateErrorMsg;
 	public static String NewProjectPage_CodewindConnectError;
 	public static String NewProjectPage_TemplateListError;
+	
+	public static String AppOverviewEditorCreateError;
+	public static String AppOverviewEditorPartName;
+	public static String AppOverviewEditorGeneralSection;
+	public static String AppOverviewEditorLanguageEntry;
+	public static String AppOverviewEditorLocationEntry;
+	public static String AppOverviewEditorAppUrlEntry;
+	public static String AppOverviewEditorHostAppPortEntry;
+	public static String AppOverviewEditorHostDebugPortEntry;
+	public static String AppOverviewEditorContainerIdEntry;
+	public static String AppOverviewEditorStatusEntry;
+	public static String AppOverviewEditorStatusEnabled;
+	public static String AppOverviewEditorStatusDisabled;
+	public static String AppOverviewEditorProjectSettingsSection;
+	public static String AppOverviewEditorContextRootEntry;
+	public static String AppOverviewEditorAppPortEntry;
+	public static String AppOverviewEditorDebugPortEntry;
+	public static String AppOverviewEditorEditProjectSettings;
+	public static String AppOverviewEditorBuildSection;
+	public static String AppOverviewEditorAutoBuildEntry;
+	public static String AppOverviewEditorAutoBuildOn;
+	public static String AppOverviewEditorAutoBuildOff;
+	public static String AppOverviewEditorLastBuildEntry;
+	public static String AppOverviewEditorLastImageBuildEntry;
+	public static String AppOverviewEditorProjectNeverBuilt;
+	public static String AppOverviewEditorImageNeverBuilt;
+	public static String AppOverviewEditorNotAvailable;
+	public static String AppOverviewEditorOpenSettingsErrorTitle;
+	public static String AppOverviewEditorOpenSettingsErrorMsg;
+	public static String AppOverviewEditorOpenSettingsNotFound;
 	
 	static {
 		// initialize resource bundle

@@ -94,7 +94,7 @@
 			addIncludedFeatures="false">
 
 		<!-- Add Main feature here -->
-			<category name="was4d"
+			<category name="Codewind"
 				label="Codewind V${version} Unit Tests"
 				description="Codewind V${version} Unit Tests">
 				<feature id="org.eclipse.codewind.test" />

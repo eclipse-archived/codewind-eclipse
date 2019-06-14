@@ -81,7 +81,7 @@
             addIncludedFeatures="false">
 
             <!-- Add Main feature here -->
-            <category name="was4d"
+            <category name="Codewind"
                 label="Codewind"
                 description="Tools for working with Codewind applications in Eclipse">
 

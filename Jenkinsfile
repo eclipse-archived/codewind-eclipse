@@ -22,7 +22,6 @@ pipeline {
                     def sys_info = sh(script: "uname -a", returnStdout: true).trim()
                     println("System information: ${sys_info}")
                     println("JAVE_HOME: ${JAVA_HOME}")
-                    println("WORKSPACE: ${WORKSPACE}")
                     
                     sh '''
                         java -version

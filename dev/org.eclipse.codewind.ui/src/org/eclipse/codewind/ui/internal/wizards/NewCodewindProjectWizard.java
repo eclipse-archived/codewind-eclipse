@@ -19,7 +19,6 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
-import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;

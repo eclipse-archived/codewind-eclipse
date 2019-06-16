@@ -18,9 +18,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
-import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
-import org.eclipse.codewind.core.internal.CodewindObjectFactory;;
+import org.eclipse.codewind.core.internal.Logger;
 
 /**
  * Singleton class to keep track of the list of current Codewind connections,
@@ -28,20 +28,19 @@ import org.eclipse.codewind.core.internal.CodewindObjectFactory;;
  */
 public class CodewindConnectionManager {
 	
-	public static final String DEFAULT_CONNECTION_URL = "http://localhost:9090";
-
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static CodewindConnectionManager instance;
 
 	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections"; //$NON-NLS-1$
-
+	
 	private List<CodewindConnection> connections = new ArrayList<>();
 	// this list tracks the URLs of connections that have never successfully connected
 	private List<String> brokenConnections = new ArrayList<>();
 
 	private CodewindConnectionManager() {
 		instance = this;
-		loadFromPreferences();
+
+//		loadFromPreferences();
 
 		// Add a preference listener to reload the cached list of connections each time it's modified.
 //		CodewindCorePlugin.getDefault().getPreferenceStore()
@@ -74,7 +73,7 @@ public class CodewindConnectionManager {
 
 		instance().connections.add(connection);
 		Logger.log("Added a new connection: " + connection.baseUrl); //$NON-NLS-1$
-		instance().writeToPreferences();
+//		instance().writeToPreferences();
 	}
 
 	/**
@@ -118,7 +117,7 @@ public class CodewindConnectionManager {
 		if (!removeResult) {
 			Logger.logError("Tried to remove connection " + baseUrl + ", but it didn't exist"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		instance().writeToPreferences();
+//		instance().writeToPreferences();
 		CoreUtil.updateAll();
 		return removeResult;
 	}
@@ -208,9 +207,4 @@ public class CodewindConnectionManager {
 		CodewindConnectionManager.remove(connectionUrl);
 		return true;
 	}
-	
-	public static CodewindConnection createConnection(String uriStr) throws Exception {
-		return CodewindObjectFactory.createCodewindConnection(new URI(uriStr));
-	}
-
 }

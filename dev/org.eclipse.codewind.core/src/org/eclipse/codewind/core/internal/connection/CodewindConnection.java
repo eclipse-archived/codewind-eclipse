@@ -708,7 +708,8 @@ public class CodewindConnection {
 		synchronized(appMap) {
 			appMap.clear();
 		}
-		CoreUtil.updateConnection(this);
+		// Update everything as Codewind might be down as well
+		CoreUtil.updateAll();
 	}
 
 	/**
@@ -721,25 +722,25 @@ public class CodewindConnection {
 		try {
 			JSONObject envData = getEnvData(baseUrl);
 			String version = getCodewindVersion(envData);
-			if (UNKNOWN_VERSION.equals(versionStr)) {
-				Logger.logError("Failed to get the Codewind version after reconnect");
-				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_VersionUnknown, CoreConstants.REQUIRED_CODEWIND_VERSION);
-				CoreUtil.updateConnection(this);
-				return;
-			}
-			if (!isSupportedVersion(version)) {
-				Logger.logError("The detected version of Codewind after reconnect is not supported: " + version);
-				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, versionStr, CoreConstants.REQUIRED_CODEWIND_VERSION);
-				CoreUtil.updateConnection(this);
-				return;
-			}
+//			if (UNKNOWN_VERSION.equals(versionStr)) {
+//				Logger.logError("Failed to get the Codewind version after reconnect");
+//				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_VersionUnknown, CoreConstants.REQUIRED_CODEWIND_VERSION);
+//				CoreUtil.updateConnection(this);
+//				return;
+//			}
+//			if (!isSupportedVersion(version)) {
+//				Logger.logError("The detected version of Codewind after reconnect is not supported: " + version);
+//				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, versionStr, CoreConstants.REQUIRED_CODEWIND_VERSION);
+//				CoreUtil.updateConnection(this);
+//				return;
+//			}
 			this.versionStr = version;
 			IPath path = getWorkspacePath(envData);
 			if (path == null) {
 				// This should not happen since the version was ok
 				Logger.logError("Failed to get the local workspace path after reconnect");
 				this.connectionErrorMsg = Messages.Connection_ErrConnection_WorkspaceErr;
-				CoreUtil.updateConnection(this);
+				CoreUtil.updateAll();
 				return;
 			}
 			this.localWorkspacePath = path;
@@ -755,20 +756,21 @@ public class CodewindConnection {
 					Logger.logError("Failed to create a new socket with updated URI: " + socket.socketUri);
 					// Clear the message so that it just shows the basic disconnected message
 					this.connectionErrorMsg = null;
+					CoreUtil.updateAll();
 					return;
 				}
 			}
 		} catch (Exception e) {
 			Logger.logError("An exception occurred while trying to update the connection information", e);
 			this.connectionErrorMsg = Messages.Connection_ErrConnection_UpdateCacheException;
-			CoreUtil.updateConnection(this);
+			CoreUtil.updateAll();
 			return;
 		}
 		
 		this.connectionErrorMsg = null;
 		isConnected = true;
 		refreshApps(null);
-		CoreUtil.updateConnection(this);
+		CoreUtil.updateAll();
 	}
 
 	@Override

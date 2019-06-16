@@ -116,8 +116,8 @@ public class CodewindSocket {
 			@Override
 			public void call(Object... arg0) {
 				if (arg0[0] instanceof Exception) {
-					Exception e = (Exception) arg0[0];
-					Logger.logError("SocketIO Error @ " + socketUri, e); //$NON-NLS-1$
+//					Exception e = (Exception) arg0[0];
+//					Logger.logError("SocketIO Error @ " + socketUri, e); //$NON-NLS-1$
 				}
 			}
 		})

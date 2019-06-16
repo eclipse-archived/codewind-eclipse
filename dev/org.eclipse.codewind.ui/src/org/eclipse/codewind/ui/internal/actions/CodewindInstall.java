@@ -1,5 +1,5 @@
 /*******************************************************************************
-e * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,15 +16,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.codewind.ui.internal.wizards.NewCodewindProjectWizard;
 import org.eclipse.codewind.ui.internal.wizards.WizardLauncher;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
@@ -67,12 +70,12 @@ public class CodewindInstall {
 
 		    switch (rc) {
 		    case SWT.YES:
-				installCodewind();
+				installCodewind(getNewProjectPrompt());
 			 break;
 		    }
 	}
 	
-	public static void installCodewind() { 
+	public static void installCodewind(Runnable prompt) { 
 
 		try {
 			Job job = new Job(Messages.InstallCodewindJobLabel) {
@@ -89,19 +92,20 @@ public class CodewindInstall {
 						}
 						
 						if (result.getExitValue() != 0) {
-							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "There was a problem trying to install Codewind: " + result.getError());
+							return getErrorStatus("There was a problem trying to install Codewind: " + result.getError());
 						}
 						
 						if (result.getExitValue() == 0) {
-							startingCodewind();
+							startCodewind(prompt);
 						}
 						
 					} catch (IOException e) {
-						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "An error occurred trying to install Codewind.", e);
+						return getErrorStatus("An error occurred trying to install Codewind.", e);
 					} catch (TimeoutException e) {
-						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "Codewind did not install in the expected time.", e);
+						return getErrorStatus("Codewind did not install in the expected time.", e);
 					}
 
+					ViewHelper.refreshCodewindExplorerView(null);
 					return Status.OK_STATUS;
 					
 				}
@@ -113,10 +117,10 @@ public class CodewindInstall {
 		
 	}
 	
-	public static void startingCodewind() { 
+	public static void startCodewind(Runnable prompt) { 
 
 		try {
-			Job job = new Job(Messages.InstalledCodewindJobLabel) {
+			Job job = new Job(Messages.StartingCodewindJobLabel) {
 			    @Override
 				protected IStatus run(IProgressMonitor monitor) {
 
@@ -125,49 +129,82 @@ public class CodewindInstall {
 						ProcessResult result = InstallUtil.startCodewind(monitor);
 						
 						if (result.getExitValue() != 0) {
-							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "There was a problem trying to start Codewind: " + result.getError());
+							return getErrorStatus("There was a problem trying to start Codewind: " + result.getError());
 						}
 						
-						Display.getDefault().asyncExec(new Runnable() {
-							public void run() {
-								promptUserAfterInstall();
-					        }
-					    });
+						if (prompt != null) {
+							Display.getDefault().asyncExec(prompt);
+						}
 					 
 					} catch (IOException e) {
-						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "An error occurred trying to start Codewind.", e);
+						return getErrorStatus("An error occurred trying to start Codewind.", e);
 					} catch (TimeoutException e) {
-						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "Codewind did not start in the expected time.", e);
+						return getErrorStatus("Codewind did not start in the expected time.", e);
 					}
 
+					ViewHelper.refreshCodewindExplorerView(null);
 					return Status.OK_STATUS;
 					
 				}
 			};
 			job.schedule();
 		} catch (Exception e) {
-			Logger.logError("An error occurred activating connection: ", e); //$NON-NLS-1$
+			Logger.logError("An error occurred starting Codewind: ", e); //$NON-NLS-1$
 		}
 		
 	}
 	
-	public static void promptUserAfterInstall() {
-	    Shell shell = new Shell();
-		MessageBox dialog =
-			    new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES| SWT.NO);
-			dialog.setText(Messages.InstallCodewindDialogTitle);
-			dialog.setMessage(Messages.InstallCodewindAfterDialogMessage);
+	public static void stopCodewind() { 
 
-			int rc = dialog.open();
+		try {
+			Job job = new Job(Messages.StoppingCodewindJobLabel) {
+			    @Override
+				protected IStatus run(IProgressMonitor monitor) {
 
-		    switch (rc) {
-		    case SWT.YES:
+					try {
+						
+						ProcessResult result = InstallUtil.stopCodewind(monitor);
+						
+						if (result.getExitValue() != 0) {
+							return getErrorStatus("There was a problem trying to stop Codewind: " + result.getError());
+						}
+					 
+					} catch (IOException e) {
+						return getErrorStatus("An error occurred trying to stop Codewind.", e);
+					} catch (TimeoutException e) {
+						return getErrorStatus("Codewind did not stop in the expected time.", e);
+					}
 
-		   	Wizard wizard = new NewCodewindProjectWizard();
-		   	WizardLauncher.launchWizardWithoutSelection(wizard);
-		   		
-			 break;
-		    }
+					ViewHelper.refreshCodewindExplorerView(null);
+					return Status.OK_STATUS;
+					
+				}
+			};
+			job.schedule();
+		} catch (Exception e) {
+			Logger.logError("An error occurred stopping Codewind: ", e); //$NON-NLS-1$
+		}
+		
+	}
+	
+	public static Runnable getNewProjectPrompt() {
+		return new Runnable() {
+			@Override
+			public void run() {
+			    Shell shell = Display.getDefault().getActiveShell();
+				MessageBox dialog = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES| SWT.NO);
+				dialog.setText(Messages.InstallCodewindDialogTitle);
+				dialog.setMessage(Messages.InstallCodewindAfterDialogMessage);
+
+				int rc = dialog.open();
+			    switch (rc) {
+				    case SWT.YES:
+				    	Wizard wizard = new NewCodewindProjectWizard();
+				    	WizardLauncher.launchWizardWithoutSelection(wizard);
+				    	break;
+				}
+			}
+		};
 	}
 	
 	public static void removeCodewind() {
@@ -175,22 +212,33 @@ public class CodewindInstall {
 		try {
 			Job job = new Job(Messages.RemovingCodewindJobLabel) {
 			    @Override
-				protected IStatus run(IProgressMonitor monitor) {
-
+				protected IStatus run(IProgressMonitor mon) {
+			    	SubMonitor monitor = SubMonitor.convert(mon, 100);
 					try {
+						InstallerStatus status = InstallUtil.getInstallerStatus();
+						if (status == InstallerStatus.RUNNING) {
+							// Stop Codewind before uninstalling
+							ProcessResult result = InstallUtil.stopCodewind(monitor.split(20));
+							if (result.getExitValue() != 0) {
+								return getErrorStatus("There was a problem trying to stop Codewind: " + result.getError());
+							}
+						}
+						
+						monitor.setWorkRemaining(80);
 						ProcessResult result = InstallUtil.removeCodewind(monitor);
 						
 						if (result.getExitValue() != 0) {
-							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "There was a problem trying to remove Codewind images: " + result.getError());
+							return getErrorStatus("There was a problem trying to remove Codewind images: " + result.getError());
 						}
 						
 						
 					} catch (IOException e) {
-						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "An error occurred trying to remove Codewind.", e);
+						return getErrorStatus("An error occurred trying to remove Codewind.", e);
 					} catch (TimeoutException e) {
-						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, "Codewind did not remove in the expected time.", e);
+						return getErrorStatus("Codewind did not remove in the expected time.", e);
 					}
-
+					
+					ViewHelper.refreshCodewindExplorerView(null);
 					return Status.OK_STATUS;
 					
 				}
@@ -200,6 +248,15 @@ public class CodewindInstall {
 			Logger.logError("An error occurred removing Codewind images: ", e); //$NON-NLS-1$
 		}
 		
+	}
+	
+	private static IStatus getErrorStatus(String msg) {
+		return getErrorStatus(msg, null);
+	}
+	
+	private static IStatus getErrorStatus(String msg, Throwable t) {
+		ViewHelper.refreshCodewindExplorerView(null);
+		return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, msg, t);
 	}
 	
 	

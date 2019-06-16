@@ -29,6 +29,7 @@ import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 
@@ -49,6 +50,43 @@ public class InstallUtil {
 	private static final String STOP_ALL_CMD = "stop-all";
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
+	
+	private static final String INSTALL_DEV_VAR = "INSTALL_DEV";
+	private static String installCmd = null;
+	private static String installExec = null;
+	
+	public enum InstallerStatus {
+		RUNNING(2),
+		INSTALLED(1),
+		NOT_INSTALLED(0),
+		UNKNOWN(-1);
+		
+		private int code;
+		
+		private InstallerStatus(int code) {
+			this.code = code;
+		}
+		
+		public static InstallerStatus getStatus(int code) {
+			for (InstallerStatus status : InstallerStatus.values()) {
+				if (status.code == code) {
+					return status;
+				}
+			}
+			// This should not happen
+			Logger.logError("Unrecognized installer status code: " + code);
+			return UNKNOWN;
+		}
+		
+		public boolean isInstalled() {
+			return (this != NOT_INSTALLED && this != UNKNOWN);
+		}
+	}
+	
+	public static InstallerStatus getInstallerStatus() throws IOException, TimeoutException {
+		ProcessResult result = statusCodewind();
+		return InstallerStatus.getStatus(result.getExitValue());
+	}
 	
 	public static ProcessResult startCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StartCodewindJobLabel, 100);
@@ -82,7 +120,7 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.InstallCodewindJobLabel, 100);
 		Process process = null;
 		try {
-		    process = runInstaller(INSTALL_DEV_CMD);
+		    process = runInstaller(getInstallCmd());
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
 		    return result;
 		} finally {
@@ -110,7 +148,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			process = runInstaller(STATUS_CMD);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, null);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, new NullProgressMonitor());
 			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
@@ -118,7 +156,6 @@ public class InstallUtil {
 			}
 		}
 	}
-	
 	
 	public static Process runInstaller(String cmd) throws IOException {
 		String installerPath = getInstallerExecutable();
@@ -134,6 +171,10 @@ public class InstallUtil {
 	}
 	
 	public static String getInstallerExecutable() throws IOException {
+		if (installExec != null && (new File(installExec)).exists()) {
+			return installExec;
+		}
+		
 		// Get the current platform and choose the correct executable path
 		OperatingSystem os = PlatformUtil.getOS(System.getProperty("os.name"));
 		String relPath = installMap.get(os);
@@ -143,20 +184,20 @@ public class InstallUtil {
 			throw new IOException(msg);
 		}
 		
-		// Make the installer directory
+		// Get the executable path
 		String installerDir = getInstallerDir();
+		String execName = relPath.substring(relPath.lastIndexOf('/') + 1);
+		String execPath = installerDir + File.separator + execName;
+				
+		// Make the installer directory
 		if (!FileUtil.makeDir(installerDir)) {
 			String msg = "Failed to make the directory for the installer utility: " + installerDir;
 			Logger.logError(msg);
 			throw new IOException(msg);
 		}
 		
-		// Get the executable name
-		String execName = relPath.substring(relPath.lastIndexOf('/') + 1);
-		
 		// Copy the executable over
 		InputStream stream = null;
-		String execPath = installerDir + File.separator + execName;
 		try {
 			stream = FileLocator.openStream(CodewindCorePlugin.getDefault().getBundle(), new Path(relPath), false);
 			FileUtil.copyFile(stream, execPath);
@@ -165,7 +206,8 @@ public class InstallUtil {
 				File file = new File(execPath);
 				Files.setPosixFilePermissions(file.toPath(), permissions);
 			}
-			return execPath;
+			installExec = execPath;
+			return installExec;
 		} finally {
 			if (stream != null) {
 				try {
@@ -180,6 +222,18 @@ public class InstallUtil {
 	private static String getInstallerDir() {
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();
+	}
+	
+	private static String getInstallCmd() {
+		if (installCmd == null) {
+			String value = System.getenv(INSTALL_DEV_VAR);
+			if ("true".equals(value)) {
+				installCmd = INSTALL_DEV_CMD;
+			} else {
+				installCmd = INSTALL_CMD;
+			}
+		}
+		return installCmd;
 	}
 
 }

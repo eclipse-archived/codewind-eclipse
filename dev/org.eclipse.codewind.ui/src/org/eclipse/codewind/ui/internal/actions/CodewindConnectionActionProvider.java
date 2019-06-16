@@ -28,8 +28,6 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 	
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
-	private ActivateAction activateAction;
-	private DeactivateAction deactivateAction;
 	
 	@Override
 	public void init(ICommonActionExtensionSite aSite) {
@@ -37,8 +35,6 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 		ISelectionProvider selProvider = aSite.getStructuredViewer();
 		newProjectAction = new NewProjectAction(selProvider);
 		bindAction = new BindAction(selProvider);
-		activateAction = new ActivateAction(selProvider);
-		deactivateAction = new DeactivateAction(selProvider);
 	}
 	
 	@Override
@@ -55,12 +51,6 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 			if (obj instanceof CodewindConnection) {
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
-				CodewindConnection connection = (CodewindConnection)obj;
-				if (connection.isConnected()) {
-					menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, deactivateAction);
-				} else {
-					menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, activateAction);
-				}
 			}
 		}
 	}

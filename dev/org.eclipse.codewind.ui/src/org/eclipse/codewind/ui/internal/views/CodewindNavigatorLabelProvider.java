@@ -12,6 +12,7 @@
 package org.eclipse.codewind.ui.internal.views;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
@@ -41,11 +42,35 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	public static final Styler ERROR_STYLER = StyledString.createColorRegistryStyler(
 			JFacePreferences.ERROR_COLOR, null);
 	
+	public static Styler LINK_STYLER = new Styler() {
+		@Override
+		public void applyStyles(TextStyle textStyle) {
+			textStyle.underline = true;
+		}
+	};
+	
 	@Override
 	public String getText(Object element) {
-		if (element instanceof CodewindConnection) {
+		if (element instanceof CodewindManager) {
+			CodewindManager manager = (CodewindManager) element;
+			switch (manager.getInstallerStatus(true)) {
+				case RUNNING:
+					return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
+				case INSTALLED:
+					return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
+				case NOT_INSTALLED:
+					return Messages.CodewindLabel + " [" + Messages.CodewindNotInstalledQualifier + "] (" + Messages.CodewindNotInstalledMsg + ")";
+				default:
+					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+			}
+		} else if (element instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)element;
-			String text = Messages.CodewindConnectionLabel + " " + connection.baseUrl;
+			String text = null;
+			if (connection.baseUrl.equals(CodewindManager.getManager().getLocalURI())) {
+				text = Messages.CodewindLocalProjects;
+			} else {
+				text = Messages.CodewindConnectionLabel + " " + connection.baseUrl;
+			}
 			if (!connection.isConnected()) {
 				String errorMsg = connection.getConnectionErrorMsg();
 				if (errorMsg == null) {
@@ -83,10 +108,34 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	@Override
 	public StyledString getStyledText(Object element) {
 		StyledString styledString;
-		if (element instanceof CodewindConnection) {
+		if (element instanceof CodewindManager) {
+			CodewindManager manager = (CodewindManager) element;
+			styledString = new StyledString(Messages.CodewindLabel);
+			switch (manager.getInstallerStatus(true)) {
+				case RUNNING:
+					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+					break;
+				case INSTALLED:
+					styledString.append(" [" + Messages.CodewindNotStartedQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindNotStartedLink + ")", StyledString.QUALIFIER_STYLER);
+					break;
+				case NOT_INSTALLED:
+					styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindNotInstalledLink + ")", StyledString.QUALIFIER_STYLER);
+					break;
+				default:
+					styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
+					break;
+			}
+		} else if (element instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)element;
-			styledString = new StyledString(Messages.CodewindConnectionLabel + " " );
-			styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
+			if (connection.baseUrl.equals(CodewindManager.getManager().getLocalURI())) {
+				styledString = new StyledString(Messages.CodewindLocalProjects);
+			} else {
+				styledString = new StyledString(Messages.CodewindConnectionLabel + " " );
+				styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
+			}
 			if (!connection.isConnected()) {
 				String errorMsg = connection.getConnectionErrorMsg();
 				if (errorMsg == null) {
@@ -125,7 +174,9 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 
 	@Override
 	public Image getImage(Object element) {
-		if (element instanceof CodewindConnection) {
+		if (element instanceof CodewindManager) {
+			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
+		} else if (element instanceof CodewindConnection) {
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
 		} else if (element instanceof CodewindApplication) {
 			ProjectLanguage language = ((CodewindApplication)element).projectLanguage;
@@ -156,5 +207,4 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	        textStyle.font = boldFont;
 	    }
 	}
-
 }

@@ -21,11 +21,13 @@
          	class="org.eclipse.codewind.ui.internal.prefs.CodewindPrefsParentPage">
          </page>
          
+         <!--
          <page id="CodewindConnectionsPage"
          	name="%PREFS_CONNECTION_PAGE_NAME"
          	category="CodewindParentPage"
          	class="org.eclipse.codewind.ui.internal.prefs.CodewindConnectionPrefsPage">
-         </page>    
+         </page>
+         -->  
    	</extension>
 
 	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
@@ -57,6 +59,16 @@
 			class="org.eclipse.codewind.ui.internal.views.CodewindExplorerView"/>
 	</extension>
 	
+	<extension point="org.eclipse.ui.perspectiveExtensions">
+		<perspectiveExtension 
+			targetID="org.eclipse.jst.j2ee.J2EEPerspective">
+	        <view id="org.eclipse.codewind.ui.explorerView" 
+	                relative="org.eclipse.wst.server.ui.ServersView" 
+	                relationship="stack"
+	                visible="true"/>
+		</perspectiveExtension> 
+	</extension>
+	
 	<extension point="org.eclipse.ui.navigator.viewer">
 		<viewerContentBinding
 			viewerId="org.eclipse.codewind.ui.explorerView">
@@ -82,14 +94,11 @@
 				</or>
 			</enablement>
 			<actionProvider
-				id="org.eclipse.codewind.ui.actionProvider"
+				id="org.eclipse.codewind.ui.codewindActionProvider"
 				class="org.eclipse.codewind.ui.internal.actions.CodewindActionProvider">
 				<enablement>
 					<or>
-						<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" />
-						<adapt type="java.util.Collection">
-							<count value="0"/>
-						</adapt>
+						<instanceof value="org.eclipse.codewind.core.internal.CodewindManager" />
 					</or>
 				</enablement>
 			</actionProvider>
@@ -190,7 +199,7 @@
 				class="org.eclipse.codewind.ui.internal.actions.RefreshAction"/>
 		</objectContribution>
 		<objectContribution
-			id="org.eclipse.codewind.ui.appObjectActions"
+			id="org.eclipse.codewind.ui.connectionObjectActions"
 			objectClass="org.eclipse.codewind.core.internal.connection.CodewindConnection">
 			<action
 				id="org.eclipse.codewind.ui.refreshConnection"
@@ -208,20 +217,23 @@
 				class="org.eclipse.codewind.ui.internal.actions.RemoveConnectionAction"/>
 			-->
 		</objectContribution>
+		<objectContribution
+			id="org.eclipse.codewind.ui.codewindActions"
+			objectClass="org.eclipse.codewind.core.internal.CodewindManager">
+			<action
+				id="org.eclipse.codewind.ui.refreshCodewind"
+				enablesFor="1"
+				menubarPath="group.additions"
+				icon="%REFRESH_ICON_PATH"
+				label="%ACTION_REFRESH"
+				class="org.eclipse.codewind.ui.internal.actions.RefreshAction"/>
+		</objectContribution>
 	</extension>
 
 	<extension point="org.eclipse.ui.viewActions">
 		<viewContribution
 			id="org.eclipse.codewind.ui.explorerViewActions"
 			targetID="org.eclipse.codewind.ui.explorerView">
-			<action
-				id="org.eclipse.codewind.ui.createConnectionAction"
-				label="%NEW_CONNECTION_MENU_LABEL"
-				menubarPath="group.new"
-				toolbarPath="group.new" 
-				icon="%DEFAULT_ICON_PATH"
-				class="org.eclipse.codewind.ui.internal.actions.CreateConnectionAction">
-			</action>
 			<action
 				id="org.eclipse.codewind.ui.restartRunModeAction"
 				label="%ACTION_RESTART_RUN_MODE"
@@ -254,6 +266,7 @@
 			id = "org.eclipse.codewind.ui.new"
 			name="%CODEWIND_CATEGORY_NAME">
 		</category>
+		<!--
 		<wizard
 			id="org.eclipse.codewind.ui.wizards.newConnection"
 			name="%NEW_CONNECTION_MENU_LABEL"
@@ -261,8 +274,8 @@
 			category="org.eclipse.codewind.ui.new"
 			icon="%DEFAULT_ICON_PATH">
 			<description>%NEW_CONNECTION_DESCRIPTION</description>
-			<selection class="org.eclipse.core.resources.IResource"/>
 		</wizard>
+		-->
 		<wizard
 			id="org.eclipse.codewind.ui.wizards.newProject"
 			name="%NEW_PROJECT_MENU_LABEL"
@@ -271,7 +284,6 @@
 			project="true"
 			icon="%DEFAULT_ICON_PATH">
 			<description>%NEW_PROJECT_DESCRIPTION</description>
-			<selection class="org.eclipse.core.resources.IResource"/>
 		</wizard>
 	</extension>
 	

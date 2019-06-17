@@ -29,6 +29,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -195,6 +198,30 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		
 		buildSection = new BuildSection(rightColumnComp, toolkit);
 		
+		Button refreshButton = new Button(columnComp, SWT.PUSH);
+		refreshButton.setText(Messages.AppOverviewEditorRefreshButton);
+		refreshButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false, 2, 1));
+
+		refreshButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				final CodewindApplication app = getApp();
+				if (app == null) {
+					Logger.logError("Could not get the application for refreshing project: " + appName); //$NON-NLS-1$
+					return;
+				}
+				Job job = new Job(NLS.bind(Messages.RefreshProjectJobLabel, app.name)) {
+					@Override
+					protected IStatus run(IProgressMonitor monitor) {
+						app.connection.refreshApps(app.projectID);
+						Display.getDefault().asyncExec(() -> ApplicationOverviewEditorPart.this.update(app));
+						return Status.OK_STATUS;
+					}
+				};
+				job.schedule();
+			}
+		});
+
 		update(getApp());
 	}
 	

@@ -26,7 +26,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class CodewindApplicationActionProvider extends CommonActionProvider {
 	
-	private ValidateAction validateAction;
+//	private ValidateAction validateAction;
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
@@ -37,7 +37,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
         ISelectionProvider selProvider = aSite.getStructuredViewer();
-        validateAction = new ValidateAction(selProvider);
+//        validateAction = new ValidateAction(selProvider);
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
@@ -47,9 +47,9 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
-    	if (validateAction.showAction()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, validateAction);
-    	}
+//    	if (validateAction.showAction()) {
+//    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, validateAction);
+//    	}
     	if (attachDebuggerAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, attachDebuggerAction);
     	}

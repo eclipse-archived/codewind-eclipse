@@ -234,6 +234,7 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorLastImageBuildEntry;
 	public static String AppOverviewEditorProjectNeverBuilt;
 	public static String AppOverviewEditorImageNeverBuilt;
+	public static String AppOverviewEditorRefreshButton;
 	public static String AppOverviewEditorNotAvailable;
 	public static String AppOverviewEditorOpenSettingsErrorTitle;
 	public static String AppOverviewEditorOpenSettingsErrorMsg;

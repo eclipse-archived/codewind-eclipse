@@ -317,12 +317,12 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	            final IMarker marker = resource.createMarker(MARKER_TYPE);
 	            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
 	            marker.setAttribute(IMarker.MESSAGE, message);
-	            if (quickFixId != null && !quickFixId.isEmpty()) {
-	            	marker.setAttribute(CONNECTION_URL, connection.baseUrl.toString());
-	            	marker.setAttribute(PROJECT_ID, projectID);
-	            	marker.setAttribute(QUICK_FIX_ID, quickFixId);
-	            	marker.setAttribute(QUICK_FIX_DESCRIPTION, quickFixDescription);
-	            }
+//	            if (quickFixId != null && !quickFixId.isEmpty()) {
+//	            	marker.setAttribute(CONNECTION_URL, connection.baseUrl.toString());
+//	            	marker.setAttribute(PROJECT_ID, projectID);
+//	            	marker.setAttribute(QUICK_FIX_ID, quickFixId);
+//	            	marker.setAttribute(QUICK_FIX_DESCRIPTION, quickFixDescription);
+//	            }
         	}
         } catch (CoreException e) {
             Logger.logError("Failed to create a marker for the " + name + " application: " + message, e); //$NON-NLS-1$

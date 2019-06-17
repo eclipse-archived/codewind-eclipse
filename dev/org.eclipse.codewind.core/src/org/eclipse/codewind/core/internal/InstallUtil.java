@@ -35,6 +35,12 @@ import org.eclipse.core.runtime.SubMonitor;
 
 public class InstallUtil {
 	
+	public static final String STOP_APP_CONTAINERS_PREFSKEY = "stopAppContainers";
+	public static final String STOP_APP_CONTAINERS_ALWAYS = "stopAppContainersAlways";
+	public static final String STOP_APP_CONTAINERS_NEVER = "stopAppContainersNever";
+	public static final String STOP_APP_CONTAINERS_PROMPT = "stopAppContainersPrompt";
+	public static final String STOP_APP_CONTAINERS_DEFAULT = STOP_APP_CONTAINERS_PROMPT;
+	
 	private static final Map<OperatingSystem, String> installMap = new HashMap<OperatingSystem, String>();
 
 	static {
@@ -47,6 +53,7 @@ public class InstallUtil {
 	private static final String INSTALL_DEV_CMD = "install-dev";
 	private static final String INSTALL_CMD = "install";
 	private static final String START_CMD = "start";
+	private static final String STOP_CMD = "stop";
 	private static final String STOP_ALL_CMD = "stop-all";
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
@@ -102,11 +109,11 @@ public class InstallUtil {
 		}
 	}
 	
-	public static ProcessResult stopCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
+	public static ProcessResult stopCodewind(boolean stopAll, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
-		    process = runInstaller(STOP_ALL_CMD);
+		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
 		} finally {

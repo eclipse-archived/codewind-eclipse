@@ -18,6 +18,7 @@ import java.util.Map;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.IDebugLauncher;
 import org.eclipse.codewind.core.internal.IUpdateHandler;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -67,6 +68,8 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 		context.registerService(DebugOptionsListener.class, Logger.instance(), null);
 
 		// Set default preferences once, here
+		getPreferenceStore().setDefault(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY,
+				InstallUtil.STOP_APP_CONTAINERS_DEFAULT);
 		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY,
 				CodewindEclipseApplication.DEFAULT_DEBUG_CONNECT_TIMEOUT);
 	}

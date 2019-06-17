@@ -75,7 +75,12 @@ public class ProcessHelper {
                 } catch (InterruptedException e) {
                     // ignore
                 }
-                
+
+                if (mon.isCanceled()) {
+                	p.destroy();
+                	return new ProcessResult(0, "", "");
+                }
+
                 mon.worked(1);
                 mon.setWorkRemaining(work);
 

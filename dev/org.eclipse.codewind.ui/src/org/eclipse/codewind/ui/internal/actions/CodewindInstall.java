@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
 import org.eclipse.codewind.core.internal.Logger;
@@ -29,6 +30,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -56,8 +60,6 @@ public class CodewindInstall {
 			}
 		
 	}
-
-
 
 	public static void codewindInstallerDialog() {
 		Shell shell = new Shell();
@@ -98,7 +100,7 @@ public class CodewindInstall {
 						if (result.getExitValue() == 0) {
 							startCodewind(prompt);
 						}
-						
+
 					} catch (IOException e) {
 						return getErrorStatus("An error occurred trying to install Codewind.", e);
 					} catch (TimeoutException e) {
@@ -127,7 +129,11 @@ public class CodewindInstall {
 					try {
 						
 						ProcessResult result = InstallUtil.startCodewind(monitor);
-						
+
+						if (monitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+
 						if (result.getExitValue() != 0) {
 							return getErrorStatus("There was a problem trying to start Codewind: " + result.getError());
 						}
@@ -154,7 +160,7 @@ public class CodewindInstall {
 		
 	}
 	
-	public static void stopCodewind() { 
+	public static void stopCodewind() {
 
 		try {
 			Job job = new Job(Messages.StoppingCodewindJobLabel) {
@@ -163,8 +169,17 @@ public class CodewindInstall {
 
 					try {
 						
-						ProcessResult result = InstallUtil.stopCodewind(monitor);
+						boolean stopAll = getStopAll(monitor);
+						if (monitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
 						
+						ProcessResult result = InstallUtil.stopCodewind(stopAll, monitor);
+
+						if (monitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+
 						if (result.getExitValue() != 0) {
 							return getErrorStatus("There was a problem trying to stop Codewind: " + result.getError());
 						}
@@ -218,14 +233,33 @@ public class CodewindInstall {
 						InstallerStatus status = InstallUtil.getInstallerStatus();
 						if (status == InstallerStatus.RUNNING) {
 							// Stop Codewind before uninstalling
-							ProcessResult result = InstallUtil.stopCodewind(monitor.split(20));
+
+							boolean stopAll = getStopAll(monitor);
+							if (monitor.isCanceled()) {
+								return Status.CANCEL_STATUS;
+							}
+
+							ProcessResult result = InstallUtil.stopCodewind(stopAll, monitor.split(20));
+							
+							if (monitor.isCanceled()) {
+								return Status.CANCEL_STATUS;
+							}
+							
 							if (result.getExitValue() != 0) {
 								return getErrorStatus("There was a problem trying to stop Codewind: " + result.getError());
 							}
 						}
 						
+						if (monitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						
 						monitor.setWorkRemaining(80);
 						ProcessResult result = InstallUtil.removeCodewind(monitor);
+						
+						if (monitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
 						
 						if (result.getExitValue() != 0) {
 							return getErrorStatus("There was a problem trying to remove Codewind images: " + result.getError());
@@ -259,5 +293,38 @@ public class CodewindInstall {
 		return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, msg, t);
 	}
 	
-	
+	private static boolean getStopAll(IProgressMonitor monitor) {
+		IPreferenceStore prefs = CodewindCorePlugin.getDefault().getPreferenceStore();
+		if (InstallUtil.STOP_APP_CONTAINERS_PROMPT.contentEquals(prefs.getString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY))) {
+			final boolean[] stopApps = new boolean[] {false};
+			Display.getDefault().syncExec(new Runnable() {
+
+				@Override
+				public void run() {
+					MessageDialogWithToggle stopAppsQuestion = MessageDialogWithToggle.openYesNoCancelQuestion(
+							Display.getDefault().getActiveShell(), Messages.StopAllDialog_Title,
+							Messages.StopAllDialog_Message,
+							Messages.StopAllDialog_ToggleMessage, false, null, null);
+					switch(stopAppsQuestion.getReturnCode()) {
+						case IDialogConstants.YES_ID:
+							stopApps[0] = true;
+							break;
+						case IDialogConstants.CANCEL_ID:
+							monitor.setCanceled(true);
+							break;
+						default:
+							break;
+					}
+					if (!monitor.isCanceled() && stopAppsQuestion.getToggleState()) {
+						// Save the user's selection
+						prefs.setValue(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY,
+								stopApps[0] ? InstallUtil.STOP_APP_CONTAINERS_ALWAYS : InstallUtil.STOP_APP_CONTAINERS_NEVER);
+					}
+				}
+			});
+			return stopApps[0];
+		}
+
+		return InstallUtil.STOP_APP_CONTAINERS_ALWAYS.contentEquals(prefs.getString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY));
+	}
 }

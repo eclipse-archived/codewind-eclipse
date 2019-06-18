@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
 import org.eclipse.codewind.core.internal.Logger;
@@ -296,6 +297,9 @@ public class CodewindInstall {
 	private static boolean getStopAll(IProgressMonitor monitor) {
 		IPreferenceStore prefs = CodewindCorePlugin.getDefault().getPreferenceStore();
 		if (InstallUtil.STOP_APP_CONTAINERS_PROMPT.contentEquals(prefs.getString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY))) {
+			if (!CodewindManager.getManager().hasActiveApplications()) {
+				return false;
+			}
 			final boolean[] stopApps = new boolean[] {false};
 			Display.getDefault().syncExec(new Runnable() {
 

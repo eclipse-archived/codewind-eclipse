@@ -101,5 +101,22 @@ public class CodewindManager {
 			localConnection = null;
 		}
 	}
+	
+	public void refresh() {
+		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
+			conn.refreshApps(null);
+		}
+	}
+	
+	public boolean hasActiveApplications() {
+		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
+			for (CodewindApplication app : conn.getApps()) {
+				if (app.isAvailable()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 }

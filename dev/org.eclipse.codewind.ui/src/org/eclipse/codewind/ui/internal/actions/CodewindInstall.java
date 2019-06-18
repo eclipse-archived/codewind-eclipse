@@ -249,13 +249,13 @@ public class CodewindInstall {
 			    Shell shell = Display.getDefault().getActiveShell();
 				MessageBox dialog = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES| SWT.NO);
 				dialog.setText(Messages.InstallCodewindDialogTitle);
-				dialog.setMessage("Codewind is installed, do you want to add " + project.getName() + " Codewind?");
+				dialog.setMessage("Codewind is installed, do you want to add " + project.getName() + " to Codewind?");
 
 				int rc = dialog.open();
 			    switch (rc) {
 				    case SWT.YES:
-						final CodewindManager manager = CodewindManager.getManager();
-						CodewindConnection connection = manager.createLocalConnection();
+				    	final CodewindManager manager = CodewindManager.getManager();
+				    	CodewindConnection connection = manager.createLocalConnection();
 				    	Wizard wizard = new BindProjectWizard(connection, project);
 				    	WizardLauncher.launchWizardWithoutSelection(wizard);
 				    	break;

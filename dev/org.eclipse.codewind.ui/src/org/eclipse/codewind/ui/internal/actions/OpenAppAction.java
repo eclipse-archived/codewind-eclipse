@@ -70,23 +70,29 @@ public class OpenAppAction implements IObjectActionDelegate, IViewActionDelegate
         			Messages.OpenAppAction_CantOpenNotRunningAppMsg);
         	return;
         }
-
-        URL appRootUrl = app.getRootUrl();
-
-        // Use the app's ID as the browser ID so that if this is called again on the same app,
-        // the browser will be re-used
-
+        
+        openAppInBrowser(app);
+    }
+    
+	public static void openAppInBrowser(CodewindApplication app) {
+		URL appRootUrl = app.getRootUrl();
+		if (appRootUrl == null) {
+			Logger.logError("The application could not be opened in the browser because the url is null: " + app.name); //$NON-NLS-1$
+			return;
+		}
 		try {
+			// Use the app's ID as the browser ID so that if this is called again on the same app,
+			// the browser will be re-used
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 			IWebBrowser browser = browserSupport
 					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
 							app.projectID, app.name, NLS.bind(Messages.BrowserTooltipApp, app.name));
 
-	        browser.openURL(appRootUrl);
+			browser.openURL(appRootUrl);
 		} catch (PartInitException e) {
 			Logger.logError("Error opening app in browser", e); //$NON-NLS-1$
 		}
-    }
+	}
 
 	@Override
 	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {

@@ -20,6 +20,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.EnableDisableAutoBuildAction;
 import org.eclipse.codewind.ui.internal.actions.EnableDisableProjectAction;
+import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
 import org.eclipse.core.filesystem.EFS;
@@ -53,8 +54,10 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.ManagedForm;
+import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.ide.FileStoreEditorInput;
@@ -247,7 +250,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		
 		private final StringEntry languageEntry;
 		private final StringEntry locationEntry;
-		private final StringEntry appURLEntry;
+		private final LinkEntry appURLEntry;
 		private final StringEntry hostAppPortEntry;
 		private final StringEntry hostDebugPortEntry;
 		private final StringEntry containerIdEntry;
@@ -275,7 +278,14 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        addSpacer(composite);
 	        locationEntry = new StringEntry(composite, Messages.AppOverviewEditorLocationEntry);
 	        addSpacer(composite);
-	        appURLEntry = new StringEntry(composite, Messages.AppOverviewEditorAppUrlEntry);
+	        appURLEntry = new LinkEntry(composite, toolkit, Messages.AppOverviewEditorAppUrlEntry, (url) -> {
+	        	CodewindApplication app = getApp();
+	        	if (app == null) {
+	        		Logger.logError("Could not get the application for opening in a browser: " + appName); //$NON-NLS-1$
+	        		return;
+	        	}
+	        	OpenAppAction.openAppInBrowser(app);
+	        });
 	        addSpacer(composite);
 	        hostAppPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostAppPortEntry);
 	        addSpacer(composite);
@@ -287,7 +297,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        		Messages.AppOverviewEditorStatusEnabled, Messages.AppOverviewEditorStatusDisabled, (value) -> {
 	        	CodewindApplication app = getApp();
 	        	if (app == null) {
-	        		Logger.logError("Could not get the application for updating project enablement for project id: " + projectID); //$NON-NLS-1$
+	        		Logger.logError("Could not get the application for updating project enablement: " + appName); //$NON-NLS-1$
 	        		return;
 	        	}
 	        	EnableDisableProjectAction.enableDisableProject(app, value);
@@ -538,6 +548,57 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	public interface BooleanAction {
 		public void execute(boolean value);
+	}
+	
+	private class LinkEntry {
+		private final Text text;
+		private final Hyperlink link;
+		private String linkUrl;
+		
+		public LinkEntry(Composite composite, FormToolkit toolkit, String name, LinkAction action) {
+			StyledText label = new StyledText(composite, SWT.NONE);
+			label.setText(name);
+			setBold(label);
+	        
+			// If not available then use a text field
+			text = new Text(composite, SWT.READ_ONLY);
+			text.setText(Messages.AppOverviewEditorNotAvailable);
+			text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+	        
+			link = toolkit.createHyperlink(composite, "", SWT.WRAP);
+			link.setVisible(false);
+			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, true, false);
+			data.exclude = true;
+			link.setLayoutData(data);
+			
+			link.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
+				public void linkActivated(org.eclipse.ui.forms.events.HyperlinkEvent e) {
+					action.execute(linkUrl);
+				}
+			});
+		}
+		
+		public void setValue(String linkUrl, boolean enabled) {
+			this.linkUrl = linkUrl;
+			if (linkUrl != null && !linkUrl.isEmpty()) {
+				link.setText(linkUrl);
+				link.setVisible(true);
+				((GridData)link.getLayoutData()).exclude = false;
+				text.setVisible(false);
+				((GridData)text.getLayoutData()).exclude = true;
+				link.setEnabled(enabled);
+			} else {
+				link.setVisible(false);
+				((GridData)link.getLayoutData()).exclude = true;
+				text.setVisible(true);
+				((GridData)text.getLayoutData()).exclude = false;
+			}
+		}
+	}
+	
+	public interface LinkAction {
+		public void execute(String url);
 	}
 	
 	private void setBold(StyledText text) {

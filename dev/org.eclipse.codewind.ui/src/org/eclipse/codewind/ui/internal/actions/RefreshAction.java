@@ -61,6 +61,7 @@ public class RefreshAction implements IObjectActionDelegate {
     		Job job = new Job(Messages.RefreshCodewindJobLabel) {
     			@Override
     			protected IStatus run(IProgressMonitor monitor) {
+    				((CodewindManager)codewindObject).refresh();
 		        	ViewHelper.refreshCodewindExplorerView(codewindObject);
 		        	return Status.OK_STATUS;
     			}

@@ -50,13 +50,26 @@ public class BindProjectAction implements IObjectActionDelegate {
 
 	@Override
 	public void run(IAction action) {
+		CodewindConnection connection = null;
+
 		if (project == null) {
 			// Should not happen
 			Logger.logError("BindProjectAction ran but no project was selected"); //$NON-NLS-1$
 			return;
 		}
 		
-		CodewindConnection connection = setupConnection();
+		try {
+			if (CodewindInstall.isCodewindInstalled()) {
+				connection = setupConnection();
+			} else {
+				CodewindInstall.codewindInstallerDialog(project);
+				return;
+			}
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		if (connection == null || !connection.isConnected()) {
 			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, Messages.BindProjectConnectionError);
 			return;

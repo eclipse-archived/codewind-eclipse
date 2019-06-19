@@ -11,10 +11,10 @@ Prerequisites
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
 2. Open the **Codewind Explorer** view.
-3. Double click on the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1GB.
+3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB.
 
 ## Using Codewind for Eclipse
-Right click on the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. Once a project is created or added, it will display in the **Codewind Explorer** view. Right click on the project to see the available actions.
+Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
 
 Features:</br>
 - Create new projects from application templates or add existing Docker-ready projects to Codewind.
@@ -26,7 +26,7 @@ Features:</br>
 - Open a shell session into a Codewind application container.
 - Toggle project auto build and manually initiate project builds.
 - Integrate Codewind validation errors into the **Markers** view.
-- Disable, enable and remove projects.
+- Disable, enable, and remove projects.
 
 ## Enabling debug logs
 1. Create an `.options` file in your Eclipse install directory, the same directory with the `eclipse` executable. Include the following content in the new file:

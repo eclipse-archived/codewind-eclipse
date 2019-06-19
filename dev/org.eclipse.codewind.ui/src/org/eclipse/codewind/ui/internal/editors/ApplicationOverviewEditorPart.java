@@ -484,6 +484,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        setBold(label);
 	        
 	        text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+	        text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
 	        text.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 		}
 		
@@ -561,7 +562,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			setBold(label);
 	        
 			// If not available then use a text field
-			text = new Text(composite, SWT.READ_ONLY);
+			text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+			text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
 			text.setText(Messages.AppOverviewEditorNotAvailable);
 			text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 	        

@@ -82,6 +82,10 @@ def corelibFolder = file(projDir + project.properties['codewind.core.prereqlib.f
 def excludeJson = "json-20090211.jar"
 def jsonFile = file(projDir + project.properties['codewind.core.prereqlib.folder'] + '/org.json_1.0.0.v201011060100.jar')
 
+def filewatcherCore = file(projDir + project.properties['eclipse.temp.folder'] + '/org.eclipse.codewind.filewatchers.core.jar')
+def filewatcherEclipse = file(projDir + project.properties['eclipse.temp.folder'] + '/org.eclipse.codewind.filewatchers.eclipse.jar')
+def filewatcherStandalonenio = file(projDir + project.properties['eclipse.temp.folder'] + '/org.eclipse.codewind.filewatchers.standalonenio.jar')
+
 // Download dependent plugins from maven repository for 'org.eclipse.codewind.core'
 task getCoreDependencies(type: Copy) {
 
@@ -102,6 +106,24 @@ task downloadJson(type: Download) {
     println("Downloading json jar")
     sourceUrl = 'http://download.eclipse.org/tools/orbit/downloads/drops/R20181102183712/repository/plugins/org.json_1.0.0.v201011060100.jar'
     target = jsonFile
+}
+
+task downloadFileWatcherCore(type: Download) {
+    println("Downloading org.eclipse.codewind.filewatchers.core.jar")
+    sourceUrl = 'http://download.eclipse.org/codewind/codewind-filewatchers/snapshots/org.eclipse.codewind.filewatchers.core-0.0.1-SNAPSHOT.jar'
+    target = filewatcherCore
+}
+
+task downloadFileWatcherEclipse(type: Download) {
+    println("Downloading org.eclipse.codewind.filewatchers.eclipse.jar")
+    sourceUrl = 'http://download.eclipse.org/codewind/codewind-filewatchers/snapshots/org.eclipse.codewind.filewatchers.eclipse-0.0.1-SNAPSHOT.jar'
+    target = filewatcherEclipse
+}
+
+task downloadFileWatcherStandalonenio(type: Download) {
+    println("Downloading org.eclipse.codewind.filewatchers.standalonenio.jar")
+    sourceUrl = 'http://download.eclipse.org/codewind/codewind-filewatchers/snapshots/org.eclipse.codewind.filewatchers.standalonenio-0.0.1-SNAPSHOT.jar'
+    target = filewatcherStandalonenio
 }
 
 class Download extends DefaultTask {
@@ -472,4 +494,4 @@ task clean(type: Delete) {
 }
 
 clean.dependsOn cleanBuilds, cleanPrereqs
-getCoreDependencies.finalizedBy downloadJson
+getCoreDependencies.finalizedBy downloadJson, downloadFileWatcherCore, downloadFileWatcherEclipse, downloadFileWatcherStandalonenio

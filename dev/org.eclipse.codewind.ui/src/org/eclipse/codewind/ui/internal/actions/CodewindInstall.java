@@ -86,7 +86,7 @@ public class CodewindInstall {
 		MessageBox dialog =
 			    new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES| SWT.NO);
 			dialog.setText(Messages.InstallCodewindDialogTitle);
-			dialog.setMessage("Could not add " + project.getName() + ", " + Messages.InstallCodewindDialogMessage);
+			dialog.setMessage("Could not add " + project.getName() + " to Codewind because Codewind is not installed, do you want to install Codewind?");
 
 			int rc = dialog.open();
 
@@ -256,8 +256,14 @@ public class CodewindInstall {
 				    case SWT.YES:
 				    	final CodewindManager manager = CodewindManager.getManager();
 				    	CodewindConnection connection = manager.createLocalConnection();
-				    	Wizard wizard = new BindProjectWizard(connection, project);
-				    	WizardLauncher.launchWizardWithoutSelection(wizard);
+				    	if (connection != null && connection.isConnected()) {
+					    	Wizard wizard = new BindProjectWizard(connection, project);
+					    	WizardLauncher.launchWizardWithoutSelection(wizard);
+				    	} else {
+							Logger.logError("In BindProjectAction run method and Codewind is not installed or has unknown status.");
+							connection = null;
+							return;
+				    	}
 				    	break;
 				}
 			}

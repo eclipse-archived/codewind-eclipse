@@ -66,8 +66,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 				return;
 			}
 		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 		
 		if (connection == null || !connection.isConnected()) {

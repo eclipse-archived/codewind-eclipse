@@ -66,7 +66,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 				return;
 			}
 		} catch (InvocationTargetException e) {
-			Logger.logError(e);
+			Logger.logError("Error trying to set up Codewind to add existing project: " + project.getName(), e);
 		}
 		
 		if (connection == null || !connection.isConnected()) {

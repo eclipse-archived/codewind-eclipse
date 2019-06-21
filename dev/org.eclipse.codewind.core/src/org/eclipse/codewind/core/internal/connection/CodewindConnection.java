@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +38,9 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
+import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.osgi.util.NLS;
@@ -61,6 +65,7 @@ public class CodewindConnection {
 	private String socketNamespace = null;
 
 	private CodewindSocket socket;
+	private CodewindFilewatcherdConnection filewatcher;
 	
 	private volatile boolean isConnected = true;
 
@@ -110,6 +115,19 @@ public class CodewindConnection {
 		}
 
 		refreshApps(null);
+		
+		filewatcher = new CodewindFilewatcherdConnection(baseUrl.toString(), new ICodewindProjectTranslator() {
+			@Override
+			public Optional<String> getProjectId(IProject project) {
+				if (project != null) {
+					CodewindApplication app = getAppByName(project.getName());
+					if (app != null) {
+						return Optional.of(app.projectID);
+					}
+				}
+				return Optional.empty();
+			}
+		});
 
 		Logger.log("Created " + this); //$NON-NLS-1$
 	}
@@ -135,6 +153,9 @@ public class CodewindConnection {
 		Logger.log("Closing " + this); //$NON-NLS-1$
 		if (socket != null) {
 			socket.close();
+		}
+		if (filewatcher != null) {
+			filewatcher.dispose();
 		}
 		for (CodewindApplication app : appMap.values()) {
 			app.dispose();

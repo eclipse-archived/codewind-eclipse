@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Eclipse
+Bundle-SymbolicName: org.eclipse.codewind.filewatchers.eclipse
+Bundle-Version: 1.0.0.qualifier
+Export-Package: org.eclipse.codewind.filewatchers.eclipse
+Import-Package: org.eclipse.codewind.filewatchers,
+ org.eclipse.codewind.filewatchers.core,
+ org.eclipse.core.resources,
+ org.eclipse.core.runtime

@@ -20,6 +20,7 @@ import org.eclipse.codewind.core.internal.IDebugLauncher;
 import org.eclipse.codewind.core.internal.IUpdateHandler;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
@@ -80,6 +81,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		CodewindConnectionManager.clear();
 		plugin = null;
 		super.stop(context);
 	}

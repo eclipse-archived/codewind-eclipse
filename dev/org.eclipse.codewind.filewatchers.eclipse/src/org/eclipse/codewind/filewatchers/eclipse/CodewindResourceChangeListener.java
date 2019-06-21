@@ -86,6 +86,19 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 			case IResourceDelta.CHANGED:
 				ceet = ChangeEntryEventType.MODIFY;
 				break;
+			default:
+				break;
+			}
+
+			if (ceet == null) {
+				// Ignore and return for any unrecognized types.
+				return true;
+			}
+
+			if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 && (delta.getFlags() & IResourceDelta.REPLACED) == 0) {
+				// Some workbench operations, such as adding/removing a debug breakpoint, will trigger a resource 
+				// delta, even though the actual file contents is the same. We ignore those, and return here.
+				return true;
 			}
 
 			File resourceFile = resource.getLocation().toFile();

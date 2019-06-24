@@ -157,6 +157,8 @@ public class EclipseResourceWatchService implements IPlatformWatchService {
 
 		private final String pathInNormalizedForm;
 
+		private final File pathRoot;
+
 		public WatchedPath(File pathRoot, ProjectToWatch projectToWatch, EclipseResourceWatchService parent)
 				throws IOException {
 
@@ -164,6 +166,8 @@ public class EclipseResourceWatchService implements IPlatformWatchService {
 
 			this.pathFilter = new PathFilter(projectToWatch);
 			this.parent = parent;
+
+			this.pathRoot = pathRoot;
 
 			List<IPlatformWatchListener> listeners = new ArrayList<>();
 			synchronized (parent.listeners_synch) {
@@ -241,5 +245,25 @@ public class EclipseResourceWatchService implements IPlatformWatchService {
 			/** No disposal needed. */
 		}
 
+		public File getPathRoot() {
+			return pathRoot;
+		}
+
+	}
+
+	@Override
+	public String generateDebugState() {
+
+		StringBuilder result = new StringBuilder();
+
+		synchronized (projIdToWatchedPaths_synch) {
+
+			projIdToWatchedPaths_synch.forEach((k, v) -> {
+				result.append("- " + k + " " + v.getPathRoot().getPath() + "\n");
+			});
+
+		}
+
+		return result.toString();
 	}
 }

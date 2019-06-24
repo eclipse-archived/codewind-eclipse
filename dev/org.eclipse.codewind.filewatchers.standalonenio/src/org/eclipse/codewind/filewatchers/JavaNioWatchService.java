@@ -147,6 +147,22 @@ public class JavaNioWatchService implements IPlatformWatchService {
 
 	}
 
+	@Override
+	public String generateDebugState() {
+
+		StringBuilder result = new StringBuilder();
+
+		synchronized (watchedProjects_synch) {
+
+			watchedProjects_synch.forEach((k, v) -> {
+				result.append("- " + k + " | " + v.getPathRoot().getPath() + "\n");
+			});
+
+		}
+
+		return result.toString();
+	}
+
 	/**
 	 * Each WatchedPath has a corresponding thread that listens for file/directory
 	 * changes.
@@ -413,13 +429,16 @@ public class JavaNioWatchService implements IPlatformWatchService {
 					if (keys.isEmpty()) {
 						if (this.pathRoot.exists()) {
 							log.logSevere(
-									"The watch service has nothing to watch, but the path root still exists. This should never happen. ");
+									"The watch service has nothing to watch, but the path root still exists. This should never happen. "
+											+ projectToWatch.getProjectId());
 						} else {
 							log.logInfo(
-									"The watch service has nothing to watch, so the thread is stopping in 30 seconds.");
+									"The watch service has nothing to watch, so the thread is stopping in 30 seconds. "
+											+ projectToWatch.getProjectId());
 							FilewatcherUtils.newThread(() -> {
 								FilewatcherUtils.sleepIgnoreInterrupt(30 * 1000);
-								log.logInfo("The watch service has nothing to watch, so the thread is now stopping.");
+								log.logInfo("The watch service has nothing to watch, so the thread is now stopping: "
+										+ projectToWatch.getProjectId());
 								stopWatching();
 							});
 						}
@@ -516,6 +535,10 @@ public class JavaNioWatchService implements IPlatformWatchService {
 			}
 
 			return watchSuccess;
+		}
+
+		public File getPathRoot() {
+			return pathRoot;
 		}
 	}
 

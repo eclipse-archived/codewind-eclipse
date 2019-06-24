@@ -19,13 +19,17 @@ import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.CheckboxTableViewer;
+import org.eclipse.jface.viewers.ICheckStateListener;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class ProjectTypeSelectionPage extends WizardPage {
@@ -35,9 +39,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private ProjectType type = null;
 	private ProjectLanguage language = null;
 	private Text languageLabel = null;
-	private Table languageTable = null;
+	private CheckboxTableViewer languageViewer = null;
 	private Text typeLabel = null;
-	private Table typeTable = null;
+	private CheckboxTableViewer typeViewer = null;
 
 	protected ProjectTypeSelectionPage(CodewindConnection connection, IProject project) {
 		super(Messages.SelectProjectTypePageName);
@@ -50,106 +54,74 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	@Override
 	public void createControl(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NULL);
-        GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        layout.horizontalSpacing = 5;
-        layout.verticalSpacing = 7;
-        composite.setLayout(layout);
-        composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
-        typeLabel = new Text(composite, SWT.READ_ONLY);
-        typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
-        typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-        typeLabel.setBackground(composite.getBackground());
-        typeLabel.setForeground(composite.getForeground());
-        
-        typeTable = new Table(composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-        fillTypeTable(typeTable);
-        typeTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-
-        languageLabel = new Text(composite, SWT.READ_ONLY);
-        languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
-        languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-        languageLabel.setBackground(composite.getBackground());
-        languageLabel.setForeground(composite.getForeground());
-        
-        languageTable = new Table (composite, SWT.SINGLE | SWT.CHECK | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-    	fillLanguageTable(languageTable);
-    	languageTable.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-    	
-    	typeTable.addListener(SWT.Selection, event -> {
-    		TableItem item = null;
-    		if (event.detail == SWT.CHECK) {
-				item = (TableItem)event.item;
-				if (item.getChecked()) {
-					for (TableItem it : typeTable.getItems()) {
-						if (it != item) {
-							it.setChecked(false);
-						}
-					}
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 1;
+		layout.horizontalSpacing = 5;
+		layout.verticalSpacing = 7;
+		composite.setLayout(layout);
+		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		typeLabel = new Text(composite, SWT.READ_ONLY);
+		typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
+		typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		typeLabel.setBackground(composite.getBackground());
+		typeLabel.setForeground(composite.getForeground());
+		
+		typeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
+		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
+		typeViewer.setInput(getProjectTypeArray());
+		typeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+	   
+		languageLabel = new Text(composite, SWT.READ_ONLY);
+		languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
+		languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		languageLabel.setBackground(composite.getBackground());
+		languageLabel.setForeground(composite.getForeground());
+		
+		languageViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+		languageViewer.setContentProvider(ArrayContentProvider.getInstance());
+		languageViewer.setLabelProvider(new LanguageLabelProvider());
+		languageViewer.setInput(getLanguageArray());
+		languageViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		
+		typeViewer.addCheckStateListener(new ICheckStateListener() {
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				if (event.getChecked()) {
+					typeViewer.setCheckedElements(new Object[] {event.getElement()});
+					type = (ProjectType) event.getElement();
+				} else {
+					type = null;
 				}
-			} else {
-				item = (TableItem)event.item;
-				item.setChecked(!item.getChecked());
+				languageLabel.setVisible(type == ProjectType.TYPE_DOCKER);
+				languageViewer.getTable().setVisible(type == ProjectType.TYPE_DOCKER);
+				getWizard().getContainer().updateButtons();
 			}
-    		if (item != null && item.getChecked()) {
-    			type = (ProjectType)item.getData();
-    			if (type == ProjectType.TYPE_DOCKER) {
-    				languageLabel.setVisible(true);
-    				languageTable.setVisible(true);
-    			} else {
-    				languageLabel.setVisible(false);
-    				languageTable.setVisible(false);
-    			}
-	        } else {
-	        	type = null;
-	        	languageLabel.setVisible(false);
-				languageTable.setVisible(false);
-	        }
-    		getWizard().getContainer().updateButtons();
-    	});
+		});
 
-    	languageTable.addListener(SWT.Selection, event -> {
-    		TableItem item = null;
-    		if (event.detail == SWT.CHECK) {
-				item = (TableItem)event.item;
-				if (item.getChecked()) {
-					for (TableItem it : languageTable.getItems()) {
-						if (it != item) {
-							it.setChecked(false);
-						}
-					}
+		languageViewer.addCheckStateListener(new ICheckStateListener() {
+			@Override
+			public void checkStateChanged(CheckStateChangedEvent event) {
+				if (event.getChecked()) {
+					languageViewer.setCheckedElements(new Object[] {event.getElement()});
+					language = (ProjectLanguage) event.getElement();
+				} else {
+					language = null;
 				}
-			} else {
-				item = (TableItem)event.item;
-				item.setChecked(!item.getChecked());
+				getWizard().getContainer().updateButtons();
 			}
-    		if (item != null && item.getChecked()) {
-    			language = (ProjectLanguage)item.getData();
-	        } else {
-	        	language = null;
-	        }
-    		getWizard().getContainer().updateButtons();
-    	});
+		});
  
-    	languageLabel.setVisible(false);
-    	languageTable.setVisible(false);
+		languageLabel.setVisible(false);
+		languageViewer.getTable().setVisible(false);
 
-    	updateTables();
+		updateTables();
 
-    	typeTable.setFocus();
+		typeViewer.getTable().setFocus();
 		setControl(composite);
 	}
-	
-	private TableItem getItem(Table table, Object data) {
-		for (TableItem item : table.getItems()) {
-			if (data.equals(item.getData())) {
-				return item;
-			}
-		}
-		return null;
-	}
-	
+
 	public boolean canFinish() {
 		if (type == null || type == ProjectType.TYPE_UNKNOWN) {
 			return false;
@@ -157,45 +129,55 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		return true;
 	}
 	
-	private void fillLanguageTable(Table languageTable) {
-		TableItem item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectLanguage.LANGUAGE_GO.getDisplayName());
-		item.setData(ProjectLanguage.LANGUAGE_GO);
-		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON));
-		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectLanguage.LANGUAGE_JAVA.getDisplayName());
-		item.setData(ProjectLanguage.LANGUAGE_JAVA);
-		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON));
-		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectLanguage.LANGUAGE_NODEJS.getDisplayName());
-		item.setData(ProjectLanguage.LANGUAGE_NODEJS);
-		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON));
-		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectLanguage.LANGUAGE_PYTHON.getDisplayName());
-		item.setData(ProjectLanguage.LANGUAGE_PYTHON);
-		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON));
-		item = new TableItem(languageTable, SWT.NONE);
-		item.setText(ProjectLanguage.LANGUAGE_SWIFT.getDisplayName());
-		item.setData(ProjectLanguage.LANGUAGE_SWIFT);
-		item.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON));
+	private ProjectType[] getProjectTypeArray() {
+		return new ProjectType[] {ProjectType.TYPE_LIBERTY, ProjectType.TYPE_NODEJS, ProjectType.TYPE_SPRING,
+				ProjectType.TYPE_SWIFT, ProjectType.TYPE_DOCKER};
 	}
 	
-	private void fillTypeTable(Table typeTable) {
-		TableItem item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_LIBERTY.getDisplayName());
-		item.setData(ProjectType.TYPE_LIBERTY);
-		item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_SPRING.getDisplayName());
-		item.setData(ProjectType.TYPE_SPRING);
-		item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_NODEJS.getDisplayName());
-		item.setData(ProjectType.TYPE_NODEJS);
-		item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_SWIFT.getDisplayName());
-		item.setData(ProjectType.TYPE_SWIFT);
-		item = new TableItem(typeTable, SWT.NONE);
-		item.setText(ProjectType.TYPE_DOCKER.getDisplayName());
-		item.setData(ProjectType.TYPE_DOCKER);
+	private ProjectLanguage[] getLanguageArray() {
+		return new ProjectLanguage[] {ProjectLanguage.LANGUAGE_GO, ProjectLanguage.LANGUAGE_JAVA, ProjectLanguage.LANGUAGE_NODEJS,
+				ProjectLanguage.LANGUAGE_PYTHON, ProjectLanguage.LANGUAGE_SWIFT};
+	}
+	
+	private class ProjectTypeLabelProvider extends LabelProvider {
+
+		@Override
+		public Image getImage(Object element) {
+			return null;
+		}
+
+		@Override
+		public String getText(Object element) {
+			return ((ProjectType)element).getDisplayName();
+		}
+		
+	}
+	
+	private class LanguageLabelProvider extends LabelProvider {
+
+		@Override
+		public Image getImage(Object element) {
+			switch((ProjectLanguage)element) {
+				case LANGUAGE_GO:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON);
+				case LANGUAGE_JAVA:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON);
+				case LANGUAGE_NODEJS:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
+				case LANGUAGE_PYTHON:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
+				case LANGUAGE_SWIFT:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
+				default:
+					return null;
+			}
+		}
+
+		@Override
+		public String getText(Object element) {
+			return ((ProjectLanguage)element).getDisplayName();
+		}
+		
 	}
 	
 	public void setProject(IProject project) {
@@ -243,17 +225,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		if (projectInfo != null) {
 			type = projectInfo.type;
 			language = projectInfo.language;
-			TableItem item = getItem(typeTable, type);
-			if (item != null) {
-				item.setChecked(true);
-			}
+			typeViewer.setChecked(type, true);
 			if (type == ProjectType.TYPE_DOCKER) {
-				item = getItem(languageTable, language);
-				if (item != null) {
-					item.setChecked(true);
-				}
+				languageViewer.setChecked(language, true);
 				languageLabel.setVisible(true);
-				languageTable.setVisible(true);
+				languageViewer.getTable().setVisible(true);
 			}
 		}
 	}

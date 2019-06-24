@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils.ExponentialBackoffUtil;
 import org.eclipse.codewind.filewatchers.core.IPlatformWatchService.IPlatformWatchListener;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch.ProjectToWatchFromWebSocket;
+import org.eclipse.codewind.filewatchers.core.internal.DebugTimer;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil.ChangedFileEntry;
 import org.eclipse.codewind.filewatchers.core.internal.HttpGetStatusThread;
@@ -65,7 +66,7 @@ public class Filewatcher {
 
 	private final WebSocketManagerThread webSocketThread;
 
-	private final AtomicBoolean disposed_synch_lock = new AtomicBoolean();
+	private final AtomicBoolean disposed_synch = new AtomicBoolean();
 
 	private final String clientUuid;
 
@@ -114,6 +115,7 @@ public class Filewatcher {
 		webSocketThread.start();
 		webSocketThread.queueEstablishConnection();
 
+		new DebugTimer(this);
 	}
 
 	public void refreshWatchStatus() {
@@ -139,11 +141,11 @@ public class Filewatcher {
 	}
 
 	public void dispose() {
-		synchronized (disposed_synch_lock) {
-			if (disposed_synch_lock.get()) {
+		synchronized (disposed_synch) {
+			if (disposed_synch.get()) {
 				return;
 			}
-			disposed_synch_lock.set(true);
+			disposed_synch.set(true);
 		}
 
 		log.logInfo("disposed() called on " + this.getClass().getSimpleName());
@@ -334,6 +336,62 @@ public class Filewatcher {
 			List<String> base64Compressed) {
 
 		outputQueue.addToQueue(projectId, mostRecentEntryTimestamp, base64Compressed);
+
+	}
+
+	public Optional<String> generateDebugString() {
+
+		synchronized (disposed_synch) {
+			if (disposed_synch.get()) {
+				return Optional.empty();
+			}
+		}
+
+		String result = "";
+
+		result += "---------------------------------------------------------------------------------------\n\n";
+
+		if (internalWatchService != null) {
+			result += "WatchService - " + internalWatchService.getClass().getSimpleName() + ":\n";
+			result += internalWatchService.generateDebugState().trim() + "\n";
+		}
+
+		if (externalWatchService != null) {
+			result += "WatchService - " + externalWatchService.getClass().getSimpleName() + ":\n";
+			result += externalWatchService.generateDebugState().trim() + "\n";
+
+		}
+
+		result += "\n";
+
+		synchronized (projectsMap_synch) {
+
+			result += "Project list:\n";
+
+			for (Map.Entry<String, ProjectObject> e : projectsMap_synch.entrySet()) {
+
+				ProjectToWatch ptw = e.getValue().getProjectToWatch();
+
+				result += "- " + e.getKey() + " | " + ptw.getPathToMonitor();
+
+				if (ptw.getIgnoredPaths().size() > 0) {
+					result += " | ignoredPaths: ";
+
+					for (String path : ptw.getIgnoredPaths()) {
+						result += "'" + path + "' ";
+					}
+				}
+
+				result += "\n";
+			}
+
+		}
+
+		result += "\nHTTP Post Output Queue:\n" + outputQueue.generateDebugString().trim() + "\n\n";
+
+		result += "---------------------------------------------------------------------------------------\n\n";
+
+		return Optional.of(result);
 
 	}
 

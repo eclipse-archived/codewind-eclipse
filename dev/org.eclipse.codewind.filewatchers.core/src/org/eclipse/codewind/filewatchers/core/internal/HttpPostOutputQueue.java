@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
@@ -49,6 +50,9 @@ public class HttpPostOutputQueue {
 	private final AtomicBoolean disposed_sync_lock = new AtomicBoolean(false);
 
 	private final FWLogger log = FWLogger.getInstance();
+
+	/** Keep track of the number of worker threads that are currently POST-ing. */
+	private final AtomicInteger activeWorkerThreads_synch = new AtomicInteger();
 
 	private final Object lock = new Object();
 
@@ -79,6 +83,43 @@ public class HttpPostOutputQueue {
 			queue_synch.offer(chunkGroup);
 			informStateChange();
 		}
+	}
+
+	public String generateDebugString() {
+
+		String result = "- ";
+
+		int activeWorkers = 0;
+		synchronized (activeWorkerThreads_synch) {
+			activeWorkers = activeWorkerThreads_synch.get();
+		}
+
+		synchronized (lock) {
+
+			if (disposed_sync_lock.get()) {
+				return result + "[disposed]";
+			}
+
+			result += "total-workers: " + threads_sync_lock.size() + "  active-workers:" + activeWorkers;
+		}
+
+		synchronized (queue_synch) {
+
+			result += "  chunkGroupList-size: " + queue_synch.size() + "\n";
+
+			if (queue_synch.size() > 0) {
+				result += "\n";
+				result += "- HTTP Post Chunk Group List:\n";
+
+				for (PostQueueChunkGroup group : queue_synch) {
+					result += "  - projectID: " + group.getProjectId() + "  timestamp: " + group.getTimestamp() + "\n";
+				}
+
+			}
+
+		}
+
+		return result;
 	}
 
 	/** Remove any chunk groups that have already sent all their chunks. */
@@ -209,6 +250,10 @@ public class HttpPostOutputQueue {
 				chunkToSend = getOrWaitForNextPieceOfWork();
 
 				if (chunkToSend != null && threadRunning) {
+					synchronized (activeWorkerThreads_synch) {
+						activeWorkerThreads_synch.incrementAndGet();
+					}
+
 					String url = serverBaseUrl + "/api/v1/projects/" + chunkToSend.getProjectId()
 							+ "/file-changes?timestamp=" + chunkToSend.getTimestamp() + "&chunk="
 							+ chunkToSend.getChunkId() + "&chunk_total=" + chunkToSend.getChunkTotal();
@@ -242,6 +287,12 @@ public class HttpPostOutputQueue {
 				}
 
 				sendFailed = true;
+			} finally {
+				if (chunkToSend != null) {
+					synchronized (activeWorkerThreads_synch) {
+						activeWorkerThreads_synch.decrementAndGet();
+					}
+				}
 			}
 
 			if (!sendFailed && chunkToSend != null) {
@@ -280,10 +331,13 @@ public class HttpPostOutputQueue {
 
 		private final FWLogger log = FWLogger.getInstance();
 
+		private final String projectId;
+
 		public PostQueueChunkGroup(long timestamp, String projectId, List<String> base64Compressed,
 				HttpPostOutputQueue parent) {
 
 			this.parent = parent;
+			this.projectId = projectId;
 
 			int chunkId = 1;
 			for (String text : base64Compressed) {
@@ -369,6 +423,14 @@ public class HttpPostOutputQueue {
 
 			return result;
 
+		}
+
+		String getProjectId() {
+			return projectId;
+		}
+
+		long getTimestamp() {
+			return timestamp;
 		}
 	}
 

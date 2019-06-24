@@ -85,4 +85,6 @@ public interface IPlatformWatchService {
 	 */
 	void dispose();
 
+	/** Generate an implementation-defined String representation of the internal state of the watcher. */
+	public String generateDebugState();
 }

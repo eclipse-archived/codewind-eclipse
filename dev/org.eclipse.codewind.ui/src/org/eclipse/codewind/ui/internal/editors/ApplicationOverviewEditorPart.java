@@ -232,6 +232,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		generalSection.update(app);
 		projectSettingsSection.update(app);
 		buildSection.update(app);
+		form.layout(true, true);
 		form.reflow(true);
 	}
 	

@@ -54,8 +54,8 @@
          <property name="fileName" value="codewind" />
          <property name="fileNameVersion" value="${newVersion}" />
          <property name="qualifier" value="${buildLabel}"/>
-         <property name="updatesite-name" value="${fileName}-${fileNameVersion}.v${qualifier}" />
-         <property name="metadata-updatesite-name" value="${fileName}-metadata-${fileNameVersion}.v${qualifier}" />
+         <property name="updatesite-name" value="${fileName}-${fileNameVersion}-${qualifier}" />
+         <property name="metadata-updatesite-name" value="${fileName}-metadata-${fileNameVersion}-${qualifier}" />
          <property name="gen.updatesite.file" location="${cw_imports.basedir}/resources/cw_updatesite-properties/generateP2Metadata.xml" />
          <property name="target.updatesite.repository" location="${updateSiteDir}/repository" />
 

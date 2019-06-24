@@ -11,6 +11,9 @@
 
 package org.eclipse.codewind.filewatchers.core;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * Utility class containing simple standalone utility methods that are used
  * throughout the code.
@@ -100,5 +103,12 @@ public class FilewatcherUtils {
 			failureDelay = minFailureDelay;
 		}
 
+	}
+
+	public static String convertStackTraceToString(Throwable t) {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		t.printStackTrace(pw);
+		return sw.toString();
 	}
 }

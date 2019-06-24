@@ -209,10 +209,13 @@ public class FWLogger {
 			return;
 		}
 
-		err("! ERROR ! " + msg);
+		String outputMsg = "! ERROR ! " + msg;
+
 		if (t != null) {
-			t.printStackTrace();
+			outputMsg += " " + FilewatcherUtils.convertStackTraceToString(t);
 		}
+
+		err(outputMsg);
 	}
 
 	public void logSevere(String msg) {
@@ -220,10 +223,15 @@ public class FWLogger {
 	}
 
 	public void logSevere(String msg, Throwable t, String projectId) {
-		err("!!! SEVERE !!! " + msg);
+
+		String outputMsg = "!!! SEVERE !!! " + msg;
+
 		if (t != null) {
-			t.printStackTrace();
+			outputMsg += " " + FilewatcherUtils.convertStackTraceToString(t);
 		}
+
+		err(outputMsg);
+
 	}
 
 	/**

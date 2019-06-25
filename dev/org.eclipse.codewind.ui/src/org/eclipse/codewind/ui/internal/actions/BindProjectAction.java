@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
@@ -150,8 +150,8 @@ public class BindProjectAction implements IObjectActionDelegate {
 		if (connection != null && connection.isConnected()) {
 			return connection;
 		}
-		InstallerStatus status = manager.getInstallerStatus(true);
-		if (status == InstallerStatus.RUNNING) {
+		InstallStatus status = manager.getInstallStatus(true);
+		if (status == InstallStatus.RUNNING) {
 			return manager.createLocalConnection();
 		}
 		if (!status.isInstalled()) {

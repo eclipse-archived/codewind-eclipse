@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.PlatformUtil.OperatingSystem;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.messages.Messages;
@@ -62,7 +63,7 @@ public class InstallUtil {
 	private static String installCmd = null;
 	private static String installExec = null;
 	
-	public enum InstallerStatus {
+	public enum InstallStatus {
 		RUNNING(2),
 		INSTALLED(1),
 		NOT_INSTALLED(0),
@@ -70,12 +71,12 @@ public class InstallUtil {
 		
 		private int code;
 		
-		private InstallerStatus(int code) {
+		private InstallStatus(int code) {
 			this.code = code;
 		}
 		
-		public static InstallerStatus getStatus(int code) {
-			for (InstallerStatus status : InstallerStatus.values()) {
+		public static InstallStatus getStatus(int code) {
+			for (InstallStatus status : InstallStatus.values()) {
 				if (status.code == code) {
 					return status;
 				}
@@ -90,15 +91,16 @@ public class InstallUtil {
 		}
 	}
 	
-	public static InstallerStatus getInstallerStatus() throws IOException, TimeoutException {
+	public static InstallStatus getInstallStatus() throws IOException, TimeoutException {
 		ProcessResult result = statusCodewind();
-		return InstallerStatus.getStatus(result.getExitValue());
+		return InstallStatus.getStatus(result.getExitValue());
 	}
 	
 	public static ProcessResult startCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StartCodewindJobLabel, 100);
 		Process process = null;
 		try {
+			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STARTING);
 			process = runInstaller(START_CMD);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(90));
 			return result;
@@ -106,6 +108,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
 	
@@ -113,6 +116,7 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
+			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
 		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
@@ -120,6 +124,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
 	
@@ -127,6 +132,7 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.InstallCodewindJobLabel, 100);
 		Process process = null;
 		try {
+			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
 		    process = runInstaller(getInstallCmd());
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
 		    return result;
@@ -134,6 +140,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
 	
@@ -141,6 +148,7 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.RemovingCodewindJobLabel, 100);
 		Process process = null;
 		try {
+			CodewindManager.getManager().setInstallerStatus(InstallerStatus.UNINSTALLING);
 		    process = runInstaller(REMOVE_CMD);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
@@ -148,6 +156,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
 	

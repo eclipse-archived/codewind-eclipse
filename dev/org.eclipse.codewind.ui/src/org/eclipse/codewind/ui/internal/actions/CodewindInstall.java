@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -38,6 +38,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
@@ -229,7 +230,7 @@ public class CodewindInstall {
 			    Shell shell = Display.getDefault().getActiveShell();
 				MessageBox dialog = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES| SWT.NO);
 				dialog.setText(Messages.InstallCodewindDialogTitle);
-				dialog.setMessage(Messages.InstallCodewindAfterDialogMessage);
+				dialog.setMessage(Messages.InstallCodewindNewProjectMessage);
 
 				int rc = dialog.open();
 			    switch (rc) {
@@ -249,7 +250,7 @@ public class CodewindInstall {
 			    Shell shell = Display.getDefault().getActiveShell();
 				MessageBox dialog = new MessageBox(shell, SWT.ICON_QUESTION | SWT.YES| SWT.NO);
 				dialog.setText(Messages.InstallCodewindDialogTitle);
-				dialog.setMessage("Codewind is installed, do you want to add " + project.getName() + " to Codewind?");
+				dialog.setMessage(NLS.bind(Messages.InstallCodewindAddProjectMessage, project.getName()));
 
 				int rc = dialog.open();
 			    switch (rc) {
@@ -278,8 +279,8 @@ public class CodewindInstall {
 				protected IStatus run(IProgressMonitor mon) {
 			    	SubMonitor monitor = SubMonitor.convert(mon, 100);
 					try {
-						InstallerStatus status = InstallUtil.getInstallerStatus();
-						if (status == InstallerStatus.RUNNING) {
+						InstallStatus status = InstallUtil.getInstallStatus();
+						if (status == InstallStatus.RUNNING) {
 							// Stop Codewind before uninstalling
 
 							boolean stopAll = getStopAll(monitor);

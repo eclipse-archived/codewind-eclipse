@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -61,7 +61,7 @@ public class CodewindNavigatorContentProvider implements ITreeContentProvider {
 	public boolean hasChildren(Object obj) {
 		if (obj instanceof CodewindManager) {
 			CodewindManager manager = (CodewindManager) obj;
-			if (manager.getInstallerStatus(true) == InstallerStatus.RUNNING) {
+			if (manager.getInstallStatus(true) == InstallStatus.RUNNING) {
 				// Make sure the local connection is there if Codewind is running
 				if (manager.getLocalConnection() == null) {
 					manager.createLocalConnection();

@@ -53,15 +53,28 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	public String getText(Object element) {
 		if (element instanceof CodewindManager) {
 			CodewindManager manager = (CodewindManager) element;
-			switch (manager.getInstallerStatus(true)) {
-				case RUNNING:
-					return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
-				case INSTALLED:
-					return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
-				case NOT_INSTALLED:
-					return Messages.CodewindLabel + " [" + Messages.CodewindNotInstalledQualifier + "] (" + Messages.CodewindNotInstalledMsg + ")";
-				default:
-					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+			if (manager.getInstallerStatus() != null) {
+				switch(manager.getInstallerStatus()) {
+				case INSTALLING:
+					return Messages.CodewindLabel + "[" + Messages.CodewindInstallingQualifier + "]";
+				case UNINSTALLING:
+					return Messages.CodewindLabel + "[" + Messages.CodewindUninstallingQualifier + "]";
+				case STARTING:
+					return Messages.CodewindLabel + "[" + Messages.CodewindStartingQualifier + "]";
+				case STOPPING:
+					return Messages.CodewindLabel + "[" + Messages.CodewindStoppingQualifier + "]";
+				}
+			} else {
+				switch (manager.getInstallStatus(true)) {
+					case RUNNING:
+						return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
+					case INSTALLED:
+						return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
+					case NOT_INSTALLED:
+						return Messages.CodewindLabel + " [" + Messages.CodewindNotInstalledQualifier + "] (" + Messages.CodewindNotInstalledMsg + ")";
+					default:
+						return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+				}
 			}
 		} else if (element instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)element;
@@ -111,22 +124,39 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		if (element instanceof CodewindManager) {
 			CodewindManager manager = (CodewindManager) element;
 			styledString = new StyledString(Messages.CodewindLabel);
-			switch (manager.getInstallerStatus(true)) {
-				case RUNNING:
-					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+			if (manager.getInstallerStatus() != null) {
+				switch(manager.getInstallerStatus()) {
+				case INSTALLING:
+					styledString.append(" [" + Messages.CodewindInstallingQualifier + "]", StyledString.DECORATIONS_STYLER);
 					break;
-				case INSTALLED:
-					styledString.append(" [" + Messages.CodewindNotStartedQualifier + "]", StyledString.DECORATIONS_STYLER);
-					styledString.append(" (" + Messages.CodewindNotStartedLink + ")", StyledString.QUALIFIER_STYLER);
+				case UNINSTALLING:
+					styledString.append(" [" + Messages.CodewindUninstallingQualifier + "]", StyledString.DECORATIONS_STYLER);
 					break;
-				case NOT_INSTALLED:
-					styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
-					styledString.append(" (" + Messages.CodewindNotInstalledLink + ")", StyledString.QUALIFIER_STYLER);
+				case STARTING:
+					styledString.append(" [" + Messages.CodewindStartingQualifier + "]", StyledString.DECORATIONS_STYLER);
 					break;
-				default:
-					styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
-					styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
+				case STOPPING:
+					styledString.append(" [" + Messages.CodewindStoppingQualifier + "]", StyledString.DECORATIONS_STYLER);
 					break;
+				}
+			} else {
+				switch (manager.getInstallStatus(true)) {
+					case RUNNING:
+						styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+						break;
+					case INSTALLED:
+						styledString.append(" [" + Messages.CodewindNotStartedQualifier + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" (" + Messages.CodewindNotStartedMsg + ")", StyledString.QUALIFIER_STYLER);
+						break;
+					case NOT_INSTALLED:
+						styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
+						break;
+					default:
+						styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
+						break;
+				}
 			}
 		} else if (element instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)element;

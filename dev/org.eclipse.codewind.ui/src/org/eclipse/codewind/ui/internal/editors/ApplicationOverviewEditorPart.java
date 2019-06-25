@@ -312,7 +312,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		public void update(CodewindApplication app) {
 			languageEntry.setValue(app.projectLanguage.getDisplayName(), true);
 			locationEntry.setValue(app.fullLocalPath.toOSString(), true);
-			appURLEntry.setValue(app.isAvailable() && app.getBaseUrl() != null ? app.getBaseUrl().toString() : null, true);
+			appURLEntry.setValue(app.isAvailable() && app.getRootUrl() != null ? app.getRootUrl().toString() : null, true);
 			hostAppPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);
 			hostDebugPortEntry.setValue(app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null, true);
 			containerIdEntry.setValue(app.isAvailable() ? app.getContainerId() : null, true);

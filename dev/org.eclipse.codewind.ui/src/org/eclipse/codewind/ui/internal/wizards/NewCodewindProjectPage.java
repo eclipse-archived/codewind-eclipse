@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -423,8 +423,8 @@ public class NewCodewindProjectPage extends WizardPage {
 		if (connection != null && connection.isConnected()) {
 			return;
 		}
-		InstallerStatus status = manager.getInstallerStatus(true);
-		if (status == InstallerStatus.RUNNING) {
+		InstallStatus status = manager.getInstallStatus(true);
+		if (status == InstallStatus.RUNNING) {
 			connection = manager.createLocalConnection();
 			return;
 		}

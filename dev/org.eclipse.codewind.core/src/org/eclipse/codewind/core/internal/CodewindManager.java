@@ -16,7 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 
@@ -29,7 +29,18 @@ public class CodewindManager {
 	CodewindConnection localConnection = null;
 	URI localURI = null;
 	
-	InstallerStatus status = null;
+	// Keep track of the install status and if the installer is currently running.
+	// If the installer is running, this is the status that should be reported, if
+	// not the install status should be reported (installerStatus will be null).
+	InstallStatus installStatus = null;
+	InstallerStatus installerStatus = null;
+	
+	public enum InstallerStatus {
+		INSTALLING,
+		UNINSTALLING,
+		STARTING,
+		STOPPING
+	};
 	
 	private CodewindManager() {
 		// empty
@@ -45,22 +56,31 @@ public class CodewindManager {
 	/**
 	 * Get the current install status for Codewind
 	 */
-	public InstallerStatus getInstallerStatus(boolean update) {
-		if (status != null && !update) {
-			return status;
+	public InstallStatus getInstallStatus(boolean update) {
+		if (installStatus != null && !update) {
+			return installStatus;
 		}
 		try {
-			status = InstallUtil.getInstallerStatus();
-			if (status != InstallerStatus.RUNNING) {
+			installStatus = InstallUtil.getInstallStatus();
+			if (installStatus != InstallStatus.RUNNING) {
 				removeLocalConnection();
 			}
-			return status;
+			return installStatus;
 		} catch (IOException e) {
 			Logger.logError("An error occurred trying to get the installer status", e); //$NON-NLS-1$
 		} catch (TimeoutException e) {
 			Logger.logError("Timed out trying to get the installer status", e); //$NON-NLS-1$
 		}
-		return InstallerStatus.UNKNOWN;
+		return InstallStatus.UNKNOWN;
+	}
+	
+	public InstallerStatus getInstallerStatus() {
+		return installerStatus;
+	}
+	
+	public void setInstallerStatus(InstallerStatus status) {
+		this.installerStatus = status;
+		CoreUtil.updateAll();
 	}
 	
 	public URI getLocalURI() {

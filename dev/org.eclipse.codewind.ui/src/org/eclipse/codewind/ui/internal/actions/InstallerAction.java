@@ -12,7 +12,7 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -49,7 +49,7 @@ public class InstallerAction extends SelectionProviderAction {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindManager) {
-				InstallerStatus status = CodewindManager.getManager().getInstallerStatus(false);
+				InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
 				if (actionType == ActionType.INSTALL_UNINSTALL) {
 					switch (status) {
 						case NOT_INSTALLED:

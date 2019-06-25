@@ -12,7 +12,7 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
@@ -45,8 +45,12 @@ public class CodewindActionProvider extends CommonActionProvider {
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
+    	if (CodewindManager.getManager().getInstallerStatus() != null) {
+    		// If the installer is active then the install actions should not be shown
+    		return;
+    	}
     	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
-    	InstallerStatus status = CodewindManager.getManager().getInstallerStatus(false);
+    	InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
     	if (status.isInstalled()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
     	}
@@ -82,7 +86,7 @@ public class CodewindActionProvider extends CommonActionProvider {
 		@Override
 		public void run() {
 			if (manager != null) {
-				InstallerStatus status = manager.getInstallerStatus(false);
+				InstallStatus status = manager.getInstallStatus(false);
 				switch(status) {
 					case NOT_INSTALLED:
 						CodewindInstall.installCodewind(null);

@@ -43,7 +43,12 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		// empty
+		if (getInstallStatus(true) == InstallStatus.RUNNING) {
+			createLocalConnection();
+			if (localConnection != null) {
+				localConnection.refreshApps(null);
+			}
+		}
 	}
 
 	public static CodewindManager getManager() {

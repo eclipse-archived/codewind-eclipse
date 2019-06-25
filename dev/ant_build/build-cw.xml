@@ -10,7 +10,7 @@
 -->
 
 <project name="cw_build" default="generateOpenCWUpdateSite">
-    <property name="level_tag" value="0.1"/>
+    <property name="level_tag" value="0.2.0"/>
     <property name="delegate.build.dir" location="${basedir}/../" />
     <property name="disable.run.executeMetatypeValidation" value="true"/>
     <property name="disable.run.unzipIfixReleaseZip" value="true"/>
@@ -36,7 +36,7 @@
 
     <target name="createBuildLabelFile" depends="checkBuildLabelFile" unless="buildLabel.present">
         <tstamp>
-              <format property="buildLabel" pattern="yyyyMMdd_HHmm" timezone="UTC"/>
+              <format property="buildLabel" pattern="yyyyMMddHHmm" timezone="UTC"/>
         </tstamp>
 
         <propertyfile file="${cw_build.basedir}/buildLabel.properties" comment="Creating buildlabel.propertiess">

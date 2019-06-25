@@ -17,6 +17,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
+import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.preference.JFacePreferences;
@@ -209,20 +210,30 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		} else if (element instanceof CodewindConnection) {
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
 		} else if (element instanceof CodewindApplication) {
-			ProjectLanguage language = ((CodewindApplication)element).projectLanguage;
-			switch (language) {
-				case LANGUAGE_JAVA:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON);
-				case LANGUAGE_NODEJS:
+			ProjectType type = ((CodewindApplication)element).projectType;
+			switch (type) {
+				case TYPE_LIBERTY:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.MICROPROFILE_ICON);
+				case TYPE_NODEJS:
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
-				case LANGUAGE_SWIFT:
+				case TYPE_SPRING:
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.SPRING_ICON);
+				case TYPE_SWIFT:
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
-				case LANGUAGE_GO:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON);
-				case LANGUAGE_PYTHON:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
+				case TYPE_DOCKER:
+					ProjectLanguage lang = ((CodewindApplication)element).projectLanguage;
+					switch (lang) {
+						case LANGUAGE_GO:
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON);
+						case LANGUAGE_JAVA:
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON);
+						case LANGUAGE_PYTHON:
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
+						default:
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
+					}
 				default:
-					return null;
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
 			}
 		}
 		return null;

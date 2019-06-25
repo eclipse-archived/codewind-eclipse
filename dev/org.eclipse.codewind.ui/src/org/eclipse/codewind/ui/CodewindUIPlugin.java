@@ -50,11 +50,14 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 			LAUNCH_DEBUG_ICON = "elcl16/launch_debug.gif",
 			LAUNCH_RUN_ICON = "elcl16/launch_run.gif",
 			REFRESH_ICON = "elcl16/refresh.png",
-			JAVA_ICON = "obj16/java.png",
-			NODE_ICON = "obj16/node.png",
-			SWIFT_ICON = "obj16/swift.png",
+			CLOUD_ICON = "obj16/cloud.png",
 			GO_ICON = "obj16/go.png",
-			PYTHON_ICON = "obj16/python.png";
+			JAVA_ICON = "obj16/java.png",
+			MICROPROFILE_ICON = "obj16/microprofile.png",
+			NODE_ICON = "obj16/nodejs.png",
+			PYTHON_ICON = "obj16/python.png",
+			SPRING_ICON = "obj16/spring.png",
+			SWIFT_ICON = "obj16/swift.png";
 
 	// The shared instance
 	private static CodewindUIPlugin plugin;
@@ -125,11 +128,14 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
         registerImage(registry, LAUNCH_DEBUG_ICON, ICON_BASE_URL + LAUNCH_DEBUG_ICON);
         registerImage(registry, LAUNCH_RUN_ICON, ICON_BASE_URL + LAUNCH_RUN_ICON);
         registerImage(registry, REFRESH_ICON, ICON_BASE_URL + REFRESH_ICON);
-        registerImage(registry, JAVA_ICON, ICON_BASE_URL + JAVA_ICON);
-        registerImage(registry, NODE_ICON, ICON_BASE_URL + NODE_ICON);
-        registerImage(registry, SWIFT_ICON, ICON_BASE_URL + SWIFT_ICON);
+        registerImage(registry, CLOUD_ICON, ICON_BASE_URL + CLOUD_ICON);
         registerImage(registry, GO_ICON, ICON_BASE_URL + GO_ICON);
+        registerImage(registry, JAVA_ICON, ICON_BASE_URL + JAVA_ICON);
+        registerImage(registry, MICROPROFILE_ICON, ICON_BASE_URL + MICROPROFILE_ICON);
+        registerImage(registry, NODE_ICON, ICON_BASE_URL + NODE_ICON);
         registerImage(registry, PYTHON_ICON, ICON_BASE_URL + PYTHON_ICON);
+        registerImage(registry, SPRING_ICON, ICON_BASE_URL + SPRING_ICON);
+        registerImage(registry, SWIFT_ICON, ICON_BASE_URL + SWIFT_ICON);
 
         return registry;
     }

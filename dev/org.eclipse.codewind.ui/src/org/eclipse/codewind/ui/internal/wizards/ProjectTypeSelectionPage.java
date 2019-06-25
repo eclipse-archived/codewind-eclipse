@@ -143,7 +143,18 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public Image getImage(Object element) {
-			return null;
+			switch((ProjectType)element) {
+			case TYPE_LIBERTY:
+				return CodewindUIPlugin.getImage(CodewindUIPlugin.MICROPROFILE_ICON);
+			case TYPE_NODEJS:
+				return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
+			case TYPE_SPRING:
+				return CodewindUIPlugin.getImage(CodewindUIPlugin.SPRING_ICON);
+			case TYPE_SWIFT:
+				return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
+			default:
+				return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
+			}
 		}
 
 		@Override
@@ -157,20 +168,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public Image getImage(Object element) {
-			switch((ProjectLanguage)element) {
-				case LANGUAGE_GO:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON);
-				case LANGUAGE_JAVA:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON);
-				case LANGUAGE_NODEJS:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
-				case LANGUAGE_PYTHON:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
-				case LANGUAGE_SWIFT:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
-				default:
-					return null;
-			}
+			return null;
 		}
 
 		@Override

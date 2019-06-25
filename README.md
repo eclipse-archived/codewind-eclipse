@@ -17,9 +17,9 @@ Complete the installation:
 Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
 
 Features:</br>
-- Create new projects from application templates or add existing Docker-ready projects to Codewind.
+- Create new projects from application templates or add existing container-ready projects to Codewind.
 - View Codewind projects, including application and build statuses.
-- Debug **Microprofile/Java EE** and **Spring** projects in their Docker containers.
+- Debug **Microprofile/Java EE** and **Spring** projects in their containers.
 - Set up a Chrome debug session for **Node.js** projects.
 - View application and build logs in the **Console** view.
 - View and edit project deployment information.

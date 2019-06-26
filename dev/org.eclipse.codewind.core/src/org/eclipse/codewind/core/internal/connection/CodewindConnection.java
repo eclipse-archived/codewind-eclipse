@@ -668,7 +668,7 @@ public class CodewindConnection {
 		createProjectPayload.put(CoreConstants.KEY_PARENT_PATH, CoreUtil.getContainerPath(localWorkspacePath.toString()));
 		createProjectPayload.put(CoreConstants.KEY_URL, templateInfo.getUrl());
 
-		HttpResult result = HttpUtil.post(uri, createProjectPayload);
+		HttpResult result = HttpUtil.post(uri, createProjectPayload, 300);
 		checkResult(result, uri, false);
 		CoreUtil.updateConnection(this);
 	}
@@ -692,7 +692,7 @@ public class CodewindConnection {
 		}
 		payload.put(CoreConstants.KEY_AUTO_BUILD, true);
 
-		HttpResult result = HttpUtil.post(uri, payload);
+		HttpResult result = HttpUtil.post(uri, payload, 300);
 		checkResult(result, uri, false);
 		CoreUtil.updateConnection(this);
 	}

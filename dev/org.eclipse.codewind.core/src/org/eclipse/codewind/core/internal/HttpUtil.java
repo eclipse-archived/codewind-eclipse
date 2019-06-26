@@ -25,6 +25,9 @@ import org.json.JSONObject;
  * Static utilities to allow easy HTTP communication, and make diagnosing and handling errors a bit easier.
  */
 public class HttpUtil {
+	
+	private static final int DEFAULT_READ_TIMEOUT_S = 10;
+	private static final int DEFAULT_READ_TIMEOUT_MS = DEFAULT_READ_TIMEOUT_S * 1000;
 
 	private HttpUtil() {}
 
@@ -88,7 +91,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("GET");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MS);
 
 			return new HttpResult(connection);
 		} finally {
@@ -98,7 +101,18 @@ public class HttpUtil {
 		}
 	}
 	
+	/**
+	 * Post to the given URI passing along the payload.  The default value is used
+	 * for the read timeout.
+	 */
 	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
+		return post(uri, payload, DEFAULT_READ_TIMEOUT_S);
+	}
+	
+	/**
+	 * Post to the given URI passing along the payload.  The readTimeout is in seconds.
+	 */
+	public static HttpResult post(URI uri, JSONObject payload, int readTimoutSeconds) throws IOException {
 		HttpURLConnection connection = null;
 
 		Logger.log("POST " + payload.toString() + " TO " + uri);
@@ -106,7 +120,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("POST");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(readTimoutSeconds * 1000);
 			
 			if (payload != null) {
 				connection.setRequestProperty("Content-Type", "application/json");
@@ -131,7 +145,7 @@ public class HttpUtil {
 		try {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 			connection.setRequestMethod("POST");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MS);
 			return new HttpResult(connection);
 		} finally {
 			if (connection != null) {
@@ -148,7 +162,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("PUT");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MS);
 
 			return new HttpResult(connection);
 		} finally {
@@ -166,7 +180,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("HEAD");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MS);
 
 			return new HttpResult(connection);
 		} finally {
@@ -184,7 +198,7 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("DELETE");
-			connection.setReadTimeout(10000);
+			connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MS);
 
 			return new HttpResult(connection);
 		} finally {

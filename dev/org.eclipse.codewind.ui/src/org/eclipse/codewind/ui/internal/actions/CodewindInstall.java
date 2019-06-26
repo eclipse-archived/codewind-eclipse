@@ -40,9 +40,7 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
 
@@ -100,7 +98,7 @@ public class CodewindInstall {
 						}
 						
 						if (result.getExitValue() != 0) {
-							return getErrorStatus("There was a problem trying to install Codewind: " + result.getError());
+							return getErrorStatus(result, "There was a problem trying to install Codewind: ");
 						}
 						
 						if (result.getExitValue() == 0) {
@@ -141,7 +139,7 @@ public class CodewindInstall {
 						}
 
 						if (result.getExitValue() != 0) {
-							return getErrorStatus("There was a problem trying to start Codewind: " + result.getError());
+							return getErrorStatus(result, "There was a problem trying to start Codewind: ");
 						}
 						
 						if (prompt != null) {
@@ -187,7 +185,7 @@ public class CodewindInstall {
 						}
 
 						if (result.getExitValue() != 0) {
-							return getErrorStatus("There was a problem trying to stop Codewind: " + result.getError());
+							return getErrorStatus(result, "There was a problem trying to stop Codewind: ");
 						}
 					 
 					} catch (IOException e) {
@@ -254,20 +252,15 @@ public class CodewindInstall {
 						InstallStatus status = InstallUtil.getInstallStatus();
 						if (status == InstallStatus.RUNNING) {
 							// Stop Codewind before uninstalling
-
-							boolean stopAll = getStopAll(monitor);
-							if (monitor.isCanceled()) {
-								return Status.CANCEL_STATUS;
-							}
-
-							ProcessResult result = InstallUtil.stopCodewind(stopAll, monitor.split(20));
+							// All containers must be stopped or uninstall won't work
+							ProcessResult result = InstallUtil.stopCodewind(true, monitor.split(20));
 							
 							if (monitor.isCanceled()) {
 								return Status.CANCEL_STATUS;
 							}
 							
 							if (result.getExitValue() != 0) {
-								return getErrorStatus("There was a problem trying to stop Codewind: " + result.getError());
+								return getErrorStatus(result, "There was a problem trying to stop Codewind: ");
 							}
 						}
 						
@@ -283,7 +276,7 @@ public class CodewindInstall {
 						}
 						
 						if (result.getExitValue() != 0) {
-							return getErrorStatus("There was a problem trying to remove Codewind images: " + result.getError());
+							return getErrorStatus(result, "There was a problem trying to remove Codewind: ");
 						}
 						
 						
@@ -305,11 +298,14 @@ public class CodewindInstall {
 		
 	}
 	
-	private static IStatus getErrorStatus(String msg) {
-		return getErrorStatus(msg, null);
+	private static IStatus getErrorStatus(ProcessResult result, String msg) {
+		Logger.logError("Installer failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError());
+		String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+		return getErrorStatus(msg + errorText, null);
 	}
 	
 	private static IStatus getErrorStatus(String msg, Throwable t) {
+		Logger.logError(msg, t);
 		ViewHelper.refreshCodewindExplorerView(null);
 		return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, msg, t);
 	}

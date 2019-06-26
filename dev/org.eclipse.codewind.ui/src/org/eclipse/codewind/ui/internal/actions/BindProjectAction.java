@@ -165,7 +165,9 @@ public class BindProjectAction implements IObjectActionDelegate {
 				try {
 					ProcessResult result = InstallUtil.startCodewind(monitor);
 					if (result.getExitValue() != 0) {
-						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + result.getError()); //$NON-NLS-1$
+						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
 					manager.createLocalConnection();
 					ViewHelper.refreshCodewindExplorerView(null);

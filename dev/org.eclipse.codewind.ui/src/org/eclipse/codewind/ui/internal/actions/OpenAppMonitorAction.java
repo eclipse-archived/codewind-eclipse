@@ -75,14 +75,23 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
 			return;
 		}
 
-        // Use the app's ID as the browser ID so that if this is called again on the same app,
-        // the browser will be re-used
-
 		try {
+			IWebBrowser browser = null;
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
-			IWebBrowser browser = browserSupport
-					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-							app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipAppMonitor, app.name));
+			
+			if (CoreUtil.isWindows()) {
+				// Use the external browser if available since the page does not display 
+				// well in the internal browser on Windows
+				browser = browserSupport.getExternalBrowser();
+			}
+			
+			if (browser == null) {
+				// Use the app's ID as the browser ID so that if this is called again on the same app,
+				// the browser will be re-used
+				browser = browserSupport
+						.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
+								app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipAppMonitor, app.name));
+			}
 
 	        browser.openURL(url);
 		} catch (PartInitException e) {

@@ -13,9 +13,9 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import java.net.URL;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -73,17 +73,26 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
 			Logger.logError("OpenPerformanceMonitorAction ran but could not get the url"); //$NON-NLS-1$
 			return;
 		}
-
-        // Use the app's ID as the browser ID so that if this is called again on the same app,
-        // the browser will be re-used
-
+		
 		try {
+			IWebBrowser browser = null;
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
-			IWebBrowser browser = browserSupport
-					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-							app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipPerformanceMonitor, app.name));
+			
+			if (CoreUtil.isWindows()) {
+				// Use the external browser if available since the performance page does not display 
+				// well in the internal browser on Windows
+				browser = browserSupport.getExternalBrowser();
+			}
+			
+			if (browser == null) {
+				// Use the app's ID as the browser ID so that if this is called again on the same app,
+				// the browser will be re-used
+				browser = browserSupport
+						.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
+								app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipPerformanceMonitor, app.name));
+			}
 
-	        browser.openURL(url);
+			browser.openURL(url);
 		} catch (PartInitException e) {
 			Logger.logError("Error opening the performance monitor in browser", e); //$NON-NLS-1$
 		}

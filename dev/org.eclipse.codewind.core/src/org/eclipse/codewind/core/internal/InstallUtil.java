@@ -17,7 +17,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -60,7 +62,11 @@ public class InstallUtil {
 	private static final String REMOVE_CMD = "remove";
 	
 	private static final String INSTALL_DEV_VAR = "INSTALL_DEV";
+	private static final String TAG_OPTION = "-t";
+	private static final String DEFAULT_INSTALL_VERSION = "0.2";
+	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
 	private static String installCmd = null;
+	private static String installVersion = null;
 	private static String installExec = null;
 	
 	public enum InstallStatus {
@@ -101,7 +107,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STARTING);
-			process = runInstaller(START_CMD);
+			process = runInstaller(START_CMD, getVersion());
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(90));
 			return result;
 		} finally {
@@ -117,7 +123,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
-		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
+		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD, null);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
 		} finally {
@@ -133,7 +139,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
-		    process = runInstaller(getInstallCmd());
+		    process = runInstaller(getInstallCmd(), getVersion());
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
 		    return result;
 		} finally {
@@ -149,7 +155,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.UNINSTALLING);
-		    process = runInstaller(REMOVE_CMD);
+		    process = runInstaller(REMOVE_CMD, null);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
 		} finally {
@@ -163,7 +169,7 @@ public class InstallUtil {
 	public static ProcessResult statusCodewind() throws IOException, TimeoutException {
 		Process process = null;
 		try {
-			process = runInstaller(STATUS_CMD);
+			process = runInstaller(STATUS_CMD, null);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, new NullProgressMonitor());
 			return result;
 		} finally {
@@ -173,9 +179,16 @@ public class InstallUtil {
 		}
 	}
 	
-	public static Process runInstaller(String cmd) throws IOException {
+	public static Process runInstaller(String cmd, String version) throws IOException {
 		String installerPath = getInstallerExecutable();
-		String[] command = {installerPath, cmd};
+		List<String> cmdList = new ArrayList<String>();
+		cmdList.add(installerPath);
+		cmdList.add(cmd);
+		if (version != null) {
+			cmdList.add(TAG_OPTION);
+			cmdList.add(version);
+		}
+		String[] command = cmdList.toArray(new String[cmdList.size()]);
 		ProcessBuilder builder = new ProcessBuilder(command);
 		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
 			String pathVar = System.getenv("PATH");
@@ -250,6 +263,22 @@ public class InstallUtil {
 			}
 		}
 		return installCmd;
+	}
+	
+	private static String getVersion() {
+		if (INSTALL_DEV_CMD.equals(getInstallCmd())) {
+			// No version if install-dev used
+			return null;
+		}
+		if (installVersion == null) {
+			String value = System.getenv(INSTALL_VERSION_VAR);
+			if (value != null && !value.isEmpty()) {
+				installVersion = value;
+			} else {
+				installVersion = DEFAULT_INSTALL_VERSION;
+			}
+		}
+		return installVersion;
 	}
 
 }

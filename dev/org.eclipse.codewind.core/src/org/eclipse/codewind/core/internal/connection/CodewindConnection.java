@@ -921,7 +921,7 @@ public class CodewindConnection {
 	public URL getPerformanceMonitorURL(CodewindApplication app) {
 		try {
 			URI uri = baseUrl;
-			uri = uri.resolve("performance/charts");
+			uri = uri.resolve(CoreConstants.PERF_MONITOR);
 			String query = CoreConstants.QUERY_PROJECT + "=" + app.projectID;
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
 			return uri.toURL();

@@ -99,7 +99,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), projectTypePage.getLanguage().getId(), projectTypePage.getType().getId());
+					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), projectTypePage.getLanguage(), projectTypePage.getType());
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e); //$NON-NLS-1$

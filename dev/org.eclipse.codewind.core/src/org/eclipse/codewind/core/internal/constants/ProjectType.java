@@ -20,7 +20,7 @@ public enum ProjectType {
 	TYPE_SPRING("spring", "Spring"),
 	TYPE_SWIFT("swift", "Swift"),
 	TYPE_NODEJS("nodejs", "Node.js"),
-	TYPE_DOCKER("docker", "Other"),
+	TYPE_DOCKER("docker", "Other (Basic Container)"),
 	TYPE_UNKNOWN("unknown", "Unknown");
 
 	private final String id;

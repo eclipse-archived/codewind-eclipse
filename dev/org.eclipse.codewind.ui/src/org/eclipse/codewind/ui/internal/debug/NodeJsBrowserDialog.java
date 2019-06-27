@@ -41,8 +41,9 @@ import org.eclipse.ui.internal.browser.IBrowserDescriptor;
 @SuppressWarnings("restriction")
 public class NodeJsBrowserDialog extends MessageDialog {
 	
-final String url;
+	public static final String DEFAULT_URL = "https://codewind.dev";
 	
+	final String url;
 	final String browserName;
 	
 	public NodeJsBrowserDialog(Shell parentShell, String dialogTitle,
@@ -106,7 +107,7 @@ final String url;
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				launchWebBrowser(browserName, "https://microclimate-dev2ops.github.io/");
+				launchWebBrowser(browserName, DEFAULT_URL);
 			}
 		});
 		

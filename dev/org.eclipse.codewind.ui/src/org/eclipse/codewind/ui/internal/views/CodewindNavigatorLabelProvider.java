@@ -221,19 +221,20 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 				case TYPE_SWIFT:
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
 				case TYPE_DOCKER:
+				default:	
 					ProjectLanguage lang = ((CodewindApplication)element).projectLanguage;
 					switch (lang) {
 						case LANGUAGE_GO:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON);
 						case LANGUAGE_JAVA:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON);
+						case LANGUAGE_NODEJS:
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
 						case LANGUAGE_PYTHON:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
 						default:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
 					}
-				default:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
 			}
 		}
 		return null;

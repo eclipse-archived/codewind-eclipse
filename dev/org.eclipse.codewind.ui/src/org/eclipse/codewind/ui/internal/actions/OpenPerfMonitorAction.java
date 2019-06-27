@@ -89,7 +89,7 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
 				// the browser will be re-used
 				browser = browserSupport
 						.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-								app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipPerformanceMonitor, app.name));
+								app.projectID + "_" + CoreConstants.PERF_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipPerformanceMonitor, app.name));
 			}
 
 			browser.openURL(url);

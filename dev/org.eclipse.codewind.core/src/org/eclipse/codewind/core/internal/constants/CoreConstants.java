@@ -139,7 +139,8 @@ public class CoreConstants {
 			QUERY_PROJECT = "project",
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
-			VIEW_OVERVIEW = "overview"
+			VIEW_OVERVIEW = "overview",
+			PERF_MONITOR = "performance/charts"
 
 			;
 

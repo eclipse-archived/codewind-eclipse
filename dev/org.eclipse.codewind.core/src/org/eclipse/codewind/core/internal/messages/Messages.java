@@ -69,6 +69,8 @@ public class Messages extends NLS {
 	public static String InstallCodewindJobLabel;
 	public static String StopCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
+	
+	public static String ProjectSettingsUpdateErrorTitle;
 
 	static {
 		// initialize resource bundle

@@ -41,19 +41,17 @@ pipeline {
                   sh '''
                   	if [ -z $CHANGE_ID ]; then
     					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+
+                  		ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
+                  		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
+                  		scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest    					
 					else
     					UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
 					fi
  
                   	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}
                   	ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}
-                  	scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}
-                  	
-                  	if [[-z $CHANGE_ID] && [“$GIT_BRANCH” == “master”]]; then
-                  		ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/master/latest
-                  		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/master/latest
-                  		scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/master/latest
-					fi
+                  	scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}                  	
                   '''
                 }
             }

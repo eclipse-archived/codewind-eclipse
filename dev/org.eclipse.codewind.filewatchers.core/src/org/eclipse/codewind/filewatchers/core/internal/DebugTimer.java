@@ -27,7 +27,7 @@ public class DebugTimer {
 
 	private final Object lock = new Object();
 
-	private final long TIME_TO_WAIT_IN_MSECS = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
+	private final long TIME_TO_WAIT_IN_MSECS = TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES);
 
 	private final Filewatcher parent;
 

@@ -51,8 +51,8 @@ public abstract class BaseDebugTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), currentText, newText);
+    	refreshProject();
     	currentText = newText;
-    	buildIfWindows();
     	CodewindApplication app = connection.getAppByName(projectName);
     	// For Java builds the states can go by quickly so don't do an assert on this
     	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
@@ -67,7 +67,7 @@ public abstract class BaseDebugTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(dockerfile);
     	TestUtil.prependToFile(path.toOSString(), "# no comment\n");
-    	buildIfWindows();
+    	refreshProject();
     	CodewindApplication app = connection.getAppByName(projectName);
     	assertTrue("App should be in stopped state", CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1));
     	assertTrue("App should be in starting state", CodewindUtil.waitForAppState(app, AppState.STARTING, 600, 1));

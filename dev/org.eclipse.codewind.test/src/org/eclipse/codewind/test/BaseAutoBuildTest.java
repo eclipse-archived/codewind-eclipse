@@ -46,6 +46,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
+    	refreshProject();
     	// Check that the old text is still there
     	pingApp(text1);
     	// Run a build
@@ -68,8 +69,8 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text2, text3);
+    	refreshProject();
     	// Check that build is started automatically
-    	buildIfWindows();
     	CodewindApplication app = connection.getAppByName(projectName);
     	// For Java builds the states can go by quickly so don't do an assert on this
     	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);

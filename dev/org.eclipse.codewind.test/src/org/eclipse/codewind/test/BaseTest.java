@@ -12,7 +12,6 @@
 package org.eclipse.codewind.test;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
@@ -20,10 +19,10 @@ import java.util.Set;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.CodewindObjectFactory;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
+import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
@@ -45,6 +44,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.ui.IMarkerResolution;
@@ -75,12 +75,18 @@ public abstract class BaseTest extends TestCase {
 	protected static Boolean origAutoBuildSetting = null;
 	
     public void doSetup() throws Exception {
+    	// Check that Codewind is installed
+    	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus(true) == InstallStatus.RUNNING);
+    	
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
     	
         // Create a Codewind connection
-        connection = CodewindObjectFactory.createCodewindConnection(new URI(CODEWIND_URI));
-        CodewindConnectionManager.add(connection);
+        connection = CodewindManager.getManager().getLocalConnection();
+        if (connection == null) {
+        	connection = CodewindManager.getManager().createLocalConnection();
+        }
+        assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project
         createProject(projectType, projectLanguage, projectName);
@@ -200,12 +206,6 @@ public abstract class BaseTest extends TestCase {
     	assertTrue("Did not find all expected consoles", foundConsoles.size() == expectedConsoles.size());
     }
     
-    protected void buildIfWindows() throws Exception {
-    	if (TestUtil.isWindows()) {
-    		build();
-    	}
-    }
-    
     protected void build() throws Exception {
     	CodewindApplication app = connection.getAppByName(projectName);
 		connection.requestProjectBuild(app, CoreConstants.VALUE_ACTION_BUILD);
@@ -277,6 +277,10 @@ public abstract class BaseTest extends TestCase {
 		connection.requestProjectCreate(templateInfo, name);
 		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, language.getId(), type.getId());
 
+	}
+	
+	protected void refreshProject() throws CoreException {
+		project.refreshLocal(IProject.DEPTH_INFINITE, new NullProgressMonitor());
 	}
 
 }

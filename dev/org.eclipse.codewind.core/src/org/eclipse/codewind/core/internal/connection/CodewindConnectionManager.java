@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
@@ -97,7 +98,7 @@ public class CodewindConnectionManager {
 	}
 
 	/**
-	 * Try to remove the given connection. Removal will fail if the connection is still in use (ie. has a linked app).
+	 * Try to remove the given connection.
 	 * @return
 	 * 	true if the connection was removed,
 	 * 	false if not because it didn't exist.
@@ -107,16 +108,18 @@ public class CodewindConnectionManager {
 
 		CodewindConnection connection = CodewindConnectionManager.getActiveConnection(baseUrl.toString());
 		if (connection != null) {
+			List<CodewindApplication> apps = connection.getApps();
 			connection.close();
 			removeResult = instance().connections.remove(connection);
-		}
-		else {
+			CoreUtil.removeConnection(apps);
+		} else {
 			removeResult = instance().brokenConnections.remove(baseUrl);
 		}
 
 		if (!removeResult) {
 			Logger.logError("Tried to remove connection " + baseUrl + ", but it didn't exist"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+		
 //		instance().writeToPreferences();
 		CoreUtil.updateAll();
 		return removeResult;

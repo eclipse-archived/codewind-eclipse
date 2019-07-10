@@ -175,6 +175,17 @@ public class CoreUtil {
 	}
 	
 	/**
+	 * Remove the connection.  Apps must be passed in since they may not
+	 * be available if the connection is no longer active.
+	 */
+	public static void removeConnection(List<CodewindApplication> apps) {
+		IUpdateHandler handler = CodewindCorePlugin.getUpdateHandler();
+		if (handler != null) {
+			handler.removeConnection(apps);
+		}
+	}
+	
+	/**
 	 * Update the application in the Codewind explorer view
 	 */
 	public static void updateApplication(CodewindApplication app) {

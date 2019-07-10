@@ -12,6 +12,7 @@
 package org.eclipse.codewind.ui.internal.views;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.IUpdateHandler;
@@ -49,6 +50,19 @@ public class UpdateHandler implements IUpdateHandler {
 		}
 	}
 	
+	@Override
+	public void removeConnection(List<CodewindApplication> apps) {
+		ViewHelper.refreshCodewindExplorerView(null);
+		synchronized(appListeners) {
+			for (CodewindApplication app : apps) {
+				AppUpdateListener listener = appListeners.get(app.projectID);
+				if (listener != null) {
+					listener.remove(app);
+				}
+			}
+		}
+	}
+
 	@Override
 	public void removeApplication(CodewindApplication app) {
 		ViewHelper.refreshCodewindExplorerView(app.connection);

@@ -43,8 +43,11 @@ pipeline {
     					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
 
                   		ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
-                  		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
-                  		scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest    					
+                  		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest/repository
+                  		
+                  		scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest   
+                  		ssh genie.codewind@projects-storage.eclipse.org unzip ${WORKSPACE}/dev/ant_build/artifacts/codewind*.zip -d /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest/repository
+                  					
 					else
     					UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
 					fi

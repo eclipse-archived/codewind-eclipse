@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.core.internal;
 
+import java.util.List;
+
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 
 public interface IUpdateHandler {
@@ -20,6 +22,8 @@ public interface IUpdateHandler {
 	public void updateConnection(CodewindConnection connection);
 	
 	public void updateApplication(CodewindApplication application);
+	
+	public void removeConnection(List<CodewindApplication> apps);
 	
 	public void removeApplication(CodewindApplication application);
 

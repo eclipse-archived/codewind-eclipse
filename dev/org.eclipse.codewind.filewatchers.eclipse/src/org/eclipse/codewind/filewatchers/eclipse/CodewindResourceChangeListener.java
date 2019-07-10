@@ -42,10 +42,6 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 		try {
 			delta.accept(visitor);
 
-			visitor.getResult().forEach(e -> {
-				System.out.println(e);
-			});
-
 			parent.handleResourceChanges(visitor.getResult());
 
 		} catch (CoreException e1) {
@@ -96,8 +92,9 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 			}
 
 			if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 && (delta.getFlags() & IResourceDelta.REPLACED) == 0) {
-				// Some workbench operations, such as adding/removing a debug breakpoint, will trigger a resource 
-				// delta, even though the actual file contents is the same. We ignore those, and return here.
+				// Some workbench operations, such as adding/removing a debug breakpoint, will
+				// trigger a resource delta, even though the actual file contents is the same. We ignore 
+				// those, and return here.
 				return true;
 			}
 

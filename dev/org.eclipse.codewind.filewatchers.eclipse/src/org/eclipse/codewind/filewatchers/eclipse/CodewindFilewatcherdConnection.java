@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.eclipse.codewind.filewatchers.JavaNioWatchService;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
@@ -92,6 +93,10 @@ public class CodewindFilewatcherdConnection {
 		}
 	}
 
+	/**
+	 * Called by the resource change listened with a list of changes, which we pass
+	 * along to the core file watcher.
+	 */
 	void handleResourceChanges(List<FileChangeEntryEclipse> result) {
 		if (result == null || result.size() == 0) {
 			return;

@@ -319,6 +319,10 @@ public class JavaNioWatchService implements IPlatformWatchService {
 			});
 		}
 
+		/**
+		 * Wait for the watch path to become available, then wrap the main event loop
+		 * and prevent it from terminating the thread.
+		 */
 		private void eventLoopCatchAll() {
 
 			// Wait for the directory to exist, and be valid.

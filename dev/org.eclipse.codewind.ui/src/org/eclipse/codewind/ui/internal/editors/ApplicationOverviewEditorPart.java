@@ -314,7 +314,13 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			locationEntry.setValue(app.fullLocalPath.toOSString(), true);
 			appURLEntry.setValue(app.isAvailable() && app.getRootUrl() != null ? app.getRootUrl().toString() : null, true);
 			hostAppPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);
-			hostDebugPortEntry.setValue(app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null, true);
+			String hostDebugPort = null;
+			if (app.supportsDebug()) {
+				hostDebugPort = app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null;
+			} else {
+				hostDebugPort = Messages.AppOverviewEditorDebugNotSupported;
+			}
+			hostDebugPortEntry.setValue(hostDebugPort, true);
 			containerIdEntry.setValue(app.isAvailable() ? app.getContainerId() : null, true);
 			statusEntry.setValue(app.isAvailable(), true);
 		}
@@ -402,7 +408,13 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		public void update(CodewindApplication app) {
 			contextRootEntry.setValue(app.getContextRoot() != null ? app.getContextRoot() : "/", true); //$NON-NLS-1$
 			appPortEntry.setValue(app.getContainerAppPort(), true);
-			debugPortEntry.setValue(app.getContainerDebugPort(), true);
+			String debugPort = null;
+			if (app.supportsDebug()) {
+				debugPort = app.getContainerDebugPort();
+			} else {
+				debugPort = Messages.AppOverviewEditorDebugNotSupported;
+			}
+			debugPortEntry.setValue(debugPort, true);
 		}
 		
 		public void enableWidgets(boolean enable) {

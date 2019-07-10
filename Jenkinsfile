@@ -39,10 +39,11 @@ pipeline {
                   println("Deploying codewind-eclipse to downoad area...")
                   
                   sh '''
-    				unzip ${WORKSPACE}/dev/ant_build/artifacts/codewind*.zip -d ${WORKSPACE}/dev/ant_build/artifacts/repository
                   
 					if [ -z $CHANGE_ID ]; then
     					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+
+	    				unzip ${WORKSPACE}/dev/ant_build/artifacts/codewind*.zip -d ${WORKSPACE}/dev/ant_build/artifacts/repository
                   		
                   		ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
                   		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest

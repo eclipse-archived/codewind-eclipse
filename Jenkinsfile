@@ -39,19 +39,24 @@ pipeline {
                   println("Deploying codewind-eclipse to downoad area...")
                   
                   sh '''
-                  	if [ -z $CHANGE_ID ]; then
-    					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+                    export sshHost="genie.codewind@projects-storage.eclipse.org"
+                    export deployDir="/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse"
 
-                  		ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
-                  		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest
-                  		scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/$GIT_BRANCH/latest    					
-					else
-    					UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
-					fi
+                  	if [ -z $CHANGE_ID ]; then
+    				UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+
+	    			unzip ${WORKSPACE}/dev/ant_build/artifacts/codewind*.zip -d ${WORKSPACE}/dev/ant_build/artifacts/repository
+                  		
+                  		ssh $sshHost rm -rf $deployDir/$GIT_BRANCH/latest
+                  		ssh $sshHost mkdir -p $deployDir/$GIT_BRANCH/latest
+                  		scp -r ${WORKSPACE}/dev/ant_build/artifacts/* $sshHost:$deployDir/$GIT_BRANCH/latest    					
+			else
+    				UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
+			fi
  
-                  	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}
-                  	ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}
-                  	scp -r ${WORKSPACE}/dev/ant_build/artifacts/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-eclipse/${UPLOAD_DIR}                  	
+                  	ssh $sshHost rm -rf $deployDir/${UPLOAD_DIR}
+                  	ssh $sshHost mkdir -p $deployDir/${UPLOAD_DIR}
+                  	scp -r ${WORKSPACE}/dev/ant_build/artifacts/* $sshHost:$deployDir/${UPLOAD_DIR}                         	
                   '''
                 }
             }

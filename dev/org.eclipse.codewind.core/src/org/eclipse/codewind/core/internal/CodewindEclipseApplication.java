@@ -331,8 +331,8 @@ public class CodewindEclipseApplication extends CodewindApplication {
 
 	@Override
 	public boolean supportsDebug() {
-		// Only supported for certain project types
-		if (projectType == ProjectType.TYPE_LIBERTY || projectType == ProjectType.TYPE_SPRING || projectType == ProjectType.TYPE_NODEJS) {
+		// Only supported for certain languages
+		if (projectLanguage == ProjectLanguage.LANGUAGE_JAVA || projectLanguage == ProjectLanguage.LANGUAGE_NODEJS) {
 			// And only if the project supports it
 			ProjectCapabilities capabilities = getProjectCapabilities();
 			return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();

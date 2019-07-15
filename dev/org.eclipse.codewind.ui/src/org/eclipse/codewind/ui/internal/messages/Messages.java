@@ -90,7 +90,12 @@ public class Messages extends NLS {
 	public static String UnbindActionLabel;
 	public static String UnbindActionTitle;
 	public static String UnbindActionMessage;
+	public static String UnbindActionMultipleMessage;
+	public static String UnbindActionDeleteContentsLabel;
+	public static String UnbindActionLocationLabel;
+	public static String UnbindActionMultipleLocationLabel;
 	public static String UnbindActionJobTitle;
+	public static String UnbindActionMultipleJobTitle;
 	public static String UnbindActionError;
 	
 	public static String InstallCodewindJobLabel;

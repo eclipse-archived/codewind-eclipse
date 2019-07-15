@@ -345,7 +345,6 @@
 			name="%CW_SETTINGS_CONTENT_TYPE" 
 			base-type="org.eclipse.wst.json.core.jsonsource"
 			file-names=".cw-settings">
-			<describer class=""/>
 		</content-type>
 	</extension>
 

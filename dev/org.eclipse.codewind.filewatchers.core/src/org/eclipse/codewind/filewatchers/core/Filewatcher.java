@@ -429,7 +429,7 @@ public class Filewatcher {
 		});
 
 		/**
-		 * Figure out which WatchEventEntries go with with project IDs, based on the
+		 * Figure out which WatchEventEntries go with which project IDs, based on the
 		 * path from the entry. Filter the results into projectIdToList.
 		 */
 		for (WatchEventEntry we : watchEntries) {
@@ -443,6 +443,10 @@ public class Filewatcher {
 			boolean match = false;
 
 			for (ProjectToWatch ptw : projectsToWatch) {
+
+				// TODO: Consider passing projectId as part of WatchEventEntry (which seems
+				// easy) and then get rid of path-prefix-based matching (but nothing inherently
+				// wrong with path-prefix-based matching)
 
 				// See if this watch event is related to the project
 				if (fullLocalPath.startsWith(ptw.getPathToMonitor())) {
@@ -477,7 +481,7 @@ public class Filewatcher {
 			List<ChangedFileEntry> changedFileEntries = new ArrayList<>();
 
 			List<WatchEventEntry> eventList = me.getValue();
-			for (WatchEventEntry we : eventList) {
+			outer: for (WatchEventEntry we : eventList) {
 
 				// Path will necessarily already have lowercase Windows drive letter, if
 				// applicable.
@@ -489,27 +493,21 @@ public class Filewatcher {
 					continue;
 				}
 
-//				if (!path.startsWith(ptw.getPathToMonitor())) {
-//					// This shouldn't happen, and is thus severe
-//					log.logSevere(
-//							"Watch event '" + path + "' does not match project path '" + ptw.getPathToMonitor() + "'");
-//					continue;
-//				}
-//
-//				// Strip project parent directory from path:
-//				// If pathToMonitor is: /home/user/codewind/project
-//				// and watchEventPath is: /home/user/codewind/project/some-file.txt
-//				// then this will convert watchEventPath to /some-file.txt
-//				path = path.replace(ptw.getPathToMonitor(), "");
-//
-//				if (path.length() == 0) {
-//					// Ignore the empty case
-//					continue;
-//				}
+				if (ptw.getIgnoredPaths() != null) {
+					if (filter.isFilteredOutByPath(path)) {
+						log.logDebug("Filtering out " + path + " by path.");
+						continue;
+					}
 
-				if (ptw.getIgnoredPaths() != null && filter.isFilteredOutByPath(path)) {
-					log.logDebug("Filtering out " + path + " by path.");
-					continue;
+					for (String parentPath : PathUtils.splitRelativeProjectPathIntoComponentPaths(path)) {
+						// Apply the path filter against parent paths as well (if path is /a/b/c, then
+						// also try to match against /a/b and /a)
+						if (filter.isFilteredOutByPath(parentPath)) {
+							log.logDebug("Filtering out " + path + " by parent path.");
+							continue outer;
+						}
+					}
+
 				}
 
 				if (ptw.getIgnoredFilenames() != null && filter.isFilteredOutByFilename(path)) {

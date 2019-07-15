@@ -94,7 +94,7 @@ public class CodewindFilewatcherdConnection {
 	}
 
 	/**
-	 * Called by the resource change listened with a list of changes, which we pass
+	 * Called by the resource change listener with a list of changes, which we pass
 	 * along to the core file watcher.
 	 */
 	void handleResourceChanges(List<FileChangeEntryEclipse> result) {

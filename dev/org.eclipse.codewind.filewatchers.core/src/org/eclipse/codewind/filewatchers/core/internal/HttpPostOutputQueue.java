@@ -14,6 +14,7 @@ package org.eclipse.codewind.filewatchers.core.internal;
 import java.net.ConnectException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -315,15 +316,37 @@ public class HttpPostOutputQueue {
 
 	}
 
+	/**
+	 * The 'chunk group' maintains the list of chunks for a specific timestamp that
+	 * we are currently trying to send to the server.
+	 * 
+	 * Each chunk in the chunk group is in one of these states:
+	 * 
+	 * <pre>
+	 * - AVAILABLE_TO_SEND: Chunks in this state are available to be sent by the next available worker. 
+	 * - WAITING_FOR_ACK: Chunks in this state are in the process of being sent by one of the workers.
+	 * - COMPLETE: Chunks in this state have been sent and acknowledged by the server.
+	 * </pre>
+	 * 
+	 * The primary goal of chunk groups is to ensure that chunks will never be sent
+	 * to the server out of ascending-timestamp order: eg we will never send the
+	 * server a chunk of 'timestamp 20', then a chunk of 'timestamp 19'. The
+	 * 'timestamp 20' chunks will wait for all of the 'timestamp 19' chunks to be
+	 * sent.
+	 * 
+	 * This class is thread safe.
+	 */
 	private static class PostQueueChunkGroup implements Comparable<PostQueueChunkGroup> {
 
 		private enum ChunkStatus {
 			AVAILABLE_TO_SEND, WAITING_FOR_ACK, COMPLETE
 		}
 
-		private final HashMap<Integer /* chunk id */, PostQueueChunk> chunkMap = new HashMap<>();
+		/** List of chunks; this map is immutable (as are the chunks themselves) */
+		private final Map<Integer /* chunk id */, PostQueueChunk> chunkMap;
 
-		private final HashMap<Integer /* chunk id */, ChunkStatus> chunkStatus_synch = new HashMap<>();
+		/** Synchronize on this before accessing. */
+		private final Map<Integer /* chunk id */, ChunkStatus> chunkStatus_synch = new HashMap<>();
 
 		private final long timestamp;
 
@@ -339,6 +362,8 @@ public class HttpPostOutputQueue {
 			this.parent = parent;
 			this.projectId = projectId;
 
+			HashMap<Integer /* chunk id */, PostQueueChunk> chunkMap = new HashMap<>();
+
 			int chunkId = 1;
 			for (String text : base64Compressed) {
 
@@ -351,6 +376,8 @@ public class HttpPostOutputQueue {
 				chunkId++;
 			}
 
+			this.chunkMap = Collections.unmodifiableMap(chunkMap);
+
 			this.timestamp = timestamp;
 
 		}
@@ -362,6 +389,7 @@ public class HttpPostOutputQueue {
 			}
 		}
 
+		/** Called by a worker thread to report a successful send. */
 		public void informChunkSent(PostQueueChunk chunk) {
 			synchronized (chunkStatus_synch) {
 				ChunkStatus currStatus = chunkStatus_synch.get(chunk.getChunkId());
@@ -375,6 +403,10 @@ public class HttpPostOutputQueue {
 			parent.informStateChange();
 		}
 
+		/**
+		 * Called by a worker thread to report a failed send; we make the chunk
+		 * available to send by another worker.
+		 */
 		public void informChunkFailedToSend(PostQueueChunk chunk) {
 			synchronized (chunkStatus_synch) {
 				ChunkStatus currStatus = chunkStatus_synch.get(chunk.getChunkId());
@@ -434,12 +466,23 @@ public class HttpPostOutputQueue {
 		}
 	}
 
+	/**
+	 * A large number of file changes will be split into 'bite-sized pieces' called
+	 * chunks. Each chunk communicates a subset of the full change list, and is
+	 * communicated on a separate HTTP POST request.
+	 * 
+	 * Instances of this class are immutable.
+	 */
 	private static class PostQueueChunk {
 
 		private final String projectId;
 		private final long timestamp;
 		private final String base64Compressed;
+
+		/** The ID of a chunk will be 1 <= id <= chunkTotal */
 		private final int chunkId;
+
+		/** The total # of chunks that will e sent for this project id and timestamp. */
 		private final int chunkTotal;
 
 		private final PostQueueChunkGroup parentGroup;

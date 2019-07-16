@@ -174,6 +174,7 @@ public class EclipseResourceWatchService implements IPlatformWatchService {
 				listeners.addAll(parent.listeners_synch);
 			}
 
+			// Inform filewatcher core plugin that the watcher has succeeded
 			for (IPlatformWatchListener pw : listeners) {
 				pw.watchAdded(projectToWatch, true);
 			}

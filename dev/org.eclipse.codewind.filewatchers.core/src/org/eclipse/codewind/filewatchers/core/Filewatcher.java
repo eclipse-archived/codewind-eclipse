@@ -578,14 +578,15 @@ public class Filewatcher {
 	}
 
 	/**
-	 * Information maintained for each project that is being monitor by the watcher.
-	 * This includes information on what to watch/filter (the ProjectToWatch), and
-	 * the batch util (one batch util object exists per project.)
+	 * Information maintained for each project that is being monitored by the
+	 * watcher. This includes information on what to watch/filter (the
+	 * ProjectToWatch), the batch util (one batch util object exists per project),
+	 * and which watch service (internal/external) is being used for this project.
 	 */
 	private static class ProjectObject {
 		private final FileChangeEventBatchUtil batchUtil;
 
-		// Synchronize on lock when accessing inside this class
+		// Synchronize on lock when reading/writing this field
 		private ProjectToWatch project_synch_lock;
 
 		private final IPlatformWatchService watchService;

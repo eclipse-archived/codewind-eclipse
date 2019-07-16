@@ -20,10 +20,12 @@ import org.json.JSONObject;
 
 /**
  * Contains information on what directory to (recursively monitor), and any
- * filters that should be applied to ignore changes to files/directories with
- * specific names/paths. The field correspond to the array of projects JSON from
- * the 'GET api/v1/projects/watchlist' API. See docs for format restrictions for
- * these fields.
+ * filters that should be applied (eg to ignore changes to files/directories
+ * with specific names/paths).
+ *
+ * The fields correspond to the array of projects JSON from the 'GET
+ * api/v1/projects/watchlist' API. See docs for format restrictions for these
+ * fields.
  */
 public class ProjectToWatch {
 

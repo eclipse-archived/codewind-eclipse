@@ -58,17 +58,7 @@
 			icon="%DEFAULT_ICON_PATH"
 			class="org.eclipse.codewind.ui.internal.views.CodewindExplorerView"/>
 	</extension>
-	
-	<extension point="org.eclipse.ui.perspectiveExtensions">
-		<perspectiveExtension 
-			targetID="org.eclipse.jst.j2ee.J2EEPerspective">
-	        <view id="org.eclipse.codewind.ui.explorerView" 
-	                relative="org.eclipse.wst.server.ui.ServersView" 
-	                relationship="stack"
-	                visible="true"/>
-		</perspectiveExtension> 
-	</extension>
-	
+
 	<extension point="org.eclipse.ui.navigator.viewer">
 		<viewerContentBinding
 			viewerId="org.eclipse.codewind.ui.explorerView">
@@ -346,6 +336,18 @@
 			base-type="org.eclipse.wst.json.core.jsonsource"
 			file-names=".cw-settings">
 		</content-type>
+	</extension>
+	
+	<extension point="org.eclipse.ui.perspectiveExtensions">
+		<perspectiveExtension 
+			targetID="org.eclipse.jst.j2ee.J2EEPerspective">
+	        <view id="org.eclipse.codewind.ui.explorerView" 
+	                relative="org.eclipse.wst.server.ui.ServersView" 
+	                relationship="stack"
+	                visible="true"/>
+	        <newWizardShortcut id="org.eclipse.codewind.ui.wizards.newProject"/>
+	        <viewShortcut id="org.eclipse.codewind.ui.explorerView"/>
+		</perspectiveExtension> 
 	</extension>
 
 </plugin>

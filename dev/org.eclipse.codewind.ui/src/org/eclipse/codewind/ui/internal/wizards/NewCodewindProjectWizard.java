@@ -31,8 +31,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -61,31 +59,30 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		Display display = Display.getDefault();
-	    Shell result = display.getActiveShell();
-
 		try {
 			if (CodewindInstall.isCodewindInstalled()) {
-				 setWindowTitle(Messages.NewProjectPage_ShellTitle);
-				 newProjectPage = new NewCodewindProjectPage(connection, templateList);
-				 addPage(newProjectPage);
+				setWindowTitle(Messages.NewProjectPage_ShellTitle);
+				newProjectPage = new NewCodewindProjectPage(connection, templateList);
+				addPage(newProjectPage);
 			} else {
-				result.close();
 				CodewindInstall.codewindInstallerDialog();
+				if (getContainer() != null) {
+					getContainer().getShell().close();
+				}
 			}
 		} catch (InvocationTargetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
- 
-		
 	}
 
 	@Override
 	public boolean performCancel() {
-		CodewindConnection newConnection = newProjectPage.getConnection();
-		if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
-			newConnection.close();
+		if (newProjectPage != null) {
+			CodewindConnection newConnection = newProjectPage.getConnection();
+			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+				newConnection.close();
+			}
 		}
 		return super.performCancel();
 	}

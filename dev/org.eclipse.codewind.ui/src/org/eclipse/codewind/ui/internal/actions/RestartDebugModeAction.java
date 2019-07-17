@@ -26,51 +26,46 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IActionDelegate2;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IViewActionDelegate;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action to restart a Codewind application in debug mode.
  */
-public class RestartDebugModeAction implements IObjectActionDelegate, IViewActionDelegate, IActionDelegate2 {
+public class RestartDebugModeAction extends SelectionProviderAction {
+	
+	public static final String ACTION_ID = "org.eclipse.codewind.ui.restartDebugModeAction";
 
     protected CodewindEclipseApplication app;
+    
+    public RestartDebugModeAction(ISelectionProvider selectionProvider) {
+        super(selectionProvider, Messages.RestartInDebugMode);
+        setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.LAUNCH_DEBUG_ICON));
+        selectionChanged(getStructuredSelection());
+    }
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable() && app.supportsDebug()) {
-		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
+		            setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
 	            	return;
             	}
             }
         }
-        
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("RestartDebugModeAction ran but no application was selected"); //$NON-NLS-1$
@@ -164,31 +159,8 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 		return result[0];
 	}
     
-	@Override
-	public void runWithEvent(IAction action, Event event) {
-		run(action);
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
-
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void init(IAction arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void init(IViewPart arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    public boolean showAction() {
+    	// Don't show the action if the app does not support debug
+    	return (app != null && app.isAvailable() && app.supportsDebug());
+    }
 }

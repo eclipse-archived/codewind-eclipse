@@ -13,7 +13,7 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -47,7 +47,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
             		this.setText(Messages.AttachDebuggerLabel);
             	}
             	if (app.isAvailable() && StartMode.DEBUG_MODES.contains(app.getStartMode()) && app.getDebugPort() != -1 &&
-            			(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING)) {
+            			(app.getAppStatus() == AppStatus.STARTED || app.getAppStatus() == AppStatus.STARTING)) {
             		setEnabled(app.canAttachDebugger());
             		return;
             	}

@@ -80,6 +80,7 @@ public class Messages extends NLS {
 	public static String CodewindDisconnected;
 	public static String CodewindProjectDisabled;
 	public static String CodewindConnectionNoProjects;
+	public static String CodewindDescriptionContextRoot;
 	
 	public static String InstallerActionInstallLabel;
 	public static String InstallerActionUninstallLabel;

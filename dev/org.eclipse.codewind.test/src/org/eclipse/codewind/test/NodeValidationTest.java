@@ -12,7 +12,7 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.test.util.CodewindUtil;
@@ -40,7 +40,7 @@ public class NodeValidationTest extends BaseValidationTest {
 		build();
 		CodewindApplication app = connection.getAppByName(projectName);
 		// For Java builds the states can go by quickly so don't do an assert on this
-		CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
-		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 300, 1));
+		CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
+		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));
 	}
 }

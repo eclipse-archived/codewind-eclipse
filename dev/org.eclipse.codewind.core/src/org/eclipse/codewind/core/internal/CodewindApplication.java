@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
@@ -42,7 +42,8 @@ public class CodewindApplication {
 	
 	private String contextRoot;	// can be null
 	private StartMode startMode;
-	private AppState appState;
+	private AppStatus appStatus;
+	private String appStatusDetails;
 	private BuildStatus buildStatus;
 	private String buildDetails;
 	private boolean autoBuild = true;
@@ -83,7 +84,7 @@ public class CodewindApplication {
 		this.fullLocalPath = CoreUtil.appendPathWithoutDupe(connection.getWorkspacePath(), pathInWorkspace);
 
 		this.startMode = StartMode.RUN;
-		this.appState = AppState.UNKNOWN;
+		this.appStatus = AppStatus.UNKNOWN;
 		this.buildStatus = BuildStatus.UNKOWN;
 	}
 
@@ -102,8 +103,15 @@ public class CodewindApplication {
 		}
 	}
 	
-	public synchronized void setAppStatus(String appStatus) {
-		this.appState = AppState.get(appStatus);
+	public synchronized void setAppStatus(String appStatus, String appStatusDetails) {
+		if (appStatus != null) {
+			this.appStatus = AppStatus.get(appStatus);
+			if (appStatusDetails == null || appStatusDetails.trim().isEmpty()) {
+				this.appStatusDetails = null;
+			} else {
+				this.appStatusDetails = appStatusDetails;
+			}
+		}
 	}
 	
 	public synchronized void setBuildStatus(String buildStatus, String buildDetails) {
@@ -225,8 +233,12 @@ public class CodewindApplication {
 		return null;
 	}
 	
-	public synchronized AppState getAppState() {
-		return appState;
+	public synchronized AppStatus getAppStatus() {
+		return appStatus;
+	}
+	
+	public synchronized String getAppStatusDetails() {
+		return appStatusDetails;
 	}
 	
 	public synchronized BuildStatus getBuildStatus() {
@@ -262,7 +274,7 @@ public class CodewindApplication {
 	}
 	
 	public boolean isActive() {
-		return getAppState() == AppState.STARTING || getAppState() == AppState.STARTED;
+		return getAppStatus() == AppStatus.STARTING || getAppStatus() == AppStatus.STARTED;
 	}
 
 	public boolean isRunning() {

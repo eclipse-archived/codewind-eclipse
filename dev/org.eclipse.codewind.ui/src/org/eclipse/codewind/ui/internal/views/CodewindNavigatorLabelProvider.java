@@ -14,7 +14,7 @@ package org.eclipse.codewind.ui.internal.views;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
@@ -26,17 +26,19 @@ import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelP
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.StyledString.Styler;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.navigator.IDescriptionProvider;
 
 /**
  * Label provider for the Codewind view.
  */
-public class CodewindNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider {
+public class CodewindNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider, IDescriptionProvider {
 
 	static final Styler BOLD_FONT_STYLER = new BoldFontStyler();
 	
@@ -100,8 +102,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			StringBuilder builder = new StringBuilder(app.name);
 			
 			if (app.isEnabled()) {
-				AppState appState = app.getAppState();
-				String displayString = appState.getDisplayString(app.getStartMode());
+				AppStatus appStatus = app.getAppStatus();
+				String displayString = appStatus.getDisplayString(app.getStartMode());
 				builder.append(" [" + displayString + "]");
 				
 				BuildStatus buildStatus = app.getBuildStatus();
@@ -181,8 +183,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			styledString = new StyledString(app.name);
 			
 			if (app.isEnabled()) {
-				AppState appState = app.getAppState();
-				String displayString = appState.getDisplayString(app.getStartMode());
+				AppStatus appStatus = app.getAppStatus();
+				String displayString = appStatus.getDisplayString(app.getStartMode());
 				styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
 				
 				BuildStatus buildStatus = app.getBuildStatus();
@@ -239,6 +241,19 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		}
 		return null;
 	}
+	
+    @Override
+    public String getDescription(Object element) {
+    	if (element instanceof CodewindApplication) {
+			CodewindApplication app = (CodewindApplication)element;
+			if (app.getAppStatusDetails() != null) {
+				return app.getAppStatusDetails();
+			} else if (app.getRootUrl() != null && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED)) {
+				return NLS.bind(Messages.CodewindDescriptionContextRoot, app.getRootUrl());
+			}
+    	}
+    	return null;
+    }
 
 	static class BoldFontStyler extends Styler {
 	    @Override

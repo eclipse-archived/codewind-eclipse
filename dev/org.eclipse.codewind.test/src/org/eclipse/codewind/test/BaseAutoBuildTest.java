@@ -12,7 +12,7 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.core.runtime.IPath;
@@ -53,8 +53,8 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	build();
     	CodewindApplication app = connection.getAppByName(projectName);
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
-    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	// Check for the new text
     	pingApp(text2);
     }
@@ -73,8 +73,8 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	// Check that build is started automatically
     	CodewindApplication app = connection.getAppByName(projectName);
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
-    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	// Check for the new text
     	pingApp(text3);
     }

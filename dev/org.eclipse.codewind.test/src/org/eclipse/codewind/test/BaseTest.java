@@ -27,7 +27,7 @@ import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
@@ -119,7 +119,7 @@ public abstract class BaseTest extends TestCase {
     
     public void checkApp(String text) throws Exception {
     	CodewindApplication app = connection.getAppByName(projectName);
-    	assertTrue("App should be in started state.  Current state is: " + app.getAppState(), CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 2));
+    	assertTrue("App should be in started state.  Current state is: " + app.getAppStatus(), CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 2));
     	pingApp(text);
     	checkMode(StartMode.RUN);
     	showConsoles();
@@ -160,8 +160,8 @@ public abstract class BaseTest extends TestCase {
     	CodewindApplication app = connection.getAppByName(projectName);
     	connection.requestProjectRestart(app, mode.startMode);
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 30, 1);
-    	assertTrue("App should be in started state instead of: " + app.getAppState(), CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 30, 1);
+    	assertTrue("App should be in started state instead of: " + app.getAppStatus(), CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	checkMode(mode);
     }
     

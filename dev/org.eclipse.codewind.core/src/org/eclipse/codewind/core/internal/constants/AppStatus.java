@@ -14,38 +14,38 @@ package org.eclipse.codewind.core.internal.constants;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.messages.Messages;
 
-public enum AppState {
+public enum AppStatus {
 
-	STARTED	("started", Messages.AppStateStarted),
-	STARTING("starting", Messages.AppStateStarting),
-	STOPPING("stopping", Messages.AppStateStopping),
-	STOPPED	("stopped", Messages.AppStateStopped),
-	UNKNOWN	("unknown", Messages.AppStateUnknown);
+	STARTED	("started", Messages.AppStatusStarted),
+	STARTING("starting", Messages.AppStatusStarting),
+	STOPPING("stopping", Messages.AppStatusStopping),
+	STOPPED	("stopped", Messages.AppStatusStopped),
+	UNKNOWN	("unknown", Messages.AppStatusUnknown);
 
-	public final String appState;
+	public final String appStatus;
 	public final String displayString;
 
 	/**
-	 * @param appState - App state used by Codewind
+	 * @param appStatus - App state used by Codewind
 	 */
-	private AppState(String appState, String displayString) {
-		this.appState = appState;
+	private AppStatus(String appStatus, String displayString) {
+		this.appStatus = appStatus;
 		this.displayString = displayString;
 	}
 	
-	public static AppState get(String appState) {
-		for (AppState state : AppState.values()) {
-			if (state.appState.equals(appState)) {
+	public static AppStatus get(String appStatus) {
+		for (AppStatus state : AppStatus.values()) {
+			if (state.appStatus.equals(appStatus)) {
 				return state;
 			}
 		}
-		Logger.logError("Unrecognized application state: " + appState);
-		return AppState.UNKNOWN;
+		Logger.logError("Unrecognized application status: " + appStatus);
+		return AppStatus.UNKNOWN;
 	}
 
 	public String getDisplayString(StartMode mode) {
-		if (this == AppState.STARTED && StartMode.DEBUG_MODES.contains(mode)) {
-			return Messages.AppStateDebugging;
+		if (this == AppStatus.STARTED && StartMode.DEBUG_MODES.contains(mode)) {
+			return Messages.AppStatusDebugging;
 		}
 		return displayString;
 	}

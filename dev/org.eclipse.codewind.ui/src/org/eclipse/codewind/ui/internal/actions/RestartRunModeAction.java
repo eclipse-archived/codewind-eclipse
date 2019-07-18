@@ -14,7 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -52,7 +52,7 @@ public class RestartRunModeAction extends SelectionProviderAction {
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable() && app.getProjectCapabilities().canRestart()) {
-		            setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
+		            setEnabled(app.getAppStatus() == AppStatus.STARTED || app.getAppStatus() == AppStatus.STARTING);
 	            	return;
             	}
             }

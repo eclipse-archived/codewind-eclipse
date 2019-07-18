@@ -152,9 +152,11 @@ public class CodewindApplicationFactory {
 			// Set the app status
 			if (appJso.has(CoreConstants.KEY_APP_STATUS)) {
 				String appStatus = appJso.getString(CoreConstants.KEY_APP_STATUS);
-				if (appStatus != null) {
-					app.setAppStatus(appStatus);
+				String detail = null;
+				if (appJso.has(CoreConstants.KEY_DETAILED_APP_STATUS)) {
+					detail = appJso.getString(CoreConstants.KEY_DETAILED_APP_STATUS);
 				}
+				app.setAppStatus(appStatus, detail);
 			}
 			
 			// Set the build status

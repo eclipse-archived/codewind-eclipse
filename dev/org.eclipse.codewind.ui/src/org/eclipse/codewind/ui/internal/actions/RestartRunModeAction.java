@@ -16,9 +16,11 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.constants.AppState;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IActionDelegate2;
@@ -26,38 +28,40 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IViewActionDelegate;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action to restart a Codewind application in run mode.
  */
-public class RestartRunModeAction implements IObjectActionDelegate, IViewActionDelegate, IActionDelegate2 {
+public class RestartRunModeAction extends SelectionProviderAction {
+	
+	public static final String ACTION_ID = "org.eclipse.codewind.ui.restartRunModeAction";
 
     protected CodewindEclipseApplication app;
+    
+    public RestartRunModeAction(ISelectionProvider selectionProvider) {
+        super(selectionProvider, Messages.RestartInRunMode);
+        setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.LAUNCH_RUN_ICON));
+        selectionChanged(getStructuredSelection());
+    }
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable() && app.getProjectCapabilities().canRestart()) {
-		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
+		            setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
 	            	return;
             	}
             }
         }
-        
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("RestartRunModeAction ran but no application was selected"); //$NON-NLS-1$
@@ -76,32 +80,9 @@ public class RestartRunModeAction implements IObjectActionDelegate, IViewActionD
 			return;
 		}
     }
-
-	@Override
-	public void runWithEvent(IAction action, Event event) {
-		run(action);
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
-
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void init(IAction arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void init(IViewPart arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    
+    public boolean showAction() {
+    	// Don't show the action if the app does not support restart
+    	return (app != null && app.isAvailable() && app.getProjectCapabilities().canRestart());
+    }
 }

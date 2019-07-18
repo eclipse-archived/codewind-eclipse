@@ -27,6 +27,8 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
 public class CodewindApplicationActionProvider extends CommonActionProvider {
 	
 //	private ValidateAction validateAction;
+	private RestartRunModeAction restartRunAction;
+	private RestartDebugModeAction restartDebugAction;
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
@@ -38,6 +40,8 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         super.init(aSite);
         ISelectionProvider selProvider = aSite.getStructuredViewer();
 //        validateAction = new ValidateAction(selProvider);
+        restartRunAction = new RestartRunModeAction(selProvider);
+        restartDebugAction = new RestartDebugModeAction(selProvider);
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
@@ -50,6 +54,12 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 //    	if (validateAction.showAction()) {
 //    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, validateAction);
 //    	}
+    	if (restartRunAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, restartRunAction);
+    	}
+    	if (restartDebugAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, restartDebugAction);
+    	}
     	if (attachDebuggerAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, attachDebuggerAction);
     	}

@@ -84,6 +84,10 @@
 				</or>
 			</enablement>
 			<actionProvider
+				id="org.eclipse.codewind.ui.rootActionProvider"
+				class="org.eclipse.codewind.ui.internal.actions.RootActionProvider">
+			</actionProvider>
+			<actionProvider
 				id="org.eclipse.codewind.ui.codewindActionProvider"
 				class="org.eclipse.codewind.ui.internal.actions.CodewindActionProvider">
 				<enablement>
@@ -154,20 +158,6 @@
 				label="%ACTION_IMPORT_PROJECT"
 				class="org.eclipse.codewind.ui.internal.actions.ImportProjectAction"/>
 			<action
-				id="org.eclipse.codewind.ui.restartDebugMode"
-				enablesFor="1"
-				menubarPath="group.generate"
-				icon="%DEBUG_ICON_PATH"
-				label="%ACTION_RESTART_DEBUG_MODE"
-				class="org.eclipse.codewind.ui.internal.actions.RestartDebugModeAction"/>
-			<action
-				id="org.eclipse.codewind.ui.restartRunMode"
-				enablesFor="1"
-				menubarPath="group.generate"
-				icon="%RUN_ICON_PATH"
-				label="%ACTION_RESTART_RUN_MODE"
-				class="org.eclipse.codewind.ui.internal.actions.RestartRunModeAction"/>
-			<action
 				id="org.eclipse.codewind.ui.enableDisableAutoBuild"
 				enablesFor="1"
 				menubarPath="group.build"
@@ -224,22 +214,6 @@
 		<viewContribution
 			id="org.eclipse.codewind.ui.explorerViewActions"
 			targetID="org.eclipse.codewind.ui.explorerView">
-			<action
-				id="org.eclipse.codewind.ui.restartRunModeAction"
-				label="%ACTION_RESTART_RUN_MODE"
-				menubarPath="group.top"
-				toolbarPath="group.top" 
-				icon="%RUN_ICON_PATH"
-				class="org.eclipse.codewind.ui.internal.actions.RestartRunModeAction">
-			</action>
-			<action
-				id="org.eclipse.codewind.ui.restartDebugModeAction"
-				label="%ACTION_RESTART_DEBUG_MODE"
-				menubarPath="group.top"
-				toolbarPath="group.top" 
-				icon="%DEBUG_ICON_PATH"
-				class="org.eclipse.codewind.ui.internal.actions.RestartDebugModeAction">
-			</action>
 			<action
 				id="org.eclipse.codewind.ui.openApplication"
 				label="%ACTION_OPEN_APP"

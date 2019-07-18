@@ -52,7 +52,7 @@ import org.json.JSONObject;
  * The algorithm is: After at least one event is received, wait for there to be
  * be no more events in the stream of events (within eg 1000 msecs) before
  * sending them to the server. If an event is seen within 1000 msecs, the timer
- * is reset and a new 200 msec timer begins. Batch together events seen since
+ * is reset and a new 1000 msec timer begins. Batch together events seen since
  * within a given timeframe, and send them as a single request.
  *
  * This class receives file change events from the watch service, and forwards
@@ -276,8 +276,8 @@ public class FileChangeEventBatchUtil {
 			log.logInfo(
 					"Batch change summary for " + projectId + "@ " + mostRecentEntryTimestamp + ": " + changeSummary);
 
-			// Split the entries into requests, ensure that each request is no larger
-			// then a given size.
+			// Split the entries into separate requests (chunks), to ensure that each
+			// request is no larger then a given size.
 			List<JSONArray> fileListsToSend = new ArrayList<>();
 			while (entries.size() > 0) {
 

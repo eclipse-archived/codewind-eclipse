@@ -56,7 +56,7 @@ public class WebSocketManagerThread extends Thread {
 
 	private final Filewatcher watcher;
 
-	private AtomicBoolean disposed = new AtomicBoolean(false);
+	private final AtomicBoolean disposed = new AtomicBoolean(false);
 
 	private final FWLogger log = FWLogger.getInstance();
 

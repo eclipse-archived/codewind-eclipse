@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -20,47 +20,54 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action for enabling/disabling a Codewind project.  Not currently used.
  */
-public class EnableDisableProjectAction implements IObjectActionDelegate {
+public class EnableDisableProjectAction extends SelectionProviderAction {
 
     protected CodewindEclipseApplication app;
+    
+	public EnableDisableProjectAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.DisableProjectLabel);
+		selectionChanged(getStructuredSelection());
+	}
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable()) {
-                	action.setText(Messages.DisableProjectLabel);
+                	setText(Messages.DisableProjectLabel);
                 } else {
-                	action.setText(Messages.EnableProjectLabel);
+                	setText(Messages.EnableProjectLabel);
                 }
-	            action.setEnabled(true);
+	            setEnabled(true);
             	return;
             }
         }
         
-        action.setEnabled(false);
+        setEnabled(false);
+    }
+    
+    /*
+     * If the selection has not changed, still need to check the application
+     * state before showing the menu item.
+     */
+    public void updateText() {
+    	if (app != null) {
+    		setText(app.isAvailable() ? Messages.DisableProjectLabel : Messages.EnableProjectLabel);
+    	}
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("EnableDisableProjectAction ran but no application was selected"); //$NON-NLS-1$
@@ -86,8 +93,4 @@ public class EnableDisableProjectAction implements IObjectActionDelegate {
 		job.schedule();
 	}
 
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
 }

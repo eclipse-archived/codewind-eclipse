@@ -226,11 +226,13 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;
 	public static String AppOverviewEditorGeneralSection;
+	public static String AppOverviewEditorTypeEntry;
 	public static String AppOverviewEditorLanguageEntry;
 	public static String AppOverviewEditorLocationEntry;
 	public static String AppOverviewEditorAppUrlEntry;
 	public static String AppOverviewEditorHostAppPortEntry;
 	public static String AppOverviewEditorHostDebugPortEntry;
+	public static String AppOverviewEditorProjectIdEntry;
 	public static String AppOverviewEditorContainerIdEntry;
 	public static String AppOverviewEditorStatusEntry;
 	public static String AppOverviewEditorStatusEnabled;

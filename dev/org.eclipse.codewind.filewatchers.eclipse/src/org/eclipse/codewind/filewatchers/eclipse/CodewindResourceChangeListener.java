@@ -26,9 +26,9 @@ import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 
 /**
- * An instance of this class is created by CodewindFilewatcherdConnection, is
- * also where where this class is registered as a workbench listener. Only one
- * instance of this class should exist per Codewind server.
+ * An instance of this class is created by CodewindFilewatcherdConnection, and
+ * is also where where this class is registered as a workbench listener. Only
+ * one instance of this class should exist per Codewind server.
  *
  * This class converts a list of changes from the IDE into a List of
  * FileChangeEntryEclipse, which are then processed by 'parent' and passed to
@@ -51,7 +51,7 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 		try {
 
 			// If the delta is null (as happens with some events), just pass the empty array
-			// list.
+			// list below.
 			if (delta != null) {
 				delta.accept(visitor);
 			}

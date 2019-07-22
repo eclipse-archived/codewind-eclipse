@@ -19,6 +19,15 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
 
+/**
+ * Every X minutes, this timer thread will run and output the internal state of
+ * each of the internal components of the filewatcher. This should run
+ * infrequently, as it can be fairly verbose (eg every 30 minutes).
+ * 
+ * The goal of this timer is to identify bugs/performance issues that might only
+ * be detectable when the workbench is open for long periods of time (memory
+ * leaks, resources we aren't closing, etc).
+ */
 public class DebugTimer {
 
 	private final FWLogger log = FWLogger.getInstance();
@@ -44,6 +53,10 @@ public class DebugTimer {
 		}
 	}
 
+	/**
+	 * Timer task to query the state of our parent, print the result, then schedule
+	 * the next run if not shutdown.
+	 */
 	private class DebugTimerTask extends TimerTask {
 
 		public DebugTimerTask() {

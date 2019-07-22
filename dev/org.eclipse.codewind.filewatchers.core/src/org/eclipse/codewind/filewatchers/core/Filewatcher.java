@@ -37,8 +37,8 @@ import org.eclipse.codewind.filewatchers.core.internal.WebSocketManagerThread;
 import org.json.JSONObject;
 
 /**
- * This class maintains information about the projects being watch, and is
- * otherwise the "glue" between the other components. This class maintains
+ * This class maintains information about the projects being watched, and is
+ * otherwise the "glue" between the other components. The class maintains
  * references to the other utilities (post queue, WebSocket connection, watch
  * service, etc) and forwards communication between them.
  * 
@@ -263,7 +263,7 @@ public class Filewatcher {
 			IPlatformWatchService watchService;
 
 			// Determine which watch service to use, based on what was provided in the
-			// constructor, and what is specified in the JSON object.
+			// FW constructor, and what is specified in the JSON object.
 			{
 				if (this.externalWatchService == null) {
 					watchService = this.internalWatchService;
@@ -578,14 +578,15 @@ public class Filewatcher {
 	}
 
 	/**
-	 * Information maintained for each project that is being monitor by the watcher.
-	 * This includes information on what to watch/filter (the ProjectToWatch), and
-	 * the batch util (one batch util object exists per project.)
+	 * Information maintained for each project that is being monitored by the
+	 * watcher. This includes information on what to watch/filter (the
+	 * ProjectToWatch), the batch util (one batch util object exists per project),
+	 * and which watch service (internal/external) is being used for this project.
 	 */
 	private static class ProjectObject {
 		private final FileChangeEventBatchUtil batchUtil;
 
-		// Synchronize on lock when accessing inside this class
+		// Synchronize on lock when reading/writing this field
 		private ProjectToWatch project_synch_lock;
 
 		private final IPlatformWatchService watchService;

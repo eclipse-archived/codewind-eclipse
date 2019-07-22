@@ -27,6 +27,17 @@ import org.eclipse.codewind.filewatchers.core.PathUtils;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch;
 import org.eclipse.codewind.filewatchers.core.WatchEventEntry;
 
+/**
+ * This class works with the Eclipse resource workbench monitoring functionality
+ * to identify file/folder changes, and pass them to the FW core plugin.
+ * 
+ * Specifically, the CodewindResourceChangeListener class creates a
+ * WatchEventEntry for each file/folder change, and the passes it to this class.
+ * Next, this class passes it to the appropriate WatchedPath below, which then
+ * processes it and forwards it to the core FW plugin.
+ * 
+ * See IPlatformWatchService for more information on watch services.
+ */
 public class EclipseResourceWatchService implements IPlatformWatchService {
 
 	/**
@@ -149,6 +160,16 @@ public class EclipseResourceWatchService implements IPlatformWatchService {
 
 	}
 
+	/**
+	 * The entry in EclipseResourceWatchService for an individual directory to
+	 * (recursively) watch. There should be a 1-1 relationship between WatchedPath
+	 * objects and projects that are monitored on behalf of the server.
+	 * 
+	 * The receiveFileChanges(...) method is called by the parent, from which we
+	 * process and filter the change, then pass it to filewatcher core through the
+	 * IPlatformWatchListener interface.
+	 * 
+	 */
 	private static class WatchedPath {
 
 		private final PathFilter pathFilter;
@@ -174,6 +195,7 @@ public class EclipseResourceWatchService implements IPlatformWatchService {
 				listeners.addAll(parent.listeners_synch);
 			}
 
+			// Inform filewatcher core plugin that the watcher has succeeded
 			for (IPlatformWatchListener pw : listeners) {
 				pw.watchAdded(projectToWatch, true);
 			}

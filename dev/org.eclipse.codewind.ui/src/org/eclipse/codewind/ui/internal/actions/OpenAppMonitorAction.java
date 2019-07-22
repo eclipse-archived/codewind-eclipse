@@ -16,7 +16,7 @@ import java.net.URL;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -47,7 +47,7 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication)obj;
-            	setEnabled(app.isAvailable() && app.getAppState() == AppState.STARTED);
+            	setEnabled(app.isAvailable() && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED));
             	return;
             }
         }

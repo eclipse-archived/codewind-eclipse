@@ -16,7 +16,7 @@ import java.net.URL;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -50,7 +50,7 @@ public class OpenAppAction implements IObjectActionDelegate, IViewActionDelegate
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication)obj;
-            	action.setEnabled(app.isAvailable() && app.getAppState() == AppState.STARTED);
+            	action.setEnabled(app.isAvailable() && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED));
             	return;
             }
         }

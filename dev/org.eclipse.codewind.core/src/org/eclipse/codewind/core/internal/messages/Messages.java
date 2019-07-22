@@ -46,12 +46,12 @@ public class Messages extends NLS {
 	public static String Socket_ErrRestartingProjectDialogMsg;
 	public static String Socket_ErrRestartingProjectDialogTitle;
 	
-	public static String AppStateStarting;
-	public static String AppStateStarted;
-	public static String AppStateStopping;
-	public static String AppStateStopped;
-	public static String AppStateUnknown;
-	public static String AppStateDebugging;
+	public static String AppStatusStarting;
+	public static String AppStatusStarted;
+	public static String AppStatusStopping;
+	public static String AppStatusStopped;
+	public static String AppStatusUnknown;
+	public static String AppStatusDebugging;
 	
 	public static String BuildStateQueued;
 	public static String BuildStateInProgress;

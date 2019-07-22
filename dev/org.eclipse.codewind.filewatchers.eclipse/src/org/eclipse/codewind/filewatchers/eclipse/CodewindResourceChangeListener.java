@@ -25,6 +25,15 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
 
+/**
+ * An instance of this class is created by CodewindFilewatcherdConnection, and
+ * is also where where this class is registered as a workbench listener. Only
+ * one instance of this class should exist per Codewind server.
+ *
+ * This class converts a list of changes from the IDE into a List of
+ * FileChangeEntryEclipse, which are then processed by 'parent' and passed to
+ * the Codewind core filewatcher plugin.
+ */
 public class CodewindResourceChangeListener implements IResourceChangeListener {
 
 	private final CodewindFilewatcherdConnection parent;
@@ -40,7 +49,12 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 		CodewindResourceDeltaVisitor visitor = new CodewindResourceDeltaVisitor();
 
 		try {
-			delta.accept(visitor);
+
+			// If the delta is null (as happens with some events), just pass the empty array
+			// list below.
+			if (delta != null) {
+				delta.accept(visitor);
+			}
 
 			parent.handleResourceChanges(visitor.getResult());
 
@@ -51,7 +65,11 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 
 	}
 
-	private class CodewindResourceDeltaVisitor implements IResourceDeltaVisitor {
+	/**
+	 * A standard Eclipse resource delta visitor, which converts a list of workbench
+	 * resource changes into FileChangeEntryEclipse, for processing by 'parent'.
+	 */
+	private static class CodewindResourceDeltaVisitor implements IResourceDeltaVisitor {
 
 		private final List<FileChangeEntryEclipse> result = new ArrayList<>();
 
@@ -93,8 +111,8 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 
 			if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 && (delta.getFlags() & IResourceDelta.REPLACED) == 0) {
 				// Some workbench operations, such as adding/removing a debug breakpoint, will
-				// trigger a resource delta, even though the actual file contents is the same. We ignore 
-				// those, and return here.
+				// trigger a resource delta, even though the actual file contents is the same.
+				// We ignore those, and return here.
 				return true;
 			}
 

@@ -210,7 +210,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		if (element instanceof CodewindManager) {
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
 		} else if (element instanceof CodewindConnection) {
-			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
+			return CodewindUIPlugin.getImage(CodewindUIPlugin.PROJECTS_ICON);
 		} else if (element instanceof CodewindApplication) {
 			ProjectType type = ((CodewindApplication)element).projectType;
 			switch (type) {

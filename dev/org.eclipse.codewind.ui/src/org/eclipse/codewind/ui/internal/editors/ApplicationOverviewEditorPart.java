@@ -252,13 +252,15 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private class GeneralSection {
 		
+		private final StringEntry typeEntry;
 		private final StringEntry languageEntry;
 		private final StringEntry locationEntry;
 		private final LinkEntry appURLEntry;
 		private final StringEntry hostAppPortEntry;
 		private final StringEntry hostDebugPortEntry;
+		private final StringEntry projectIdEntry;
 		private final StringEntry containerIdEntry;
-		private final BooleanEntry statusEntry;
+		private final StringEntry statusEntry;
 		
 		public GeneralSection(Composite parent, FormToolkit toolkit) {
 			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
@@ -278,6 +280,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        toolkit.paintBordersFor(composite);
 	        section.setClient(composite);
 	        
+	        typeEntry = new StringEntry(composite, Messages.AppOverviewEditorTypeEntry);
+	        addSpacer(composite);
 	        languageEntry = new StringEntry(composite, Messages.AppOverviewEditorLanguageEntry);
 	        addSpacer(composite);
 	        locationEntry = new StringEntry(composite, Messages.AppOverviewEditorLocationEntry);
@@ -295,21 +299,15 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        addSpacer(composite);
 	        hostDebugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostDebugPortEntry);
 	        addSpacer(composite);
+	        projectIdEntry = new StringEntry(composite, Messages.AppOverviewEditorProjectIdEntry);
+	        addSpacer(composite);
 	        containerIdEntry = new StringEntry(composite, Messages.AppOverviewEditorContainerIdEntry);
 	        addSpacer(composite);
-	        statusEntry = new BooleanEntry(composite, Messages.AppOverviewEditorStatusEntry, null,
-	        		Messages.AppOverviewEditorStatusEnabled, Messages.AppOverviewEditorStatusDisabled, (value) -> {
-	        	CodewindApplication app = getApp();
-	        	if (app == null) {
-	        		Logger.logError("Could not get the application for updating project enablement: " + appName); //$NON-NLS-1$
-	        		return;
-	        	}
-	        	EnableDisableProjectAction.enableDisableProject(app, value);
-	        	ApplicationOverviewEditorPart.this.enableWidgets(value);
-	        });
+	        statusEntry = new StringEntry(composite, Messages.AppOverviewEditorStatusEntry);
 		}
 		
 		public void update(CodewindApplication app) {
+			typeEntry.setValue(app.projectType.getDisplayName(), true);
 			languageEntry.setValue(app.projectLanguage.getDisplayName(), true);
 			locationEntry.setValue(app.fullLocalPath.toOSString(), true);
 			appURLEntry.setValue(app.isAvailable() && app.getRootUrl() != null ? app.getRootUrl().toString() : null, true);
@@ -321,8 +319,9 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 				hostDebugPort = Messages.AppOverviewEditorDebugNotSupported;
 			}
 			hostDebugPortEntry.setValue(hostDebugPort, true);
+			projectIdEntry.setValue(app.projectID, true);
 			containerIdEntry.setValue(app.isAvailable() ? app.getContainerId() : null, true);
-			statusEntry.setValue(app.isAvailable(), true);
+			statusEntry.setValue(app.isAvailable() ? Messages.AppOverviewEditorStatusEnabled : Messages.AppOverviewEditorStatusDisabled, true);
 		}
 		
 		public void enableWidgets(boolean enable) {
@@ -423,7 +422,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	}
 	
 	private class BuildSection {
-		private final BooleanEntry autoBuildEntry;
+		private final StringEntry autoBuildEntry;
 		private final StringEntry lastBuildEntry;
 		private final StringEntry lastImageBuildEntry;
 		
@@ -445,15 +444,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        toolkit.paintBordersFor(composite);
 	        section.setClient(composite);
 	        
-	        autoBuildEntry = new BooleanEntry(composite, Messages.AppOverviewEditorAutoBuildEntry, null,
-	        		Messages.AppOverviewEditorAutoBuildOn, Messages.AppOverviewEditorAutoBuildOff, (value) -> {
-	        	CodewindApplication app = getApp();
-	        	if (app == null) {
-	        		Logger.logError("Could not get the application for updating auto build setting for project id: " + projectID); //$NON-NLS-1$
-	        		return;
-	        	}
-	        	EnableDisableAutoBuildAction.enableDisableAutoBuild(app, value);
-	        });
+	        autoBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorAutoBuildEntry);
 	        addSpacer(composite);
 	        lastBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastBuildEntry);
 	        addSpacer(composite);
@@ -461,7 +452,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 		
 		public void update(CodewindApplication app) {
-			autoBuildEntry.setValue(app.isAutoBuild(), app.isAvailable());
+			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, app.isAvailable());
 			long lastBuild = app.getLastBuild();
 			String lastBuildStr = Messages.AppOverviewEditorProjectNeverBuilt;
 			if (lastBuild > 0) {
@@ -477,7 +468,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 		
 		public void enableWidgets(boolean enable) {
-			autoBuildEntry.enableEntry(enable);
+			// Nothing to do
 		}
 	}
 	

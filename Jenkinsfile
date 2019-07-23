@@ -58,7 +58,8 @@ pipeline {
                             scp $OUTPUT_DIR/$OUTPUT_NAME.zip $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR/$OUTPUT_NAME.zip
                         
                             echo "build_info.url=$BUILD_URL" >> $OUTPUT_DIR/$BUILD_INFO
-                            SHA1=($(sha1sum $OUTPUT_DIR/$OUTPUT_NAME.zip | cut -d ' ' -f 1))
+                            #SHA1=($(sha1sum $OUTPUT_DIR/$OUTPUT_NAME.zip | cut -d ' ' -f 1))
+                            SHA1=12345
                             echo "build_info.SHA-1=$SHA1" >> $OUTPUT_DIR/$BUILD_INFO
                             
                             unzip $OUTPUT_DIR/$OUTPUT_NAME-*.zip -d $OUTPUT_DIR/repository

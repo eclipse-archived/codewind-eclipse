@@ -48,8 +48,10 @@ pipeline {
                         export sshHost="genie.codewind@projects-storage.eclipse.org"
                         export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
                     
-                        if [ -z $CHANGE_ID ]; then
-                            UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+                        #if [ -z $CHANGE_ID ]; then
+                         if [ -z '' ]; then
+                            #UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+                            UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
                             BUILD_URL="$DOWNLOAD_AREA_URL/$UPLOAD_DIR"
                   
                             ssh $sshHost rm -rf $deployDir/$GIT_BRANCH/$LATEST_DIR
@@ -58,6 +60,8 @@ pipeline {
                             scp $OUTPUT_DIR/$OUTPUT_NAME.zip $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR/$OUTPUT_NAME.zip
                         
                             echo "build_info.url=$BUILD_URL" >> $OUTPUT_DIR/$BUILD_INFO
+                            
+                            echo "$(sha1sum $OUTPUT_DIR/$OUTPUT_NAME.zip | cut -d ' ' -f 1)"
                             SHA1=($(sha1sum $OUTPUT_DIR/$OUTPUT_NAME.zip | cut -d ' ' -f 1))
                             echo "build_info.SHA-1=$SHA1" >> $OUTPUT_DIR/$BUILD_INFO
                             
@@ -69,6 +73,10 @@ pipeline {
                             rm -rf $OUTPUT_DIR/repository
                         else
                             UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
+                            
+                            echo "build_info.url=$BUILD_URL" >> $OUTPUT_DIR/$BUILD_INFO
+                            SHA1=($(sha1sum $OUTPUT_DIR/$OUTPUT_NAME.zip | cut -d ' ' -f 1))
+                            echo "build_info.SHA-1=$SHA1" >> $OUTPUT_DIR/$BUILD_INFO
                         fi
                         
                         ssh $sshHost rm -rf $deployDir/${UPLOAD_DIR}

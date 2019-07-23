@@ -54,16 +54,20 @@ pipeline {
                   
                             ssh $sshHost rm -rf $deployDir/$GIT_BRANCH/$LATEST_DIR
                             ssh $sshHost mkdir -p $deployDir/$GIT_BRANCH/$LATEST_DIR
-                            cp $OUTPUT_DIR/$OUTPUT_NAME-*.zip $OUTPUT_DIR/$OUTPUT_NAME.zip
+                            
+                            cp $OUTPUT_DIR/$OUTPUT_NAME*.zip $OUTPUT_DIR/$OUTPUT_NAME.zip
+                            
                             scp $OUTPUT_DIR/$OUTPUT_NAME.zip $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR/$OUTPUT_NAME.zip
                         
                             echo "build_info.url=$BUILD_URL" >> $OUTPUT_DIR/$BUILD_INFO
-                            SHA1=($(sha1sum $OUTPUT_DIR/$OUTPUT_NAME.zip | cut -d ' ' -f 1))
-                            echo "build_info.SHA-1=$SHA1" >> $OUTPUT_DIR/$BUILD_INFO
+                            SHA1=$(sha1sum ${OUTPUT_DIR}/${OUTPUT_NAME}.zip | cut -d ' ' -f 1)
+                            echo "build_info.SHA-1=${SHA1}" >> $OUTPUT_DIR/$BUILD_INFO
                             
                             unzip $OUTPUT_DIR/$OUTPUT_NAME-*.zip -d $OUTPUT_DIR/repository
+                            
                             scp -r $OUTPUT_DIR/repository $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR/repository
                             scp $OUTPUT_DIR/$BUILD_INFO $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR/$BUILD_INFO
+                            
                             rm $OUTPUT_DIR/$BUILD_INFO
                             rm $OUTPUT_DIR/$OUTPUT_NAME.zip
                             rm -rf $OUTPUT_DIR/repository

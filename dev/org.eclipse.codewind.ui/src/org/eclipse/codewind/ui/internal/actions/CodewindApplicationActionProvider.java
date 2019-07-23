@@ -32,6 +32,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
+	private EnableDisableProjectAction enableDisableProjectAction;
 	private UnbindProjectAction unbindProjectAction;
 	private OpenAppDoubleClickAction openAppDoubleClickAction;
 	
@@ -45,6 +46,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
+        enableDisableProjectAction = new EnableDisableProjectAction(selProvider);
         unbindProjectAction = new UnbindProjectAction(selProvider);
         openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
     }
@@ -69,6 +71,8 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	if (openPerfMonitorAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openPerfMonitorAction);
     	}
+    	enableDisableProjectAction.updateText();
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, enableDisableProjectAction);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, unbindProjectAction);
     	
     }

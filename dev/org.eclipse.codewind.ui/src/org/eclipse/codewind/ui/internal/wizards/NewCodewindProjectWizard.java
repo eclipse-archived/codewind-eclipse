@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -64,6 +65,12 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 				setWindowTitle(Messages.NewProjectPage_ShellTitle);
 				newProjectPage = new NewCodewindProjectPage(connection, templateList);
 				addPage(newProjectPage);
+			} else if (CodewindManager.getManager().getInstallerStatus() != null) {
+				// The installer is currently running
+				CodewindInstall.installerActiveDialog(CodewindManager.getManager().getInstallerStatus());
+				if (getContainer() != null) {
+					getContainer().getShell().close();
+				}
 			} else {
 				CodewindInstall.codewindInstallerDialog();
 				if (getContainer() != null) {

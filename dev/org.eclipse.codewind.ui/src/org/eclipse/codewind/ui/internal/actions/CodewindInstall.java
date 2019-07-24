@@ -17,6 +17,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
@@ -79,6 +80,29 @@ public class CodewindInstall {
 				Messages.InstallCodewindDialogMessage)) {
 			installCodewind(addExistingProjectPrompt(project));
 		}
+	}
+	
+	public static void installerActiveDialog(InstallerStatus status) {
+		if (status == null) {
+			// This should not happen
+			Logger.logError("The installerActiveDialog method is invoked but the installer status is null");
+			return;
+		}
+		String msg = null;
+		switch(status) {
+			case INSTALLING:
+			case STARTING:
+				msg = Messages.InstallCodewindInstallingMessage;
+				break;
+			case UNINSTALLING:
+			case STOPPING:
+				msg = Messages.InstallCodewindUninstallingMessage;
+				break;
+			default:
+				Logger.logError("The installerActiveDialog method is invoked but the installer status is not recognized: " + status);
+				return;
+		}
+		MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.InstallCodewindDialogTitle, msg);
 	}
 	
 	public static void installCodewind(Runnable prompt) { 
@@ -301,6 +325,9 @@ public class CodewindInstall {
 	private static IStatus getErrorStatus(ProcessResult result, String msg) {
 		Logger.logError("Installer failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError());
 		String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+		if (errorText == null || errorText.trim().isEmpty()) {
+			errorText = NLS.bind(Messages.InstallCodewindFailNoMessage, result.getExitValue());
+		}
 		return getErrorStatus(msg + errorText, null);
 	}
 	

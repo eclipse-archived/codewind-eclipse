@@ -16,6 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
@@ -57,6 +58,18 @@ public class BindProjectAction implements IObjectActionDelegate {
 			Logger.logError("BindProjectAction ran but no project was selected"); //$NON-NLS-1$
 			return;
 		}
+
+		// If the installer is currently running, show a dialog to the user
+		final InstallerStatus installerStatus = CodewindManager.getManager().getInstallerStatus();
+		if (installerStatus != null) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					CodewindInstall.installerActiveDialog(installerStatus);
+				}
+			});
+			return;
+		}
 		
 		try {
 			if (CodewindInstall.isCodewindInstalled()) {
@@ -68,7 +81,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 		} catch (InvocationTargetException e) {
 			Logger.logError("Error trying to set up Codewind to add existing project: " + project.getName(), e);
 		}
-		
+
 		if (connection == null || !connection.isConnected()) {
 			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, Messages.BindProjectConnectionError);
 			return;

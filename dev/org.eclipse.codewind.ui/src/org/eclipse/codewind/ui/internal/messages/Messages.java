@@ -107,6 +107,9 @@ public class Messages extends NLS {
 	public static String InstallCodewindDialogMessage;
 	public static String InstallCodewindNewProjectMessage;
 	public static String InstallCodewindAddProjectMessage;
+	public static String InstallCodewindInstallingMessage;
+	public static String InstallCodewindUninstallingMessage;
+	public static String InstallCodewindFailNoMessage;
 	
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;

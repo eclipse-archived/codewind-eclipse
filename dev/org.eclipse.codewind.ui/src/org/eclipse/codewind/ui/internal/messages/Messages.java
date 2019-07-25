@@ -103,6 +103,8 @@ public class Messages extends NLS {
 	public static String StartingCodewindJobLabel;
 	public static String StoppingCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
+	public static String InstallingCodewindTask;
+	public static String UninstallingCodewindTask;
 	public static String InstallCodewindDialogTitle;
 	public static String InstallCodewindDialogMessage;
 	public static String InstallCodewindNewProjectMessage;
@@ -110,6 +112,18 @@ public class Messages extends NLS {
 	public static String InstallCodewindInstallingMessage;
 	public static String InstallCodewindUninstallingMessage;
 	public static String InstallCodewindFailNoMessage;
+	public static String CodewindStartFail;
+	public static String CodewindStopFail;
+	public static String CodewindInstallFail;
+	public static String CodewindUninstallFail;
+	public static String CodewindStartError;
+	public static String CodewindStopError;
+	public static String CodewindInstallError;
+	public static String CodewindUninstallError;
+	public static String CodewindStartTimeout;
+	public static String CodewindStopTimeout;
+	public static String CodewindInstallTimeout;
+	public static String CodewindUninstallTimeout;
 	
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;

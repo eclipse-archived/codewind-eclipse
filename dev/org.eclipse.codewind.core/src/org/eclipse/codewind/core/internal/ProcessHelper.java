@@ -64,7 +64,7 @@ public class ProcessHelper {
         StringBuilder inBuilder = new StringBuilder();
         StringBuilder errBuilder = new StringBuilder();
         int iter = timeout * 1000 / pollingDelay;
-        int work = 20;
+        int work = 50;
         SubMonitor mon = SubMonitor.convert(monitor, work);
         try {
             in = p.getInputStream();

@@ -85,7 +85,7 @@ public class CodewindInstall {
 	public static void installerActiveDialog(InstallerStatus status) {
 		if (status == null) {
 			// This should not happen
-			Logger.logError("The installerActiveDialog method is invoked but the installer status is null");
+			Logger.logError("The installerActiveDialog method is invoked but the installer status is null"); //$NON-NLS-1$
 			return;
 		}
 		String msg = null;
@@ -99,7 +99,7 @@ public class CodewindInstall {
 				msg = Messages.InstallCodewindUninstallingMessage;
 				break;
 			default:
-				Logger.logError("The installerActiveDialog method is invoked but the installer status is not recognized: " + status);
+				Logger.logError("The installerActiveDialog method is invoked but the installer status is not recognized: " + status); //$NON-NLS-1$
 				return;
 		}
 		MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.InstallCodewindDialogTitle, msg);
@@ -110,29 +110,41 @@ public class CodewindInstall {
 		try {
 			Job job = new Job(Messages.InstallCodewindJobLabel) {
 			    @Override
-				protected IStatus run(IProgressMonitor monitor) {
+				protected IStatus run(IProgressMonitor progressMon) {
 
 					try {
+						SubMonitor mon = SubMonitor.convert(progressMon, 100);
+						mon.setTaskName(Messages.InstallingCodewindTask);
+						ProcessResult result = InstallUtil.installCodewind(mon.split(95));
 						
-						ProcessResult result = InstallUtil.installCodewind(monitor);
-						
-						if (monitor.isCanceled()) {
+						if (mon.isCanceled()) {
 							removeCodewind();
 							return Status.CANCEL_STATUS;
 						}
 						
 						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, "There was a problem trying to install Codewind: ");
+							return getErrorStatus(result, Messages.CodewindInstallFail);
 						}
 						
-						if (result.getExitValue() == 0) {
-							startCodewind(prompt);
+						mon.setTaskName(Messages.StartingCodewindJobLabel);
+						result = InstallUtil.startCodewind(mon.split(5));
+						
+						if (mon.isCanceled()) {
+							removeCodewind();
+							return Status.CANCEL_STATUS;
 						}
-
+						
+						if (result.getExitValue() != 0) {
+							return getErrorStatus(result, Messages.CodewindStartFail);
+						}
+						
+						if (prompt != null) {
+							Display.getDefault().asyncExec(prompt);
+						}
 					} catch (IOException e) {
-						return getErrorStatus("An error occurred trying to install Codewind.", e);
+						return getErrorStatus(Messages.CodewindInstallError, e);
 					} catch (TimeoutException e) {
-						return getErrorStatus("Codewind did not install in the expected time.", e);
+						return getErrorStatus(Messages.CodewindInstallTimeout, e);
 					}
 
 					ViewHelper.refreshCodewindExplorerView(null);
@@ -163,7 +175,7 @@ public class CodewindInstall {
 						}
 
 						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, "There was a problem trying to start Codewind: ");
+							return getErrorStatus(result, Messages.CodewindStartFail);
 						}
 						
 						if (prompt != null) {
@@ -171,9 +183,9 @@ public class CodewindInstall {
 						}
 					 
 					} catch (IOException e) {
-						return getErrorStatus("An error occurred trying to start Codewind.", e);
+						return getErrorStatus(Messages.CodewindStartError, e);
 					} catch (TimeoutException e) {
-						return getErrorStatus("Codewind did not start in the expected time.", e);
+						return getErrorStatus(Messages.CodewindStartTimeout, e);
 					}
 
 					ViewHelper.refreshCodewindExplorerView(null);
@@ -209,13 +221,13 @@ public class CodewindInstall {
 						}
 
 						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, "There was a problem trying to stop Codewind: ");
+							return getErrorStatus(result, Messages.CodewindStopFail);
 						}
 					 
 					} catch (IOException e) {
-						return getErrorStatus("An error occurred trying to stop Codewind.", e);
+						return getErrorStatus(Messages.CodewindStopError, e);
 					} catch (TimeoutException e) {
-						return getErrorStatus("Codewind did not stop in the expected time.", e);
+						return getErrorStatus(Messages.CodewindStopTimeout, e);
 					}
 
 					ViewHelper.refreshCodewindExplorerView(null);
@@ -257,7 +269,7 @@ public class CodewindInstall {
 						Wizard wizard = new BindProjectWizard(connection, project);
 						WizardLauncher.launchWizardWithoutSelection(wizard);
 					} else {
-						Logger.logError("In BindProjectAction run method and Codewind is not installed or has unknown status.");
+						Logger.logError("Codewind not installed or has unknown status when trying to bind project: " + project.getName()); //$NON-NLS-1$
 						return;
 					}
 				}
@@ -270,44 +282,46 @@ public class CodewindInstall {
 		try {
 			Job job = new Job(Messages.RemovingCodewindJobLabel) {
 			    @Override
-				protected IStatus run(IProgressMonitor mon) {
-			    	SubMonitor monitor = SubMonitor.convert(mon, 100);
+				protected IStatus run(IProgressMonitor progressMon) {
+			    	SubMonitor mon = SubMonitor.convert(progressMon, 100);
 					try {
 						InstallStatus status = InstallUtil.getInstallStatus();
 						if (status == InstallStatus.RUNNING) {
 							// Stop Codewind before uninstalling
 							// All containers must be stopped or uninstall won't work
-							ProcessResult result = InstallUtil.stopCodewind(true, monitor.split(20));
+							mon.setTaskName(Messages.StoppingCodewindJobLabel);
+							ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
 							
-							if (monitor.isCanceled()) {
+							if (mon.isCanceled()) {
 								return Status.CANCEL_STATUS;
 							}
 							
 							if (result.getExitValue() != 0) {
-								return getErrorStatus(result, "There was a problem trying to stop Codewind: ");
+								return getErrorStatus(result, Messages.CodewindStopFail);
 							}
 						}
 						
-						if (monitor.isCanceled()) {
+						if (mon.isCanceled()) {
 							return Status.CANCEL_STATUS;
 						}
 						
-						monitor.setWorkRemaining(80);
-						ProcessResult result = InstallUtil.removeCodewind(monitor);
+						mon.setTaskName(Messages.UninstallingCodewindTask);
+						mon.setWorkRemaining(20);
+						ProcessResult result = InstallUtil.removeCodewind(mon.split(20));
 						
-						if (monitor.isCanceled()) {
+						if (mon.isCanceled()) {
 							return Status.CANCEL_STATUS;
 						}
 						
 						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, "There was a problem trying to remove Codewind: ");
+							return getErrorStatus(result, Messages.CodewindUninstallFail);
 						}
 						
 						
 					} catch (IOException e) {
-						return getErrorStatus("An error occurred trying to remove Codewind.", e);
+						return getErrorStatus(Messages.CodewindUninstallError, e);
 					} catch (TimeoutException e) {
-						return getErrorStatus("Codewind did not remove in the expected time.", e);
+						return getErrorStatus(Messages.CodewindUninstallTimeout, e);
 					}
 					
 					ViewHelper.refreshCodewindExplorerView(null);
@@ -323,12 +337,12 @@ public class CodewindInstall {
 	}
 	
 	private static IStatus getErrorStatus(ProcessResult result, String msg) {
-		Logger.logError("Installer failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError());
+		Logger.logError("Installer failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 		if (errorText == null || errorText.trim().isEmpty()) {
 			errorText = NLS.bind(Messages.InstallCodewindFailNoMessage, result.getExitValue());
 		}
-		return getErrorStatus(msg + errorText, null);
+		return getErrorStatus(NLS.bind(msg, errorText), null);
 	}
 	
 	private static IStatus getErrorStatus(String msg, Throwable t) {

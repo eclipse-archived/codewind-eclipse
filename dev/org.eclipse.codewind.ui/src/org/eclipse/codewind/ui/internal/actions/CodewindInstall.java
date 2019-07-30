@@ -48,22 +48,14 @@ import org.eclipse.swt.widgets.Shell;
 public class CodewindInstall {
 		
 	public static boolean isCodewindInstalled() throws InvocationTargetException {
-						
 			try {
-				ProcessResult result = InstallUtil.statusCodewind();
-
-				if (result.getExitValue() == 0) {
-					return false;
-				} else {
-					return true;
-				}
-				
+				InstallStatus status = InstallUtil.getInstallStatus();
+				return status != null && status.isInstalled();
 			} catch (IOException e) {
 				throw new InvocationTargetException(e, "An error occurred trying to determine Codewind status: " + e.getMessage()); //$NON-NLS-1$
 			} catch (TimeoutException e) {
 				throw new InvocationTargetException(e, "Codewind did not return status in the expected time: " + e.getMessage()); //$NON-NLS-1$
 			}
-		
 	}
 
 	public static void codewindInstallerDialog() {

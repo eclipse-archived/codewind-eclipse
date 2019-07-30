@@ -70,9 +70,9 @@ public class InstallUtil {
 	private static String installExec = null;
 	
 	public enum InstallStatus {
-		RUNNING(2),
-		INSTALLED(1),
-		NOT_INSTALLED(0),
+		NOT_INSTALLED(200),
+		INSTALLED(201),
+		RUNNING(202),
 		UNKNOWN(-1);
 		
 		private int code;
@@ -166,7 +166,7 @@ public class InstallUtil {
 		}
 	}
 	
-	public static ProcessResult statusCodewind() throws IOException, TimeoutException {
+	private static ProcessResult statusCodewind() throws IOException, TimeoutException {
 		Process process = null;
 		try {
 			process = runInstaller(STATUS_CMD, null);

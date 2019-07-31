@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,6 +60,9 @@ public class HttpPostOutputQueue {
 
 	private final String serverBaseUrl;
 
+	/** Wait up to 24 hours for a chunk group to complete, before we drop it. */
+	private static final long CHUNK_GROUP_EXPIRE_TIME_IN_NANOS = TimeUnit.NANOSECONDS.convert(24, TimeUnit.HOURS);
+
 	public HttpPostOutputQueue(String url) {
 		this.serverBaseUrl = url;
 
@@ -78,7 +82,8 @@ public class HttpPostOutputQueue {
 
 		log.logDebug("Added file changes to queue: " + base64Compressed.size(), projectId);
 
-		PostQueueChunkGroup chunkGroup = new PostQueueChunkGroup(timestamp, projectId, base64Compressed, this);
+		PostQueueChunkGroup chunkGroup = new PostQueueChunkGroup(timestamp, projectId, base64Compressed,
+				System.nanoTime() + CHUNK_GROUP_EXPIRE_TIME_IN_NANOS, this);
 
 		synchronized (queue_synch) {
 			queue_synch.offer(chunkGroup);
@@ -123,9 +128,14 @@ public class HttpPostOutputQueue {
 		return result;
 	}
 
-	/** Remove any chunk groups that have already sent all their chunks. */
+	/**
+	 * Remove any chunk groups that have already sent all their chunks, or that have
+	 * expired (unable to send communication for X hours, eg 24)
+	 */
 	private void cleanupChunkGroups() {
 		synchronized (queue_synch) {
+
+			long currentTime = System.nanoTime();
 
 			boolean changeMade = false;
 			for (Iterator<PostQueueChunkGroup> it = queue_synch.iterator(); it.hasNext();) {
@@ -135,10 +145,17 @@ public class HttpPostOutputQueue {
 				if (group.isGroupComplete()) {
 					it.remove();
 					changeMade = true;
+				} else if (currentTime > group.getExpireTimeInNanos()) {
+					it.remove();
+					changeMade = true;
+					log.logSevere(
+							"Chunk group expired. This implies we could not connect to server for many hours. Chunk-group project: "
+									+ group.getProjectId() + "  timestamp: " + group.getTimestamp());
 				}
 			}
 
 			if (changeMade) {
+				// Inform threads waiting for work
 				informStateChange();
 			}
 		}
@@ -163,7 +180,7 @@ public class HttpPostOutputQueue {
 				// If there is at least one chunk group available
 				if (queue_synch.size() > 0) {
 
-					// If there work available from the top chunk?
+					// Is there work available from the top chunk?
 					PostQueueChunkGroup group = queue_synch.peek();
 					Optional<PostQueueChunk> o = group.acquireNextChunkAvailableToSend();
 					if (o.isPresent()) {
@@ -356,11 +373,18 @@ public class HttpPostOutputQueue {
 
 		private final String projectId;
 
+		/**
+		 * After X hours (eg 24), give up on trying to send this chunk group to the
+		 * server. At this point the data is too stale to be useful.
+		 */
+		private final long expireTimeInNanos;
+
 		public PostQueueChunkGroup(long timestamp, String projectId, List<String> base64Compressed,
-				HttpPostOutputQueue parent) {
+				long expireTimeInNanos, HttpPostOutputQueue parent) {
 
 			this.parent = parent;
 			this.projectId = projectId;
+			this.expireTimeInNanos = expireTimeInNanos;
 
 			HashMap<Integer /* chunk id */, PostQueueChunk> chunkMap = new HashMap<>();
 
@@ -455,6 +479,10 @@ public class HttpPostOutputQueue {
 
 			return result;
 
+		}
+
+		long getExpireTimeInNanos() {
+			return expireTimeInNanos;
 		}
 
 		String getProjectId() {

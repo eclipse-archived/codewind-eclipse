@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -25,6 +26,9 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
+import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.IProject;
@@ -41,13 +45,20 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
@@ -65,6 +76,7 @@ public class NewCodewindProjectPage extends WizardPage {
 	private Table selectionTable;
 	private Text descriptionLabel;
 	private Text projectNameText;
+	private List<Integer> styleList = new ArrayList<Integer>();
 
 	protected NewCodewindProjectPage(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
 		super(Messages.NewProjectPage_ShellTitle);
@@ -137,12 +149,20 @@ public class NewCodewindProjectPage extends WizardPage {
 		layout.marginWidth = 8;
 		layout.horizontalSpacing = 7;
 		layout.verticalSpacing = 7;
+		layout.numColumns = 2;
 		templateGroup.setLayout(layout);
 		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 		
+		// Style selection button
+		final Button styleButton = new Button(templateGroup, SWT.PUSH | SWT.RIGHT_TO_LEFT);
+		styleButton.setText("Select Styles");
+		styleButton.setToolTipText("Select the styles to work with");
+		styleButton.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.MENU_DOWN_ICON));
+		styleButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, false, false));
+		
 		// Filter text
 		filterText = new Text(templateGroup, SWT.BORDER);
-		filterText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		filterText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		filterText.setMessage(Messages.NewProjectPage_FilterMessage);
 
 		// Table
@@ -152,29 +172,38 @@ public class NewCodewindProjectPage extends WizardPage {
 		selectionTable.setLayoutData(data);
 		
 		// Columns
-		final TableColumn featureColumn = new TableColumn(selectionTable, SWT.NONE);
-		featureColumn.setText(Messages.NewProjectPage_TypeColumn);
-		featureColumn.setResizable(true);
-		featureColumn.addSelectionListener(new SelectionAdapter() {
+		final TableColumn templateColumn = new TableColumn(selectionTable, SWT.NONE);
+		templateColumn.setText(Messages.NewProjectPage_TemplateColumn);
+		templateColumn.setResizable(true);
+		templateColumn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				sortTable(selectionTable, featureColumn);
+				sortTable(selectionTable, templateColumn);
 			}
 		});
-		final TableColumn nameColumn = new TableColumn(selectionTable, SWT.NONE);
-		nameColumn.setText(Messages.NewProjectPage_LanguageColumn);
-		nameColumn.setResizable(true);
-		nameColumn.addSelectionListener(new SelectionAdapter() {
+		final TableColumn typeColumn = new TableColumn(selectionTable, SWT.NONE);
+		typeColumn.setText(Messages.NewProjectPage_TypeColumn);
+		typeColumn.setResizable(true);
+		typeColumn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				sortTable(selectionTable, nameColumn);
+				sortTable(selectionTable, typeColumn);
+			}
+		});
+		final TableColumn languageColumn = new TableColumn(selectionTable, SWT.NONE);
+		languageColumn.setText(Messages.NewProjectPage_LanguageColumn);
+		languageColumn.setResizable(true);
+		languageColumn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				sortTable(selectionTable, languageColumn);
 			}
 		});
 
 		selectionTable.setHeaderVisible(true);
 		selectionTable.setLinesVisible(false);
 		selectionTable.setSortDirection(SWT.DOWN);
-		selectionTable.setSortColumn(featureColumn);
+		selectionTable.setSortColumn(templateColumn);
 		
 		createItems(selectionTable, "");
 
@@ -188,7 +217,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		descriptionLabel.setForeground(templateGroup.getForeground());
 		descriptionScroll.setContent(descriptionLabel);
 		
-		data = new GridData(GridData.FILL, GridData.FILL, true, false);
+		data = new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1);
 		int lineHeight = filterText.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 		data.heightHint = lineHeight * 2;
 		data.horizontalSpan = 2;
@@ -199,6 +228,17 @@ public class NewCodewindProjectPage extends WizardPage {
 		descriptionScroll.setForeground(templateGroup.getForeground());
 
 		// Listeners
+		final Shell shell = getShell();
+		styleButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				final Menu menu = new Menu(shell, SWT.POP_UP);
+				fillFilterMenu(menu);
+				displayDropdownMenu(styleButton, menu, true);
+				menu.dispose();
+			}
+		});
+        
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent event) {
@@ -303,18 +343,22 @@ public class NewCodewindProjectPage extends WizardPage {
 		// Create the items for the table.
 		table.removeAll();
 		pattern.setPattern("*" + filter + "*");
-		for (ProjectTemplateInfo template : templateList) {
-			String type = template.getLabel();
-			String language = template.getLanguage();
-			if (pattern.matches(type) || (language != null && pattern.matches(language))) {
+		for (ProjectTemplateInfo templateInfo : templateList) {
+			String template = templateInfo.getLabel();
+			String type = ProjectType.getDisplayName(templateInfo.getProjectType());
+			String language = ProjectLanguage.getDisplayName(templateInfo.getLanguage());
+			if (pattern.matches(template) || (type != null && pattern.matches(type)) || (language != null && pattern.matches(language))) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setForeground(table.getForeground());
 				item.setBackground(table.getBackground());
-				item.setText(0, type);
-				if (language != null) {
-					item.setText(1, language);
+				item.setText(0, template);
+				if (type != null) {
+					item.setText(1, type);
 				}
-				item.setData(template);
+				if (language != null) {
+					item.setText(2, language);
+				}
+				item.setData(templateInfo);
 			}
 		}
 	}
@@ -474,6 +518,55 @@ public class NewCodewindProjectPage extends WizardPage {
 			templateList = connection.requestProjectTemplates();
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
+		}
+	}
+	
+	protected void fillFilterMenu(final Menu menu) {
+		final SelectionAdapter listener = new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				MenuItem item = (MenuItem) event.getSource();
+				if (item.getSelection()) {
+					if (item.getData() == null) {
+						styleList.clear();
+					} else {
+						styleList.add((Integer)item.getData());
+					}
+				} else {
+					if (item.getData() != null) {
+						styleList.remove(item.getData());
+					}
+				}
+				// Update template list
+			}
+		};
+
+		MenuItem item;
+		item = new MenuItem(menu, SWT.CHECK);
+		item.setText("All Styles");
+		item.setSelection(styleList.isEmpty());
+		item.addSelectionListener(listener);
+		for (int i = 1; i < 5; i++) {
+			item = new MenuItem(menu, SWT.CHECK);
+			item.setText("Style" + i);
+			item.setToolTipText("Description of style " + i + "\nSource of style " + i);
+			item.setData(new Integer(i));
+			item.setSelection(styleList.contains(item.getData()));
+			item.addSelectionListener(listener);
+		}
+	}
+    
+	protected void displayDropdownMenu(Control anchor, Menu menu, boolean subtractWidth) {
+		Point size = anchor.getSize();
+		Point point = anchor.toDisplay(0, size.y);
+		menu.setLocation(point.x - (subtractWidth ? size.x : 0), point.y);
+		menu.setVisible(true);
+
+		while (!menu.isDisposed() && menu.isVisible()) {
+			Display display = menu.getShell().getDisplay();
+			if (!display.readAndDispatch()) {
+				display.sleep();
+			}
 		}
 	}
 }

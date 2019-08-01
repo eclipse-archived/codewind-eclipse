@@ -77,9 +77,11 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	    composite.setLayout(layout);
 	    composite.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
 
-	    Label stopAppContainersLabel = new Label(composite, SWT.NONE);
+	    Text stopAppContainersLabel = new Text(composite, SWT.READ_ONLY | SWT.SINGLE);
 	    stopAppContainersLabel.setText(Messages.PrefsParentPage_StopAppsLabel);
 	    stopAppContainersLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 2, 1));
+	    stopAppContainersLabel.setBackground(composite.getBackground());
+	    stopAppContainersLabel.setForeground(composite.getForeground());
 
 	    Composite stopAppsComposite = new Composite(composite, SWT.NONE);
 	    layout = new GridLayout();

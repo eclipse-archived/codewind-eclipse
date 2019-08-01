@@ -150,6 +150,8 @@ public class NewCodewindProjectPage extends WizardPage {
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
 		data.heightHint = 100;
 		selectionTable.setLayoutData(data);
+		selectionTable.setBackground(templateGroup.getBackground());
+		selectionTable.setForeground(templateGroup.getForeground());
 		
 		// Columns
 		final TableColumn featureColumn = new TableColumn(selectionTable, SWT.NONE);

@@ -20,8 +20,6 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
-import org.eclipse.codewind.ui.internal.actions.EnableDisableAutoBuildAction;
-import org.eclipse.codewind.ui.internal.actions.EnableDisableProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
@@ -486,7 +484,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final Text text;
 		
 		public StringEntry(Composite composite, String name) {
-			StyledText label = new StyledText(composite, SWT.NONE);
+			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
 	        setBold(label);
 	        
@@ -500,17 +498,6 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 	}
 	
-//	private void addTextEntry(Composite composite, String name, String value, boolean enabled) {
-//		StyledText label = new StyledText(composite, SWT.NONE);
-//		label.setText(name);
-//        setBold(label);
-//        
-//        Text text = new Text(composite, SWT.BORDER);
-//        text.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-//        text.setText(value != null ? value : "Not available");
-//        text.setEnabled(enabled);
-//	}
-	
 	private class BooleanEntry {
 		private final String onText, offText;
 		private final Button button;
@@ -519,7 +506,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			this.onText = onText;
 			this.offText = offText;
 			
-			StyledText label = new StyledText(composite, SWT.NONE);
+			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
 	        setBold(label);
 	        
@@ -564,7 +551,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private String linkUrl;
 		
 		public LinkEntry(Composite composite, FormToolkit toolkit, String name, LinkAction action) {
-			StyledText label = new StyledText(composite, SWT.NONE);
+			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
 			setBold(label);
 	        

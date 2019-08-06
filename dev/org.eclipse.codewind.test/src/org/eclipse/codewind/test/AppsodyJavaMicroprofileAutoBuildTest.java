@@ -13,31 +13,33 @@ package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
-import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.core.runtime.IPath;
 
-public class NodeValidationTest extends BaseValidationTest {
+public class AppsodyJavaMicroprofileAutoBuildTest extends BaseBuildTest {
 
 	static {
-		projectName = "nodevalidationtest";
-		templateId = NODE_EXPRESS_ID;
-		relativeURL = "/hello";
-		srcPath = "server/server.js";
-		text = "Hello World!";
-		dockerfile = "Dockerfile";
+		projectName = "appsodyjavamicroprofileautobuildtest";
+		templateId = APPSODY_JAVA_MICROPROFILE_ID;
+		relativeURL = "/starter/hello";
+		srcPath = "src/main/java/dev/appsody/starter/hello/Hello.java";
+		text1 = "World";
+		text2 = "Earth";
 	}
 
 	@Override
 	public void doSetup() throws Exception {
 		super.doSetup();
-		IPath path = connection.getWorkspacePath().append(projectName);
-    	path = path.append(srcPath);
-		TestUtil.updateFile(path.toOSString(), "// Add your code here", "app.get('/hello', (req, res) => res.send('Hello World!'));");
-		build();
+		
+		IPath destPath = connection.getWorkspacePath().append(projectName);
+		destPath = destPath.append(srcPath);
+		copyFile("appsodyJavaMicroprofile/Hello.java", destPath);
+		refreshProject();
+    	
 		CodewindApplication app = connection.getAppByName(projectName);
-		// For Java builds the states can go by quickly so don't do an assert on this
-		CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
-		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));
+		CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
+		assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
+		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
 	}
 }

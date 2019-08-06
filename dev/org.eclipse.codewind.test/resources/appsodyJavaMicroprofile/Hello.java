@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -9,17 +9,18 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.codewind.test;
+package dev.appsody.starter.hello;
 
-public class LibertyDebugTest extends BaseDebugTest {
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-	static {
-		projectName = "libertydebugtest";
-		templateId = JAVA_MICROPROFILE_ID;
-		relativeURL = "/v1/example";
-		srcPath = "src/main/java/application/rest/v1/Example.java";
-		currentText = "Congratulations";
-		newText = "Hello";
-		dockerfile = "Dockerfile";
+@Path("/hello")
+public class Hello {
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getHello() {
+		return "Hello World";
 	}
 }

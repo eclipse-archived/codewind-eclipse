@@ -13,12 +13,15 @@ package org.eclipse.codewind.test.util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.eclipse.codewind.core.internal.FileUtil;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.jobs.Job;
 
 public class TestUtil {
@@ -148,6 +151,24 @@ public class TestUtil {
     		throw new IOException("The file did not delete successfully: " + file.getPath());
     	}
     }
+    
+	public static void copyFile(IPath srcPath, IPath destPath) throws Exception {
+		FileInputStream inStream = null;
+		try {
+			IPath destFolder = destPath.removeLastSegments(1);
+			FileUtil.makeDir(destFolder.toOSString());
+			inStream = new FileInputStream(srcPath.toFile());
+			FileUtil.copyFile(inStream, destPath.toOSString());
+		} finally {
+			if (inStream != null) {
+				try {
+					inStream.close();
+				} catch (IOException e) {
+					// Ignore
+				}
+			}
+		}
+	}
     
     public static boolean isWindows() {
     	return System.getProperty("os.name").toLowerCase().contains("windows");

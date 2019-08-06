@@ -17,6 +17,7 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -80,6 +81,16 @@ public class CodewindUtil {
 			}
 		}, timeout, interval);
 		return app.getAppStatus() == status;
+	}
+	
+	public static boolean waitForBuildState(CodewindApplication app, BuildStatus status, long timeout, long interval) {
+		TestUtil.wait(new Condition() {
+			@Override
+			public boolean test() {
+				return app.getBuildStatus() == status;
+			}
+		}, timeout, interval);
+		return app.getBuildStatus() == status;
 	}
 
 }

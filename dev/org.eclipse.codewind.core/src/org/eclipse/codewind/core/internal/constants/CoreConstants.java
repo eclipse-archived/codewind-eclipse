@@ -81,10 +81,6 @@ public class CoreConstants {
 			KEY_INTERNAL_DEBUG_PORT = "internalDebugPort",
 			KEY_AUTO_BUILD = "autoBuild",
 
-			KEY_ENV_WORKSPACE_LOC = "workspace_location",
-			KEY_ENV_VERSION = "microclimate_version",
-			KEY_ENV_SOCKET_NAMESPACE = "socket_namespace",
-
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",
 			KEY_EXTENSION = "extension",

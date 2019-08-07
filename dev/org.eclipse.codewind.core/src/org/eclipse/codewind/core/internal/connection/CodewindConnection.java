@@ -42,7 +42,6 @@ import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,15 +53,12 @@ import org.json.JSONObject;
 public class CodewindConnection {
 
 	public static final String CODEWIND_WORKSPACE_PROPERTY = "org.eclipse.codewind.internal.workspace"; //$NON-NLS-1$
-	private static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
 	private static final String BRANCH_VERSION = "\\d{4}_M\\d{1,2}_\\D";
 	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	public final URI baseUrl;
-	private IPath localWorkspacePath;
-	private String versionStr;
+	private ConnectionEnv env = null;
 	private String connectionErrorMsg = null;
-	private String socketNamespace = null;
 
 	private CodewindSocket socket;
 	private CodewindFilewatcherdConnection filewatcher;
@@ -85,10 +81,7 @@ public class CodewindConnection {
 			onInitFail(NLS.bind(Messages.Connection_ErrConnection_AlreadyExists, baseUrl));
 		}
 		
-		JSONObject env = getEnvData(this.baseUrl);
-
-		this.versionStr = getCodewindVersion(env);
-
+		env = new ConnectionEnv(getEnvData(this.baseUrl));
 //		if (UNKNOWN_VERSION.equals(versionStr)) {
 //			onInitFail(NLS.bind(Messages.Connection_ErrConnection_VersionUnknown,
 //					MCConstants.REQUIRED_MC_VERSION));
@@ -96,17 +89,13 @@ public class CodewindConnection {
 //			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion,
 //					versionStr, MCConstants.REQUIRED_MC_VERSION));
 //		}
+		Logger.log("Codewind version is: " + env.getVersion());			// $NON-NLS-1$
 
-		Logger.log("Codewind version is: " + versionStr);			// $NON-NLS-1$
-
-		this.localWorkspacePath = getWorkspacePath(env);
-		if (localWorkspacePath == null) {
+		if (env.getWorkspacePath() == null) {
 			// Can't recover from this
 			// This should never happen since we have already determined it is a supported version of Codewind.
 			onInitFail(Messages.Connection_ErrConnection_WorkspaceErr);
 		}
-		
-		this.socketNamespace = getSocketNamespace(env);
 		
 		socket = new CodewindSocket(this);
 		if(!socket.blockUntilFirstConnection()) {
@@ -133,7 +122,7 @@ public class CodewindConnection {
 	}
 	
 	public String getSocketNamespace() {
-		return socketNamespace;
+		return env.getSocketNamespace();
 	}
 	
 	public CodewindSocket getSocket() {
@@ -176,25 +165,8 @@ public class CodewindConnection {
 		return new JSONObject(envResponse);
 	}
 
-	private static String getCodewindVersion(JSONObject env) {
-		if (!env.has(CoreConstants.KEY_ENV_VERSION)) {
-			Logger.logError("Missing version from env data"); //$NON-NLS-1$
-			return UNKNOWN_VERSION;
-		}
-
-		try {
-			String versionStr = env.getString(CoreConstants.KEY_ENV_VERSION);
-			Logger.log("Codewind version is: " + versionStr); //$NON-NLS-1$
-			return versionStr;
-		} catch (JSONException e) {
-			// we already checked for this key so this will not happen.
-			Logger.logError(e);
-			return UNKNOWN_VERSION;
-		}
-	}
-
 	private static boolean isSupportedVersion(String versionStr) {
-		if (UNKNOWN_VERSION.equals(versionStr)) {
+		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
 			return false;
 		}
 
@@ -220,7 +192,9 @@ public class CodewindConnection {
 	}
 	
 	public boolean checkVersion(int requiredVersion, String requiredVersionBr) {
-		if (UNKNOWN_VERSION.equals(versionStr)) {
+		String versionStr = env.getVersion();
+		
+		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
 			return false;
 		}
 		
@@ -260,38 +234,6 @@ public class CodewindConnection {
 	
 	public String getConnectionErrorMsg() {
 		return this.connectionErrorMsg;
-	}
-
-	private static Path getWorkspacePath(JSONObject env) throws JSONException {
-		// Try the internal system property first
-		String path = System.getProperty(CODEWIND_WORKSPACE_PROPERTY, null);
-		if (path != null && !path.isEmpty()) {
-			return new Path(path);
-		}
-
-		if (!env.has(CoreConstants.KEY_ENV_WORKSPACE_LOC)) {
-			Logger.logError("Missing workspace location from env data"); //$NON-NLS-1$
-			return null;
-		}
-		String workspaceLoc = env.getString(CoreConstants.KEY_ENV_WORKSPACE_LOC);
-		if (CoreUtil.isWindows() && workspaceLoc.startsWith("/")) { //$NON-NLS-1$
-			String device = workspaceLoc.substring(1, 2);
-			workspaceLoc = device + ":" + workspaceLoc.substring(2); //$NON-NLS-1$
-		}
-		return new Path(workspaceLoc);
-	}
-	
-	private static String getSocketNamespace(JSONObject env) throws JSONException {
-		if (env.has(CoreConstants.KEY_ENV_SOCKET_NAMESPACE)) {
-			Object nsObj = env.get(CoreConstants.KEY_ENV_SOCKET_NAMESPACE);
-			if (nsObj instanceof String) {
-				String namespace = (String)nsObj;
-				if (!namespace.isEmpty()) {
-					return namespace;
-				}
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -665,7 +607,7 @@ public class CodewindConnection {
 
 		JSONObject createProjectPayload = new JSONObject();
 		createProjectPayload.put(CoreConstants.KEY_PROJECT_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_PARENT_PATH, CoreUtil.getContainerPath(localWorkspacePath.toString()));
+		createProjectPayload.put(CoreConstants.KEY_PARENT_PATH, CoreUtil.getContainerPath(env.getWorkspacePath().toString()));
 		createProjectPayload.put(CoreConstants.KEY_URL, templateInfo.getUrl());
 
 		HttpResult result = HttpUtil.post(uri, createProjectPayload, 300);
@@ -741,8 +683,8 @@ public class CodewindConnection {
 		
 		// Reset any cached information in case it has changed
 		try {
-			JSONObject envData = getEnvData(baseUrl);
-			String version = getCodewindVersion(envData);
+			String oldSocketNS = env.getSocketNamespace();
+			env = new ConnectionEnv(getEnvData(baseUrl));
 //			if (UNKNOWN_VERSION.equals(versionStr)) {
 //				Logger.logError("Failed to get the Codewind version after reconnect");
 //				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_VersionUnknown, CoreConstants.REQUIRED_CODEWIND_VERSION);
@@ -755,21 +697,17 @@ public class CodewindConnection {
 //				CoreUtil.updateConnection(this);
 //				return;
 //			}
-			this.versionStr = version;
-			IPath path = getWorkspacePath(envData);
-			if (path == null) {
+			if (env.getWorkspacePath() == null) {
 				// This should not happen since the version was ok
 				Logger.logError("Failed to get the local workspace path after reconnect");
 				this.connectionErrorMsg = Messages.Connection_ErrConnection_WorkspaceErr;
 				CoreUtil.updateAll();
 				return;
 			}
-			this.localWorkspacePath = path;
 			
-			String socketNS = getSocketNamespace(envData);
-			if ((socketNS != null && !socketNS.equals(this.socketNamespace)) || (this.socketNamespace != null && !this.socketNamespace.equals(socketNS))) {
+			String socketNS = env.getSocketNamespace();
+			if ((socketNS != null && !socketNS.equals(oldSocketNS)) || (oldSocketNS != null && !oldSocketNS.equals(socketNS))) {
 				// The socket namespace has changed so need to recreate the socket
-				this.socketNamespace = socketNS;
 				socket.close();
 				socket = new CodewindSocket(this);
 				if(!socket.blockUntilFirstConnection()) {
@@ -797,7 +735,7 @@ public class CodewindConnection {
 	@Override
 	public String toString() {
 		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d", //$NON-NLS-1$
-				CodewindConnection.class.getSimpleName(), baseUrl, localWorkspacePath, appMap.size());
+				CodewindConnection.class.getSimpleName(), baseUrl, env.getWorkspacePath(), appMap.size());
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
@@ -878,7 +816,11 @@ public class CodewindConnection {
 	}
 
 	public IPath getWorkspacePath() {
-		return localWorkspacePath;
+		return env.getWorkspacePath();
+	}
+	
+	public URL getTektonDashboardURL() {
+		return env.getTektonDashboardURL(); 
 	}
 	
 	public URI getNewProjectURI() {

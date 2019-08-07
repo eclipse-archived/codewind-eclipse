@@ -32,6 +32,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
+	private OpenTektonDashboardAction openTektonDashboardAction;
 	private EnableDisableProjectAction enableDisableProjectAction;
 	private UnbindProjectAction unbindProjectAction;
 	private OpenAppDoubleClickAction openAppDoubleClickAction;
@@ -46,6 +47,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
+        openTektonDashboardAction = new OpenTektonDashboardAction(selProvider);
         enableDisableProjectAction = new EnableDisableProjectAction(selProvider);
         unbindProjectAction = new UnbindProjectAction(selProvider);
         openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
@@ -70,6 +72,9 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	}
     	if (openPerfMonitorAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openPerfMonitorAction);
+    	}
+    	if (openTektonDashboardAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openTektonDashboardAction);
     	}
     	enableDisableProjectAction.updateText();
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, enableDisableProjectAction);

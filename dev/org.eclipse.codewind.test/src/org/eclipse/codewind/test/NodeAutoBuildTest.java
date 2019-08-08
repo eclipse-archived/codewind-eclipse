@@ -13,31 +13,40 @@ package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.core.runtime.IPath;
 
-public class NodeValidationTest extends BaseValidationTest {
+public class NodeAutoBuildTest extends BaseAutoBuildTest {
 
 	static {
-		projectName = "nodevalidationtest";
+		projectName = "nodeautobuildtest";
 		templateId = NODE_EXPRESS_ID;
 		relativeURL = "/hello";
 		srcPath = "server/server.js";
-		text = "Hello World!";
-		dockerfile = "Dockerfile";
+		text1 = "Planet";
+		text2 = "Earth";
+		text3 = "World";
 	}
 
 	@Override
 	public void doSetup() throws Exception {
 		super.doSetup();
+		
+		String origText = "// Add your code here";
+		String newText = "app.get('/hello', (req, res) => res.send('Hello Planet!'));";
+		
 		IPath path = connection.getWorkspacePath().append(projectName);
-    	path = path.append(srcPath);
-		TestUtil.updateFile(path.toOSString(), "// Add your code here", "app.get('/hello', (req, res) => res.send('Hello World!'));");
-		build();
+		path = path.append(srcPath);
+		TestUtil.updateFile(path.toOSString(), origText, newText);
+		refreshProject();
+    	
 		CodewindApplication app = connection.getAppByName(projectName);
-		// For Java builds the states can go by quickly so don't do an assert on this
-		CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
-		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));
+		CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
+		assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
+		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
 	}
+	
+	
 }

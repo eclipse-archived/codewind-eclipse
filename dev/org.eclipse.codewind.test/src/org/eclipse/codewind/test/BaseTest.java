@@ -29,8 +29,6 @@ import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
-import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.Condition;
@@ -44,6 +42,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
@@ -58,17 +57,28 @@ import org.json.JSONException;
 import junit.framework.TestCase;
 
 public abstract class BaseTest extends TestCase {
+	
+	protected static final String LAGOM_ID = "lagomJavaTemplate";
+	protected static final String GO_ID = "microclimateGoTemplate";
+	protected static final String JAVA_MICROPROFILE_ID = "javaMicroProfileTemplate";
+	protected static final String NODE_EXPRESS_ID = "nodeExpressTemplate";
+	protected static final String PYTHON_ID = "SVTPythonTemplate";
+	protected static final String SPRING_JAVA_ID = "springJavaTemplate";
+	protected static final String APPSODY_JAVA_MICROPROFILE_ID = "codewind-appsody-java-microprofile";
+	protected static final String APPSODY_NODE_EXPRESS_ID = "codewind-appsody-nodejs-express";
+	protected static final String APPSODY_JAVA_SPRING_ID = "codewind-appsody-java-spring-boot2";
 
 	protected static final String CODEWIND_URI = "http://localhost:9090";
 	
 	protected static final String MARKER_TYPE = "org.eclipse.codewind.core.validationMarker";
 	
+	protected static final String RESOURCE_PATH = "resources";
+	
 	protected static CodewindConnection connection;
 	protected static IProject project;
 	
 	protected static String projectName;
-	protected static ProjectType projectType;
-	protected static ProjectLanguage projectLanguage;
+	protected static String templateId;
 	protected static String relativeURL;
 	protected static String srcPath;
 	
@@ -89,7 +99,7 @@ public abstract class BaseTest extends TestCase {
         assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project
-        createProject(projectType, projectLanguage, projectName);
+        createProject(templateId, projectName);
         
         // Wait for the project to be created
         assertTrue("The application " + projectName + " should be created", CodewindUtil.waitForProject(connection, projectName, 300, 5));
@@ -252,35 +262,29 @@ public abstract class BaseTest extends TestCase {
 		return null;
 	}
 	
-	protected void createProject(ProjectType type, ProjectLanguage language, String name) throws IOException, JSONException {
+	protected void createProject(String id, String name) throws IOException, JSONException {
 		ProjectTemplateInfo templateInfo = null;
 		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
 		for (ProjectTemplateInfo template : templates) {
-			if (language.getId().equals(template.getLanguage())) {
-				if (language == ProjectLanguage.LANGUAGE_JAVA) {
-					String label = template.getLabel();
-					if (type == ProjectType.TYPE_LIBERTY && label.toLowerCase().contains("microprofile")) {
-						templateInfo = template;
-						break;
-					}
-					if (type == ProjectType.TYPE_SPRING && label.toLowerCase().contains("spring")) {
-						templateInfo = template;
-						break;
-					}
-				} else {
-					templateInfo = template;
-					break;
-				}
+			if (template.getUrl().toLowerCase().contains(id.toLowerCase())) {
+				templateInfo = template;
+				break;
 			}
 		}
-		assertNotNull("No template found that matches the project type: " + projectType, templateInfo);
+		assertNotNull("No template found that matches the id: " + id, templateInfo);
 		connection.requestProjectCreate(templateInfo, name);
-		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, language.getId(), type.getId());
+		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType());
 
 	}
 	
 	protected void refreshProject() throws CoreException {
 		project.refreshLocal(IProject.DEPTH_INFINITE, new NullProgressMonitor());
+	}
+	
+	protected void copyFile(String resourcesRelPath, IPath destPath) throws Exception {
+		IPath srcPath = CodewindTestPlugin.getInstallLocation();
+		srcPath = srcPath.append(RESOURCE_PATH).append(resourcesRelPath);
+		TestUtil.copyFile(srcPath, destPath);
 	}
 
 }

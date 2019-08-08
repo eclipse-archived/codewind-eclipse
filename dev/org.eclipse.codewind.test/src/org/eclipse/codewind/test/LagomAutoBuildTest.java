@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,15 +11,15 @@
 
 package org.eclipse.codewind.test;
 
-public class LibertyDebugTest extends BaseDebugTest {
-
+public class LagomAutoBuildTest extends BaseAutoBuildTest {
+	
 	static {
-		projectName = "libertydebugtest";
-		templateId = JAVA_MICROPROFILE_ID;
-		relativeURL = "/v1/example";
-		srcPath = "src/main/java/application/rest/v1/Example.java";
-		currentText = "Congratulations";
-		newText = "Hello";
-		dockerfile = "Dockerfile";
+		projectName = "lagomautobuildtest";
+		templateId = LAGOM_ID;
+		relativeURL = "";
+		srcPath = "hello-impl/src/main/java/com/example/rp/test/lagomendpoints/impl/HelloServiceImpl.java";
+		text1 = "hello:";
+		text2 = "hi there:";
+		text3 = "hola:";
 	}
 }

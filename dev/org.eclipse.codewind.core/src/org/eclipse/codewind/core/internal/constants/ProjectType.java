@@ -63,4 +63,16 @@ public enum ProjectType {
 				return null;
 		}
 	}
+	
+	public static String getDisplayName(String typeId) {
+		if (typeId == null) {
+			return ProjectType.TYPE_UNKNOWN.getDisplayName();
+		}
+		ProjectType type = ProjectType.getType(typeId);
+		if (type != null && type != ProjectType.TYPE_UNKNOWN) {
+			return type.getDisplayName();
+		}
+		return typeId;
+	}
+	
 }

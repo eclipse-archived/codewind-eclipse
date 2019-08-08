@@ -58,7 +58,8 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 			PYTHON_ICON = "obj16/python.png",
 			SPRING_ICON = "obj16/spring.png",
 			SWIFT_ICON = "obj16/swift.png",
-			PROJECTS_ICON = "obj16/projects.png";
+			PROJECTS_ICON = "obj16/projects.png",
+			MENU_DOWN_ICON = "obj16/menuDown.gif";
 
 	// The shared instance
 	private static CodewindUIPlugin plugin;
@@ -138,6 +139,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
         registerImage(registry, SPRING_ICON, ICON_BASE_URL + SPRING_ICON);
         registerImage(registry, SWIFT_ICON, ICON_BASE_URL + SWIFT_ICON);
         registerImage(registry, PROJECTS_ICON, ICON_BASE_URL + PROJECTS_ICON);
+        registerImage(registry, MENU_DOWN_ICON, ICON_BASE_URL + MENU_DOWN_ICON);
 
         return registry;
     }

@@ -165,7 +165,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		Arrays.sort(types, new Comparator<String>() {
 			@Override
 			public int compare(String t1, String t2) {
-				return getTypeDisplayName(t1).compareToIgnoreCase(getTypeDisplayName(t2));
+				return ProjectType.getDisplayName(t1).compareToIgnoreCase(ProjectType.getDisplayName(t2));
 			}
 		});
 		return types;
@@ -180,7 +180,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		Arrays.sort(languages, new Comparator<String>() {
 			@Override
 			public int compare(String l1, String l2) {
-				return getLanguageDisplayName(l1).compareToIgnoreCase(getLanguageDisplayName(l2));
+				return ProjectLanguage.getDisplayName(l1).compareToIgnoreCase(ProjectLanguage.getDisplayName(l2));
 			}
 		});
 		return languages;
@@ -195,17 +195,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public String getText(Object element) {
-			return getTypeDisplayName((String)element);
+			return ProjectType.getDisplayName((String)element);
 		}
 		
-	}
-	
-	private String getTypeDisplayName(String typeId) {
-		ProjectType type = ProjectType.getType(typeId);
-		if (type != null && type != ProjectType.TYPE_UNKNOWN) {
-			return type.getDisplayName();
-		}
-		return typeId;
 	}
 	
 	private class LanguageLabelProvider extends LabelProvider {
@@ -217,18 +209,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public String getText(Object element) {
-			return getLanguageDisplayName((String)element);
+			return ProjectLanguage.getDisplayName((String)element);
 		}
 	}
-	
-	private String getLanguageDisplayName(String languageId) {
-		ProjectLanguage language = ProjectLanguage.getLanguage(languageId);
-		if (language != null && language != ProjectLanguage.LANGUAGE_UNKNOWN) {
-			return language.getDisplayName();
-		}
-		return languageId;
-	}
-	
+
 	public void setProject(IProject project) {
 		this.project = project;
 		updateTables();

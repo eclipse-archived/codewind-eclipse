@@ -56,5 +56,15 @@ public enum ProjectLanguage {
 				return null;
 		}
 	}
-
+	
+	public static String getDisplayName(String languageId) {
+		if (languageId == null) {
+			return ProjectLanguage.LANGUAGE_UNKNOWN.getDisplayName();
+		}
+		ProjectLanguage language = ProjectLanguage.getLanguage(languageId);
+		if (language != null && language != ProjectLanguage.LANGUAGE_UNKNOWN) {
+			return language.getDisplayName();
+		}
+		return languageId;
+	}
 };

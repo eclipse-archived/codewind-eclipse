@@ -25,6 +25,8 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
+import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.IProject;
@@ -152,29 +154,38 @@ public class NewCodewindProjectPage extends WizardPage {
 		selectionTable.setLayoutData(data);
 		
 		// Columns
-		final TableColumn featureColumn = new TableColumn(selectionTable, SWT.NONE);
-		featureColumn.setText(Messages.NewProjectPage_TypeColumn);
-		featureColumn.setResizable(true);
-		featureColumn.addSelectionListener(new SelectionAdapter() {
+		final TableColumn templateColumn = new TableColumn(selectionTable, SWT.NONE);
+		templateColumn.setText(Messages.NewProjectPage_TemplateColumn);
+		templateColumn.setResizable(true);
+		templateColumn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				sortTable(selectionTable, featureColumn);
+				sortTable(selectionTable, templateColumn);
 			}
 		});
-		final TableColumn nameColumn = new TableColumn(selectionTable, SWT.NONE);
-		nameColumn.setText(Messages.NewProjectPage_LanguageColumn);
-		nameColumn.setResizable(true);
-		nameColumn.addSelectionListener(new SelectionAdapter() {
+		final TableColumn typeColumn = new TableColumn(selectionTable, SWT.NONE);
+		typeColumn.setText(Messages.NewProjectPage_TypeColumn);
+		typeColumn.setResizable(true);
+		typeColumn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				sortTable(selectionTable, nameColumn);
+				sortTable(selectionTable, typeColumn);
+			}
+		});
+		final TableColumn languageColumn = new TableColumn(selectionTable, SWT.NONE);
+		languageColumn.setText(Messages.NewProjectPage_LanguageColumn);
+		languageColumn.setResizable(true);
+		languageColumn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				sortTable(selectionTable, languageColumn);
 			}
 		});
 
 		selectionTable.setHeaderVisible(true);
 		selectionTable.setLinesVisible(false);
 		selectionTable.setSortDirection(SWT.DOWN);
-		selectionTable.setSortColumn(featureColumn);
+		selectionTable.setSortColumn(templateColumn);
 		
 		createItems(selectionTable, "");
 
@@ -303,18 +314,22 @@ public class NewCodewindProjectPage extends WizardPage {
 		// Create the items for the table.
 		table.removeAll();
 		pattern.setPattern("*" + filter + "*");
-		for (ProjectTemplateInfo template : templateList) {
-			String type = template.getLabel();
-			String language = template.getLanguage();
-			if (pattern.matches(type) || (language != null && pattern.matches(language))) {
+		for (ProjectTemplateInfo templateInfo : templateList) {
+			String template = templateInfo.getLabel();
+			String type = ProjectType.getDisplayName(templateInfo.getProjectType());
+			String language = ProjectLanguage.getDisplayName(templateInfo.getLanguage());
+			if (pattern.matches(template) || (type != null && pattern.matches(type)) || (language != null && pattern.matches(language))) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setForeground(table.getForeground());
 				item.setBackground(table.getBackground());
-				item.setText(0, type);
-				if (language != null) {
-					item.setText(1, language);
+				item.setText(0, template);
+				if (type != null) {
+					item.setText(1, type);
 				}
-				item.setData(template);
+				if (language != null) {
+					item.setText(2, language);
+				}
+				item.setData(templateInfo);
 			}
 		}
 	}
@@ -345,7 +360,7 @@ public class NewCodewindProjectPage extends WizardPage {
 			for (int j = i + 1; j < rows; j++) {
 				TableItem a = items[map[i]];
 				TableItem b = items[map[j]];
-				if ((a.getText(columnNum).compareTo(b.getText(columnNum)) * dir > 0)) {
+				if ((a.getText(columnNum).toLowerCase().compareTo(b.getText(columnNum).toLowerCase()) * dir > 0)) {
 					int t = map[i];
 					map[i] = map[j];
 					map[j] = t;

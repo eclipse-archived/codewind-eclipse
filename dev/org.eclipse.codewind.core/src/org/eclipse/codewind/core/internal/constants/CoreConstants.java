@@ -140,8 +140,4 @@ public class CoreConstants {
 			PERF_MONITOR = "performance/charts"
 
 			;
-
-	public static final int
-			REQUIRED_CODEWIND_VERSION = 1812;
-
 }

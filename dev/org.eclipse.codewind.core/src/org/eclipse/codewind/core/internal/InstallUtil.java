@@ -35,6 +35,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class InstallUtil {
 	
@@ -53,7 +55,6 @@ public class InstallUtil {
 	}
 	
 	private static final String INSTALLER_DIR = "installerWorkDir";
-	private static final String INSTALL_DEV_CMD = "install-dev";
 	private static final String INSTALL_CMD = "install";
 	private static final String START_CMD = "start";
 	private static final String STOP_CMD = "stop";
@@ -61,45 +62,64 @@ public class InstallUtil {
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
 	
-	private static final String INSTALL_DEV_VAR = "INSTALL_DEV";
+	public static final String DEFAULT_INSTALL_VERSION = "0.2";
+	
 	private static final String TAG_OPTION = "-t";
-	private static final String DEFAULT_INSTALL_VERSION = "0.2";
+	private static final String JSON_OPTION = "-j";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
-	private static String installCmd = null;
+	
+	public static final String STATUS_KEY = "status";
+	public static final String URL_KEY = "url";
+	
 	private static String installVersion = null;
 	private static String installExec = null;
 	
 	public enum InstallStatus {
-		NOT_INSTALLED(200),
-		INSTALLED(201),
-		RUNNING(202),
-		UNKNOWN(-1);
+		UNINSTALLED("uninstalled"),
+		STOPPED("stopped"),
+		RUNNING("started"),
+		UNKNOWN("unknown");
 		
-		private int code;
+		private String value;
 		
-		private InstallStatus(int code) {
-			this.code = code;
+		private InstallStatus(String value) {
+			this.value = value;
 		}
 		
-		public static InstallStatus getStatus(int code) {
+		public static InstallStatus getStatus(String statusStr) {
 			for (InstallStatus status : InstallStatus.values()) {
-				if (status.code == code) {
+				if (status.value.equals(statusStr)) {
 					return status;
 				}
 			}
 			// This should not happen
-			Logger.logError("Unrecognized installer status code: " + code);
+			Logger.logError("Unrecognized installer status: " + statusStr);
 			return UNKNOWN;
 		}
 		
 		public boolean isInstalled() {
-			return (this != NOT_INSTALLED && this != UNKNOWN);
+			return (this != UNINSTALLED && this != UNKNOWN);
 		}
 	}
 	
-	public static InstallStatus getInstallStatus() throws IOException, TimeoutException {
+	public static InstallStatus getInstallStatus() throws IOException, JSONException, TimeoutException {
+		JSONObject statusObj = getRawInstallStatus();
+		return InstallStatus.getStatus(statusObj.getString(STATUS_KEY));
+	}
+	
+	public static JSONObject getRawInstallStatus() throws IOException, JSONException, TimeoutException {
 		ProcessResult result = statusCodewind();
-		return InstallStatus.getStatus(result.getExitValue());
+		if (result.getExitValue() != 0) {
+			String error = result.getError();
+			if (error == null || error.isEmpty()) {
+				error = result.getOutput();
+			}
+			String msg = "Installer status command failed with rc: " + result.getExitValue() + " and error: " + error;  //$NON-NLS-1$ //$NON-NLS-2$
+			Logger.logError(msg);
+			throw new IOException(msg);
+		}
+		JSONObject status = new JSONObject(result.getOutput());
+		return status;
 	}
 	
 	public static ProcessResult startCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
@@ -107,7 +127,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STARTING);
-			process = runInstaller(START_CMD, getVersion());
+			process = runInstaller(START_CMD, TAG_OPTION, getVersion());
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(90));
 			return result;
 		} finally {
@@ -123,7 +143,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
-		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD, null);
+		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
 		} finally {
@@ -139,7 +159,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
-		    process = runInstaller(getInstallCmd(), getVersion());
+		    process = runInstaller(INSTALL_CMD, TAG_OPTION, getVersion());
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
 		    return result;
 		} finally {
@@ -155,7 +175,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.UNINSTALLING);
-		    process = runInstaller(REMOVE_CMD, null);
+		    process = runInstaller(REMOVE_CMD);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
 		} finally {
@@ -169,7 +189,7 @@ public class InstallUtil {
 	private static ProcessResult statusCodewind() throws IOException, TimeoutException {
 		Process process = null;
 		try {
-			process = runInstaller(STATUS_CMD, null);
+			process = runInstaller(STATUS_CMD, JSON_OPTION);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, new NullProgressMonitor());
 			return result;
 		} finally {
@@ -179,14 +199,15 @@ public class InstallUtil {
 		}
 	}
 	
-	public static Process runInstaller(String cmd, String version) throws IOException {
+	public static Process runInstaller(String cmd, String... options) throws IOException {
 		String installerPath = getInstallerExecutable();
 		List<String> cmdList = new ArrayList<String>();
 		cmdList.add(installerPath);
 		cmdList.add(cmd);
-		if (version != null) {
-			cmdList.add(TAG_OPTION);
-			cmdList.add(version);
+		if (options != null) {
+			for (String option : options) {
+				cmdList.add(option);
+			}
 		}
 		String[] command = cmdList.toArray(new String[cmdList.size()]);
 		ProcessBuilder builder = new ProcessBuilder(command);
@@ -253,23 +274,7 @@ public class InstallUtil {
 		return stateLoc.append(INSTALLER_DIR).toOSString();
 	}
 	
-	private static String getInstallCmd() {
-		if (installCmd == null) {
-			String value = System.getenv(INSTALL_DEV_VAR);
-			if ("true".equals(value)) {
-				installCmd = INSTALL_DEV_CMD;
-			} else {
-				installCmd = INSTALL_CMD;
-			}
-		}
-		return installCmd;
-	}
-	
-	private static String getVersion() {
-		if (INSTALL_DEV_CMD.equals(getInstallCmd())) {
-			// No version if install-dev used
-			return null;
-		}
+	public static String getVersion() {
 		if (installVersion == null) {
 			String value = System.getenv(INSTALL_VERSION_VAR);
 			if (value != null && !value.isEmpty()) {

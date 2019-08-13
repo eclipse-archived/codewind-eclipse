@@ -43,6 +43,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.json.JSONException;
 
 
 public class CodewindInstall {
@@ -55,6 +56,8 @@ public class CodewindInstall {
 				throw new InvocationTargetException(e, "An error occurred trying to determine Codewind status: " + e.getMessage()); //$NON-NLS-1$
 			} catch (TimeoutException e) {
 				throw new InvocationTargetException(e, "Codewind did not return status in the expected time: " + e.getMessage()); //$NON-NLS-1$
+			} catch (JSONException e) {
+				throw new InvocationTargetException(e, "The Codewind status format is not recognized: " + e.getMessage()); //$NON-NLS-1$
 			}
 	}
 
@@ -144,6 +147,7 @@ public class CodewindInstall {
 					
 				}
 			};
+			job.setPriority(Job.LONG);
 			job.schedule();
 		} catch (Exception e) {
 			Logger.logError("An error occurred installing Codewind: ", e); //$NON-NLS-1$
@@ -185,6 +189,7 @@ public class CodewindInstall {
 					
 				}
 			};
+			job.setPriority(Job.LONG);
 			job.schedule();
 		} catch (Exception e) {
 			Logger.logError("An error occurred starting Codewind: ", e); //$NON-NLS-1$
@@ -227,6 +232,7 @@ public class CodewindInstall {
 					
 				}
 			};
+			job.setPriority(Job.LONG);
 			job.schedule();
 		} catch (Exception e) {
 			Logger.logError("An error occurred stopping Codewind: ", e); //$NON-NLS-1$
@@ -267,6 +273,78 @@ public class CodewindInstall {
 				}
 			}
 		};
+	}
+	
+	public static void updateCodewind(boolean removeOldVersion) {
+		try {
+			Job job = new Job(Messages.UpdatingCodewindJobLabel) {
+				@Override
+				protected IStatus run(IProgressMonitor progressMon) {
+					SubMonitor mon = SubMonitor.convert(progressMon, 200);
+					try {
+						// Stop if necessary
+						InstallStatus status = InstallUtil.getInstallStatus();
+						if (status == InstallStatus.RUNNING) {
+							mon.setTaskName(Messages.StoppingCodewindJobLabel);
+							ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
+							if (mon.isCanceled()) {
+								return Status.CANCEL_STATUS;
+							}
+							if (result.getExitValue() != 0) {
+								return getErrorStatus(result, Messages.CodewindStopFail);
+							}
+						}
+						mon.setWorkRemaining(120);
+						
+						// Remove if requested
+						if (removeOldVersion) {
+							mon.setTaskName(Messages.UninstallingCodewindTask);
+							ProcessResult result = InstallUtil.removeCodewind(mon.split(20));
+							if (mon.isCanceled()) {
+								return Status.CANCEL_STATUS;
+							}
+							if (result.getExitValue() != 0) {
+								return getErrorStatus(result, Messages.CodewindUninstallFail);
+							}
+						}
+						mon.setWorkRemaining(100);
+						
+						// Install
+						mon.setTaskName(Messages.InstallingCodewindTask);
+						ProcessResult result = InstallUtil.installCodewind(mon.split(95));
+						if (mon.isCanceled()) {
+							removeCodewind();
+							return Status.CANCEL_STATUS;
+						}
+						if (result.getExitValue() != 0) {
+							return getErrorStatus(result, Messages.CodewindInstallFail);
+						}
+						
+						// Start
+						mon.setTaskName(Messages.StartingCodewindJobLabel);
+						result = InstallUtil.startCodewind(mon.split(5));
+						if (mon.isCanceled()) {
+							removeCodewind();
+							return Status.CANCEL_STATUS;
+						}
+						if (result.getExitValue() != 0) {
+							return getErrorStatus(result, Messages.CodewindStartFail);
+						}
+					} catch (TimeoutException e) {
+						return getErrorStatus(Messages.CodewindUpdateTimeout, e);
+					} catch (Exception e) {
+						return getErrorStatus(Messages.CodewindUpdateError, e);
+					}
+					
+					ViewHelper.refreshCodewindExplorerView(null);
+					return Status.OK_STATUS;
+				}
+			};
+			job.setPriority(Job.LONG);
+			job.schedule();
+		} catch (Exception e) {
+			Logger.logError("An error occurred updating Codewind images: ", e); //$NON-NLS-1$
+		}
 	}
 	
 	public static void removeCodewind() {
@@ -310,10 +388,10 @@ public class CodewindInstall {
 						}
 						
 						
-					} catch (IOException e) {
-						return getErrorStatus(Messages.CodewindUninstallError, e);
 					} catch (TimeoutException e) {
 						return getErrorStatus(Messages.CodewindUninstallTimeout, e);
+					} catch (Exception e) {
+						return getErrorStatus(Messages.CodewindUninstallError, e);
 					}
 					
 					ViewHelper.refreshCodewindExplorerView(null);
@@ -321,6 +399,7 @@ public class CodewindInstall {
 					
 				}
 			};
+			job.setPriority(Job.LONG);
 			job.schedule();
 		} catch (Exception e) {
 			Logger.logError("An error occurred removing Codewind images: ", e); //$NON-NLS-1$

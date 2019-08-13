@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -24,6 +25,7 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 public class InstallerAction extends SelectionProviderAction {
 	
 	public final ActionType actionType;
+	public boolean versionUpgrade = false;
 
 	public enum ActionType {
 		INSTALL_UNINSTALL(Messages.InstallerActionInstallLabel, Messages.InstallerActionUninstallLabel),
@@ -46,19 +48,29 @@ public class InstallerAction extends SelectionProviderAction {
 
 	@Override
 	public void selectionChanged(IStructuredSelection sel) {
+		versionUpgrade = false;
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindManager) {
 				InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
 				if (actionType == ActionType.INSTALL_UNINSTALL) {
 					switch (status) {
-						case NOT_INSTALLED:
+						case UNINSTALLED:
 							setText(actionType.enableLabel);
 							setEnabled(true);
 							break;
-						case INSTALLED:
-						case RUNNING:
+						case STOPPED:
 							setText(actionType.disableLabel);
+							setEnabled(true);
+							break;
+						case RUNNING:
+							String version = CodewindManager.getManager().getVersion();
+							if (version == null || CodewindManager.getManager().isSupportedVersion(version)) {
+								setText(actionType.disableLabel);
+							} else {
+								versionUpgrade = true;
+								setText(actionType.enableLabel);
+							}
 							setEnabled(true);
 							break;
 						default:
@@ -68,11 +80,11 @@ public class InstallerAction extends SelectionProviderAction {
 					return;
 				} else {
 					switch (status) {
-						case NOT_INSTALLED:
+						case UNINSTALLED:
 							this.setText(actionType.enableLabel);
 							this.setEnabled(false);
 							break;
-						case INSTALLED:
+						case STOPPED:
 							this.setText(actionType.enableLabel);
 							this.setEnabled(true);
 							break;
@@ -95,7 +107,14 @@ public class InstallerAction extends SelectionProviderAction {
 	public void run() {
 		if (actionType == ActionType.INSTALL_UNINSTALL) {
 			if (actionType.enableLabel.equals(getText())) {
-				CodewindInstall.installCodewind(null);
+				if (versionUpgrade) {
+					int result = IDEUtil.openQuestionCancelDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
+					if (result == 0 || result == 1) {
+						CodewindInstall.updateCodewind(result == 0);
+					}
+				} else {
+					CodewindInstall.installCodewind(null);
+				}
 			} else {
 				CodewindInstall.removeCodewind();
 			}

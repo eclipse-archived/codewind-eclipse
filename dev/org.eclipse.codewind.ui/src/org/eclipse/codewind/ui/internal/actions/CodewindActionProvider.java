@@ -13,7 +13,9 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
+import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -49,10 +51,15 @@ public class CodewindActionProvider extends CommonActionProvider {
     		// If the installer is active then the install actions should not be shown
     		return;
     	}
-    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
     	InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
-    	if (status.isInstalled()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
+    	if (status == InstallStatus.RUNNING) {
+    		String version = CodewindManager.getManager().getVersion();
+    		if (version == null || CodewindManager.getManager().isSupportedVersion(version)) {
+    			menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
+    		}
+    	} else if (status.isInstalled()) {
+	    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
     	}
     }
 
@@ -88,13 +95,25 @@ public class CodewindActionProvider extends CommonActionProvider {
 			if (manager != null) {
 				InstallStatus status = manager.getInstallStatus(false);
 				switch(status) {
-					case NOT_INSTALLED:
+					case UNINSTALLED:
 						CodewindInstall.installCodewind(null);
 						break;
-					case INSTALLED:
+					case STOPPED:
 						CodewindInstall.startCodewind(null);
 						break;
 					case RUNNING:
+						String version = CodewindManager.getManager().getVersion();
+						if (version == null) {
+							// An error occurred so do nothing (the error is displayed to the user)
+							break;
+						}
+						if (!CodewindManager.getManager().isSupportedVersion(version)) {
+							int result = IDEUtil.openQuestionCancelDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
+							if (result == 0 || result == 1) {
+								CodewindInstall.updateCodewind(result == 0);
+							}
+							break;
+						}
 						ViewHelper.toggleExpansion(manager);
 						break;
 					default:

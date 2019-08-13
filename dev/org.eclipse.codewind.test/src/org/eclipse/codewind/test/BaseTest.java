@@ -12,6 +12,7 @@
 package org.eclipse.codewind.test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
@@ -24,9 +25,9 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
@@ -261,9 +262,9 @@ public abstract class BaseTest extends TestCase {
 		return null;
 	}
 	
-	protected void createProject(String id, String name) throws IOException, JSONException, TimeoutException {
+	protected void createProject(String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
-		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
+		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
 		for (ProjectTemplateInfo template : templates) {
 			if (template.getUrl().toLowerCase().contains(id.toLowerCase())) {
 				templateInfo = template;

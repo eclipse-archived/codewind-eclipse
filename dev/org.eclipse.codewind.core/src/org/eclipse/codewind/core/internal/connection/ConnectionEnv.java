@@ -17,10 +17,9 @@ import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ConnectionEnv {
+public class ConnectionEnv extends JSONObjectResult {
 	
 	public static final String CODEWIND_WORKSPACE_PROPERTY = "org.eclipse.codewind.internal.workspace"; //$NON-NLS-1$
 	public static final String KEY_VERSION = "codewind_version"; //$NON-NLS-1$
@@ -31,11 +30,10 @@ public class ConnectionEnv {
 	public static final String VALUE_TEKTON_DASHBOARD_NOT_INSTALLED = "not-installed"; //$NON-NLS-1$
 	public static final String VALUE_TEKTON_DASHBOARD_ERROR = "error"; //$NON-NLS-1$
 	
-	private JSONObject env;
 	private IPath workspacePath;
 	
 	public ConnectionEnv(JSONObject env) {
-		this.env = env;
+		super(env, "connection environment");
 	}
 	
 	public String getVersion() {
@@ -83,24 +81,4 @@ public class ConnectionEnv {
 		}
 		return null;
 	}
-	
-	private String getString(String key) {
-		String value = null;
-		if (env.has(key)) {
-			try {
-				value = env.getString(key);
-			} catch (JSONException e) {
-				Logger.logError("An error occurred retrieving the value from the connection environment object for key: " + key, e);
-			}
-		} else {
-			Logger.logError("The connection environment object did not have the expected key: " + key);
-		}
-		return value;
-	}
-
-	@Override
-	public String toString() {
-		return env.toString();
-	}
-
 }

@@ -19,7 +19,14 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * Static utilities to allow easy HTTP communication, and make diagnosing and handling errors a bit easier.
@@ -28,7 +35,9 @@ public class HttpUtil {
 	
 	private static final int DEFAULT_READ_TIMEOUT_S = 10;
 	private static final int DEFAULT_READ_TIMEOUT_MS = DEFAULT_READ_TIMEOUT_S * 1000;
-
+	
+	public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+	
 	private HttpUtil() {}
 
 	public static class HttpResult {
@@ -69,6 +78,32 @@ public class HttpUtil {
 				else {
 					response = null;
 				}
+			}
+		}
+		
+		// HttpResult for OkHttp (used for PATCH)
+		public HttpResult(URI uri, Response httpResponse) throws IOException {
+			responseCode = httpResponse.code();
+			isGoodResponse = responseCode > 199 && responseCode < 300;
+			
+			headerFields = null;
+
+			InputStream stream = httpResponse.body().byteStream();
+			String content = null;
+			if (stream != null) {
+				content = CoreUtil.readAllFromStream(stream);
+			}
+			if (isGoodResponse) {
+				response = content;
+				error = null;
+			} else {
+				error = content;
+				response = null;
+			}
+
+			if (!isGoodResponse) {
+				Logger.logError("Received bad response code " + responseCode + " from "
+						+ uri + " - Error:\n" + content);
 			}
 		}
 		
@@ -171,7 +206,7 @@ public class HttpUtil {
 			}
 		}
 	}
-	
+
 	public static HttpResult head(URI uri) throws IOException {
 		HttpURLConnection connection = null;
 
@@ -191,6 +226,10 @@ public class HttpUtil {
 	}
 	
 	public static HttpResult delete(URI uri) throws IOException {
+		return delete(uri, null);
+	}
+	
+	public static HttpResult delete(URI uri, JSONObject payload) throws IOException {
 		HttpURLConnection connection = null;
 
 		Logger.log("DELETE " + uri);
@@ -199,6 +238,14 @@ public class HttpUtil {
 
 			connection.setRequestMethod("DELETE");
 			connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MS);
+			
+			if (payload != null) {
+				connection.setRequestProperty("Content-Type", "application/json");
+				connection.setDoOutput(true);
+	
+				DataOutputStream payloadStream = new DataOutputStream(connection.getOutputStream());
+				payloadStream.write(payload.toString().getBytes());
+			}
 
 			return new HttpResult(connection);
 		} finally {
@@ -207,4 +254,16 @@ public class HttpUtil {
 			}
 		}
 	}
+	
+	public static HttpResult patch(URI uri, JSONArray payload) throws IOException {
+		Logger.log("PATCH " + uri);
+		
+		// No PATCH for HttpURLConnection so use OkHttp
+		RequestBody body = RequestBody.create(JSON, payload.toString());
+		OkHttpClient client = new OkHttpClient();
+		Request request = new Request.Builder().url(uri.toURL()).patch(body).build();
+		Response response = client.newCall(request).execute();
+		return new HttpResult(uri, response);
+	}
+
 }

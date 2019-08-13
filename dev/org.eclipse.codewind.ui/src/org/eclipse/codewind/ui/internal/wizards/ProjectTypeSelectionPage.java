@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -22,24 +23,37 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 
 public class ProjectTypeSelectionPage extends WizardPage {
@@ -53,13 +67,14 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private CheckboxTableViewer languageViewer = null;
 	private Text typeLabel = null;
 	private CheckboxTableViewer typeViewer = null;
+	private ProjectInfo projectInfo = null;
 
 	protected ProjectTypeSelectionPage(CodewindConnection connection, IProject project) {
 		super(Messages.SelectProjectTypePageName);
 		setTitle(Messages.SelectProjectTypePageTitle);
 		setDescription(Messages.SelectProjectTypePageDescription);
 		this.connection = connection;
-		this.project = project;
+		setProject(project);
 		this.typeMap = getProjectTypeMap();
 	}
 
@@ -90,7 +105,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
 		typeViewer.setInput(getProjectTypeArray());
-		typeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		GridData typeViewerData = new GridData(GridData.FILL, GridData.FILL, true, true);
+		typeViewerData.minimumHeight = 200;
+		typeViewer.getTable().setLayoutData(typeViewerData);
 	   
 		languageLabel = new Text(composite, SWT.READ_ONLY);
 		languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
@@ -142,6 +159,68 @@ public class ProjectTypeSelectionPage extends WizardPage {
 					language = null;
 				}
 				getWizard().getContainer().updateButtons();
+			}
+		});
+		
+		// Manage repositories link
+		Composite manageReposComp = new Composite(composite, SWT.NONE);
+		manageReposComp.setLayout(new GridLayout(2, false));
+		manageReposComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 1, 1));
+		
+		Label manageRepoLabel = new Label(manageReposComp, SWT.NONE);
+		manageRepoLabel.setText(Messages.SelectProjectTypeManageRepoLabel);
+		manageRepoLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		
+		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
+		manageRepoLink.setText("<a>" + Messages.SelectProjectTypeManageRepoLink + "</a>");
+		manageRepoLink.setToolTipText(Messages.SelectProjectTypeManageRepoTooltip);
+		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+
+		manageRepoLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				List<RepositoryInfo> repoList;
+				try {
+					repoList = connection.requestRepositories();
+					RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(getShell(), connection, repoList);
+					if (repoDialog.open() == Window.OK) {
+						if (repoDialog.hasChanges()) {
+							IRunnableWithProgress runnable = new IRunnableWithProgress() {
+								@Override
+								public void run(IProgressMonitor monitor) throws InvocationTargetException {
+									SubMonitor mon = SubMonitor.convert(monitor, Messages.RepoUpdateTask, 100);
+									IStatus status = repoDialog.updateRepos(mon.split(75));
+									if (!status.isOK()) {
+										throw new InvocationTargetException(status.getException(), status.getMessage());
+									}
+									if (mon.isCanceled()) {
+										return;
+									}
+									try {
+										mon = mon.split(25);
+										mon.setTaskName(Messages.SelectProjectTypeRefreshTypesTask);
+										typeMap = getProjectTypeMap();
+										mon.worked(25);
+									} catch (Exception e) {
+										throw new InvocationTargetException(e, Messages.SelectProjectTypeRefreshTypesError);
+									}
+								}
+							};
+							try {
+								getWizard().getContainer().run(true, true, runnable);
+							} catch (InvocationTargetException e) {
+								MessageDialog.openError(getShell(), Messages.RepoUpdateErrorTitle, e.getMessage());
+								return;
+							} catch (InterruptedException e) {
+								// The user cancelled the operation
+								return;
+							}
+							updateTables();
+						}
+					}
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), Messages.RepoListErrorTitle, NLS.bind(Messages.RepoListErrorMsg, e));
+				}
 			}
 		});
  
@@ -217,6 +296,30 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 	public void setProject(IProject project) {
 		this.project = project;
+		this.projectInfo = null;
+		if (project == null) {
+			return;
+		}
+		if (getWizard() != null && getWizard().getContainer() != null) {
+			IRunnableWithProgress runnable = new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException {
+					SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, project.getName()), 100);
+					projectInfo = getProjectInfo(mon.split(100));
+				}
+			};
+			try {
+				getContainer().run(true, true, runnable);
+			} catch (InvocationTargetException e) {
+				Logger.logError("An error occurred getting the project info for: " + project.getName(), e);
+				return;
+			} catch (InterruptedException e) {
+				// The user cancelled the operation
+				return;
+			}
+		} else {
+			projectInfo = getProjectInfo(new NullProgressMonitor());
+		}
 		updateTables();
 	}
 	
@@ -242,31 +345,59 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 
 	private void updateTables() {
-		ProjectInfo projectInfo = getProjectInfo();
-		if (projectInfo != null) {
-			type = projectInfo.type.getId();
-			language = projectInfo.language.getId();
+		if (typeViewer == null || typeViewer.getTable().isDisposed()) {
+			return;
+		}
+		typeViewer.setInput(getProjectTypeArray());
+		if (type != null && typeMap.containsKey(type)) {
+			// Maintain the current selection
 			typeViewer.setCheckedElements(new Object[] {type});
 			String[] languages = getLanguageArray(type);
-			if (languages != null && languages.length > 1) {
-				languageLabel.setVisible(true);
-				languageViewer.setInput(languages);
-				languageViewer.setCheckedElements(new Object[] {language});
-				languageViewer.getTable().setVisible(true);
-			} else {
-				languageLabel.setVisible(false);
-				languageViewer.getTable().setVisible(false);
+			updateLanguages(languages, language);
+		} else {
+			// If no selection, use the project info
+			if (projectInfo != null) {
+				type = projectInfo.type.getId();
+				language = projectInfo.language.getId();
+				if (typeMap.containsKey(type)) {
+					typeViewer.setCheckedElements(new Object[] {type});
+					String[] languages = getLanguageArray(type);
+					updateLanguages(languages, language);
+				}
 			}
 		}
 	}
+	
+	private void updateLanguages(String[] languages, String language) {
+		if (languageViewer == null || languageViewer.getTable().isDisposed()) {
+			return;
+		}
+		if (languages != null && languages.length > 1) {
+			languageLabel.setVisible(true);
+			languageViewer.setInput(languages);
+			languageViewer.getTable().setVisible(true);
+			if (language != null) {
+				for (String lang : languages) {
+					if (language.equals(lang)) {
+						languageViewer.setCheckedElements(new Object[] {language});
+						break;
+					}
+				}
+			}
+			languageViewer.getTable().setVisible(true);
+		} else {
+			languageLabel.setVisible(false);
+			languageViewer.getTable().setVisible(false);
+		}
+	}
 
-	private ProjectInfo getProjectInfo() {
+	private ProjectInfo getProjectInfo(IProgressMonitor monitor) {
 		if (connection == null || project == null) {
 			return null;
 		}
 
 		try {
-			return InstallUtil.validateProject(project.getName(), project.getLocation().toFile().getAbsolutePath(), new NullProgressMonitor());
+			return InstallUtil.validateProject(project.getName(), project.getLocation().toFile().getAbsolutePath(), monitor);
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the project type for project: " + project.getName(), e); //$NON-NLS-1$
 		}
@@ -278,7 +409,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		List<ProjectTemplateInfo> templates = null;
 		Map<String, Set<String>> typeMap = new HashMap<String, Set<String>>();
 		try {
-			templates = connection.requestProjectTemplates();
+			templates = connection.requestProjectTemplates(true);
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the list of templates for connection: " + connection.baseUrl, e); //$NON-NLS-1$
 			return null;

@@ -18,6 +18,7 @@ import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,12 +27,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
@@ -78,7 +76,7 @@ public class RestartDebugModeAction extends SelectionProviderAction {
 	        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
 	        // Check if the project has been imported into Eclipse. If not, offer to import it.
 	        if (project == null || !project.exists()) {
-	        	int result = openDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
+	        	int result = IDEUtil.openQuestionCancelDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
 	        	if (result == 0) {
 	        		// Import the project
 	        		ImportProjectAction.importProject(app);
@@ -88,7 +86,7 @@ public class RestartDebugModeAction extends SelectionProviderAction {
 	        	}
 	        // Check if the project is open in Eclipse. If not, offer to open it.
 	        } else if (!project.isOpen()) {
-	        	int result = openDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
+	        	int result = IDEUtil.openQuestionCancelDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
 	        	if (result == 0) {
 	        		// Open the project
 	        		Job job = new Job(NLS.bind(Messages.ProjectOpenJob, app.name)) {
@@ -134,30 +132,6 @@ public class RestartDebugModeAction extends SelectionProviderAction {
 			return;
 		}
     }
-    
-    /*
-     * Dialog which asks the user a question and they can select Yes, No
-     * or Cancel.
-     * Returns:
-     *  0 - user selected Yes
-     *  1 - user selected No
-     *  2 - user selected Cancel
-     */
-    private static int openDialog(String title, String msg) {
-    	final int[] result = new int[1];
-		Display.getDefault().syncExec(new Runnable() {
-			@Override
-			public void run() {
-				Shell shell = Display.getDefault().getActiveShell();
-				String[] buttonLabels = new String[] {Messages.DialogYesButton, Messages.DialogNoButton, Messages.DialogCancelButton};
-				MessageDialog dialog = new MessageDialog(shell, title, CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON),
-						msg, MessageDialog.QUESTION, buttonLabels, 0);
-				result[0] = dialog.open();
-			}
-		});
-		
-		return result[0];
-	}
     
     public boolean showAction() {
     	// Don't show the action if the app does not support debug

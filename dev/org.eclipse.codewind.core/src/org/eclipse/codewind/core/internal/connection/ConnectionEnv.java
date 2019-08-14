@@ -23,7 +23,7 @@ import org.json.JSONObject;
 public class ConnectionEnv {
 	
 	public static final String CODEWIND_WORKSPACE_PROPERTY = "org.eclipse.codewind.internal.workspace"; //$NON-NLS-1$
-	public static final String KEY_VERSION = "microclimate_version"; //$NON-NLS-1$
+	public static final String KEY_VERSION = "codewind_version"; //$NON-NLS-1$
 	public static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
 	public static final String KEY_WORKSPACE_LOC = "workspace_location"; //$NON-NLS-1$
 	public static final String KEY_SOCKET_NAMESPACE = "socket_namespace"; //$NON-NLS-1$

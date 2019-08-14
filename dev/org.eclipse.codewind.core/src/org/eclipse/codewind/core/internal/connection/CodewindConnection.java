@@ -31,6 +31,7 @@ import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
@@ -82,13 +83,6 @@ public class CodewindConnection {
 		}
 		
 		env = new ConnectionEnv(getEnvData(this.baseUrl));
-//		if (UNKNOWN_VERSION.equals(versionStr)) {
-//			onInitFail(NLS.bind(Messages.Connection_ErrConnection_VersionUnknown,
-//					MCConstants.REQUIRED_MC_VERSION));
-//		} else if (!isSupportedVersion(versionStr)) {
-//			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion,
-//					versionStr, MCConstants.REQUIRED_MC_VERSION));
-//		}
 		Logger.log("Codewind version is: " + env.getVersion());			// $NON-NLS-1$
 
 		if (env.getWorkspacePath() == null) {
@@ -150,7 +144,7 @@ public class CodewindConnection {
 			app.dispose();
 		}
 	}
-
+	
 	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
 		final URI envUrl = baseUrl.resolve(CoreConstants.APIPATH_ENV);
 
@@ -164,8 +158,18 @@ public class CodewindConnection {
 
 		return new JSONObject(envResponse);
 	}
+	
+	public static String getVersion(URI baseURI) {
+		try {
+			ConnectionEnv env = new ConnectionEnv(getEnvData(baseURI));
+			return env.getVersion();
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to get the Codewind version.", e);
+		}
+		return null;
+	}
 
-	private static boolean isSupportedVersion(String versionStr) {
+	public static boolean isSupportedVersion(String versionStr) {
 		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
 			return false;
 		}
@@ -180,10 +184,10 @@ public class CodewindConnection {
 			return true;
 		}
 
-		// The version will have a format like '1809', which corresponds to v18.09
 		try {
-			int version = Integer.parseInt(versionStr);
-			return version >= CoreConstants.REQUIRED_CODEWIND_VERSION;
+			float version = Float.parseFloat(versionStr);
+			float expectedVersion = Float.parseFloat(InstallUtil.DEFAULT_INSTALL_VERSION);
+			return version >= expectedVersion;
 		}
 		catch(NumberFormatException e) {
 			Logger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$

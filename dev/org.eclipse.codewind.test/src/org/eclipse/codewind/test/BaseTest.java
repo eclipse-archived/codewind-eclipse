@@ -68,8 +68,6 @@ public abstract class BaseTest extends TestCase {
 	protected static final String APPSODY_NODE_EXPRESS_ID = "codewind-appsody-nodejs-express";
 	protected static final String APPSODY_JAVA_SPRING_ID = "codewind-appsody-java-spring-boot2";
 
-	protected static final String CODEWIND_URI = "http://localhost:9090";
-	
 	protected static final String MARKER_TYPE = "org.eclipse.codewind.core.validationMarker";
 	
 	protected static final String RESOURCE_PATH = "resources";

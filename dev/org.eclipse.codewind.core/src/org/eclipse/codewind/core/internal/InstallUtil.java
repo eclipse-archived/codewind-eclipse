@@ -62,7 +62,7 @@ public class InstallUtil {
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
 	
-	public static final String DEFAULT_INSTALL_VERSION = "0.2";
+	public static final String DEFAULT_INSTALL_VERSION = "0.3";
 	
 	private static final String TAG_OPTION = "-t";
 	private static final String JSON_OPTION = "-j";

@@ -233,17 +233,15 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.PROJECTS_ICON);
 		} else if (element instanceof CodewindApplication) {
 			ProjectType type = ((CodewindApplication)element).projectType;
-			switch (type) {
-				case TYPE_LIBERTY:
+			if (type == ProjectType.TYPE_LIBERTY) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.MICROPROFILE_ICON);
-				case TYPE_NODEJS:
+			} else if (type == ProjectType.TYPE_NODEJS) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
-				case TYPE_SPRING:
+			} else if (type == ProjectType.TYPE_SPRING) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.SPRING_ICON);
-				case TYPE_SWIFT:
+			} else if (type == ProjectType.TYPE_SWIFT) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
-				case TYPE_DOCKER:
-				default:	
+			} else {
 					ProjectLanguage lang = ((CodewindApplication)element).projectLanguage;
 					switch (lang) {
 						case LANGUAGE_GO:

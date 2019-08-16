@@ -11,44 +11,72 @@
 
 package org.eclipse.codewind.core.internal.constants;
 
-/**
- * Type and language of a project.
- */
-public enum ProjectType {
-	
-	TYPE_LIBERTY("liberty", "MicroProfile / Java EE"),
-	TYPE_SPRING("spring", "Spring"),
-	TYPE_SWIFT("swift", "Swift"),
-	TYPE_NODEJS("nodejs", "Node.js"),
-	TYPE_DOCKER("docker", "Other (Basic Container)"),
-	TYPE_UNKNOWN("unknown", "Unknown");
+import java.util.HashMap;
+import java.util.Map;
 
-	private final String id;
+import org.eclipse.codewind.core.internal.messages.Messages;
+
+/**
+ * Project type. For known types provides a user friendly name.
+ */
+public class ProjectType {
+	
+	public static final ProjectType TYPE_LIBERTY = new ProjectType("liberty", "MicroProfile / Java EE");
+	public static final ProjectType TYPE_SPRING = new ProjectType("spring", "Spring");
+	public static final ProjectType TYPE_SWIFT = new ProjectType("swift", "Swift");
+	public static final ProjectType TYPE_NODEJS = new ProjectType("nodejs", "Node.js");
+	public static final ProjectType TYPE_DOCKER = new ProjectType("docker", Messages.DockerTypeDisplayName);
+	public static final ProjectType TYPE_UNKNOWN = new ProjectType("unknown", Messages.GenericUnknown);
+	
+	private static final Map<String, ProjectType> defaultTypes = new HashMap<String, ProjectType>();
+	static {
+		defaultTypes.put("liberty", TYPE_LIBERTY);
+		defaultTypes.put("spring", TYPE_SPRING);
+		defaultTypes.put("swift", TYPE_SWIFT);
+		defaultTypes.put("nodejs", TYPE_NODEJS);
+		defaultTypes.put("docker", TYPE_DOCKER);
+		defaultTypes.put("unknown", TYPE_UNKNOWN);
+	}
+	
+	private final String typeId;
 	private final String displayName;
 	
-	private ProjectType(String id, String displayName) {
-		this.id = id;
+	private ProjectType(String typeId, String displayName) {
+		this.typeId = typeId;
 		this.displayName = displayName;
 	}
 	
+	public static ProjectType getType(String typeId) {
+		ProjectType type = defaultTypes.get(typeId);
+		if (type == null) {
+			type = new ProjectType(typeId, null);
+		}
+		return type;
+	}
+	
 	public String getId() {
-		return id;
+		return typeId;
 	}
 	
 	public String getDisplayName() {
-		return displayName;
-	}
-	
-	public static ProjectType getType(String name) {
-		for (ProjectType type : ProjectType.values()) {
-			if (type.id.equals(name)) {
-				return type;
-			}
+		if (displayName != null) {
+			return displayName;
 		}
-		return TYPE_UNKNOWN;
+		return typeId;
 	}
 	
-	public static ProjectType getTypeFromLanguage(String language) {
+	public static String getDisplayName(String typeId) {
+		if (typeId == null) {
+			return Messages.GenericUnknown;
+		}
+		ProjectType type = defaultTypes.get(typeId);
+		if (type != null) {
+			return type.getDisplayName();
+		}
+		return typeId;
+	}
+	
+ 	public static ProjectType getTypeFromLanguage(String language) {
 		ProjectLanguage lang = ProjectLanguage.getLanguage(language);
 		switch(lang) {
 			case LANGUAGE_NODEJS:
@@ -62,16 +90,5 @@ public enum ProjectType {
 			default:
 				return null;
 		}
-	}
-	
-	public static String getDisplayName(String typeId) {
-		if (typeId == null) {
-			return ProjectType.TYPE_UNKNOWN.getDisplayName();
-		}
-		ProjectType type = ProjectType.getType(typeId);
-		if (type != null && type != ProjectType.TYPE_UNKNOWN) {
-			return type.getDisplayName();
-		}
-		return typeId;
 	}
 }

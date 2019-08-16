@@ -16,6 +16,8 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.codewind.core.internal.messages.messages"; //$NON-NLS-1$
 
+	public static String GenericUnknown;
+	
 	public static String Connection_ErrConnection_AlreadyExists;
 	public static String Connection_ErrConnection_OldVersion;
 	public static String Connection_ErrConnection_VersionUnknown;
@@ -71,6 +73,8 @@ public class Messages extends NLS {
 	public static String RemovingCodewindJobLabel;
 	
 	public static String ProjectSettingsUpdateErrorTitle;
+	
+	public static String DockerTypeDisplayName;
 
 	static {
 		// initialize resource bundle

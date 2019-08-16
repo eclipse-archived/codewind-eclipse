@@ -115,7 +115,7 @@ public class NewCodewindProjectPage extends WizardPage {
 	private void createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(2, false));
-		composite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		composite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		Label label = new Label(composite, SWT.NONE);
 		label.setText(Messages.NewProjectPage_ProjectNameLabel);
@@ -140,7 +140,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		layout.horizontalSpacing = 7;
 		layout.verticalSpacing = 7;
 		templateGroup.setLayout(layout);
-		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
 		
 		// Filter text
 		filterText = new Text(templateGroup, SWT.BORDER);

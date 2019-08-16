@@ -84,11 +84,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeLabel.setBackground(composite.getBackground());
 		typeLabel.setForeground(composite.getForeground());
 		
-		typeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+		typeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
 		typeViewer.setInput(getProjectTypeArray());
-		typeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		typeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 	   
 		languageLabel = new Text(composite, SWT.READ_ONLY);
 		languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
@@ -96,10 +96,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		languageLabel.setBackground(composite.getBackground());
 		languageLabel.setForeground(composite.getForeground());
 		
-		languageViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+		languageViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		languageViewer.setContentProvider(ArrayContentProvider.getInstance());
 		languageViewer.setLabelProvider(new LanguageLabelProvider());
-		languageViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		languageViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		typeViewer.addCheckStateListener(new ICheckStateListener() {
 			@Override

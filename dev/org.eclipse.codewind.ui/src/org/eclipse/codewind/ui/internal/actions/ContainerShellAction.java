@@ -83,11 +83,8 @@ public class ContainerShellAction implements IObjectActionDelegate {
 			return;
 		}
         
-        // The command varies depending on the application type
-        String command = "bash"; //$NON-NLS-1$
-        if (app.projectType == ProjectType.TYPE_DOCKER && app.projectLanguage == ProjectLanguage.LANGUAGE_PYTHON) {
-        	command = "sh"; //$NON-NLS-1$
-        }
+        // exec bash if it's installed, else exec sh
+        String command = "sh -c \"if type bash > /dev/null; then bash; else sh; fi\"";
 
         // Open a shell in the application container
         String envPath = CoreUtil.getEnvPath();

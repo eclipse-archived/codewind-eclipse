@@ -12,7 +12,8 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -25,7 +26,6 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 public class InstallerAction extends SelectionProviderAction {
 	
 	public final ActionType actionType;
-	public boolean versionUpgrade = false;
 
 	public enum ActionType {
 		INSTALL_UNINSTALL(Messages.InstallerActionInstallLabel, Messages.InstallerActionUninstallLabel),
@@ -48,53 +48,38 @@ public class InstallerAction extends SelectionProviderAction {
 
 	@Override
 	public void selectionChanged(IStructuredSelection sel) {
-		versionUpgrade = false;
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindManager) {
 				InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
 				if (actionType == ActionType.INSTALL_UNINSTALL) {
-					switch (status) {
-						case UNINSTALLED:
-							setText(actionType.enableLabel);
-							setEnabled(true);
-							break;
-						case STOPPED:
-							setText(actionType.disableLabel);
-							setEnabled(true);
-							break;
-						case RUNNING:
-							String version = CodewindManager.getManager().getVersion();
-							if (version == null || CodewindManager.getManager().isSupportedVersion(version)) {
-								setText(actionType.disableLabel);
-							} else {
-								versionUpgrade = true;
-								setText(actionType.enableLabel);
-							}
-							setEnabled(true);
-							break;
-						default:
-							setText(actionType.enableLabel);
-							setEnabled(false);
+					if (status.isInstalled()) {
+						setText(actionType.disableLabel);
+						setEnabled(true);
+					} else if (status.hasInstalledVersions()) {
+						setText(Messages.InstallerActionUpdateLabel);
+						setEnabled(true);
+					} else if (status.isUnknown()) {
+						setText(actionType.enableLabel);
+						setEnabled(false);
+					} else {
+						setText(actionType.enableLabel);
+						setEnabled(true);
 					}
 					return;
 				} else {
-					switch (status) {
-						case UNINSTALLED:
-							this.setText(actionType.enableLabel);
-							this.setEnabled(false);
-							break;
-						case STOPPED:
-							this.setText(actionType.enableLabel);
-							this.setEnabled(true);
-							break;
-						case RUNNING:
-							this.setText(actionType.disableLabel);
-							this.setEnabled(true);
-							break;
-						default:
-							this.setText(actionType.enableLabel);
-							this.setEnabled(false);
+					if (status.isStarted()) {
+						this.setText(actionType.disableLabel);
+						this.setEnabled(true);
+					} else if (status.isInstalled()) {
+						this.setText(actionType.enableLabel);
+						this.setEnabled(true);
+					} else if (status.isUnknown()) {
+						this.setText(actionType.enableLabel);
+						this.setEnabled(false);
+					} else {
+						this.setText(actionType.enableLabel);
+						this.setEnabled(false);
 					}
 					return;
 				}
@@ -105,22 +90,21 @@ public class InstallerAction extends SelectionProviderAction {
 
 	@Override
 	public void run() {
+		InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
 		if (actionType == ActionType.INSTALL_UNINSTALL) {
-			if (actionType.enableLabel.equals(getText())) {
-				if (versionUpgrade) {
-					int result = IDEUtil.openQuestionCancelDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
-					if (result == 0 || result == 1) {
-						CodewindInstall.updateCodewind(result == 0);
-					}
-				} else {
-					CodewindInstall.installCodewind(null);
+			if (Messages.InstallerActionUpdateLabel.equals(getText())) {
+				boolean result = IDEUtil.openConfirmDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
+				if (result) {
+					CodewindInstall.updateCodewind(InstallUtil.getVersion(), true, null);
 				}
+			} else if (actionType.enableLabel.equals(getText())) {
+				CodewindInstall.installCodewind(InstallUtil.getVersion(), null);
 			} else {
-				CodewindInstall.removeCodewind();
+				CodewindInstall.removeCodewind(status.getVersion());
 			}
 		} else {
 			if (actionType.enableLabel.equals(getText())) {
-				CodewindInstall.startCodewind(null);
+				CodewindInstall.startCodewind(status.getVersion(), null);
 			} else {
 				CodewindInstall.stopCodewind();
 			}

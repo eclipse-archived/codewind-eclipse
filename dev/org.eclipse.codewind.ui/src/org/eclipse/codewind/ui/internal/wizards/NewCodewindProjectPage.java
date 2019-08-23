@@ -19,8 +19,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -439,12 +439,12 @@ public class NewCodewindProjectPage extends WizardPage {
 			return;
 		}
 		InstallStatus status = manager.getInstallStatus(true);
-		if (status == InstallStatus.RUNNING) {
+		if (status.isStarted()) {
 			connection = manager.createLocalConnection();
 			return;
 		}
 		if (!status.isInstalled()) {
-			Logger.logError("In BindProjectAction run method and Codewind is not installed or has unknown status.");
+			Logger.logError("In NewCodewindProjectPage setupConnection method and Codewind is not installed or has unknown status.");
 			connection = null;
 			return;
 		}
@@ -454,7 +454,7 @@ public class NewCodewindProjectPage extends WizardPage {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					ProcessResult result = InstallUtil.startCodewind(monitor);
+					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
 					if (result.getExitValue() != 0) {
 						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();

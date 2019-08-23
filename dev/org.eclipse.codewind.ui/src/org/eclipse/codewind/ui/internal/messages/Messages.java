@@ -86,6 +86,7 @@ public class Messages extends NLS {
 	
 	public static String InstallerActionInstallLabel;
 	public static String InstallerActionUninstallLabel;
+	public static String InstallerActionUpdateLabel;
 	public static String InstallerActionStartLabel;
 	public static String InstallerActionStopLabel;
 	
@@ -110,6 +111,7 @@ public class Messages extends NLS {
 	public static String UninstallingCodewindTask;
 	public static String InstallCodewindDialogTitle;
 	public static String InstallCodewindDialogMessage;
+	public static String UpgradeCodewindDialogMessage;
 	public static String InstallCodewindNewProjectMessage;
 	public static String InstallCodewindAddProjectMessage;
 	public static String InstallCodewindInstallingMessage;

@@ -18,8 +18,8 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -62,18 +62,24 @@ public class CodewindInstall {
 	}
 
 	public static void codewindInstallerDialog() {
-		Shell shell = Display.getDefault().getActiveShell();
-		if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle,
-				Messages.InstallCodewindDialogMessage)) {
-			installCodewind(getNewProjectPrompt());
-		}
+		codewindInstallerDialog(getNewProjectPrompt());
 	}
 	
 	public static void codewindInstallerDialog(IProject project) {
+		codewindInstallerDialog(addExistingProjectPrompt(project));
+	}
+	
+	private static void codewindInstallerDialog(Runnable prompt) {
+		InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
 		Shell shell = Display.getDefault().getActiveShell();
-		if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle,
-				Messages.InstallCodewindDialogMessage)) {
-			installCodewind(addExistingProjectPrompt(project));
+		if (status.hasInstalledVersions()) {
+			if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle, Messages.UpgradeCodewindDialogMessage)) {
+				updateCodewind(InstallUtil.getVersion(), true, prompt);
+			}
+		} else {
+			if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle, Messages.InstallCodewindDialogMessage)) {
+				installCodewind(InstallUtil.getVersion(), prompt);
+			}
 		}
 	}
 	
@@ -100,7 +106,7 @@ public class CodewindInstall {
 		MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.InstallCodewindDialogTitle, msg);
 	}
 	
-	public static void installCodewind(Runnable prompt) { 
+	public static void installCodewind(String version, Runnable prompt) { 
 
 		try {
 			Job job = new Job(Messages.InstallCodewindJobLabel) {
@@ -110,10 +116,10 @@ public class CodewindInstall {
 					try {
 						SubMonitor mon = SubMonitor.convert(progressMon, 100);
 						mon.setTaskName(Messages.InstallingCodewindTask);
-						ProcessResult result = InstallUtil.installCodewind(mon.split(95));
+						ProcessResult result = InstallUtil.installCodewind(version, mon.split(95));
 						
 						if (mon.isCanceled()) {
-							removeCodewind();
+							removeCodewind(version);
 							return Status.CANCEL_STATUS;
 						}
 						
@@ -122,10 +128,10 @@ public class CodewindInstall {
 						}
 						
 						mon.setTaskName(Messages.StartingCodewindJobLabel);
-						result = InstallUtil.startCodewind(mon.split(5));
+						result = InstallUtil.startCodewind(version, mon.split(5));
 						
 						if (mon.isCanceled()) {
-							removeCodewind();
+							removeCodewind(version);
 							return Status.CANCEL_STATUS;
 						}
 						
@@ -155,7 +161,7 @@ public class CodewindInstall {
 		
 	}
 	
-	public static void startCodewind(Runnable prompt) { 
+	public static void startCodewind(String version, Runnable prompt) { 
 
 		try {
 			Job job = new Job(Messages.StartingCodewindJobLabel) {
@@ -164,7 +170,7 @@ public class CodewindInstall {
 
 					try {
 						
-						ProcessResult result = InstallUtil.startCodewind(monitor);
+						ProcessResult result = InstallUtil.startCodewind(version, monitor);
 
 						if (monitor.isCanceled()) {
 							return Status.CANCEL_STATUS;
@@ -275,7 +281,7 @@ public class CodewindInstall {
 		};
 	}
 	
-	public static void updateCodewind(boolean removeOldVersion) {
+	public static void updateCodewind(String version, boolean removeOldVersion, Runnable prompt) {
 		try {
 			Job job = new Job(Messages.UpdatingCodewindJobLabel) {
 				@Override
@@ -284,7 +290,7 @@ public class CodewindInstall {
 					try {
 						// Stop if necessary
 						InstallStatus status = InstallUtil.getInstallStatus();
-						if (status == InstallStatus.RUNNING) {
+						if (status.hasStartedVersions()) {
 							mon.setTaskName(Messages.StoppingCodewindJobLabel);
 							ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
 							if (mon.isCanceled()) {
@@ -299,7 +305,7 @@ public class CodewindInstall {
 						// Remove if requested
 						if (removeOldVersion) {
 							mon.setTaskName(Messages.UninstallingCodewindTask);
-							ProcessResult result = InstallUtil.removeCodewind(mon.split(20));
+							ProcessResult result = InstallUtil.removeCodewind(null, mon.split(20));
 							if (mon.isCanceled()) {
 								return Status.CANCEL_STATUS;
 							}
@@ -311,9 +317,9 @@ public class CodewindInstall {
 						
 						// Install
 						mon.setTaskName(Messages.InstallingCodewindTask);
-						ProcessResult result = InstallUtil.installCodewind(mon.split(95));
+						ProcessResult result = InstallUtil.installCodewind(version, mon.split(95));
 						if (mon.isCanceled()) {
-							removeCodewind();
+							removeCodewind(version);
 							return Status.CANCEL_STATUS;
 						}
 						if (result.getExitValue() != 0) {
@@ -322,13 +328,18 @@ public class CodewindInstall {
 						
 						// Start
 						mon.setTaskName(Messages.StartingCodewindJobLabel);
-						result = InstallUtil.startCodewind(mon.split(5));
+						result = InstallUtil.startCodewind(version, mon.split(5));
 						if (mon.isCanceled()) {
-							removeCodewind();
+							removeCodewind(version);
 							return Status.CANCEL_STATUS;
 						}
 						if (result.getExitValue() != 0) {
 							return getErrorStatus(result, Messages.CodewindStartFail);
+						}
+						
+						// Display prompt
+						if (prompt != null) {
+							Display.getDefault().asyncExec(prompt);
 						}
 					} catch (TimeoutException e) {
 						return getErrorStatus(Messages.CodewindUpdateTimeout, e);
@@ -347,7 +358,7 @@ public class CodewindInstall {
 		}
 	}
 	
-	public static void removeCodewind() {
+	public static void removeCodewind(String version) {
 
 		try {
 			Job job = new Job(Messages.RemovingCodewindJobLabel) {
@@ -356,7 +367,7 @@ public class CodewindInstall {
 			    	SubMonitor mon = SubMonitor.convert(progressMon, 100);
 					try {
 						InstallStatus status = InstallUtil.getInstallStatus();
-						if (status == InstallStatus.RUNNING) {
+						if (status.isStarted()) {
 							// Stop Codewind before uninstalling
 							// All containers must be stopped or uninstall won't work
 							mon.setTaskName(Messages.StoppingCodewindJobLabel);
@@ -377,7 +388,7 @@ public class CodewindInstall {
 						
 						mon.setTaskName(Messages.UninstallingCodewindTask);
 						mon.setWorkRemaining(20);
-						ProcessResult result = InstallUtil.removeCodewind(mon.split(20));
+						ProcessResult result = InstallUtil.removeCodewind(version, mon.split(20));
 						
 						if (mon.isCanceled()) {
 							return Status.CANCEL_STATUS;

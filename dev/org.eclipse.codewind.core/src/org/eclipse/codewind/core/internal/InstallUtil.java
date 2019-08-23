@@ -14,10 +14,12 @@ package org.eclipse.codewind.core.internal;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +41,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class InstallUtil {
-	
+
 	public static final String STOP_APP_CONTAINERS_PREFSKEY = "stopAppContainers";
 	public static final String STOP_APP_CONTAINERS_ALWAYS = "stopAppContainersAlways";
 	public static final String STOP_APP_CONTAINERS_NEVER = "stopAppContainersNever";
 	public static final String STOP_APP_CONTAINERS_PROMPT = "stopAppContainersPrompt";
 	public static final String STOP_APP_CONTAINERS_DEFAULT = STOP_APP_CONTAINERS_PROMPT;
-	
+
 	private static final Map<OperatingSystem, String> installMap = new HashMap<OperatingSystem, String>();
 
 	static {
@@ -53,7 +55,7 @@ public class InstallUtil {
 		installMap.put(OperatingSystem.MAC, "resources/codewind-installer-macos");
 		installMap.put(OperatingSystem.WINDOWS, "resources/codewind-installer-win.exe");
 	}
-	
+
 	private static final String INSTALLER_DIR = "installerWorkDir";
 	private static final String INSTALL_CMD = "install";
 	private static final String START_CMD = "start";
@@ -61,73 +63,71 @@ public class InstallUtil {
 	private static final String STOP_ALL_CMD = "stop-all";
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
-	
+
 	public static final String DEFAULT_INSTALL_VERSION = "0.3";
-	
+
 	private static final String TAG_OPTION = "-t";
 	private static final String JSON_OPTION = "-j";
-	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
-	
-	public static final String STATUS_KEY = "status";
-	public static final String URL_KEY = "url";
-	
+	private static final String INSTALL_VERSION_VAR = "CW_TAG";
+
 	private static String installVersion = null;
 	private static String installExec = null;
 	
-	public enum InstallStatus {
-		UNINSTALLED("uninstalled"),
-		STOPPED("stopped"),
-		RUNNING("started"),
-		UNKNOWN("unknown");
-		
-		private String value;
-		
-		private InstallStatus(String value) {
-			this.value = value;
-		}
-		
-		public static InstallStatus getStatus(String statusStr) {
-			for (InstallStatus status : InstallStatus.values()) {
-				if (status.value.equals(statusStr)) {
-					return status;
-				}
-			}
-			// This should not happen
-			Logger.logError("Unrecognized installer status: " + statusStr);
-			return UNKNOWN;
-		}
-		
-		public boolean isInstalled() {
-			return (this != UNINSTALLED && this != UNKNOWN);
-		}
+
+    public enum InstallStatus {
+       UNINSTALLED("uninstalled"),
+       STOPPED("stopped"),
+       RUNNING("started"),
+       UNKNOWN("unknown");
+
+       private String value;
+
+       private InstallStatus(String value) {
+               this.value = value;
+       }
+
+       public static InstallStatus getStatus(String statusStr) {
+               for (InstallStatus status : InstallStatus.values()) {
+                       if (status.value.equals(statusStr)) {
+                               return status;
+                       }
+               }
+               // This should not happen
+               Logger.logError("Unrecognized installer status: " + statusStr);
+               return UNKNOWN;
+       }
+
+       public boolean isInstalled() {
+               return (this != UNINSTALLED && this != UNKNOWN);
+       }
+  }
+
+	public static FullInstallStatus getInstallStatus()
+			throws IOException, JSONException, TimeoutException, URISyntaxException {
+		return new FullInstallStatus(getRawInstallStatus());
 	}
-	
-	public static InstallStatus getInstallStatus() throws IOException, JSONException, TimeoutException {
-		JSONObject statusObj = getRawInstallStatus();
-		return InstallStatus.getStatus(statusObj.getString(STATUS_KEY));
-	}
-	
-	public static JSONObject getRawInstallStatus() throws IOException, JSONException, TimeoutException {
+
+	private static JSONObject getRawInstallStatus() throws IOException, JSONException, TimeoutException {
 		ProcessResult result = statusCodewind();
 		if (result.getExitValue() != 0) {
 			String error = result.getError();
 			if (error == null || error.isEmpty()) {
 				error = result.getOutput();
 			}
-			String msg = "Installer status command failed with rc: " + result.getExitValue() + " and error: " + error;  //$NON-NLS-1$ //$NON-NLS-2$
+			String msg = "Installer status command failed with rc: " + result.getExitValue() + " and error: " + error; //$NON-NLS-1$ //$NON-NLS-2$
 			Logger.logError(msg);
 			throw new IOException(msg);
 		}
 		JSONObject status = new JSONObject(result.getOutput());
 		return status;
 	}
-	
+
 	public static ProcessResult startCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StartCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STARTING);
-			process = runInstaller(START_CMD, TAG_OPTION, getVersion());
+			process = runInstaller(START_CMD, TAG_OPTION, getRequiredVersion());
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(90));
 			return result;
 		} finally {
@@ -137,15 +137,16 @@ public class InstallUtil {
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
-	
-	public static ProcessResult stopCodewind(boolean stopAll, IProgressMonitor monitor) throws IOException, TimeoutException {
+
+	public static ProcessResult stopCodewind(boolean stopAll, IProgressMonitor monitor)
+			throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
-		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
-		    return result;
+			process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
@@ -153,15 +154,15 @@ public class InstallUtil {
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
-	
+
 	public static ProcessResult installCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.InstallCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
-		    process = runInstaller(INSTALL_CMD, TAG_OPTION, getVersion());
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
-		    return result;
+			process = runInstaller(INSTALL_CMD, TAG_OPTION, getRequiredVersion());
+			ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
+			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
@@ -169,15 +170,15 @@ public class InstallUtil {
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
-	
+
 	public static ProcessResult removeCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.RemovingCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.UNINSTALLING);
-		    process = runInstaller(REMOVE_CMD);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
-		    return result;
+			process = runInstaller(REMOVE_CMD);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
@@ -185,7 +186,7 @@ public class InstallUtil {
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
-	
+
 	private static ProcessResult statusCodewind() throws IOException, TimeoutException {
 		Process process = null;
 		try {
@@ -198,7 +199,7 @@ public class InstallUtil {
 			}
 		}
 	}
-	
+
 	public static Process runInstaller(String cmd, String... options) throws IOException {
 		String installerPath = getInstallerExecutable();
 		List<String> cmdList = new ArrayList<String>();
@@ -209,6 +210,7 @@ public class InstallUtil {
 				cmdList.add(option);
 			}
 		}
+		Logger.log("Running installer " + cmd + " " + Arrays.toString(options));
 		String[] command = cmdList.toArray(new String[cmdList.size()]);
 		ProcessBuilder builder = new ProcessBuilder(command);
 		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
@@ -219,12 +221,12 @@ public class InstallUtil {
 		}
 		return builder.start();
 	}
-	
+
 	public static String getInstallerExecutable() throws IOException {
 		if (installExec != null && (new File(installExec)).exists()) {
 			return installExec;
 		}
-		
+
 		// Get the current platform and choose the correct executable path
 		OperatingSystem os = PlatformUtil.getOS(System.getProperty("os.name"));
 		String relPath = installMap.get(os);
@@ -233,19 +235,19 @@ public class InstallUtil {
 			Logger.logError(msg);
 			throw new IOException(msg);
 		}
-		
+
 		// Get the executable path
 		String installerDir = getInstallerDir();
 		String execName = relPath.substring(relPath.lastIndexOf('/') + 1);
 		String execPath = installerDir + File.separator + execName;
-				
+
 		// Make the installer directory
 		if (!FileUtil.makeDir(installerDir)) {
 			String msg = "Failed to make the directory for the installer utility: " + installerDir;
 			Logger.logError(msg);
 			throw new IOException(msg);
 		}
-		
+
 		// Copy the executable over
 		InputStream stream = null;
 		try {
@@ -268,13 +270,13 @@ public class InstallUtil {
 			}
 		}
 	}
-	
+
 	private static String getInstallerDir() {
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();
 	}
-	
-	public static String getVersion() {
+
+	public static String getRequiredVersion() {
 		if (installVersion == null) {
 			String value = System.getenv(INSTALL_VERSION_VAR);
 			if (value != null && !value.isEmpty()) {

@@ -23,6 +23,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 /**
  * General utils that don't belong anywhere else
@@ -234,4 +236,11 @@ public class CoreUtil {
     	return path;
     }
     
+	public static List<String> jsonArrayToStringArray(JSONArray jsonArray) throws JSONException {
+		List<String> result = new ArrayList<String>(jsonArray.length());
+		for(int i = 0; i < jsonArray.length(); i++){
+		    result.add(jsonArray.getString(i));
+		}
+		return result;
+	}    
 }

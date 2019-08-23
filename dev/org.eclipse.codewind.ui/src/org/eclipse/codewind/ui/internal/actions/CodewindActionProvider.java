@@ -13,9 +13,7 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
-import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
-import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -108,10 +106,7 @@ public class CodewindActionProvider extends CommonActionProvider {
 							break;
 						}
 						if (!CodewindManager.getManager().isSupportedVersion(version)) {
-							int result = IDEUtil.openQuestionCancelDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
-							if (result == 0 || result == 1) {
-								CodewindInstall.updateCodewind(result == 0);
-							}
+							CodewindInstall.promptAndUpdateCodewind();
 							break;
 						}
 						ViewHelper.toggleExpansion(manager);

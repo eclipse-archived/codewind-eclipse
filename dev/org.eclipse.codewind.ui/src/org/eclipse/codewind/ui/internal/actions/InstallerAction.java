@@ -13,7 +13,6 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
-import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -108,10 +107,7 @@ public class InstallerAction extends SelectionProviderAction {
 		if (actionType == ActionType.INSTALL_UNINSTALL) {
 			if (actionType.enableLabel.equals(getText())) {
 				if (versionUpgrade) {
-					int result = IDEUtil.openQuestionCancelDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
-					if (result == 0 || result == 1) {
-						CodewindInstall.updateCodewind(result == 0);
-					}
+					CodewindInstall.promptAndUpdateCodewind();
 				} else {
 					CodewindInstall.installCodewind(null);
 				}

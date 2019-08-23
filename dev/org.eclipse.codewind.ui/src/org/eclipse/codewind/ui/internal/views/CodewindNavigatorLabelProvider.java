@@ -77,7 +77,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 						}
 						if (!CodewindManager.getManager().isSupportedVersion(version)) {
 							return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, version) + "] (" +
-									NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
+									NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getRequiredVersion());
 						} 
 						return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
 					case STOPPED:
@@ -162,7 +162,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 						}
 						if (!CodewindManager.getManager().isSupportedVersion(version)) {
 							styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, version) + "]", StyledString.DECORATIONS_STYLER);
-							styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
+							styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getRequiredVersion()) + ")", StyledString.QUALIFIER_STYLER);
 							break;
 						}
 						styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);

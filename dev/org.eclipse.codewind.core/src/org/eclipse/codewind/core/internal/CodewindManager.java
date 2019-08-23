@@ -16,11 +16,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 public class CodewindManager {
 	
@@ -33,7 +31,7 @@ public class CodewindManager {
 	// Keep track of the install status and if the installer is currently running.
 	// If the installer is running, this is the status that should be reported, if
 	// not the install status should be reported (installerStatus will be null).
-	InstallStatus installStatus = null;
+	FullInstallStatus installStatus = null;
 	InstallerStatus installerStatus = null;
 	
 	public enum InstallerStatus {
@@ -44,7 +42,7 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		if (getInstallStatus(true) == InstallStatus.RUNNING) {
+		if (getFullInstallStatus(true).isRunning()) {
 			createLocalConnection();
 			if (localConnection != null) {
 				localConnection.refreshApps(null);
@@ -59,23 +57,22 @@ public class CodewindManager {
 		return codewindManager;
 	}
 	
+	public InstallUtil.InstallStatus getInstallStatus(boolean update) {
+		return getFullInstallStatus(update).simpleStatus;
+	}
+		
 	/**
 	 * Get the current install status for Codewind
 	 */
-	public InstallStatus getInstallStatus(boolean update) {
+	public FullInstallStatus getFullInstallStatus(boolean update) {
 		if (installStatus != null && !update) {
 			return installStatus;
 		}
 		String url = null;
 		try {
-			JSONObject statusObj = InstallUtil.getRawInstallStatus();
-			installStatus = InstallStatus.getStatus(statusObj.getString(InstallUtil.STATUS_KEY));
-			if (installStatus == InstallStatus.RUNNING) {
-				url = statusObj.getString(InstallUtil.URL_KEY);
-				if (!url.endsWith("/")) {
-					url = url + "/";
-				}
-				localURI = new URI(url);
+			installStatus = InstallUtil.getInstallStatus();
+			if (installStatus.url != null) {
+				localURI = installStatus.url;
 			} else {
 				removeLocalConnection();
 				localURI = null;
@@ -91,7 +88,8 @@ public class CodewindManager {
 		} catch (URISyntaxException e) {
 			Logger.logError("The Codewind installer status command returned an invalid url: " + url, e);
 		}
-		return InstallStatus.UNKNOWN;
+		// TODO !! how to handle this?
+		return null;
 	}
 	
 	public InstallerStatus getInstallerStatus() {
@@ -105,20 +103,21 @@ public class CodewindManager {
 	
 	public URI getLocalURI() {
 		if (localURI == null) {
-			getInstallStatus(true);
+			getFullInstallStatus(true);
 		}
 		return localURI;
 	}
 	
 	public String getVersion() {
-		if (version == null && getInstallStatus(false) == InstallStatus.RUNNING) {
+		if (version == null && getFullInstallStatus(false).isRunning()) {
 			version = CodewindConnection.getVersion(getLocalURI());
 		}
 		return version;
 	}
 	
 	public boolean isSupportedVersion(String version) {
-		return CodewindConnection.isSupportedVersion(version);
+		String requiredVersion = InstallUtil.getRequiredVersion();
+		return version.equals(requiredVersion);
 	}
 	
 	public synchronized CodewindConnection getLocalConnection() {

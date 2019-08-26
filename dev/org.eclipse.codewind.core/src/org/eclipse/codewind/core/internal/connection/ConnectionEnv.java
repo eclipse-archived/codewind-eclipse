@@ -28,6 +28,8 @@ public class ConnectionEnv {
 	public static final String KEY_WORKSPACE_LOC = "workspace_location"; //$NON-NLS-1$
 	public static final String KEY_SOCKET_NAMESPACE = "socket_namespace"; //$NON-NLS-1$
 	public static final String KEY_TEKTON_DASHBOARD_URL = "tekton_dashboard_url"; //$NON-NLS-1$
+	public static final String VALUE_TEKTON_DASHBOARD_NOT_INSTALLED = "not-installed"; //$NON-NLS-1$
+	public static final String VALUE_TEKTON_DASHBOARD_ERROR = "error"; //$NON-NLS-1$
 	
 	private JSONObject env;
 	private IPath workspacePath;
@@ -71,7 +73,7 @@ public class ConnectionEnv {
 	
 	public URL getTektonDashboardURL() {
 		String urlStr = getString(KEY_TEKTON_DASHBOARD_URL);
-		if (urlStr == null || urlStr.isEmpty()) {
+		if (urlStr == null || urlStr.isEmpty() || urlStr.equals(VALUE_TEKTON_DASHBOARD_NOT_INSTALLED) || urlStr.equals(VALUE_TEKTON_DASHBOARD_ERROR)) {
 			return null;
 		}
 		try {

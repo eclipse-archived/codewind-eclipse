@@ -74,6 +74,12 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
 			Logger.logError("OpenAppMonitorAction ran but could not construct the url"); //$NON-NLS-1$
 			return;
 		}
+		
+        app.confirmMetricsAvailable();
+        if (!app.getMetricsAvailable()) {
+        	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.PerfDashboardNotSupported);
+        	return;
+        }
 
 		try {
 			IWebBrowser browser = null;

@@ -11,7 +11,9 @@
 
 package org.eclipse.codewind.core.internal;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.core.runtime.IPath;
 import org.json.JSONObject;
 
@@ -53,6 +56,7 @@ public class CodewindApplication {
 	private String action;
 	private List<ProjectLogInfo> logInfos = new ArrayList<ProjectLogInfo>();
 	private boolean metricsAvailable = false;
+	private boolean hasConfirmedMetrics = false; 		// see confirmMetricsAvailable
 	private long lastBuild = -1;
 	private long lastImageBuild = -1;
 	
@@ -231,6 +235,38 @@ public class CodewindApplication {
 			Logger.logError("An error occurred trying to construct the application metrics URL", e);
 		}
 		return null;
+	}
+	
+	/**
+	 * For extension projects, the metricsAvailable may not be correct. 
+	 * So after the application is running, GET that page to make sure. If it fails, we set metricsAvailable to false.
+	 * 
+	 * Workaround for https://github.com/eclipse/codewind/issues/258
+	 */
+	public synchronized void confirmMetricsAvailable() {
+		if (this.hasConfirmedMetrics) {
+			return;
+		}
+		this.hasConfirmedMetrics = true;
+
+		// Only extension projects require this extra check; 
+		// for normal projects the metricsAvailable is accurate.
+		if (!this.projectType.getId().toLowerCase().contains("extension")) {
+			return;
+		}
+		
+		try {
+			URL metricsUrl = this.getMetricsUrl();
+			if (metricsUrl == null) {
+				// we should not have made it this far
+				return;
+			}
+			HttpResult getMetricsResult = HttpUtil.get(metricsUrl.toURI());
+			this.metricsAvailable = getMetricsResult.isGoodResponse;
+		}
+		catch (IOException | URISyntaxException e) {
+			Logger.logError("An error occurred trying to confirm the application metrics status", e);
+		}		
 	}
 	
 	public synchronized AppStatus getAppStatus() {

@@ -77,7 +77,7 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
 		
         app.confirmMetricsAvailable();
         if (!app.getMetricsAvailable()) {
-        	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.PerfDashboardNotSupported);
+        	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.AppMonitorNotSupported);
         	return;
         }
 

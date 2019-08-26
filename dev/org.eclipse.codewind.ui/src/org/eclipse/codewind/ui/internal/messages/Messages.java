@@ -273,6 +273,7 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorAppPortEntry;
 	public static String AppOverviewEditorDebugPortEntry;
 	public static String AppOverviewEditorEditProjectSettings;
+	public static String AppOverviewEditorProjectSettingsInfo;
 	public static String AppOverviewEditorBuildSection;
 	public static String AppOverviewEditorAutoBuildEntry;
 	public static String AppOverviewEditorAutoBuildOn;

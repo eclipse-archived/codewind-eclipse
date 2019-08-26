@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.editors;
 
+import java.net.URL;
 import java.util.Date;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
@@ -52,6 +53,8 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.forms.ManagedForm;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
@@ -67,6 +70,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private static final String SETTINGS_FILE = ".cw-settings";
 	private static final String JSON_EDITOR_ID = "org.eclipse.wst.json.ui.JSONEditor";
+	private static final String CWSETTINGS_INFO_URL = "https://www.eclipse.org/codewind/mdteclipsemanagingprojects.html";
+	private static final String CWSETTINGS_INFO_ID = "org.eclipse.codewind.ui.overview.ProjectSettingsInfo";
 	
 	private Composite contents;
 	private String appName;
@@ -331,6 +336,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final StringEntry appPortEntry;
 		private final StringEntry debugPortEntry;
 		private final Button editButton;
+		private final Button infoButton;
 		
 		public ProjectSettingsSection(Composite parent, FormToolkit toolkit) {
 			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
@@ -355,8 +361,19 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        appPortEntry = new StringEntry(composite, Messages.AppOverviewEditorAppPortEntry);
 	        addSpacer(composite);
 	        debugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorDebugPortEntry);
+	        addSpacer(composite);
 	        
-	        editButton = new Button(composite, SWT.PUSH);
+	        Composite buttonComp = toolkit.createComposite(composite);
+	        layout = new GridLayout();
+	        layout.numColumns = 2;
+	        layout.marginHeight = 0;
+	        layout.marginWidth = 0;
+	        layout.verticalSpacing = 5;
+	        layout.horizontalSpacing = 10;
+	        buttonComp.setLayout(layout);
+	        buttonComp.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
+	        
+	        editButton = new Button(buttonComp, SWT.PUSH);
 	        editButton.setText(Messages.AppOverviewEditorEditProjectSettings);
 	        editButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
 	        editButton.addSelectionListener(new SelectionAdapter() {
@@ -397,6 +414,25 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 					}
 					Logger.logError("Failed to open project settings file for project: " + appName + ", with id: " + projectID); //$NON-NLS-1$ //$NON-NLS-2$
 					MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenSettingsErrorTitle, Messages.AppOverviewEditorOpenSettingsNotFound);
+				}
+	        });
+	        
+	        infoButton = new Button(buttonComp, SWT.PUSH);
+	        infoButton.setText(Messages.AppOverviewEditorProjectSettingsInfo);
+	        infoButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+	        infoButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					try {
+						IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
+						IWebBrowser browser = browserSupport
+								.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
+										CWSETTINGS_INFO_ID, null, null);
+						URL url = new URL(CWSETTINGS_INFO_URL);
+						browser.openURL(url);
+					} catch (Exception e) {
+						Logger.logError("Failed to open the browser for the project settings documentation: " + CWSETTINGS_INFO_URL, e); //$NON-NLS-1$
+					}
 				}
 	        });
 		}

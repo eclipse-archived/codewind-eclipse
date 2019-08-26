@@ -33,6 +33,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class CodewindActionProvider extends CommonActionProvider {
 	
+	private ISelectionProvider selProvider;
 	private InstallerAction installUninstallAction;
 	private InstallerAction startStopAction;
 	private CodewindDoubleClickAction doubleClickAction;
@@ -40,7 +41,7 @@ public class CodewindActionProvider extends CommonActionProvider {
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
-        ISelectionProvider selProvider = aSite.getStructuredViewer();
+        selProvider = aSite.getStructuredViewer();
         installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
         doubleClickAction = new CodewindDoubleClickAction(selProvider);
@@ -52,6 +53,7 @@ public class CodewindActionProvider extends CommonActionProvider {
     		// If the installer is active then the install actions should not be shown
     		return;
     	}
+    	selProvider.setSelection(selProvider.getSelection());
     	InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
     	if (status.isStarted()) {

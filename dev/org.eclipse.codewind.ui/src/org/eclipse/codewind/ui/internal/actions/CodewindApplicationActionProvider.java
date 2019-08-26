@@ -26,6 +26,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class CodewindApplicationActionProvider extends CommonActionProvider {
 	
+	private ISelectionProvider selProvider;
 //	private ValidateAction validateAction;
 	private RestartRunModeAction restartRunAction;
 	private RestartDebugModeAction restartDebugAction;
@@ -40,7 +41,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
-        ISelectionProvider selProvider = aSite.getStructuredViewer();
+        selProvider = aSite.getStructuredViewer();
 //        validateAction = new ValidateAction(selProvider);
         restartRunAction = new RestartRunModeAction(selProvider);
         restartDebugAction = new RestartDebugModeAction(selProvider);
@@ -55,6 +56,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
+    	selProvider.setSelection(selProvider.getSelection());
 //    	if (validateAction.showAction()) {
 //    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, validateAction);
 //    	}
@@ -76,7 +78,6 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	if (openTektonDashboardAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openTektonDashboardAction);
     	}
-    	enableDisableProjectAction.updateText();
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, enableDisableProjectAction);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, unbindProjectAction);
     	

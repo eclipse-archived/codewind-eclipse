@@ -56,16 +56,6 @@ public class EnableDisableProjectAction extends SelectionProviderAction {
         setEnabled(false);
     }
     
-    /*
-     * If the selection has not changed, still need to check the application
-     * state before showing the menu item.
-     */
-    public void updateText() {
-    	if (app != null) {
-    		setText(app.isAvailable() ? Messages.DisableProjectLabel : Messages.EnableProjectLabel);
-    	}
-    }
-
     @Override
     public void run() {
         if (app == null) {

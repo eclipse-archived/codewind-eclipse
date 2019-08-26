@@ -13,7 +13,7 @@ Prerequisites
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
 2. Open the **Codewind Explorer** view.
-3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB.
+3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdteclipseinstallinfo.html).
 
 ## Using Codewind for Eclipse
 Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.

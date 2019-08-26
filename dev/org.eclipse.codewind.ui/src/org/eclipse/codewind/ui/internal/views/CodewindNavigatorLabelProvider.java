@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.views;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
@@ -69,23 +70,24 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					return Messages.CodewindLabel + "[" + Messages.CodewindStoppingQualifier + "]";
 				}
 			} else {
-				switch (manager.getInstallStatus(true)) {
-					case RUNNING:
-						String version = CodewindManager.getManager().getVersion();
-						if (version == null) {
-							return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
-						}
-						if (!CodewindManager.getManager().isSupportedVersion(version)) {
-							return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, version) + "] (" +
-									NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
-						} 
-						return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
-					case STOPPED:
-						return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
-					case UNINSTALLED:
-						return Messages.CodewindLabel + " [" + Messages.CodewindNotInstalledQualifier + "] (" + Messages.CodewindNotInstalledMsg + ")";
-					default:
-						return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+				InstallStatus status = manager.getInstallStatus(true);
+				if (status.isStarted()) {
+					return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
+				} else if (status.isInstalled()) {
+					if (status.hasStartedVersions()) {
+						// An older version is running
+						return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "] (" +
+								NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
+					}
+					return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
+				} else if (status.hasInstalledVersions()) {
+					// An older version is installed
+					return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "] (" +
+							NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
+				} else if (status.isUnknown()) {
+					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+				} else {
+					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
 				}
 			}
 		} else if (element instanceof CodewindConnection) {
@@ -152,33 +154,28 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					break;
 				}
 			} else {
-				switch (manager.getInstallStatus(true)) {
-					case RUNNING:
-						String version = CodewindManager.getManager().getVersion();
-						if (version == null) {
-							styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
-							styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
-							break;
-						}
-						if (!CodewindManager.getManager().isSupportedVersion(version)) {
-							styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, version) + "]", StyledString.DECORATIONS_STYLER);
-							styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
-							break;
-						}
-						styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
-						break;
-					case STOPPED:
+				InstallStatus status = manager.getInstallStatus(true);
+				if (status.isStarted()) {
+					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+				} else if (status.isInstalled()) {
+					if (status.hasStartedVersions()) {
+						// An older version is running
+						styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
+					} else {
 						styledString.append(" [" + Messages.CodewindNotStartedQualifier + "]", StyledString.DECORATIONS_STYLER);
 						styledString.append(" (" + Messages.CodewindNotStartedMsg + ")", StyledString.QUALIFIER_STYLER);
-						break;
-					case UNINSTALLED:
-						styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
-						styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
-						break;
-					default:
-						styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
-						styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
-						break;
+					}
+				} else if (status.hasInstalledVersions()) {
+					// An older version is installed
+					styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
+				} else if (status.isUnknown()) {
+					styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
+				} else {
+					styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
 				}
 			}
 		} else if (element instanceof CodewindConnection) {

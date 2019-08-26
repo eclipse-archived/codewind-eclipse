@@ -42,5 +42,18 @@ public class IDEUtil {
 		
 		return result[0];
 	}
+    
+    public static boolean openConfirmDialog(String title, String msg) {
+    	final boolean[] result = new boolean[1];
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				Shell shell = Display.getDefault().getActiveShell();
+				result[0] = MessageDialog.openConfirm(shell, title, msg);
+			}
+		});
+		
+		return result[0];
+	}
 
 }

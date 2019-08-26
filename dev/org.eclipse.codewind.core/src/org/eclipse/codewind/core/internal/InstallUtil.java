@@ -74,40 +74,7 @@ public class InstallUtil {
 	private static String installVersion = null;
 	private static String installExec = null;
 	
-	public enum InstallStatus {
-		UNINSTALLED("uninstalled"),
-		STOPPED("stopped"),
-		RUNNING("started"),
-		UNKNOWN("unknown");
-		
-		private String value;
-		
-		private InstallStatus(String value) {
-			this.value = value;
-		}
-		
-		public static InstallStatus getStatus(String statusStr) {
-			for (InstallStatus status : InstallStatus.values()) {
-				if (status.value.equals(statusStr)) {
-					return status;
-				}
-			}
-			// This should not happen
-			Logger.logError("Unrecognized installer status: " + statusStr);
-			return UNKNOWN;
-		}
-		
-		public boolean isInstalled() {
-			return (this != UNINSTALLED && this != UNKNOWN);
-		}
-	}
-	
 	public static InstallStatus getInstallStatus() throws IOException, JSONException, TimeoutException {
-		JSONObject statusObj = getRawInstallStatus();
-		return InstallStatus.getStatus(statusObj.getString(STATUS_KEY));
-	}
-	
-	public static JSONObject getRawInstallStatus() throws IOException, JSONException, TimeoutException {
 		ProcessResult result = statusCodewind();
 		if (result.getExitValue() != 0) {
 			String error = result.getError();
@@ -119,15 +86,15 @@ public class InstallUtil {
 			throw new IOException(msg);
 		}
 		JSONObject status = new JSONObject(result.getOutput());
-		return status;
+		return new InstallStatus(status);
 	}
 	
-	public static ProcessResult startCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
+	public static ProcessResult startCodewind(String version, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StartCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STARTING);
-			process = runInstaller(START_CMD, TAG_OPTION, getVersion());
+			process = runInstaller(START_CMD, TAG_OPTION, version);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(90));
 			return result;
 		} finally {
@@ -154,12 +121,12 @@ public class InstallUtil {
 		}
 	}
 	
-	public static ProcessResult installCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
+	public static ProcessResult installCodewind(String version, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.InstallCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
-		    process = runInstaller(INSTALL_CMD, TAG_OPTION, getVersion());
+		    process = runInstaller(INSTALL_CMD, TAG_OPTION, version);
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
 		    return result;
 		} finally {
@@ -170,12 +137,16 @@ public class InstallUtil {
 		}
 	}
 	
-	public static ProcessResult removeCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
+	public static ProcessResult removeCodewind(String version, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.RemovingCodewindJobLabel, 100);
 		Process process = null;
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.UNINSTALLING);
-		    process = runInstaller(REMOVE_CMD);
+			if (version != null) {
+				process = runInstaller(REMOVE_CMD, TAG_OPTION, version);
+			} else {
+				process = runInstaller(REMOVE_CMD);
+			}
 		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 		    return result;
 		} finally {

@@ -15,7 +15,6 @@ import java.util.Date;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -95,7 +94,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		CodewindApplication application = null;
 		if (input instanceof ApplicationOverviewEditorInput &&
-				CodewindManager.getManager().getInstallStatus(false) == InstallStatus.RUNNING) {
+				CodewindManager.getManager().getInstallStatus(false).isStarted()) {
 			ApplicationOverviewEditorInput appInput = (ApplicationOverviewEditorInput)input;
 			if (appInput.connectionUri != null && appInput.projectID != null) {
 				connection = CodewindConnectionManager.getActiveConnection(appInput.connectionUri);

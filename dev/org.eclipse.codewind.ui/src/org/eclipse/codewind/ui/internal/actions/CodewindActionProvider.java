@@ -12,7 +12,8 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -53,11 +54,8 @@ public class CodewindActionProvider extends CommonActionProvider {
     	}
     	InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
-    	if (status == InstallStatus.RUNNING) {
-    		String version = CodewindManager.getManager().getVersion();
-    		if (version == null || CodewindManager.getManager().isSupportedVersion(version)) {
-    			menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
-    		}
+    	if (status.isStarted()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
     	} else if (status.isInstalled()) {
 	    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
     	}
@@ -94,34 +92,21 @@ public class CodewindActionProvider extends CommonActionProvider {
 		public void run() {
 			if (manager != null) {
 				InstallStatus status = manager.getInstallStatus(false);
-				switch(status) {
-					case UNINSTALLED:
-						CodewindInstall.installCodewind(null);
-						break;
-					case STOPPED:
-						CodewindInstall.startCodewind(null);
-						break;
-					case RUNNING:
-						String version = CodewindManager.getManager().getVersion();
-						if (version == null) {
-							// An error occurred so do nothing (the error is displayed to the user)
-							break;
-						}
-						if (!CodewindManager.getManager().isSupportedVersion(version)) {
-							int result = IDEUtil.openQuestionCancelDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
-							if (result == 0 || result == 1) {
-								CodewindInstall.updateCodewind(result == 0);
-							}
-							break;
-						}
-						ViewHelper.toggleExpansion(manager);
-						break;
-					default:
-						// do nothing
-						break;
+				if (status.isStarted()) {
+					ViewHelper.toggleExpansion(manager);
+				} else if (status.isInstalled()) {
+					CodewindInstall.startCodewind(status.getVersion(), null);
+				} else if (status.hasInstalledVersions()) {
+					boolean result = IDEUtil.openConfirmDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
+					if (result) {
+						CodewindInstall.updateCodewind(InstallUtil.getVersion(), true, null);
+					}
+				} else if (status.isUnknown()) {
+					// An error occurred so do nothing (the error is displayed to the user)
+				} else {
+					CodewindInstall.installCodewind(InstallUtil.getVersion(), null);
 				}
 			}
 		}
 	}
-
 }

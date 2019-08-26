@@ -16,11 +16,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 public class CodewindManager {
 	
@@ -28,7 +26,6 @@ public class CodewindManager {
 	
 	CodewindConnection localConnection = null;
 	URI localURI = null;
-	String version = null;
 	
 	// Keep track of the install status and if the installer is currently running.
 	// If the installer is running, this is the status that should be reported, if
@@ -44,7 +41,7 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		if (getInstallStatus(true) == InstallStatus.RUNNING) {
+		if (getInstallStatus(true).isStarted()) {
 			createLocalConnection();
 			if (localConnection != null) {
 				localConnection.refreshApps(null);
@@ -68,18 +65,12 @@ public class CodewindManager {
 		}
 		String url = null;
 		try {
-			JSONObject statusObj = InstallUtil.getRawInstallStatus();
-			installStatus = InstallStatus.getStatus(statusObj.getString(InstallUtil.STATUS_KEY));
-			if (installStatus == InstallStatus.RUNNING) {
-				url = statusObj.getString(InstallUtil.URL_KEY);
-				if (!url.endsWith("/")) {
-					url = url + "/";
-				}
-				localURI = new URI(url);
+			installStatus = InstallUtil.getInstallStatus();
+			if (installStatus.isStarted()) {
+				localURI = new URI(installStatus.getURL());
 			} else {
 				removeLocalConnection();
 				localURI = null;
-				version = null;
 			}
 			return installStatus;
 		} catch (IOException e) {
@@ -109,14 +100,7 @@ public class CodewindManager {
 		}
 		return localURI;
 	}
-	
-	public String getVersion() {
-		if (version == null && getInstallStatus(false) == InstallStatus.RUNNING) {
-			version = CodewindConnection.getVersion(getLocalURI());
-		}
-		return version;
-	}
-	
+
 	public boolean isSupportedVersion(String version) {
 		return CodewindConnection.isSupportedVersion(version);
 	}
@@ -130,13 +114,10 @@ public class CodewindManager {
 			return localConnection;
 		}
 		try {
-			String version = getVersion();
-			if (version != null && isSupportedVersion(version)) {
-				CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(getLocalURI());
-				localConnection = connection;
-				CodewindConnectionManager.add(connection);
-				return connection;
-			}
+			CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(getLocalURI());
+			localConnection = connection;
+			CodewindConnectionManager.add(connection);
+			return connection;
 		} catch(Exception e) {
 			Logger.log("Attempting to connect to Codewind failed: " + e.getMessage()); //$NON-NLS-1$
 		}

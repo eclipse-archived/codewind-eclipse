@@ -21,7 +21,6 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
@@ -84,7 +83,7 @@ public abstract class BaseTest extends TestCase {
 	
     public void doSetup() throws Exception {
     	// Check that Codewind is installed
-    	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus(true) == InstallStatus.RUNNING);
+    	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus(true).isStarted());
     	
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);

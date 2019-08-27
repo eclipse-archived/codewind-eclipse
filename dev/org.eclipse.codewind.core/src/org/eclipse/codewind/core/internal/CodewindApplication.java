@@ -238,7 +238,7 @@ public class CodewindApplication {
 	}
 	
 	/**
-	 * For extension projects, the metricsAvailable may not be correct. 
+	 * For extension projects, the metricsAvailable may not be incorrectly 'true'.
 	 * So after the application is running, GET that page to make sure. If it fails, we set metricsAvailable to false.
 	 * 
 	 * Workaround for https://github.com/eclipse/codewind/issues/258
@@ -249,9 +249,9 @@ public class CodewindApplication {
 		}
 		this.hasConfirmedMetrics = true;
 
-		// Only extension projects require this extra check; 
+		// Only extension projects which report they DO support metrics require this extra check; 
 		// for normal projects the metricsAvailable is accurate.
-		if (!this.projectType.getId().toLowerCase().contains("extension")) {
+		if (!this.metricsAvailable || !this.projectType.getId().toLowerCase().contains("extension")) {
 			return;
 		}
 		

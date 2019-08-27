@@ -67,6 +67,12 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
         			Messages.OpenAppAction_CantOpenNotRunningAppMsg);
         	return;
         }
+        
+        app.confirmMetricsAvailable();
+        if (!app.getMetricsAvailable()) {
+        	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.PerfDashboardNotSupported);
+        	return;
+        }
 
         URL url = app.connection.getPerformanceMonitorURL(app);
 		if (url == null) {

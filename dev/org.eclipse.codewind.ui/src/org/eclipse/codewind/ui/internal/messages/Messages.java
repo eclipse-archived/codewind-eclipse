@@ -293,6 +293,10 @@ public class Messages extends NLS {
 	public static String StopAllDialog_Message;
 	public static String StopAllDialog_ToggleMessage;
 	
+	public static String GenericActionNotSupported;
+	public static String AppMonitorNotSupported;
+	public static String PerfDashboardNotSupported;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

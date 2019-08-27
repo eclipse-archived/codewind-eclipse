@@ -17,7 +17,7 @@ public class ProjectInfo {
 	public final ProjectLanguage language;
 	
 	public ProjectInfo(String type, String language) {
-		this.type = ProjectType.getType(type);
+		this.type = ProjectType.getType(type, null);
 		this.language = ProjectLanguage.getLanguage(language);
 	}
 

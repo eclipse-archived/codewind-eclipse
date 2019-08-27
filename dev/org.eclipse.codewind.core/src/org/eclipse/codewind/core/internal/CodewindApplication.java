@@ -251,7 +251,7 @@ public class CodewindApplication {
 
 		// Only extension projects which report they DO support metrics require this extra check; 
 		// for normal projects the metricsAvailable is accurate.
-		if (!this.metricsAvailable || !this.projectType.getId().toLowerCase().contains("extension")) {
+		if (!this.metricsAvailable || !this.projectType.isExtension()) {
 			return;
 		}
 		

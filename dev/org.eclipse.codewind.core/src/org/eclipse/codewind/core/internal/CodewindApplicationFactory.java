@@ -96,13 +96,17 @@ public class CodewindApplicationFactory {
 			// MCLogger.log("app: " + appJso.toString());
 			String name = appJso.getString(CoreConstants.KEY_NAME);
 			String id = appJso.getString(CoreConstants.KEY_PROJECT_ID);
+			JSONObject extension = null;
+			if (appJso.has(CoreConstants.KEY_EXTENSION)) {
+				extension = appJso.getJSONObject(CoreConstants.KEY_EXTENSION);
+			}
 
 			ProjectType type = ProjectType.TYPE_UNKNOWN;
 			ProjectLanguage language = ProjectLanguage.LANGUAGE_UNKNOWN;
 			try {
 				String typeStr = appJso.getString(CoreConstants.KEY_PROJECT_TYPE);
 				String languageStr = appJso.getString(CoreConstants.KEY_LANGUAGE);
-				type = ProjectType.getType(typeStr);
+				type = ProjectType.getType(typeStr, extension);
 				language = ProjectLanguage.getLanguage(languageStr);
 			} catch(JSONException e) {
 				Logger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$

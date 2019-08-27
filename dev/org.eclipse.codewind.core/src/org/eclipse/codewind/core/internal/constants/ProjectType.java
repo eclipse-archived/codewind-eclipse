@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.json.JSONObject;
 
 /**
  * Project type. For known types provides a user friendly name.
@@ -40,18 +41,36 @@ public class ProjectType {
 	
 	private final String typeId;
 	private final String displayName;
+	private final JSONObject extension;
 	
 	private ProjectType(String typeId, String displayName) {
-		this.typeId = typeId;
-		this.displayName = displayName;
+		this(typeId, displayName, null);
 	}
 	
-	public static ProjectType getType(String typeId) {
+	private ProjectType(String typeId, String displayName, JSONObject extension) {
+		this.typeId = typeId;
+		this.displayName = displayName;
+		this.extension = extension;
+	}
+	
+	public static ProjectType getType(String typeId, JSONObject extension) {
 		ProjectType type = defaultTypes.get(typeId);
 		if (type == null) {
-			type = new ProjectType(typeId, null);
+			String name = null;
+			if (extension != null) {
+				name = getExtDisplayName(typeId);
+			}
+			type = new ProjectType(typeId, name, extension);
 		}
 		return type;
+	}
+	
+	private static String getExtDisplayName(String typeId) {
+		String name = typeId.toLowerCase();
+		if (name.endsWith("extension")) {
+			name = name.substring(0, name.length() - "extension".length());
+		}
+		return name.substring(0, 1).toUpperCase() + name.substring(1);
 	}
 	
 	public String getId() {
@@ -65,6 +84,10 @@ public class ProjectType {
 		return typeId;
 	}
 	
+	public boolean isExtension() {
+		return extension != null;
+	}
+	
 	public static String getDisplayName(String typeId) {
 		if (typeId == null) {
 			return Messages.GenericUnknown;
@@ -73,7 +96,7 @@ public class ProjectType {
 		if (type != null) {
 			return type.getDisplayName();
 		}
-		return typeId;
+		return getExtDisplayName(typeId);
 	}
 	
  	public static ProjectType getTypeFromLanguage(String language) {

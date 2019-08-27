@@ -47,6 +47,8 @@ import org.json.JSONException;
 
 
 public class CodewindInstall {
+	
+	public static boolean ENABLE_STOP_APPS_OPTION = false;
 		
 	public static boolean isCodewindInstalled() throws InvocationTargetException {
 			try {
@@ -434,6 +436,9 @@ public class CodewindInstall {
 	}
 	
 	private static boolean getStopAll(IProgressMonitor monitor) {
+		if (!ENABLE_STOP_APPS_OPTION) {
+			return true;
+		}
 		IPreferenceStore prefs = CodewindCorePlugin.getDefault().getPreferenceStore();
 		if (InstallUtil.STOP_APP_CONTAINERS_PROMPT.contentEquals(prefs.getString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY))) {
 			if (!CodewindManager.getManager().hasActiveApplications()) {

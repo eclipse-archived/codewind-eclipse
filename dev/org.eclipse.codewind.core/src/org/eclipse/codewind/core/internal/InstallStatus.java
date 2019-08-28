@@ -62,30 +62,43 @@ public class InstallStatus {
 	public InstallStatus(JSONObject statusObj) {
 		try {
 			status = Status.getStatus(statusObj.getString(STATUS_KEY));
-			if (status.isInstalled()) {
-				installedVersions = statusObj.getJSONArray(INSTALLED_VERSIONS_KEY);
-				for (int i = 0; i < installedVersions.length(); i++) {
-					try {
-						if (CodewindConnection.isSupportedVersion(installedVersions.getString(i))) {
-							supportedVersion = installedVersions.getString(i);
-						}
-					} catch (NumberFormatException e) {
-						Logger.logError("The Codewind installer status contained an invalid version", e); //$NON-NLS-1$
-					}
-				}
-			}
 			if (status == Status.STARTED) {
 				startedVersions = statusObj.getJSONArray(STARTED_KEY);
+				supportedVersion = getSupportedVersion(startedVersions);
 				url = statusObj.getString(URL_KEY);
 				if (!url.endsWith("/")) {
 					url = url + "/";
 				}
 			}
+			if (status.isInstalled()) {
+				installedVersions = statusObj.getJSONArray(INSTALLED_VERSIONS_KEY);
+				if (supportedVersion == null) {
+					supportedVersion = getSupportedVersion(installedVersions);
+				}
+				if (installedVersions.length() == 0 && startedVersions != null) {
+					installedVersions = startedVersions;
+				}
+			}
+			
 		} catch (JSONException e) {
 			Logger.logError("The Codewind installer status format is not recognized", e); //$NON-NLS-1$
 			status = Status.UNKNOWN;
 			url = null;
 		}
+	}
+	
+	private String getSupportedVersion(JSONArray versions) throws JSONException {
+		String version = null;
+		for (int i = 0; i < versions.length(); i++) {
+			try {
+				if (CodewindConnection.isSupportedVersion(versions.getString(i))) {
+					version = versions.getString(i);
+				}
+			} catch (NumberFormatException e) {
+				Logger.logError("The Codewind installer status contained an invalid version", e); //$NON-NLS-1$
+			}
+		}
+		return version;
 	}
 	
 	private InstallStatus(Status status) {

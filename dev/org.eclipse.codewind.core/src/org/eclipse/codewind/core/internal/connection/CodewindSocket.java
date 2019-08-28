@@ -380,34 +380,16 @@ public class CodewindSocket {
 			return;
 		}
 
-		// This event should always have a 'ports' sub-object
-		JSONObject portsObj = event.getJSONObject(CoreConstants.KEY_PORTS);
-
-		// The ports object should always have an http port
-		if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_PORT)) {
-			int port = CoreUtil.parsePort(portsObj.getString(CoreConstants.KEY_EXPOSED_PORT));
-			app.setHttpPort(port);
-		} else {
-			Logger.logError("No http port on project restart event for: " + app.name); //$NON-NLS-1$
-		}
-
-		// Debug port will be missing if the restart was into Run mode.
-		int debugPort = -1;
-		if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {
-			debugPort = CoreUtil.parsePort(portsObj.getString(CoreConstants.KEY_EXPOSED_DEBUG_PORT));
-		}
-		app.setDebugPort(debugPort);
-		
-		StartMode startMode = StartMode.get(event);
-		app.setStartMode(startMode);
-		
 		// Update the application
+		CodewindApplicationFactory.updateApp(app, event);
+		
+		// Notify that the application is updated
 		CoreUtil.updateApplication(app);
 		
 		// Make sure no old debugger is running
 		app.clearDebugger();
 		
-		if (StartMode.DEBUG_MODES.contains(startMode) && debugPort != -1) {
+		if (StartMode.DEBUG_MODES.contains(app.getStartMode()) && app.getDebugPort() != -1) {
 			app.connectDebugger();
 		}
 	}

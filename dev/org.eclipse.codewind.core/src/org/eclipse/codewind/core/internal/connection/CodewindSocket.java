@@ -401,6 +401,11 @@ public class CodewindSocket {
 		StartMode startMode = StartMode.get(event);
 		app.setStartMode(startMode);
 		
+		if (event.has(CoreConstants.KEY_CONTAINER_ID)) {
+		    String containerId = event.getString(CoreConstants.KEY_CONTAINER_ID);
+		    app.setContainerId(containerId);
+		}
+		
 		// Update the application
 		CoreUtil.updateApplication(app);
 		

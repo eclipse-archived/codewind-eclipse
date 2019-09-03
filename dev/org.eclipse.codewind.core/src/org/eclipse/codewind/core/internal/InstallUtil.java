@@ -67,6 +67,7 @@ public class InstallUtil {
 	private static final String TAG_OPTION = "-t";
 	private static final String JSON_OPTION = "-j";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
+	private static final String CW_TAG_VAR = "CW_TAG";
 	
 	public static final String STATUS_KEY = "status";
 	public static final String URL_KEY = "url";
@@ -247,7 +248,11 @@ public class InstallUtil {
 	
 	public static String getVersion() {
 		if (installVersion == null) {
-			String value = System.getenv(INSTALL_VERSION_VAR);
+			String value = System.getenv(CW_TAG_VAR);
+			if (value == null || value.isEmpty()) {
+				// Try the old env var
+				value = System.getenv(INSTALL_VERSION_VAR);
+			}
 			if (value != null && !value.isEmpty()) {
 				installVersion = value;
 			} else {

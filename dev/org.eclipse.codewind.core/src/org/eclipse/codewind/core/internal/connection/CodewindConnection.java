@@ -185,12 +185,33 @@ public class CodewindConnection {
 		}
 
 		try {
-			float version = Float.parseFloat(versionStr);
-			float expectedVersion = Float.parseFloat(InstallUtil.DEFAULT_INSTALL_VERSION);
-			return version >= expectedVersion;
-		}
-		catch(NumberFormatException e) {
-			Logger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
+			String[] expectedDigits = InstallUtil.DEFAULT_INSTALL_VERSION.split("\\.");
+			String[] actualDigits = versionStr.split("\\.");
+			
+			for (int i = 0; i < expectedDigits.length; i++) {
+				int expectedVal = Integer.parseInt(expectedDigits[i]);
+				if (i >= actualDigits.length) {
+					// It is ok if the expected is longer than the actual
+					// as long as all of the extra digits are 0, if not
+					// then return false
+					if (expectedVal != 0) {
+						return false;
+					}
+				} else {
+					// If the value is less than expected, return false.
+					// If the value is greater than expected, return true.
+					// If they are the same, keep going.
+					int actualVal = Integer.parseInt(actualDigits[i]);
+					if (actualVal < expectedVal) {
+						return false;
+					} else if (actualVal > expectedVal) {
+						return true;
+					}
+				}
+			}
+			return true;
+		} catch(NumberFormatException e) {
+			Logger.logError("Couldn't parse version number from: " + versionStr); //$NON-NLS-1$
 			return false;
 		}
 	}

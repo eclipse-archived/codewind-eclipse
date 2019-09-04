@@ -10,7 +10,11 @@
 -->
 
 <project name="cw_build" default="generateOpenCWUpdateSite">
+<<<<<<< HEAD
     <property name="level_tag" value="0.4.0"/>
+=======
+    <property name="level_tag" value="0.3.1"/>
+>>>>>>> Issue #254: Update version to 0.3.1 and include version checking fix
     <property name="delegate.build.dir" location="${basedir}/../" />
     <property name="disable.run.executeMetatypeValidation" value="true"/>
     <property name="disable.run.unzipIfixReleaseZip" value="true"/>

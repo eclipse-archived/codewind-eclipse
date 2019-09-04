@@ -209,7 +209,7 @@ public class CodewindConnection {
 			}
 			return true;
 		} catch(NumberFormatException e) {
-			Logger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
+			Logger.logError("Couldn't parse version number from: " + versionStr); //$NON-NLS-1$
 			return false;
 		}
 	}

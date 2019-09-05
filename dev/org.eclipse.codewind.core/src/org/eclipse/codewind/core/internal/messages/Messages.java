@@ -26,6 +26,7 @@ public class Messages extends NLS {
 	public static String Connection_ErrContactingServerDialogTitle;
 	public static String Connection_ErrGettingProjectListTitle;
 	public static String Connection_ErrConnection_UpdateCacheException;
+	public static String Connection_ErrConnection_CodewindNotReady;
 
 	public static String ConnectionException_ConnectingToMCFailed;
 

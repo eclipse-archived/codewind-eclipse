@@ -23,6 +23,7 @@ public class CoreConstants {
 			VERSION_LATEST = "latest",
 
 			// Portal API endpoints
+			APIPATH_READY = "ready",
 			APIPATH_BASE = "api/v1",
 			APIPATH_PROJECT_LIST = "api/v1/projects",
 			APIPATH_ENV = "api/v1/environment",

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
@@ -27,6 +28,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
@@ -258,13 +260,13 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 	}
 
-	ProjectInfo getProjectInfo() {
+	private ProjectInfo getProjectInfo() {
 		if (connection == null || project == null) {
 			return null;
 		}
 
 		try {
-			return connection.requestProjectValidate(project.getLocation().toFile().getAbsolutePath());
+			return InstallUtil.validateProject(project.getName(), project.getLocation().toFile().getAbsolutePath(), new NullProgressMonitor());
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the project type for project: " + project.getName(), e); //$NON-NLS-1$
 		}

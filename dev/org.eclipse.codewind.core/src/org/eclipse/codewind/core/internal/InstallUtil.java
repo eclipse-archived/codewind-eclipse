@@ -28,6 +28,8 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.PlatformUtil.OperatingSystem;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
@@ -35,6 +37,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -61,11 +64,13 @@ public class InstallUtil {
 	private static final String STOP_ALL_CMD = "stop-all";
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
+	private static final String PROJECT_CMD = "project";
 	
 	public static final String DEFAULT_INSTALL_VERSION = "0.3";
 	
 	private static final String TAG_OPTION = "-t";
 	private static final String JSON_OPTION = "-j";
+	private static final String URL_OPTION = "--url";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
 	private static final String CW_TAG_VAR = "CW_TAG";
 	
@@ -155,6 +160,69 @@ public class InstallUtil {
 				process.destroy();
 			}
 			CodewindManager.getManager().setInstallerStatus(null);
+		}
+	}
+	
+	public static void createProject(String name, String path, String url, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
+		Process process = null;
+		try {
+			process = runInstaller(PROJECT_CMD, path, URL_OPTION, url);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+			if (result.getExitValue() != 0) {
+				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
+				throw new IOException(result.getErrorMsg());
+			}
+			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
+				// This should not happen
+				Logger.logError("Project create had 0 return code but the output is empty"); //$NON-NLS-1$
+				throw new IOException("The output from project create is empty."); //$NON-NLS-1$
+			}
+			JSONObject resultJson = new JSONObject(result.getOutput());
+			if (!CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
+				String msg = "Project create failed for project: " + name + " with output: " + result.getOutput(); //$NON-NLS-1$ //$NON-NLS-2$
+				Logger.logError(msg);
+				throw new IOException(msg);
+			}
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
+		}
+	}
+	
+	public static ProjectInfo validateProject(String name, String path, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.ValidateProjectTaskLabel, name), 100);
+		Process process = null;
+		try {
+			process = runInstaller(PROJECT_CMD, path);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+			if (result.getExitValue() != 0) {
+				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
+				throw new IOException(result.getErrorMsg());
+			}
+			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
+				// This should not happen
+				Logger.logError("Project validate had 0 return code but the output is empty"); //$NON-NLS-1$
+				throw new IOException("The output from project validate is empty."); //$NON-NLS-1$
+			}
+		    
+			JSONObject resultJson = new JSONObject(result.getOutput());
+			if (CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
+				if (resultJson.has(CoreConstants.KEY_RESULT)) {
+					JSONObject typeJson = resultJson.getJSONObject(CoreConstants.KEY_RESULT);
+					String language = typeJson.getString(CoreConstants.KEY_LANGUAGE);
+					String projectType = typeJson.getString(CoreConstants.KEY_PROJECT_TYPE);
+					return new ProjectInfo(projectType, language);
+				}
+			}
+			String msg = "Validation failed for project: " + name + " with output: " + result.getOutput(); //$NON-NLS-1$ //$NON-NLS-2$
+			Logger.logError(msg);
+			throw new IOException(msg);
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
 		}
 	}
 	

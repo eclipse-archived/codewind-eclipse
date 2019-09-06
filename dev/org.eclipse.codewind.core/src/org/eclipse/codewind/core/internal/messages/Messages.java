@@ -71,10 +71,14 @@ public class Messages extends NLS {
 	public static String InstallCodewindJobLabel;
 	public static String StopCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
+	public static String CreateProjectTaskLabel;
+	public static String ValidateProjectTaskLabel;
 	
 	public static String ProjectSettingsUpdateErrorTitle;
 	
 	public static String DockerTypeDisplayName;
+	
+	public static String ProcessHelperUnknownError;
 
 	static {
 		// initialize resource bundle

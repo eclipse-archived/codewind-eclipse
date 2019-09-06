@@ -16,11 +16,13 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
@@ -259,7 +261,7 @@ public abstract class BaseTest extends TestCase {
 		return null;
 	}
 	
-	protected void createProject(String id, String name) throws IOException, JSONException {
+	protected void createProject(String id, String name) throws IOException, JSONException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
 		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
 		for (ProjectTemplateInfo template : templates) {
@@ -269,7 +271,8 @@ public abstract class BaseTest extends TestCase {
 			}
 		}
 		assertNotNull("No template found that matches the id: " + id, templateInfo);
-		connection.requestProjectCreate(templateInfo, name);
+		IPath path = connection.getWorkspacePath().append(name);
+		InstallUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), new NullProgressMonitor());
 		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType());
 
 	}

@@ -600,46 +600,7 @@ public class CodewindConnection {
 		
 		return templates;
 	}
-	
-	public ProjectInfo requestProjectValidate(String path) throws JSONException, IOException {
-		String endpoint = CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_VALIDATE;
-		URI uri = baseUrl.resolve(endpoint);
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_PROJECT_PATH, CoreUtil.getContainerPath(path));
-		
-		HttpResult result = HttpUtil.post(uri, createProjectPayload);
-		checkResult(result, uri, false);
-		
-		JSONObject resultJson = new JSONObject(result.response);
-		if (CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
-			if (resultJson.has(CoreConstants.KEY_RESULT)) {
-				JSONObject typeJson = resultJson.getJSONObject(CoreConstants.KEY_RESULT);
-				String language = typeJson.getString(CoreConstants.KEY_LANGUAGE);
-				String projectType = typeJson.getString(CoreConstants.KEY_PROJECT_TYPE);
-				return new ProjectInfo(projectType, language);
-			}
-			return null;
-		}
-		throw new IOException("Validate failed for project: " + path);
-	}
-	
-	public void requestProjectCreate(ProjectTemplateInfo templateInfo, String name)
-			throws JSONException, IOException {
 
-		String endpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-		URI uri = baseUrl.resolve(endpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_PROJECT_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_PARENT_PATH, CoreUtil.getContainerPath(env.getWorkspacePath().toString()));
-		createProjectPayload.put(CoreConstants.KEY_URL, templateInfo.getUrl());
-
-		HttpResult result = HttpUtil.post(uri, createProjectPayload, 300);
-		checkResult(result, uri, false);
-		CoreUtil.updateConnection(this);
-	}
-	
 	public void requestProjectBind(String name, String path, String language, String projectType)
 			throws JSONException, IOException {
 

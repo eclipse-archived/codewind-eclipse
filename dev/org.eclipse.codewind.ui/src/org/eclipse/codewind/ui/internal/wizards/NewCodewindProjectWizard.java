@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -25,9 +26,11 @@ import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -108,22 +111,37 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			return false;
 		}
 		
-		Job job = new Job("Creating Codewind project: " + name) {
+		Job job = new Job(NLS.bind(Messages.NewProjectPage_CreateJobLabel, name)) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					newConnection.requestProjectCreate(info, name);
+					SubMonitor mon = SubMonitor.convert(monitor, 100);
+					IPath path = newConnection.getWorkspacePath().append(name);
+					InstallUtil.createProject(name, path.toOSString(), info.getUrl(), mon.split(40));
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
 					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), info.getProjectType());
 					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.worked(40);
 					newConnection.refreshApps(null);
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.worked(10);
 					CodewindApplication app = newConnection.getAppByName(name);
 					if (app != null) {
 						ImportProjectAction.importProject(app);
 					} else {
 						Logger.logError("Could not get the application for import: " + name); //$NON-NLS-1$
 					}
+					mon.worked(10);
+					mon.done();
 					ViewHelper.openCodewindExplorerView();
 					ViewHelper.refreshCodewindExplorerView(newConnection);
 					ViewHelper.expandConnection(newConnection);

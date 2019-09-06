@@ -249,6 +249,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_EclipseProjectExistsError;
 	public static String NewProjectPage_EmptyProjectName;
 	public static String NewProjectPage_InvalidProjectName;
+	public static String NewProjectPage_CreateJobLabel;
 	public static String NewProjectPage_ProjectCreateErrorTitle;
 	public static String NewProjectPage_ProjectCreateErrorMsg;
 	public static String NewProjectPage_CodewindConnectError;

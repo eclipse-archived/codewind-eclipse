@@ -66,7 +66,7 @@ public class InstallUtil {
 	private static final String REMOVE_CMD = "remove";
 	private static final String PROJECT_CMD = "project";
 	
-	public static final String DEFAULT_INSTALL_VERSION = "0.3";
+	public static final String DEFAULT_INSTALL_VERSION = "0.3.1";
 	
 	private static final String TAG_OPTION = "-t";
 	private static final String JSON_OPTION = "-j";

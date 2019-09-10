@@ -50,11 +50,21 @@ public class InstallUtil {
 	public static final String STOP_APP_CONTAINERS_DEFAULT = STOP_APP_CONTAINERS_PROMPT;
 	
 	private static final Map<OperatingSystem, String> installMap = new HashMap<OperatingSystem, String>();
+	private static final Map<OperatingSystem, String> appsodyMap = new HashMap<OperatingSystem, String>();
 
 	static {
 		installMap.put(OperatingSystem.LINUX, "resources/codewind-installer-linux");
 		installMap.put(OperatingSystem.MAC, "resources/codewind-installer-macos");
 		installMap.put(OperatingSystem.WINDOWS, "resources/codewind-installer-win.exe");
+	}
+
+	@SuppressWarnings("rawtypes")
+	private static final Map[] installerPrereqs = {appsodyMap};
+	
+	static {
+		appsodyMap.put(OperatingSystem.LINUX, "resources/appsody/linux/appsody");
+		appsodyMap.put(OperatingSystem.MAC, "resources/appsody/macos/appsody");
+		appsodyMap.put(OperatingSystem.WINDOWS, "resources/appsody/win/appsody.exe");		
 	}
 	
 	private static final String INSTALLER_DIR = "installerWorkDir";
@@ -239,8 +249,17 @@ public class InstallUtil {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Process runInstaller(String cmd, String... options) throws IOException {
 		String installerPath = getInstallerExecutable();
+		
+		
+		// Install prerequistes
+		int len = installerPrereqs.length;
+		for (int i=0; i< len; i++) {
+			copyExecutable(installerPrereqs[i]);
+		}
+		
 		List<String> cmdList = new ArrayList<String>();
 		cmdList.add(installerPath);
 		cmdList.add(cmd);
@@ -298,6 +317,55 @@ public class InstallUtil {
 			}
 			installExec = execPath;
 			return installExec;
+		} finally {
+			if (stream != null) {
+				try {
+					stream.close();
+				} catch (IOException e) {
+					// Ignore
+				}
+			}
+		}
+	}
+	
+	protected static void copyExecutable(Map<OperatingSystem, String> fileMap) throws IOException {
+		// Get the current platform and choose the correct executable path
+		OperatingSystem os = PlatformUtil.getOS(System.getProperty("os.name"));
+		String relPath = fileMap.get(os);
+		
+		if (relPath == null) {
+			String msg = "Failed to get the relative path for the file executable";
+			Logger.logError(msg);
+			throw new IOException(msg);
+		}
+		
+		// Get the file path
+		String installerDir = getInstallerDir();
+		String execName = relPath.substring(relPath.lastIndexOf('/') + 1);
+		String execPath = installerDir + File.separator + execName;
+		
+		// Check if file exists, if it does return the path and skip the copying
+		if ((new File(execPath)).exists()) {
+			return;
+		}
+		
+		// Make the installer directory
+		if (!FileUtil.makeDir(installerDir)) {
+			String msg = "Failed to make the directory for the installer utility: " + installerDir;
+			Logger.logError(msg);
+			throw new IOException(msg);
+		}
+		
+		// Copy the executable over
+		InputStream stream = null;
+		try {
+			stream = FileLocator.openStream(CodewindCorePlugin.getDefault().getBundle(), new Path(relPath), false);
+			FileUtil.copyFile(stream, execPath);
+			if (PlatformUtil.getOS() != PlatformUtil.OperatingSystem.WINDOWS) {
+				Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rwxr-xr-x");
+				File file = new File(execPath);
+				Files.setPosixFilePermissions(file.toPath(), permissions);
+			}
 		} finally {
 			if (stream != null) {
 				try {

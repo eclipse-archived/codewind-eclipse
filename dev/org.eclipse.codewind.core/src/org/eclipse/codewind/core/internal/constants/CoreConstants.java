@@ -38,6 +38,8 @@ public class CoreConstants {
 			APIPATH_TEMPLATES = "templates",
 			APIPATH_PROJECT_BIND = "bind",
 			APIPATH_PROJECT_UNBIND = "unbind",
+			APIPATH_REPOSITORIES = "templates/repositories",
+			APIPATH_BATCH_REPOSITORIES = "batch/" + APIPATH_REPOSITORIES,
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -88,6 +90,9 @@ public class CoreConstants {
 			KEY_PARENT_PATH = "parentPath",
 			KEY_URL = "url",
 			KEY_TEMPLATE_ID = "templateID",
+			KEY_OP = "op",
+			KEY_VALUE = "value",
+			VALUE_OP_ENABLE = "enable",
 
 			KEY_START_MODE = "startMode",
 			KEY_ACTION = "action",
@@ -121,7 +126,7 @@ public class CoreConstants {
 			KEY_METRICS_AVAILABLE = "metricsAvailable",
 			
 			KEY_AUTO_GENERATE = "autoGenerate",
-
+			
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",
 			
@@ -137,7 +142,9 @@ public class CoreConstants {
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
 			VIEW_OVERVIEW = "overview",
-			PERF_MONITOR = "performance/charts"
+			PERF_MONITOR = "performance/charts",
+			
+			QUERY_SHOW_ENABLED_ONLY = "showEnabledOnly"
 
 			;
 }

@@ -150,6 +150,12 @@ public class Messages extends NLS {
 	public static String SelectProjectTypePageProjectTypeLabel;
 	public static String SelectProjectTypePageLanguageLabel;
 	public static String SelectProjectTypeErrorLabel;
+	public static String SelectProjectTypeManageRepoLabel;
+	public static String SelectProjectTypeManageRepoLink;
+	public static String SelectProjectTypeManageRepoTooltip;
+	public static String SelectProjectTypeRefreshTypesTask;
+	public static String SelectProjectTypeRefreshTypesError;
+	public static String SelectProjectTypeValidateTask;
 	
 	public static String SelectProjectPageName;
 	public static String SelectProjectPageTitle;
@@ -245,6 +251,11 @@ public class Messages extends NLS {
 	public static String NewProjectPage_DescriptionNone;
 	public static String NewProjectPage_ImportLabel;
 	public static String NewProjectPage_ProjectNameLabel;
+	public static String NewProjectPage_ManageRepoLabel;
+	public static String NewProjectPage_ManageRepoLink;
+	public static String NewProjectPage_ManageRepoTooltip;
+	public static String NewProjectPage_RefreshTemplatesTask;
+	public static String NewProjectPage_RefreshTemplatesError;
 	public static String NewProjectPage_ProjectExistsError;
 	public static String NewProjectPage_EclipseProjectExistsError;
 	public static String NewProjectPage_EmptyProjectName;
@@ -297,6 +308,33 @@ public class Messages extends NLS {
 	public static String GenericActionNotSupported;
 	public static String AppMonitorNotSupported;
 	public static String PerfDashboardNotSupported;
+	
+	public static String RepoMgmtDialogTitle;
+	public static String RepoMgmtDialogMessage;
+	
+	public static String RepoMgmtDescription;
+	public static String RepoMgmtTableLabel;
+	public static String RepoMgmtAddButton;
+	public static String RepoMgmtRemoveButton;
+	public static String RepoMgmtDescriptionLabel;
+	public static String RepoMgmtStylesLabel;
+	public static String RepoMgmtUrlLabel;
+	public static String RepoMgmtUpdateError;
+	public static String RepoMgmtRemoveFailed;
+	public static String RepoMgmtUpdateFailed;
+	public static String RepoMgmtAddFailed;
+	
+	public static String AddRepoDialogTitle;
+	public static String AddRepoDialogMessage;
+	public static String AddRepoDialogDescriptionLabel;
+	public static String AddRepoDialogUrlLabel;
+	public static String AddRepoDialogNoDescription;
+	public static String AddRepoDialogNoUrl;
+	
+	public static String RepoUpdateTask;
+	public static String RepoUpdateErrorTitle;
+	public static String RepoListErrorTitle;
+	public static String RepoListErrorMsg;
 	
 	static {
 		// initialize resource bundle

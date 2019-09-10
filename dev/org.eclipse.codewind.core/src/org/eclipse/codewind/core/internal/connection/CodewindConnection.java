@@ -34,9 +34,7 @@ import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
-import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
@@ -587,9 +585,13 @@ public class CodewindConnection {
 		return capabilities;
 	}
 	
-	public List<ProjectTemplateInfo> requestProjectTemplates() throws IOException, JSONException {
+	public List<ProjectTemplateInfo> requestProjectTemplates(boolean enabledOnly) throws IOException, JSONException, URISyntaxException {
 		List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_TEMPLATES);
+		URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_TEMPLATES);
+		if (enabledOnly) {
+			String query = CoreConstants.QUERY_SHOW_ENABLED_ONLY + "=true";
+			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
+		}
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		
@@ -597,8 +599,53 @@ public class CodewindConnection {
 		for (int i = 0; i < templateArray.length(); i++) {
 			templates.add(new ProjectTemplateInfo(templateArray.getJSONObject(i)));
 		}
-		
 		return templates;
+	}
+	
+	public List<RepositoryInfo> requestRepositories() throws IOException, JSONException {
+		List<RepositoryInfo> repos = new ArrayList<RepositoryInfo>();
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
+		
+		JSONArray repoArray = new JSONArray(result.response);
+		for (int i = 0; i < repoArray.length(); i++) {
+			repos.add(new RepositoryInfo(repoArray.getJSONObject(i)));
+		}
+		return repos;
+	}
+	
+	public void requestRepoEnable(String repoUrl, boolean enable) throws IOException, JSONException {
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_BATCH_REPOSITORIES);
+		JSONArray payload = new JSONArray();
+		JSONObject obj = new JSONObject();
+		obj.put(CoreConstants.KEY_OP, CoreConstants.VALUE_OP_ENABLE);
+		obj.put(CoreConstants.KEY_URL, repoUrl);
+		obj.put(CoreConstants.KEY_VALUE, enable ? "true" : "false");
+		payload.put(obj);
+		
+		HttpResult result = HttpUtil.patch(uri, payload);
+		checkResult(result, uri, false);
+	}
+	
+	public void requestRepoAdd(String description, String url) throws IOException, JSONException {
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		JSONObject payload = new JSONObject();
+		payload.put(RepositoryInfo.DESCRIPTION_KEY, description);
+		payload.put(RepositoryInfo.URL_KEY, url);
+		payload.put(RepositoryInfo.ENABLED_KEY, true);
+		
+		HttpResult result = HttpUtil.post(uri, payload);
+		checkResult(result, uri, false);
+	}
+	
+	public void requestRepoRemove(String url) throws IOException, JSONException {
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		JSONObject payload = new JSONObject();
+		payload.put(RepositoryInfo.URL_KEY, url);
+		
+		HttpResult result = HttpUtil.delete(uri, payload);
+		checkResult(result, uri, false);
 	}
 
 	public void requestProjectBind(String name, String path, String language, String projectType)
@@ -732,64 +779,6 @@ public class CodewindConnection {
 		return baseUrl.toString();
 	}
 	
-	public void requestProjectCreate(ProjectType type, String name)
-			throws JSONException, IOException {
-		if (type == ProjectType.TYPE_LIBERTY) {
-			requestMicroprofileProjectCreate(name);
-		} else if (type == ProjectType.TYPE_SPRING) {
-			requestSpringProjectCreate(name);
-		} else if (type == ProjectType.TYPE_NODEJS) {
-			requestNodeProjectCreate(name);
-		} else {
-			Logger.log("Creation of projects with type " + type + " is not supported.");  //$NON-NLS-1$ //$NON-NLS-2$
-		}	
-	}
-
-	public void requestMicroprofileProjectCreate(String name)
-			throws JSONException, IOException {
-
-		String createEndpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-        URI url = baseUrl.resolve(createEndpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_LANGUAGE, "java");
-		createProjectPayload.put(CoreConstants.KEY_FRAMEWORK, "microprofile");
-
-		HttpUtil.post(url, createProjectPayload);
-	}
-	
-	public void requestSpringProjectCreate(String name)
-			throws JSONException, IOException {
-
-		String createEndpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-        URI url = baseUrl.resolve(createEndpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_LANGUAGE, "java");
-		createProjectPayload.put(CoreConstants.KEY_FRAMEWORK, "spring");
-
-		HttpUtil.post(url, createProjectPayload);
-	}
-	
-	public void requestNodeProjectCreate(String name)
-			throws JSONException, IOException {
-
-		String createEndpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-		URI uri = baseUrl.resolve(createEndpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_LANGUAGE, "nodejs");
-
-		HttpResult result = HttpUtil.post(uri, createProjectPayload);
-		checkResult(result, uri, false);
-	}
-
 	public void requestProjectDelete(String projectId)
 			throws JSONException, IOException {
 

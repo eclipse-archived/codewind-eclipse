@@ -9,13 +9,11 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.codewind.core.internal.console;
+package org.eclipse.codewind.core.internal.connection;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-public class ProjectTemplateInfo {
+public class ProjectTemplateInfo extends JSONObjectResult {
 	
 	public static final String LABEL_KEY = "label";
 	public static final String DESCRIPTION_KEY = "description";
@@ -23,10 +21,8 @@ public class ProjectTemplateInfo {
 	public static final String LANGUAGE_KEY = "language";
 	public static final String PROJECT_TYPE_KEY = "projectType";
 	
-	private JSONObject projectInfo;
-	
 	public ProjectTemplateInfo(JSONObject projectInfo) {
-		this.projectInfo = projectInfo;
+		super(projectInfo, "project template");
 	}
 	
 	public String getLabel() {
@@ -48,24 +44,4 @@ public class ProjectTemplateInfo {
 	public String getProjectType() {
 		return getString(PROJECT_TYPE_KEY);
 	}
-	
-	private String getString(String key) {
-		String value = null;
-		if (projectInfo.has(key)) {
-			try {
-				value = projectInfo.getString(key);
-			} catch (JSONException e) {
-				Logger.logError("An error occurred retrieving the value from the project template object for key: " + key, e);
-			}
-		} else {
-			Logger.logError("The project template object did not have the expected key: " + key);
-		}
-		return value;
-	}
-
-	@Override
-	public String toString() {
-		return projectInfo.toString();
-	}
-
 }

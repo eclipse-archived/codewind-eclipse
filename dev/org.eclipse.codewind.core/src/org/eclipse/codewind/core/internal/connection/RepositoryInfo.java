@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.core.internal.connection;
 
+import java.util.List;
+
 import org.json.JSONObject;
 
 public class RepositoryInfo extends JSONObjectResult {
@@ -19,6 +21,7 @@ public class RepositoryInfo extends JSONObjectResult {
 	public static final String DESCRIPTION_KEY = "description";
 	public static final String ENABLED_KEY = "enabled";
 	public static final String PROTECTED_KEY = "protected";
+	public static final String STYLES_KEY = "projectStyles";
 	
 	public RepositoryInfo(JSONObject repo) {
 		super(repo, "repository");
@@ -38,5 +41,9 @@ public class RepositoryInfo extends JSONObjectResult {
 	
 	public boolean isProtected() {
 		return getBoolean(PROTECTED_KEY);
+	}
+	
+	public List<String> getStyles() {
+		return getStringArray(STYLES_KEY);
 	}
 }

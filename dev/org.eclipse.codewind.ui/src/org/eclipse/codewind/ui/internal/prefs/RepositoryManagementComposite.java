@@ -69,8 +69,8 @@ public class RepositoryManagementComposite extends Composite {
 	private CheckboxTableViewer repoViewer;
 	private Button removeButton;
 	private Font boldFont;
-	private Label descLabel;
-	private Text descText;
+//	private Label descLabel;
+//	private Text descText;
 	private Label styleLabel;
 	private Text styleText;
 	private Label linkLabel;
@@ -193,13 +193,13 @@ public class RepositoryManagementComposite extends Composite {
 				boldFont.dispose();
 		});
 
-		descLabel = new Label(detailsComp, SWT.NONE);
-		descLabel.setFont(boldFont);
-		descLabel.setText(Messages.RepoMgmtDescriptionLabel);
-		descText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
-		descText.setText("");
-		GridData descData = new GridData(GridData.FILL, GridData.FILL, false, false);
-		descText.setLayoutData(descData);
+//		descLabel = new Label(detailsComp, SWT.NONE);
+//		descLabel.setFont(boldFont);
+//		descLabel.setText(Messages.RepoMgmtDescriptionLabel);
+//		descText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+//		descText.setText("");
+//		GridData descData = new GridData(GridData.FILL, GridData.FILL, false, false);
+//		descText.setLayoutData(descData);
 
 		styleLabel = new Label(detailsComp, SWT.NONE);
 		styleLabel.setFont(boldFont);
@@ -240,7 +240,7 @@ public class RepositoryManagementComposite extends Composite {
 		
 		detailsScroll.addListener(SWT.Resize, (event) -> {
 			  int width = detailsScroll.getClientArea().width;
-			  descData.widthHint = width - detailsLayout.marginWidth; // Add padding to right.
+//			  descData.widthHint = width - detailsLayout.marginWidth; // Add padding to right.
 			  styleData.widthHint = width - detailsLayout.marginWidth;
 			  linkData.widthHint = width - detailsLayout.marginWidth;
 			  Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -274,7 +274,7 @@ public class RepositoryManagementComposite extends Composite {
 
 	private void updateDetails() {
 		TableItem[] items = repoViewer.getTable().getSelection();
-		String description = "";
+//		String description = "";
 		String styles = "";
 		String url = "";
 		RepoEntry entry = null;
@@ -282,20 +282,15 @@ public class RepositoryManagementComposite extends Composite {
 		if (items.length == 1) {
 			enabled = true;
 			entry = (RepoEntry)items[0].getData();
-			description = entry.description;
-			if (description == null || description.isEmpty()) {
-				description = Messages.NewProjectPage_DescriptionNone;
-			}
-			if (description.toLowerCase().contains("codewind")) {
-				styles = styles + "codewind, ";
-			} else if (description.toLowerCase().contains("appsody")) {
-				styles = styles + "appsody, ";
-			}
-			styles = styles + "styleX, styleY, styleZ";
+//			description = entry.description;
+//			if (description == null || description.isEmpty()) {
+//				description = Messages.NewProjectPage_DescriptionNone;
+//			}
+			styles = entry.getStyles();
 			url = entry.url;
 		}
-		descLabel.setEnabled(enabled);
-		descText.setText(description);
+//		descLabel.setEnabled(enabled);
+//		descText.setText(description);
 		styleLabel.setEnabled(enabled);
 		styleText.setText(styles);
 		linkLabel.setEnabled(enabled);
@@ -458,6 +453,27 @@ public class RepositoryManagementComposite extends Composite {
 				return info.isProtected();
 			}
 			return false;
+		}
+		
+		public String getStyles() {
+			if (info != null) {
+				List<String> styles = info.getStyles();
+				if (styles == null || styles.isEmpty()) {
+					return Messages.GenericNotAvailable;
+				}
+				StringBuilder builder = new StringBuilder();
+				boolean start = true;
+				for (String style : styles) {
+					if (!start) {
+						builder.append(", ");
+					} else {
+						start = false;
+					}
+					builder.append(style);
+					return builder.toString();
+				}
+			}
+			return Messages.GenericNotAvailable;
 		}
 	}
 	

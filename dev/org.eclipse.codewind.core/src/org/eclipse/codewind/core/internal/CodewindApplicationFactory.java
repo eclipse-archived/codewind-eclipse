@@ -187,6 +187,13 @@ public class CodewindApplicationFactory {
 				}
 			}
 			
+			// Set isHttps
+			boolean isHttps = false;
+			if (appJso.has(CoreConstants.KEY_IS_HTTPS)) {
+				isHttps = appJso.getBoolean(CoreConstants.KEY_IS_HTTPS);
+			}
+			app.setIsHttps(isHttps);
+			
 			// Get the container id
 			String containerId = null;
 			if (appJso.has(CoreConstants.KEY_CONTAINER_ID)) {

@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,6 +49,11 @@ public class InstallUtil {
 	public static final String STOP_APP_CONTAINERS_NEVER = "stopAppContainersNever";
 	public static final String STOP_APP_CONTAINERS_PROMPT = "stopAppContainersPrompt";
 	public static final String STOP_APP_CONTAINERS_DEFAULT = STOP_APP_CONTAINERS_PROMPT;
+	
+	public static final int INSTALL_TIMEOUT_DEFAULT = 300;
+	public static final int UNINSTALL_TIMEOUT_DEFAULT = 60;
+	public static final int START_TIMEOUT_DEFAULT = 60;
+	public static final int STOP_TIMEOUT_DEFAULT = 300;
 	
 	private static final Map<OperatingSystem, String> installMap = new HashMap<OperatingSystem, String>();
 
@@ -101,7 +107,7 @@ public class InstallUtil {
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STARTING);
 			process = runInstaller(START_CMD, TAG_OPTION, version);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(90));
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_START_TIMEOUT), mon.split(90));
 			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
@@ -117,7 +123,7 @@ public class InstallUtil {
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
 		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT), mon);
 		    return result;
 		} finally {
 			if (process != null && process.isAlive()) {
@@ -133,7 +139,7 @@ public class InstallUtil {
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
 		    process = runInstaller(INSTALL_CMD, TAG_OPTION, version);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, 300, mon);
+		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, getPrefs().getInt(CodewindCorePlugin.CW_INSTALL_TIMEOUT), mon);
 		    return result;
 		} finally {
 			if (process != null && process.isAlive()) {
@@ -153,7 +159,7 @@ public class InstallUtil {
 			} else {
 				process = runInstaller(REMOVE_CMD);
 			}
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_UNINSTALL_TIMEOUT), mon);
 		    return result;
 		} finally {
 			if (process != null && process.isAlive()) {
@@ -328,6 +334,10 @@ public class InstallUtil {
 			}
 		}
 		return installVersion;
+	}
+	
+	private static IPreferenceStore getPrefs() {
+		return CodewindCorePlugin.getDefault().getPreferenceStore();
 	}
 
 }

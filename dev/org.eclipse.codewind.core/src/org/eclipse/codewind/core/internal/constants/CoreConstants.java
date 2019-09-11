@@ -51,6 +51,7 @@ public class CoreConstants {
 			KEY_CONTEXTROOT = "contextroot",
 			KEY_CONTEXT_ROOT = "contextRoot",
 			KEY_CONTAINER_ID = "containerId",
+			KEY_IS_HTTPS = "isHttps",
 
 			KEY_BUILD_LOG = "build-log",
 			KEY_BUILD_LOG_LAST_MODIFIED = "build-log-last-modified",

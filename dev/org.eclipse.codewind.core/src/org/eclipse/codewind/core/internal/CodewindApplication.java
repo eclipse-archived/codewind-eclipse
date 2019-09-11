@@ -59,6 +59,7 @@ public class CodewindApplication {
 	private boolean hasConfirmedMetrics = false; 		// see confirmMetricsAvailable
 	private long lastBuild = -1;
 	private long lastImageBuild = -1;
+	private boolean isHttps = false;
 	
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -100,7 +101,8 @@ public class CodewindApplication {
 			return;
 		}
 
-		baseUrl = new URL("http", host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
+		String httpStr = getIsHttps() ? "https" : "http";
+		baseUrl = new URL(httpStr, host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
 		rootUrl = baseUrl;
 		if (contextRoot != null && !contextRoot.isEmpty()) {
 			rootUrl = new URL(baseUrl, contextRoot);
@@ -399,6 +401,14 @@ public class CodewindApplication {
 	
 	public synchronized String getContainerDebugPort() {
 		return this.containerDebugPort;
+	}
+	
+	public synchronized void setIsHttps(boolean value) {
+		isHttps = value;
+	}
+	
+	public synchronized boolean getIsHttps() {
+		return isHttps;
 	}
 
 	/**

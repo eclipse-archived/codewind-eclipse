@@ -28,7 +28,7 @@ public class Messages extends NLS {
 	public static String PrefsParentPage_StopAppsNever;
 	public static String PrefsParentPage_StopAppsPrompt;
 	public static String PrefsParentPage_DebugTimeoutLabel;
-	public static String PrefsParentPage_ErrInvalidDebugTimeout;
+	public static String PrefsParentPage_ErrInvalidTimeout;
 
 	public static String NewConnectionPage_ConnectSucceeded;
 	public static String NewConnectionPage_ErrAConnectionAlreadyExists;
@@ -130,7 +130,6 @@ public class Messages extends NLS {
 	public static String CodewindStopTimeout;
 	public static String CodewindInstallTimeout;
 	public static String CodewindUninstallTimeout;
-	public static String CodewindUpdateTimeout;
 	
 	public static String UpdateCodewindDialogTitle;
 	public static String UpdateCodewindDialogMsg;

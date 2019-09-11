@@ -114,41 +114,49 @@ public class CodewindInstall {
 			Job job = new Job(Messages.InstallCodewindJobLabel) {
 			    @Override
 				protected IStatus run(IProgressMonitor progressMon) {
-
-					try {
+			    	try {
 						SubMonitor mon = SubMonitor.convert(progressMon, 100);
 						mon.setTaskName(Messages.InstallingCodewindTask);
-						ProcessResult result = InstallUtil.installCodewind(version, mon.split(95));
 						
-						if (mon.isCanceled()) {
-							removeCodewind(version);
-							return Status.CANCEL_STATUS;
+						ProcessResult result;
+						try {
+							result = InstallUtil.installCodewind(version, mon.split(95));
+							
+							if (mon.isCanceled()) {
+								removeCodewind(version);
+								return Status.CANCEL_STATUS;
+							}
+							
+							if (result.getExitValue() != 0) {
+								return getErrorStatus(result, Messages.CodewindInstallFail);
+							}
+						} catch (TimeoutException e) {
+							return getErrorStatus(Messages.CodewindInstallTimeout, e);
 						}
-						
-						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, Messages.CodewindInstallFail);
-						}
-						
+					
 						mon.setTaskName(Messages.StartingCodewindJobLabel);
-						result = InstallUtil.startCodewind(version, mon.split(5));
 						
-						if (mon.isCanceled()) {
-							removeCodewind(version);
-							return Status.CANCEL_STATUS;
+						try {
+							result = InstallUtil.startCodewind(version, mon.split(5));
+							
+							if (mon.isCanceled()) {
+								removeCodewind(version);
+								return Status.CANCEL_STATUS;
+							}
+							
+							if (result.getExitValue() != 0) {
+								return getErrorStatus(result, Messages.CodewindStartFail);
+							}
+						} catch (TimeoutException e) {
+							return getErrorStatus(Messages.CodewindStartTimeout, e);
 						}
-						
-						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, Messages.CodewindStartFail);
-						}
-						
+
 						if (prompt != null) {
 							Display.getDefault().asyncExec(prompt);
 						}
-					} catch (IOException e) {
-						return getErrorStatus(Messages.CodewindInstallError, e);
-					} catch (TimeoutException e) {
-						return getErrorStatus(Messages.CodewindInstallTimeout, e);
-					}
+			    	} catch (IOException e) {
+			    		return getErrorStatus(Messages.CodewindInstallError, e);
+			    	}
 
 					ViewHelper.refreshCodewindExplorerView(null);
 					return Status.OK_STATUS;
@@ -294,12 +302,16 @@ public class CodewindInstall {
 						InstallStatus status = InstallUtil.getInstallStatus();
 						if (status.hasStartedVersions()) {
 							mon.setTaskName(Messages.StoppingCodewindJobLabel);
-							ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
-							if (mon.isCanceled()) {
-								return Status.CANCEL_STATUS;
-							}
-							if (result.getExitValue() != 0) {
-								return getErrorStatus(result, Messages.CodewindStopFail);
+							try {
+								ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
+								if (mon.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+								if (result.getExitValue() != 0) {
+									return getErrorStatus(result, Messages.CodewindStopFail);
+								}
+							} catch (TimeoutException e) {
+								return getErrorStatus(Messages.CodewindStopTimeout, e);
 							}
 						}
 						mon.setWorkRemaining(120);
@@ -307,44 +319,54 @@ public class CodewindInstall {
 						// Remove if requested
 						if (removeOldVersion) {
 							mon.setTaskName(Messages.UninstallingCodewindTask);
-							ProcessResult result = InstallUtil.removeCodewind(null, mon.split(20));
-							if (mon.isCanceled()) {
-								return Status.CANCEL_STATUS;
-							}
-							if (result.getExitValue() != 0) {
-								return getErrorStatus(result, Messages.CodewindUninstallFail);
+							try {
+								ProcessResult result = InstallUtil.removeCodewind(null, mon.split(20));
+								if (mon.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+								if (result.getExitValue() != 0) {
+									return getErrorStatus(result, Messages.CodewindUninstallFail);
+								}
+							} catch (TimeoutException e) {
+								return getErrorStatus(Messages.CodewindUninstallTimeout, e);
 							}
 						}
 						mon.setWorkRemaining(100);
 						
 						// Install
 						mon.setTaskName(Messages.InstallingCodewindTask);
-						ProcessResult result = InstallUtil.installCodewind(version, mon.split(95));
-						if (mon.isCanceled()) {
-							removeCodewind(version);
-							return Status.CANCEL_STATUS;
-						}
-						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, Messages.CodewindInstallFail);
+						try {
+							ProcessResult result = InstallUtil.installCodewind(version, mon.split(95));
+							if (mon.isCanceled()) {
+								removeCodewind(version);
+								return Status.CANCEL_STATUS;
+							}
+							if (result.getExitValue() != 0) {
+								return getErrorStatus(result, Messages.CodewindInstallFail);
+							}
+						} catch (TimeoutException e) {
+							return getErrorStatus(Messages.CodewindInstallTimeout, e);
 						}
 						
 						// Start
 						mon.setTaskName(Messages.StartingCodewindJobLabel);
-						result = InstallUtil.startCodewind(version, mon.split(5));
-						if (mon.isCanceled()) {
-							removeCodewind(version);
-							return Status.CANCEL_STATUS;
-						}
-						if (result.getExitValue() != 0) {
-							return getErrorStatus(result, Messages.CodewindStartFail);
+						try {
+							ProcessResult result = InstallUtil.startCodewind(version, mon.split(5));
+							if (mon.isCanceled()) {
+								removeCodewind(version);
+								return Status.CANCEL_STATUS;
+							}
+							if (result.getExitValue() != 0) {
+								return getErrorStatus(result, Messages.CodewindStartFail);
+							}
+						} catch (TimeoutException e) {
+							return getErrorStatus(Messages.CodewindStartTimeout, e);
 						}
 						
 						// Display prompt
 						if (prompt != null) {
 							Display.getDefault().asyncExec(prompt);
 						}
-					} catch (TimeoutException e) {
-						return getErrorStatus(Messages.CodewindUpdateTimeout, e);
 					} catch (Exception e) {
 						return getErrorStatus(Messages.CodewindUpdateError, e);
 					}
@@ -373,14 +395,18 @@ public class CodewindInstall {
 							// Stop Codewind before uninstalling
 							// All containers must be stopped or uninstall won't work
 							mon.setTaskName(Messages.StoppingCodewindJobLabel);
-							ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
-							
-							if (mon.isCanceled()) {
-								return Status.CANCEL_STATUS;
-							}
-							
-							if (result.getExitValue() != 0) {
-								return getErrorStatus(result, Messages.CodewindStopFail);
+							try {
+								ProcessResult result = InstallUtil.stopCodewind(true, mon.split(80));
+								
+								if (mon.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+								
+								if (result.getExitValue() != 0) {
+									return getErrorStatus(result, Messages.CodewindStopFail);
+								}
+							} catch (TimeoutException e) {
+								return getErrorStatus(Messages.CodewindStopTimeout, e);
 							}
 						}
 						

@@ -11,7 +11,11 @@
 
 package org.eclipse.codewind.core.internal.connection;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.codewind.core.internal.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,6 +55,23 @@ public abstract class JSONObjectResult {
 			Logger.logError("The " + type + " object did not have the expected key: " + key);
 		}
 		return value;
+	}
+	
+	protected List<String> getStringArray(String key) {
+		List<String> list = new ArrayList<String>();
+		if (result.has(key)) {
+			try {
+				JSONArray array = result.getJSONArray(key);
+				for (int i = 0; i < array.length(); i++) {
+					list.add(array.getString(i));
+				}
+			} catch (JSONException e) {
+				Logger.logError("An error occurred retrieving the value from the " + type + " object for key: " + key, e);
+			}
+		} else {
+			Logger.logError("The " + type + " object did not have the expected key: " + key);
+		}
+		return list;
 	}
 
 	@Override

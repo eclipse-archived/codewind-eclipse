@@ -16,6 +16,8 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.codewind.ui.internal.messages.messages"; //$NON-NLS-1$
 
+	public static String GenericNotAvailable;
+	
 	public static String ConnectionPrefsPage_AddBtn;
 	public static String ConnectionPrefsPage_PageTitle;
 	public static String ConnectionPrefsPage_RemoveBtn;

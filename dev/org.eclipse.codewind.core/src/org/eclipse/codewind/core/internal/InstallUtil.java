@@ -125,6 +125,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().refreshInstallStatus();
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -141,6 +142,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().refreshInstallStatus();
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -157,6 +159,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().refreshInstallStatus();
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -177,6 +180,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
+			CodewindManager.getManager().refreshInstallStatus();
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -248,7 +252,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			process = runInstaller(STATUS_CMD, JSON_OPTION);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, new NullProgressMonitor());
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 120, new NullProgressMonitor());
 			return result;
 		} finally {
 			if (process != null && process.isAlive()) {

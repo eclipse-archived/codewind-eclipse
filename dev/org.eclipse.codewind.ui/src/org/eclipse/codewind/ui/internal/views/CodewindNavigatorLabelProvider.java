@@ -70,7 +70,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					return Messages.CodewindLabel + "[" + Messages.CodewindStoppingQualifier + "]";
 				}
 			} else {
-				InstallStatus status = manager.getInstallStatus(true);
+				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
 					return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
 				} else if (status.isInstalled()) {
@@ -154,7 +154,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					break;
 				}
 			} else {
-				InstallStatus status = manager.getInstallStatus(true);
+				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
 					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
 				} else if (status.isInstalled()) {

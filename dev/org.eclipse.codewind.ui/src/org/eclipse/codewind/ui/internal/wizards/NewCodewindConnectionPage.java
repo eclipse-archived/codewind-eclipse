@@ -224,7 +224,7 @@ public class NewCodewindConnectionPage extends WizardPage {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
+					InstallStatus status = CodewindManager.getManager().getInstallStatus();
 					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
 					if (result.getExitValue() != 0) {
 						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

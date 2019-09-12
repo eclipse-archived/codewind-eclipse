@@ -12,7 +12,6 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -43,25 +42,11 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.json.JSONException;
 
 
 public class CodewindInstall {
 	
 	public static boolean ENABLE_STOP_APPS_OPTION = false;
-		
-	public static boolean isCodewindInstalled() throws InvocationTargetException {
-			try {
-				InstallStatus status = InstallUtil.getInstallStatus();
-				return status != null && status.isInstalled();
-			} catch (IOException e) {
-				throw new InvocationTargetException(e, "An error occurred trying to determine Codewind status: " + e.getMessage()); //$NON-NLS-1$
-			} catch (TimeoutException e) {
-				throw new InvocationTargetException(e, "Codewind did not return status in the expected time: " + e.getMessage()); //$NON-NLS-1$
-			} catch (JSONException e) {
-				throw new InvocationTargetException(e, "The Codewind status format is not recognized: " + e.getMessage()); //$NON-NLS-1$
-			}
-	}
 
 	public static void codewindInstallerDialog() {
 		codewindInstallerDialog(getNewProjectPrompt());
@@ -72,7 +57,7 @@ public class CodewindInstall {
 	}
 	
 	private static void codewindInstallerDialog(Runnable prompt) {
-		InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
+		InstallStatus status = CodewindManager.getManager().getInstallStatus();
 		Shell shell = Display.getDefault().getActiveShell();
 		if (status.hasInstalledVersions()) {
 			if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle, Messages.UpgradeCodewindDialogMessage)) {
@@ -299,7 +284,7 @@ public class CodewindInstall {
 					SubMonitor mon = SubMonitor.convert(progressMon, 200);
 					try {
 						// Stop if necessary
-						InstallStatus status = InstallUtil.getInstallStatus();
+						InstallStatus status = CodewindManager.getManager().getInstallStatus();
 						if (status.hasStartedVersions()) {
 							mon.setTaskName(Messages.StoppingCodewindJobLabel);
 							try {
@@ -390,7 +375,7 @@ public class CodewindInstall {
 				protected IStatus run(IProgressMonitor progressMon) {
 			    	SubMonitor mon = SubMonitor.convert(progressMon, 100);
 					try {
-						InstallStatus status = InstallUtil.getInstallStatus();
+						InstallStatus status = CodewindManager.getManager().getInstallStatus();
 						if (status.isStarted()) {
 							// Stop Codewind before uninstalling
 							// All containers must be stopped or uninstall won't work
@@ -460,7 +445,7 @@ public class CodewindInstall {
 		ViewHelper.refreshCodewindExplorerView(null);
 		return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, msg, t);
 	}
-	
+
 	private static boolean getStopAll(IProgressMonitor monitor) {
 		if (!ENABLE_STOP_APPS_OPTION) {
 			return true;

@@ -99,7 +99,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		CodewindApplication application = null;
 		if (input instanceof ApplicationOverviewEditorInput &&
-				CodewindManager.getManager().getInstallStatus(false).isStarted()) {
+				CodewindManager.getManager().getInstallStatus().isStarted()) {
 			ApplicationOverviewEditorInput appInput = (ApplicationOverviewEditorInput)input;
 			if (appInput.connectionUri != null && appInput.projectID != null) {
 				connection = CodewindConnectionManager.getActiveConnection(appInput.connectionUri);

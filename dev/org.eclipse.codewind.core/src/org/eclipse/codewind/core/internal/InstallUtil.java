@@ -186,7 +186,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			process = runInstaller(PROJECT_CMD, path, URL_OPTION, url);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
 				throw new IOException(result.getErrorMsg());
@@ -214,7 +214,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			process = runInstaller(PROJECT_CMD, path);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
 				throw new IOException(result.getErrorMsg());

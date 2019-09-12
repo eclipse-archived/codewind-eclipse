@@ -512,7 +512,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		if (connection != null && connection.isConnected()) {
 			return;
 		}
-		InstallStatus status = manager.getInstallStatus(true);
+		InstallStatus status = manager.getInstallStatus();
 		if (status.isStarted()) {
 			connection = manager.createLocalConnection();
 			return;

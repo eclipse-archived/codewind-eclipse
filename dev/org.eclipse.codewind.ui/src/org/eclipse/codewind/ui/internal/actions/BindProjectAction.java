@@ -71,15 +71,11 @@ public class BindProjectAction implements IObjectActionDelegate {
 			return;
 		}
 		
-		try {
-			if (CodewindInstall.isCodewindInstalled()) {
-				connection = setupConnection();
-			} else {
-				CodewindInstall.codewindInstallerDialog(project);
-				return;
-			}
-		} catch (InvocationTargetException e) {
-			Logger.logError("Error trying to set up Codewind to add existing project: " + project.getName(), e);
+		if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
+			connection = setupConnection();
+		} else {
+			CodewindInstall.codewindInstallerDialog(project);
+			return;
 		}
 
 		if (connection == null || !connection.isConnected()) {
@@ -163,7 +159,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 		if (connection != null && connection.isConnected()) {
 			return connection;
 		}
-		InstallStatus status = manager.getInstallStatus(true);
+		InstallStatus status = manager.getInstallStatus();
 		if (status.isStarted()) {
 			return manager.createLocalConnection();
 		}

@@ -86,7 +86,7 @@ public abstract class BaseTest extends TestCase {
 	
     public void doSetup() throws Exception {
     	// Check that Codewind is installed
-    	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus(true).isStarted());
+    	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus().isStarted());
     	
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);

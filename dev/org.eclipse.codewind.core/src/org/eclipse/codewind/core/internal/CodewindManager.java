@@ -30,7 +30,7 @@ public class CodewindManager {
 	// Keep track of the install status and if the installer is currently running.
 	// If the installer is running, this is the status that should be reported, if
 	// not the install status should be reported (installerStatus will be null).
-	InstallStatus installStatus = null;
+	InstallStatus installStatus = InstallStatus.UNKNOWN;
 	InstallerStatus installerStatus = null;
 	
 	public enum InstallerStatus {
@@ -41,7 +41,8 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		if (getInstallStatus(true).isStarted()) {
+		refreshInstallStatus();
+		if (getInstallStatus().isStarted()) {
 			createLocalConnection();
 			if (localConnection != null) {
 				localConnection.refreshApps(null);
@@ -59,20 +60,22 @@ public class CodewindManager {
 	/**
 	 * Get the current install status for Codewind
 	 */
-	public InstallStatus getInstallStatus(boolean update) {
-		if (installStatus != null && !update) {
-			return installStatus;
-		}
+	public InstallStatus getInstallStatus() {
+		return installStatus;
+	}
+	
+	public synchronized void refreshInstallStatus() {
 		String url = null;
 		try {
 			installStatus = InstallUtil.getInstallStatus();
 			if (installStatus.isStarted()) {
-				localURI = new URI(installStatus.getURL());
+				url = installStatus.getURL();
+				localURI = new URI(url);
 			} else {
 				removeLocalConnection();
 				localURI = null;
 			}
-			return installStatus;
+			return;
 		} catch (IOException e) {
 			Logger.logError("An error occurred trying to get the installer status", e); //$NON-NLS-1$
 		} catch (TimeoutException e) {
@@ -82,7 +85,7 @@ public class CodewindManager {
 		} catch (URISyntaxException e) {
 			Logger.logError("The Codewind installer status command returned an invalid url: " + url, e);
 		}
-		return InstallStatus.UNKNOWN;
+		installStatus = InstallStatus.UNKNOWN;
 	}
 	
 	public InstallerStatus getInstallerStatus() {
@@ -95,9 +98,6 @@ public class CodewindManager {
 	}
 	
 	public URI getLocalURI() {
-		if (localURI == null) {
-			getInstallStatus(true);
-		}
 		return localURI;
 	}
 
@@ -133,6 +133,7 @@ public class CodewindManager {
 	}
 	
 	public void refresh() {
+		refreshInstallStatus();
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
 			conn.refreshApps(null);
 		}

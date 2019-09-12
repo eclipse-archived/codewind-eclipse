@@ -54,7 +54,7 @@ public class CodewindActionProvider extends CommonActionProvider {
     		return;
     	}
     	selProvider.setSelection(selProvider.getSelection());
-    	InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
+    	InstallStatus status = CodewindManager.getManager().getInstallStatus();
     	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
     	if (status.isStarted()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
@@ -93,7 +93,7 @@ public class CodewindActionProvider extends CommonActionProvider {
 		@Override
 		public void run() {
 			if (manager != null) {
-				InstallStatus status = manager.getInstallStatus(false);
+				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
 					ViewHelper.toggleExpansion(manager);
 				} else if (status.isInstalled()) {

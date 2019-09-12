@@ -51,7 +51,7 @@ public class InstallerAction extends SelectionProviderAction {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindManager) {
-				InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
+				InstallStatus status = CodewindManager.getManager().getInstallStatus();
 				if (actionType == ActionType.INSTALL_UNINSTALL) {
 					if (status.isInstalled()) {
 						setText(actionType.disableLabel);
@@ -90,7 +90,7 @@ public class InstallerAction extends SelectionProviderAction {
 
 	@Override
 	public void run() {
-		InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
+		InstallStatus status = CodewindManager.getManager().getInstallStatus();
 		if (actionType == ActionType.INSTALL_UNINSTALL) {
 			if (Messages.InstallerActionUpdateLabel.equals(getText())) {
 				boolean result = IDEUtil.openConfirmDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);

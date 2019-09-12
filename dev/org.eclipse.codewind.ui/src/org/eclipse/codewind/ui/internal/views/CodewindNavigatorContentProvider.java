@@ -60,7 +60,7 @@ public class CodewindNavigatorContentProvider implements ITreeContentProvider {
 	public boolean hasChildren(Object obj) {
 		if (obj instanceof CodewindManager) {
 			CodewindManager manager = (CodewindManager) obj;
-			if (manager.getInstallStatus(true).isStarted()) {
+			if (manager.getInstallStatus().isStarted()) {
 				// Make sure the local connection is there if Codewind is running
 				if (manager.getLocalConnection() == null) {
 					manager.createLocalConnection();

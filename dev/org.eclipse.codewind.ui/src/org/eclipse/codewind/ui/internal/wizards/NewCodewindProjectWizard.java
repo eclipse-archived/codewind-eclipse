@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
@@ -63,26 +62,21 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		try {
-			if (CodewindInstall.isCodewindInstalled()) {
-				setWindowTitle(Messages.NewProjectPage_ShellTitle);
-				newProjectPage = new NewCodewindProjectPage(connection, templateList);
-				addPage(newProjectPage);
-			} else if (CodewindManager.getManager().getInstallerStatus() != null) {
-				// The installer is currently running
-				CodewindInstall.installerActiveDialog(CodewindManager.getManager().getInstallerStatus());
-				if (getContainer() != null) {
-					getContainer().getShell().close();
-				}
-			} else {
-				CodewindInstall.codewindInstallerDialog();
-				if (getContainer() != null) {
-					getContainer().getShell().close();
-				}
+		if (CodewindManager.getManager().getInstallerStatus() != null) {
+			// The installer is currently running
+			CodewindInstall.installerActiveDialog(CodewindManager.getManager().getInstallerStatus());
+			if (getContainer() != null) {
+				getContainer().getShell().close();
 			}
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} else if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
+			setWindowTitle(Messages.NewProjectPage_ShellTitle);
+			newProjectPage = new NewCodewindProjectPage(connection, templateList);
+			addPage(newProjectPage);
+		} else {
+			CodewindInstall.codewindInstallerDialog();
+			if (getContainer() != null) {
+				getContainer().getShell().close();
+			}
 		}
 	}
 

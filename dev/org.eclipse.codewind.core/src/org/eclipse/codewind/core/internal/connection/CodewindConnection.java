@@ -80,6 +80,13 @@ public class CodewindConnection {
 			onInitFail(NLS.bind(Messages.Connection_ErrConnection_AlreadyExists, baseUrl));
 		}
 		
+		if (!waitForReady()) {
+			Logger.logError("Timed out waiting for Codewind to go into ready state.");
+			isConnected = false;
+			connectionErrorMsg = Messages.Connection_ErrConnection_CodewindNotReady;
+			return;
+		}
+		
 		env = new ConnectionEnv(getEnvData(this.baseUrl));
 		Logger.log("Codewind version is: " + env.getVersion());			// $NON-NLS-1$
 
@@ -209,7 +216,7 @@ public class CodewindConnection {
 			}
 			return true;
 		} catch(NumberFormatException e) {
-			Logger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
+			Logger.logError("Couldn't parse version number from: " + versionStr); //$NON-NLS-1$
 			return false;
 		}
 	}
@@ -327,6 +334,34 @@ public class CodewindConnection {
 		}
 		Logger.log("No application found for name " + name); //$NON-NLS-1$
 		return null;
+	}
+	
+	public boolean waitForReady() throws IOException {
+		IOException exception = null;
+		for (int i = 0; i < 10; i++) {
+			try {
+				if (requestCodewindReady()) {
+					return true;
+				}
+				Thread.sleep(1000);
+			} catch (IOException e) {
+				exception = e;
+			} catch (InterruptedException e) {
+				// Ignore
+			}
+		}
+		if (exception != null) {
+			throw exception;
+		}
+		return false;
+	}
+	
+	public boolean requestCodewindReady() throws IOException {
+		String endpoint = CoreConstants.APIPATH_READY;
+		URI uri = baseUrl.resolve(endpoint);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
+		return "true".equals(result.response);
 	}
 
 	public void requestProjectRestart(CodewindApplication app, String launchMode)

@@ -135,7 +135,9 @@ public class CodewindManager {
 	public void refresh() {
 		refreshInstallStatus();
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
-			conn.refreshApps(null);
+			if (conn.isConnected()) {
+				conn.refreshApps(null);
+			}
 		}
 	}
 	

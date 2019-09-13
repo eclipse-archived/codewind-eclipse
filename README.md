@@ -60,6 +60,7 @@ build/dev/ant_build/artifacts/codewind-[Version].vYYYYMMDD_hhmm.zip
  ```
  git clone https://github.com/eclipse/codewind-eclipse
  ```
+- The extension bundles dependency executables. These are gitignored, but should be kept up-to-date on your local system with the same versions used in the `Jenkinsfile` `parameters` section. Run `dev/org.eclipse.codewind.core/binaries/pull.sh` to download the dependencies. Also see `dev/org.eclipse.codewind.core/binaries/README.txt`.
 - Open the **Git Repositories** view in Eclipse and click on the **Add an existing local Git Repository to this view** toolbar button.
 - Fill in the location of your repository clone and finish the wizard.
 - Right click on the repository you just created, select **Import Projects** and import all of the `org.eclipse.codewind.*` projects.

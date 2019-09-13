@@ -6,7 +6,7 @@
 Create and develop cloud-native, containerized web applications from Eclipse.
 
 ## Installing Codewind for Eclipse
-You can install Codewind locally in Eclipse. For more information about installing Codewind, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdt-eclipse-installinfo.html).
+You can install Codewind locally in Eclipse. For more information about installing Codewind, see [Getting started: Codewind for Eclipse](https://www.eclipse.org/codewind/mdteclipsegettingstarted.html).
 
 Prerequisites
 - Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Codewind for Eclipse is 4.11.0 (2019-03).
@@ -15,8 +15,8 @@ Prerequisites
 
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
-2. Open the **Codewind Explorer** view.
-3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB.
+2. Open the **Codewind Explorer** view. Go to **Window**>**Show View**>**Other…**>**Codewind**>**Codewind Explorer**.
+3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdteclipseinstallinfo.html).
 
 ## Using Codewind for Eclipse
 Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.

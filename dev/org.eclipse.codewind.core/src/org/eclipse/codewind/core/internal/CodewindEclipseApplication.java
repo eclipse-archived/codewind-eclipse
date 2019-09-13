@@ -326,5 +326,34 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			job.schedule();
     	}
 	}
+
+	@Override
+	public void onProjectDelete() {
+		if (getDeleteContents()) {
+			Job job = new Job(NLS.bind(Messages.DeleteProjectJobLabel, name)) {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					try {
+						IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+						if (project != null && project.exists() && project.getLocation().toFile().equals(fullLocalPath.toFile())) {
+							project.delete(true, true, monitor);
+						} else if (fullLocalPath.toFile().exists()) {
+							FileUtil.deleteDirectory(fullLocalPath.toOSString(), true);
+						} else {
+							Logger.log("No project contents were found to delete for application: " + name);
+						}
+					} catch (Exception e) {
+						Logger.logError("Error deleting project contents: " + name, e); //$NON-NLS-1$
+						return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.DeleteProjectError, name), e);
+					}
+					if (monitor.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					return Status.OK_STATUS;
+				}
+			};
+			job.schedule();
+		}
+	}
     
 }

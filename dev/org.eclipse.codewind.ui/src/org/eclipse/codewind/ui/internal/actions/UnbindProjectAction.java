@@ -15,12 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -109,18 +106,14 @@ public class UnbindProjectAction extends SelectionProviderAction {
 				protected IStatus run(IProgressMonitor monitor) {
 					for (CodewindEclipseApplication app : apps) {
 						try {
+							app.setDeleteContents(deleteContent);
 							app.connection.requestProjectUnbind(app.projectID);
-							if (deleteContent) {
-								IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
-								if (project != null && project.exists() && project.getLocation().toFile().equals(app.fullLocalPath.toFile())) {
-									project.delete(true, true, monitor);
-								} else if (app.fullLocalPath.toFile().exists()) {
-									FileUtil.deleteDirectory(app.fullLocalPath.toOSString(), true);
-								}
-							}
 						} catch (Exception e) {
 							Logger.logError("Error requesting application remove: " + app.name, e); //$NON-NLS-1$
 							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.UnbindActionError, app.name), e);
+						}
+						if (monitor.isCanceled()) {
+							return Status.CANCEL_STATUS;
 						}
 					}
 					return Status.OK_STATUS;

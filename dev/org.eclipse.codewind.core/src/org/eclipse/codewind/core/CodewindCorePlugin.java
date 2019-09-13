@@ -41,6 +41,8 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	public static final String CW_START_TIMEOUT = "cwStartTimeout";
 	public static final String CW_STOP_TIMEOUT = "cwStopTimeout";
 	public static final String CW_UNINSTALL_TIMEOUT = "cwUninstallTimeout";
+	
+	public static final String AUTO_OPEN_OVERVIEW_PAGE = "autoOpenOverviewPage";
 
 	public static final String
 			// Int option for debug timeout in seconds
@@ -80,6 +82,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 		getPreferenceStore().setDefault(CW_UNINSTALL_TIMEOUT, InstallUtil.UNINSTALL_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(CW_START_TIMEOUT, InstallUtil.START_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(CW_STOP_TIMEOUT, InstallUtil.STOP_TIMEOUT_DEFAULT);
+		getPreferenceStore().setDefault(AUTO_OPEN_OVERVIEW_PAGE, true);
 	}
 
 	/*

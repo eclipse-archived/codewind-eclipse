@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.util.List;
 
+import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallUtil;
@@ -23,6 +24,7 @@ import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
+import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.runtime.IPath;
@@ -34,6 +36,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -131,6 +134,9 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					CodewindApplication app = newConnection.getAppByName(name);
 					if (app != null) {
 						ImportProjectAction.importProject(app);
+						if (CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE)) {
+							Display.getDefault().asyncExec(() -> OpenAppOverviewAction.openAppOverview(app));
+						}
 					} else {
 						Logger.logError("Could not get the application for import: " + name); //$NON-NLS-1$
 					}

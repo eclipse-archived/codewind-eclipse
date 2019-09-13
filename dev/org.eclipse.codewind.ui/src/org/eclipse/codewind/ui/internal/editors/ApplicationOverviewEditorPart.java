@@ -23,6 +23,7 @@ import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.CodewindPrefsParentPage;
 import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
@@ -35,9 +36,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -56,8 +57,11 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.forms.ManagedForm;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
+import org.eclipse.ui.forms.events.HyperlinkEvent;
+import org.eclipse.ui.forms.events.IHyperlinkListener;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Hyperlink;
@@ -122,19 +126,22 @@ public class ApplicationOverviewEditorPart extends EditorPart {
         
         setPartName(NLS.bind(Messages.AppOverviewEditorPartName, appName));
         
-        CodewindUIPlugin.getUpdateHandler().addAppUpdateListener(projectID, new AppUpdateListener() {
+        CodewindUIPlugin.getUpdateHandler().addAppUpdateListener(connection, projectID, new AppUpdateListener() {
 			@Override
-			public void update(CodewindApplication app) {
-				Display.getDefault().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						ApplicationOverviewEditorPart.this.update(app);
-					}
-				});
+			public void update() {
+				CodewindApplication app = getApp();
+				if (app != null) {
+					Display.getDefault().asyncExec(new Runnable() {
+						@Override
+						public void run() {
+							ApplicationOverviewEditorPart.this.update(app);
+						}
+					});
+				}
 			}
 
 			@Override
-			public void remove(CodewindApplication app) {
+			public void remove() {
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run() {
@@ -147,7 +154,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 
 	@Override
 	public void dispose() {
-		CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(projectID);
+		CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(connection, projectID);
 		super.dispose();
 	}
 
@@ -207,9 +214,40 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		
 		buildSection = new BuildSection(rightColumnComp, toolkit);
 		
+		addSpacer(columnComp, toolkit, 2, 1);
+		
+		toolkit.createLabel(columnComp, "", SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));;
+		
+		addSpacer(columnComp, toolkit, 2, 1);
+		
+		Hyperlink preferencesLink = toolkit.createHyperlink(columnComp, "Control opening of overview page on project create and add", SWT.WRAP);
+		preferencesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 1, 1));
+		
+		preferencesLink.addHyperlinkListener(new IHyperlinkListener() {
+			@Override
+			public void linkActivated(HyperlinkEvent arg0) {
+				PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(parent.getShell(), CodewindPrefsParentPage.ID, null, null);
+				if (dialog != null) {
+					dialog.open();
+				} else {
+					Logger.logError("Could not create the preference dialog for: " + CodewindPrefsParentPage.ID);
+				}
+			}
+			
+			@Override
+			public void linkEntered(HyperlinkEvent arg0) {
+				// Empty
+			}
+			
+			@Override
+			public void linkExited(HyperlinkEvent arg0) {
+				// Empty
+			}
+		});
+
 		Button refreshButton = new Button(columnComp, SWT.PUSH);
 		refreshButton.setText(Messages.AppOverviewEditorRefreshButton);
-		refreshButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false, 2, 1));
+		refreshButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false, 1, 1));
 
 		refreshButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -514,6 +552,10 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private void addSpacer(Composite composite) {
 		new Label(composite, SWT.NONE);
+	}
+	
+	private void addSpacer(Composite composite, FormToolkit toolkit, int horizontalSpan, int verticalSpan) {
+		toolkit.createLabel(composite, "").setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, horizontalSpan, verticalSpan));
 	}
 
 	private class StringEntry {

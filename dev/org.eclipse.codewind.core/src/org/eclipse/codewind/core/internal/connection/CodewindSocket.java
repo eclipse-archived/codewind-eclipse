@@ -18,10 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
@@ -431,6 +431,12 @@ public class CodewindSocket {
 
 	private void onProjectDeletion(JSONObject event) throws JSONException {
 		String projectID = event.getString(CoreConstants.KEY_PROJECT_ID);
+		CodewindApplication app = connection.getAppByID(projectID);
+		if (app == null) {
+			Logger.logError("No application found for project being deleted: " + projectID);
+			return;
+		}
+		app.onProjectDelete();
 		connection.removeApp(projectID);
 	}
 

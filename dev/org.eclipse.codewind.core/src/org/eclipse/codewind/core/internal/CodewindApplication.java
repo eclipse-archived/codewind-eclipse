@@ -60,6 +60,7 @@ public class CodewindApplication {
 	private long lastBuild = -1;
 	private long lastImageBuild = -1;
 	private boolean isHttps = false;
+	private boolean deleteContents = false;
 	
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -410,6 +411,14 @@ public class CodewindApplication {
 	public synchronized boolean getIsHttps() {
 		return isHttps;
 	}
+	
+	public synchronized void setDeleteContents(boolean value) {
+		deleteContents = value;
+	}
+	
+	public synchronized boolean getDeleteContents() {
+		return deleteContents;
+	}
 
 	/**
 	 * Get the capabilities of a project.  Cache them because they should not change
@@ -456,6 +465,10 @@ public class CodewindApplication {
 	}
 	
 	public void validationWarning(String filePath, String message, String quickFixId, String quickFixDescription) {
+		// Override as needed
+	}
+	
+	public void onProjectDelete() {
 		// Override as needed
 	}
 	

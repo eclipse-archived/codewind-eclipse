@@ -47,11 +47,11 @@ public enum ProjectLanguage {
 	public String getMetricsRoot() {
 		switch(this) {
 			case LANGUAGE_NODEJS:
-				return "appmetrics-dash/";
+				return "appmetrics-dash/?theme=dark";
 			case LANGUAGE_SWIFT:
-				return "swiftmetrics-dash/";
+				return "swiftmetrics-dash/?theme=dark";
 			case LANGUAGE_JAVA:
-				return "javametrics-dash/";
+				return "javametrics-dash/?theme=dark";
 			default:
 				return null;
 		}

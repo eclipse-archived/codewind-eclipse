@@ -24,7 +24,7 @@ pipeline {
                 dir("dev/org.eclipse.codewind.core/binaries") {
                     sh """#!/usr/bin/env bash
                         export CW_CLI_BRANCH=${params.CW_CLI_BRANCH} APPSODY_VERSION=${params.APPSODY_VERSION}
-                        ./pull.sh
+                        ./meta-pull.sh
                     """
                 }
             }

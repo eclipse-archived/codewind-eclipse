@@ -12,7 +12,7 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
@@ -51,12 +51,12 @@ public abstract class BaseDebugTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), currentText, newText);
+    	refreshProject();
     	currentText = newText;
-    	buildIfWindows();
     	CodewindApplication app = connection.getAppByName(projectName);
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
-    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	pingApp(currentText);
     	checkMode(StartMode.DEBUG);
     	checkConsoles();
@@ -67,11 +67,11 @@ public abstract class BaseDebugTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(dockerfile);
     	TestUtil.prependToFile(path.toOSString(), "# no comment\n");
-    	buildIfWindows();
+    	refreshProject();
     	CodewindApplication app = connection.getAppByName(projectName);
-    	assertTrue("App should be in stopped state", CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1));
-    	assertTrue("App should be in starting state", CodewindUtil.waitForAppState(app, AppState.STARTING, 600, 1));
-    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 300, 1));
+    	assertTrue("App should be in stopped state", CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1));
+    	assertTrue("App should be in starting state", CodewindUtil.waitForAppState(app, AppStatus.STARTING, 600, 1));
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));
     	pingApp(currentText);
     	checkMode(StartMode.DEBUG);
     	checkConsoles();

@@ -41,22 +41,23 @@ import org.json.JSONObject;
  * touch a bunch of source files at once. This means, in order to avoid
  * performing extra builds, we should batch together changes that occur within
  * close temporal proximity.
- * 
+ *
  * However, we don't want to wait TOO long for new events, otherwise this
  * introduces latency between when the user makes a change, and when their build
  * actually starts.
- * 
+ *
  * This class implements an algorithm that groups together changes that occur
  * within TIME_TO_WAIT_FOR_NO_NEW_EVENTS_IN_MSECS milliseconds of each other.
- * 
+ *
  * The algorithm is: After at least one event is received, wait for there to be
- * be no more events in the stream of events (within eg 200 msecs) before
- * sending them to the server. Batch together events seen since within a given
- * timeframe (initially 200msec).
- * 
+ * be no more events in the stream of events (within eg 1000 msecs) before
+ * sending them to the server. If an event is seen within 1000 msecs, the timer
+ * is reset and a new 1000 msec timer begins. Batch together events seen since
+ * within a given timeframe, and send them as a single request.
+ *
  * This class receives file change events from the watch service, and forwards
  * batched groups of events to the HTTP POST output queue.
- * 
+ *
  */
 public class FileChangeEventBatchUtil {
 
@@ -275,8 +276,8 @@ public class FileChangeEventBatchUtil {
 			log.logInfo(
 					"Batch change summary for " + projectId + "@ " + mostRecentEntryTimestamp + ": " + changeSummary);
 
-			// Split the entries into requests, ensure that each request is no larger
-			// then a given size.
+			// Split the entries into separate requests (chunks), to ensure that each
+			// request is no larger then a given size.
 			List<JSONArray> fileListsToSend = new ArrayList<>();
 			while (entries.size() > 0) {
 
@@ -328,7 +329,8 @@ public class FileChangeEventBatchUtil {
 
 	/**
 	 * Simple representation of a single change: the file/dir path that changed,
-	 * what type of change, and when.
+	 * what type of change, and when. These are then consumed by the batch
+	 * processing utility.
 	 */
 	public static class ChangedFileEntry implements Comparable<ChangedFileEntry> {
 

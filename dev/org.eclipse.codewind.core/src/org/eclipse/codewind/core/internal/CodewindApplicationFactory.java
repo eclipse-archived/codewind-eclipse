@@ -96,13 +96,17 @@ public class CodewindApplicationFactory {
 			// MCLogger.log("app: " + appJso.toString());
 			String name = appJso.getString(CoreConstants.KEY_NAME);
 			String id = appJso.getString(CoreConstants.KEY_PROJECT_ID);
+			JSONObject extension = null;
+			if (appJso.has(CoreConstants.KEY_EXTENSION)) {
+				extension = appJso.getJSONObject(CoreConstants.KEY_EXTENSION);
+			}
 
 			ProjectType type = ProjectType.TYPE_UNKNOWN;
 			ProjectLanguage language = ProjectLanguage.LANGUAGE_UNKNOWN;
 			try {
 				String typeStr = appJso.getString(CoreConstants.KEY_PROJECT_TYPE);
 				String languageStr = appJso.getString(CoreConstants.KEY_LANGUAGE);
-				type = ProjectType.getType(typeStr);
+				type = ProjectType.getType(typeStr, extension);
 				language = ProjectLanguage.getLanguage(languageStr);
 			} catch(JSONException e) {
 				Logger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
@@ -152,9 +156,11 @@ public class CodewindApplicationFactory {
 			// Set the app status
 			if (appJso.has(CoreConstants.KEY_APP_STATUS)) {
 				String appStatus = appJso.getString(CoreConstants.KEY_APP_STATUS);
-				if (appStatus != null) {
-					app.setAppStatus(appStatus);
+				String detail = null;
+				if (appJso.has(CoreConstants.KEY_DETAILED_APP_STATUS)) {
+					detail = appJso.getString(CoreConstants.KEY_DETAILED_APP_STATUS);
 				}
+				app.setAppStatus(appStatus, detail);
 			}
 			
 			// Set the build status
@@ -180,6 +186,13 @@ public class CodewindApplicationFactory {
 					Logger.logError("Error parsing the app image last build value: " + timestamp, e);
 				}
 			}
+			
+			// Set isHttps
+			boolean isHttps = false;
+			if (appJso.has(CoreConstants.KEY_IS_HTTPS)) {
+				isHttps = appJso.getBoolean(CoreConstants.KEY_IS_HTTPS);
+			}
+			app.setIsHttps(isHttps);
 			
 			// Get the container id
 			String containerId = null;
@@ -230,13 +243,10 @@ public class CodewindApplicationFactory {
 			
 			// Set the context root
 			String contextRoot = null;
-			if (appJso.has(CoreConstants.KEY_CONTEXTROOT)) {
+			if (appJso.has(CoreConstants.KEY_CONTEXT_ROOT)) {
+				contextRoot = appJso.getString(CoreConstants.KEY_CONTEXT_ROOT);
+			} else if (appJso.has(CoreConstants.KEY_CONTEXTROOT)) {
 				contextRoot = appJso.getString(CoreConstants.KEY_CONTEXTROOT);
-			} else if (appJso.has(CoreConstants.KEY_CUSTOM)) {
-				JSONObject custom = appJso.getJSONObject(CoreConstants.KEY_CUSTOM);
-				if (custom.has(CoreConstants.KEY_CONTEXTROOT)) {
-					contextRoot = custom.getString(CoreConstants.KEY_CONTEXTROOT);
-				}
 			}
 			app.setContextRoot(contextRoot);
 			

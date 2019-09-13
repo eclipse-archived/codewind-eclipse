@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils.ExponentialBackoffUtil;
 import org.eclipse.codewind.filewatchers.core.IPlatformWatchService.IPlatformWatchListener;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch.ProjectToWatchFromWebSocket;
+import org.eclipse.codewind.filewatchers.core.internal.DebugTimer;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil.ChangedFileEntry;
 import org.eclipse.codewind.filewatchers.core.internal.HttpGetStatusThread;
@@ -36,8 +37,8 @@ import org.eclipse.codewind.filewatchers.core.internal.WebSocketManagerThread;
 import org.json.JSONObject;
 
 /**
- * This class maintains information about the projects being watch, and is
- * otherwise the "glue" between the other components. This class maintains
+ * This class maintains information about the projects being watched, and is
+ * otherwise the "glue" between the other components. The class maintains
  * references to the other utilities (post queue, WebSocket connection, watch
  * service, etc) and forwards communication between them.
  * 
@@ -65,7 +66,7 @@ public class Filewatcher {
 
 	private final WebSocketManagerThread webSocketThread;
 
-	private final AtomicBoolean disposed_synch_lock = new AtomicBoolean();
+	private final AtomicBoolean disposed_synch = new AtomicBoolean();
 
 	private final String clientUuid;
 
@@ -114,6 +115,7 @@ public class Filewatcher {
 		webSocketThread.start();
 		webSocketThread.queueEstablishConnection();
 
+		new DebugTimer(this);
 	}
 
 	public void refreshWatchStatus() {
@@ -139,11 +141,11 @@ public class Filewatcher {
 	}
 
 	public void dispose() {
-		synchronized (disposed_synch_lock) {
-			if (disposed_synch_lock.get()) {
+		synchronized (disposed_synch) {
+			if (disposed_synch.get()) {
 				return;
 			}
-			disposed_synch_lock.set(true);
+			disposed_synch.set(true);
 		}
 
 		log.logInfo("disposed() called on " + this.getClass().getSimpleName());
@@ -261,7 +263,7 @@ public class Filewatcher {
 			IPlatformWatchService watchService;
 
 			// Determine which watch service to use, based on what was provided in the
-			// constructor, and what is specified in the JSON object.
+			// FW constructor, and what is specified in the JSON object.
 			{
 				if (this.externalWatchService == null) {
 					watchService = this.internalWatchService;
@@ -337,6 +339,62 @@ public class Filewatcher {
 
 	}
 
+	public Optional<String> generateDebugString() {
+
+		synchronized (disposed_synch) {
+			if (disposed_synch.get()) {
+				return Optional.empty();
+			}
+		}
+
+		String result = "";
+
+		result += "---------------------------------------------------------------------------------------\n\n";
+
+		if (internalWatchService != null) {
+			result += "WatchService - " + internalWatchService.getClass().getSimpleName() + ":\n";
+			result += internalWatchService.generateDebugState().trim() + "\n";
+		}
+
+		if (externalWatchService != null) {
+			result += "WatchService - " + externalWatchService.getClass().getSimpleName() + ":\n";
+			result += externalWatchService.generateDebugState().trim() + "\n";
+
+		}
+
+		result += "\n";
+
+		synchronized (projectsMap_synch) {
+
+			result += "Project list:\n";
+
+			for (Map.Entry<String, ProjectObject> e : projectsMap_synch.entrySet()) {
+
+				ProjectToWatch ptw = e.getValue().getProjectToWatch();
+
+				result += "- " + e.getKey() + " | " + ptw.getPathToMonitor();
+
+				if (ptw.getIgnoredPaths().size() > 0) {
+					result += " | ignoredPaths: ";
+
+					for (String path : ptw.getIgnoredPaths()) {
+						result += "'" + path + "' ";
+					}
+				}
+
+				result += "\n";
+			}
+
+		}
+
+		result += "\nHTTP Post Output Queue:\n" + outputQueue.generateDebugString().trim() + "\n\n";
+
+		result += "---------------------------------------------------------------------------------------\n\n";
+
+		return Optional.of(result);
+
+	}
+
 	Optional<FileChangeEventBatchUtil> getEventProcessing(String projectId) {
 		synchronized (projectsMap_synch) {
 
@@ -371,7 +429,7 @@ public class Filewatcher {
 		});
 
 		/**
-		 * Figure out which WatchEventEntries go with with project IDs, based on the
+		 * Figure out which WatchEventEntries go with which project IDs, based on the
 		 * path from the entry. Filter the results into projectIdToList.
 		 */
 		for (WatchEventEntry we : watchEntries) {
@@ -385,6 +443,10 @@ public class Filewatcher {
 			boolean match = false;
 
 			for (ProjectToWatch ptw : projectsToWatch) {
+
+				// TODO: Consider passing projectId as part of WatchEventEntry (which seems
+				// easy) and then get rid of path-prefix-based matching (but nothing inherently
+				// wrong with path-prefix-based matching)
 
 				// See if this watch event is related to the project
 				if (fullLocalPath.startsWith(ptw.getPathToMonitor())) {
@@ -419,7 +481,7 @@ public class Filewatcher {
 			List<ChangedFileEntry> changedFileEntries = new ArrayList<>();
 
 			List<WatchEventEntry> eventList = me.getValue();
-			for (WatchEventEntry we : eventList) {
+			outer: for (WatchEventEntry we : eventList) {
 
 				// Path will necessarily already have lowercase Windows drive letter, if
 				// applicable.
@@ -431,27 +493,21 @@ public class Filewatcher {
 					continue;
 				}
 
-//				if (!path.startsWith(ptw.getPathToMonitor())) {
-//					// This shouldn't happen, and is thus severe
-//					log.logSevere(
-//							"Watch event '" + path + "' does not match project path '" + ptw.getPathToMonitor() + "'");
-//					continue;
-//				}
-//
-//				// Strip project parent directory from path:
-//				// If pathToMonitor is: /home/user/codewind/project
-//				// and watchEventPath is: /home/user/codewind/project/some-file.txt
-//				// then this will convert watchEventPath to /some-file.txt
-//				path = path.replace(ptw.getPathToMonitor(), "");
-//
-//				if (path.length() == 0) {
-//					// Ignore the empty case
-//					continue;
-//				}
+				if (ptw.getIgnoredPaths() != null) {
+					if (filter.isFilteredOutByPath(path)) {
+						log.logDebug("Filtering out " + path + " by path.");
+						continue;
+					}
 
-				if (ptw.getIgnoredPaths() != null && filter.isFilteredOutByPath(path)) {
-					log.logDebug("Filtering out " + path + " by path.");
-					continue;
+					for (String parentPath : PathUtils.splitRelativeProjectPathIntoComponentPaths(path)) {
+						// Apply the path filter against parent paths as well (if path is /a/b/c, then
+						// also try to match against /a/b and /a)
+						if (filter.isFilteredOutByPath(parentPath)) {
+							log.logDebug("Filtering out " + path + " by parent path.");
+							continue outer;
+						}
+					}
+
 				}
 
 				if (ptw.getIgnoredFilenames() != null && filter.isFilteredOutByFilename(path)) {
@@ -522,14 +578,15 @@ public class Filewatcher {
 	}
 
 	/**
-	 * Information maintained for each project that is being monitor by the watcher.
-	 * This includes information on what to watch/filter (the ProjectToWatch), and
-	 * the batch util (one batch util object exists per project.)
+	 * Information maintained for each project that is being monitored by the
+	 * watcher. This includes information on what to watch/filter (the
+	 * ProjectToWatch), the batch util (one batch util object exists per project),
+	 * and which watch service (internal/external) is being used for this project.
 	 */
 	private static class ProjectObject {
 		private final FileChangeEventBatchUtil batchUtil;
 
-		// Synchronize on lock when accessing inside this class
+		// Synchronize on lock when reading/writing this field
 		private ProjectToWatch project_synch_lock;
 
 		private final IPlatformWatchService watchService;

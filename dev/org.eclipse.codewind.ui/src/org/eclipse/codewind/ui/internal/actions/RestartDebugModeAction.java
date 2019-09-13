@@ -14,10 +14,11 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -26,51 +27,43 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IActionDelegate2;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IViewActionDelegate;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action to restart a Codewind application in debug mode.
  */
-public class RestartDebugModeAction implements IObjectActionDelegate, IViewActionDelegate, IActionDelegate2 {
+public class RestartDebugModeAction extends SelectionProviderAction {
+	
+	public static final String ACTION_ID = "org.eclipse.codewind.ui.restartDebugModeAction";
 
     protected CodewindEclipseApplication app;
+    
+    public RestartDebugModeAction(ISelectionProvider selectionProvider) {
+        super(selectionProvider, Messages.RestartInDebugMode);
+        setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.LAUNCH_DEBUG_ICON));
+        selectionChanged(getStructuredSelection());
+    }
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable() && app.supportsDebug()) {
-		            action.setEnabled(app.getAppState() == AppState.STARTED || app.getAppState() == AppState.STARTING);
+		            setEnabled(app.getAppStatus() == AppStatus.STARTED || app.getAppStatus() == AppStatus.STARTING);
 	            	return;
             	}
             }
         }
-        
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("RestartDebugModeAction ran but no application was selected"); //$NON-NLS-1$
@@ -83,7 +76,7 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 	        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
 	        // Check if the project has been imported into Eclipse. If not, offer to import it.
 	        if (project == null || !project.exists()) {
-	        	int result = openDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
+	        	int result = IDEUtil.openQuestionCancelDialog(NLS.bind(Messages.ProjectNotImportedDialogTitle, app.name), NLS.bind(Messages.ProjectNotImportedDialogMsg, app.name));
 	        	if (result == 0) {
 	        		// Import the project
 	        		ImportProjectAction.importProject(app);
@@ -93,7 +86,7 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 	        	}
 	        // Check if the project is open in Eclipse. If not, offer to open it.
 	        } else if (!project.isOpen()) {
-	        	int result = openDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
+	        	int result = IDEUtil.openQuestionCancelDialog(NLS.bind(Messages.ProjectClosedDialogTitle, app.name), NLS.bind(Messages.ProjectClosedDialogMsg, app.name));
 	        	if (result == 0) {
 	        		// Open the project
 	        		Job job = new Job(NLS.bind(Messages.ProjectOpenJob, app.name)) {
@@ -140,55 +133,8 @@ public class RestartDebugModeAction implements IObjectActionDelegate, IViewActio
 		}
     }
     
-    /*
-     * Dialog which asks the user a question and they can select Yes, No
-     * or Cancel.
-     * Returns:
-     *  0 - user selected Yes
-     *  1 - user selected No
-     *  2 - user selected Cancel
-     */
-    private static int openDialog(String title, String msg) {
-    	final int[] result = new int[1];
-		Display.getDefault().syncExec(new Runnable() {
-			@Override
-			public void run() {
-				Shell shell = Display.getDefault().getActiveShell();
-				String[] buttonLabels = new String[] {Messages.DialogYesButton, Messages.DialogNoButton, Messages.DialogCancelButton};
-				MessageDialog dialog = new MessageDialog(shell, title, CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON),
-						msg, MessageDialog.QUESTION, buttonLabels, 0);
-				result[0] = dialog.open();
-			}
-		});
-		
-		return result[0];
-	}
-    
-	@Override
-	public void runWithEvent(IAction action, Event event) {
-		run(action);
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
-
-	@Override
-	public void dispose() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void init(IAction arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void init(IViewPart arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    public boolean showAction() {
+    	// Don't show the action if the app does not support debug
+    	return (app != null && app.isAvailable() && app.supportsDebug());
+    }
 }

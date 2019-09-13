@@ -73,7 +73,7 @@ public class ProjectSelectionPage extends WizardPage {
 		filterText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		filterText.setMessage(Messages.SelectProjectPageFilterText);
         
-        CheckboxTableViewer projectList = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+        CheckboxTableViewer projectList = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
         projectList.setContentProvider(new WorkbenchContentProvider());
         projectList.setLabelProvider(new WorkbenchLabelProvider());
         projectList.setInput(ResourcesPlugin.getWorkspace().getRoot());

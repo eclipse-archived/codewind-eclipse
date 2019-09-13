@@ -314,12 +314,34 @@ public class CodewindSocket {
 		
 		app.setEnabled(true);
 		
-		// Update context root
+		// Check the status
+		if (event.has(CoreConstants.KEY_STATUS)) {
+			String status = event.getString(CoreConstants.KEY_STATUS);
+			if (!CoreConstants.VALUE_STATUS_SUCCESS.equals(status)) {
+				if (event.has(CoreConstants.KEY_ERROR)) {
+					String errorMsg = event.getString(CoreConstants.KEY_ERROR);
+					CoreUtil.openDialog(true, Messages.ProjectSettingsUpdateErrorTitle, errorMsg);
+				} else {
+					Logger.logError("The project settings request failed but there is no error message in the result");
+				}
+				return;
+			}
+		}
+		
+		// Update project
 		if (event.has(CoreConstants.KEY_CONTEXT_ROOT)) {
 			app.setContextRoot(event.getString(CoreConstants.KEY_CONTEXT_ROOT));
 		}
+		if (event.has(CoreConstants.KEY_PORTS) && (event.get(CoreConstants.KEY_PORTS) instanceof JSONObject)) {
+			JSONObject portsObj = event.getJSONObject(CoreConstants.KEY_PORTS);
+			if (portsObj.has(CoreConstants.KEY_INTERNAL_PORT)) {
+				app.setContainerAppPort(portsObj.getString(CoreConstants.KEY_INTERNAL_PORT));
+			}
+			if (portsObj.has(CoreConstants.KEY_INTERNAL_DEBUG_PORT)) {
+				app.setContainerDebugPort(portsObj.getString(CoreConstants.KEY_INTERNAL_DEBUG_PORT));
+			}
+		}
 		
-		// TODO: need to update ports?
 		
 		CoreUtil.updateApplication(app);
 	}
@@ -379,6 +401,11 @@ public class CodewindSocket {
 		StartMode startMode = StartMode.get(event);
 		app.setStartMode(startMode);
 		
+		if (event.has(CoreConstants.KEY_CONTAINER_ID)) {
+		    String containerId = event.getString(CoreConstants.KEY_CONTAINER_ID);
+		    app.setContainerId(containerId);
+		}
+		
 		// Update the application
 		CoreUtil.updateApplication(app);
 		
@@ -397,6 +424,7 @@ public class CodewindSocket {
 			Logger.logError("No application found for project being closed: " + projectID); //$NON-NLS-1$
 			return;
 		}
+		app.dispose();
 		app.connection.refreshApps(app.projectID);
 		CoreUtil.updateApplication(app);
 	}

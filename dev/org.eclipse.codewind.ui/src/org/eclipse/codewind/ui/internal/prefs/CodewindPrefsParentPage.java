@@ -18,6 +18,7 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
@@ -33,8 +34,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -50,6 +53,10 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 
 	private static IPreferenceStore prefs;
 
+	private Text installTimeoutText;
+	private Text startTimeoutText;
+	private Text stopTimeoutText;
+	private Text uninstallTimeoutText;
 	private Text debugTimeoutText;
 	private Combo webBrowserCombo;
 	private Text selectWebBrowserLabel;
@@ -73,46 +80,76 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		layout.verticalSpacing = convertVerticalDLUsToPixels(3);
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-	    layout.numColumns = 2;
+	    layout.numColumns = 1;
 	    composite.setLayout(layout);
 	    composite.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
 
-	    Label stopAppContainersLabel = new Label(composite, SWT.NONE);
-	    stopAppContainersLabel.setText(Messages.PrefsParentPage_StopAppsLabel);
-	    stopAppContainersLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 2, 1));
-
-	    Composite stopAppsComposite = new Composite(composite, SWT.NONE);
+	    if (CodewindInstall.ENABLE_STOP_APPS_OPTION) {
+		    Text stopAppContainersLabel = new Text(composite, SWT.READ_ONLY | SWT.SINGLE);
+		    stopAppContainersLabel.setText(Messages.PrefsParentPage_StopAppsLabel);
+		    stopAppContainersLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 2, 1));
+		    stopAppContainersLabel.setBackground(composite.getBackground());
+		    stopAppContainersLabel.setForeground(composite.getForeground());
+	
+		    Composite stopAppsComposite = new Composite(composite, SWT.NONE);
+		    layout = new GridLayout();
+		    layout.horizontalSpacing = convertHorizontalDLUsToPixels(8);
+		    layout.verticalSpacing = convertVerticalDLUsToPixels(3);
+		    layout.marginWidth = 20;
+		    layout.marginHeight = 2;
+		    layout.numColumns = 3;
+		    stopAppsComposite.setLayout(layout);
+		    stopAppsComposite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+	
+		    stopAppsButtons[0] = new Button(stopAppsComposite, SWT.RADIO);
+		    stopAppsButtons[0].setText(Messages.PrefsParentPage_StopAppsAlways);
+		    stopAppsButtons[0].setData(InstallUtil.STOP_APP_CONTAINERS_ALWAYS);
+	
+		    stopAppsButtons[1] = new Button(stopAppsComposite, SWT.RADIO);
+		    stopAppsButtons[1].setText(Messages.PrefsParentPage_StopAppsNever);
+		    stopAppsButtons[1].setData(InstallUtil.STOP_APP_CONTAINERS_NEVER);
+	
+		    stopAppsButtons[2] = new Button(stopAppsComposite, SWT.RADIO);
+		    stopAppsButtons[2].setText(Messages.PrefsParentPage_StopAppsPrompt);
+		    stopAppsButtons[2].setData(InstallUtil.STOP_APP_CONTAINERS_PROMPT);
+	
+		    setStopAppsSelection(prefs.getString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY));
+	
+		    new Label(composite, SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL, GridData.CENTER, true, false, 2, 1));
+	    }
+	    
+	    Group installGroup = new Group(composite, SWT.NONE);
+	    installGroup.setText("Startup and Shutdown Settings");
 	    layout = new GridLayout();
-	    layout.horizontalSpacing = convertHorizontalDLUsToPixels(4);
-	    layout.verticalSpacing = convertVerticalDLUsToPixels(3);
-	    layout.marginWidth = 20;
-	    layout.marginHeight = 2;
-	    layout.numColumns = 3;
-	    stopAppsComposite.setLayout(layout);
-	    stopAppsComposite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+	    layout.horizontalSpacing = convertHorizontalDLUsToPixels(7);
+	    layout.verticalSpacing = convertVerticalDLUsToPixels(5);
+	    layout.marginWidth = 3;
+	    layout.marginHeight = 10;
+	    layout.numColumns = 4;
+	    installGroup.setLayout(layout);
+	    installGroup.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
+	    
+	    installTimeoutText = createCWTimeoutEntry(installGroup, "Codewind install timeout (s):", CodewindCorePlugin.CW_INSTALL_TIMEOUT);
+	    uninstallTimeoutText = createCWTimeoutEntry(installGroup, "Codewind uninstall timeout (s):", CodewindCorePlugin.CW_UNINSTALL_TIMEOUT);
+	    startTimeoutText = createCWTimeoutEntry(installGroup, "Codewind start timeout (s):", CodewindCorePlugin.CW_START_TIMEOUT);
+	    stopTimeoutText = createCWTimeoutEntry(installGroup, "Codewind stop timeout (s):", CodewindCorePlugin.CW_STOP_TIMEOUT);
+	    
+	    Group debugGroup = new Group(composite, SWT.NONE);
+	    debugGroup.setText("Debug Settings");
+	    layout = new GridLayout();
+	    layout.horizontalSpacing = convertHorizontalDLUsToPixels(7);
+	    layout.verticalSpacing = convertVerticalDLUsToPixels(5);
+	    layout.marginWidth = 3;
+	    layout.marginHeight = 10;
+	    layout.numColumns = 2;
+	    debugGroup.setLayout(layout);
+	    debugGroup.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
 
-	    stopAppsButtons[0] = new Button(stopAppsComposite, SWT.RADIO);
-	    stopAppsButtons[0].setText(Messages.PrefsParentPage_StopAppsAlways);
-	    stopAppsButtons[0].setData(InstallUtil.STOP_APP_CONTAINERS_ALWAYS);
-
-	    stopAppsButtons[1] = new Button(stopAppsComposite, SWT.RADIO);
-	    stopAppsButtons[1].setText(Messages.PrefsParentPage_StopAppsNever);
-	    stopAppsButtons[1].setData(InstallUtil.STOP_APP_CONTAINERS_NEVER);
-
-	    stopAppsButtons[2] = new Button(stopAppsComposite, SWT.RADIO);
-	    stopAppsButtons[2].setText(Messages.PrefsParentPage_StopAppsPrompt);
-	    stopAppsButtons[2].setData(InstallUtil.STOP_APP_CONTAINERS_PROMPT);
-
-	    setStopAppsSelection(prefs.getString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY));
-
-	    Label separator = new Label(composite, SWT.HORIZONTAL);
-	    separator.setLayoutData(new GridData(GridData.FILL_HORIZONTAL, GridData.CENTER, true, false, 2, 1));
-
-		Label debugTimeoutLabel = new Label(composite, SWT.READ_ONLY);
-		debugTimeoutLabel.setText(Messages.PrefsParentPage_DebugTimeoutLabel);
+		Label debugTimeoutLabel = new Label(debugGroup, SWT.READ_ONLY);
+		debugTimeoutLabel.setText(" " + Messages.PrefsParentPage_DebugTimeoutLabel);
 		debugTimeoutLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
 
-		debugTimeoutText = new Text(composite, SWT.BORDER);
+		debugTimeoutText = new Text(debugGroup, SWT.BORDER);
 		debugTimeoutText.setTextLimit(3);
 		debugTimeoutText.setText("" + 	//$NON-NLS-1$
 				prefs.getInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
@@ -127,18 +164,14 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 				validate();
 			}
 		});
-		
-		separator = new Label(composite, SWT.HORIZONTAL);
-	    separator.setLayoutData(new GridData(GridData.FILL_HORIZONTAL, GridData.CENTER, true, false, 2, 1));
-	    	    	    
-	    Text browserSelectionLabel = new Text(composite, SWT.READ_ONLY | SWT.SINGLE);
+		 	    
+	    Text browserSelectionLabel = new Text(debugGroup, SWT.READ_ONLY | SWT.SINGLE);
 	    browserSelectionLabel.setText(Messages.BrowserSelectionLabel);
-	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 3, 1));
+	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 3, 1));
 	    browserSelectionLabel.setBackground(composite.getBackground());
 	    browserSelectionLabel.setForeground(composite.getForeground());
 	    
-	    
-	    final Composite selectWebBrowserComposite = new Composite(composite, SWT.NONE);
+	    final Composite selectWebBrowserComposite = new Composite(debugGroup, SWT.NONE);
 	    layout = new GridLayout();
 		layout.horizontalSpacing = convertHorizontalDLUsToPixels(4);
 		layout.verticalSpacing = convertVerticalDLUsToPixels(3);
@@ -176,6 +209,27 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		return composite;
 	}
 	
+	private Text createCWTimeoutEntry(Composite comp, String label, String prefKey) {
+	    Label timeoutLabel = new Label(comp, SWT.NONE);
+	    timeoutLabel.setText(label);
+	    timeoutLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
+	    
+	    Text text = new Text(comp, SWT.BORDER);
+	    text.setText(Integer.toString(prefs.getInt(prefKey)));
+	    GridData data = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
+		data.widthHint = 50;
+		text.setLayoutData(data);
+		
+		text.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				validate();
+			}
+		});
+		
+	    return text;
+	}
+	
 	private void setStopAppsSelection(String selection) {
 		for (Button button : stopAppsButtons) {
 			if (button.getData().equals(selection)) {
@@ -186,22 +240,33 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	}
 
 	private void validate() {
-		String invalidReason = null;
-
-		String timeoutText = debugTimeoutText.getText().trim();
-		boolean goodDebugTimeout = false;
+		if (!validateTimeout(installTimeoutText.getText().trim()) ||
+				!validateTimeout(uninstallTimeoutText.getText().trim()) ||
+				!validateTimeout(startTimeoutText.getText().trim()) ||
+				!validateTimeout(stopTimeoutText.getText().trim()) ||
+				!validateTimeout(debugTimeoutText.getText().trim())) {
+			return;
+		}
+		
+		setErrorMessage(null);
+		setValid(true);
+	}
+	
+	private boolean validateTimeout(String timeoutStr) {
+		boolean isValid = true;
 		try {
-			int timeout = Integer.parseInt(timeoutText);
-			goodDebugTimeout = timeout > 0;
+			int timeout = Integer.parseInt(timeoutStr);
+			if (timeout <= 0) {
+				isValid = false;
+			}
+		} catch(NumberFormatException e) {
+			isValid = false;
 		}
-		catch(NumberFormatException e) {}
-
-		if (!goodDebugTimeout) {
-			invalidReason = NLS.bind(Messages.PrefsParentPage_ErrInvalidDebugTimeout, timeoutText);
+		if (!isValid) {
+			setErrorMessage(NLS.bind(Messages.PrefsParentPage_ErrInvalidTimeout, timeoutStr));
+			setValid(false);
 		}
-
-		setErrorMessage(invalidReason);
-		setValid(invalidReason == null);
+		return isValid;
 	}
 
 	@Override
@@ -210,12 +275,19 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 			return false;
 		}
 		
-		for (Button button : stopAppsButtons) {
-			if (button.getSelection()) {
-				prefs.setValue(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY, (String)button.getData());
-				break;
+		if (CodewindInstall.ENABLE_STOP_APPS_OPTION) {
+			for (Button button : stopAppsButtons) {
+				if (button.getSelection()) {
+					prefs.setValue(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY, (String)button.getData());
+					break;
+				}
 			}
 		}
+		
+		prefs.setValue(CodewindCorePlugin.CW_INSTALL_TIMEOUT, Integer.parseInt(installTimeoutText.getText().trim()));
+		prefs.setValue(CodewindCorePlugin.CW_UNINSTALL_TIMEOUT, Integer.parseInt(uninstallTimeoutText.getText().trim()));
+		prefs.setValue(CodewindCorePlugin.CW_START_TIMEOUT, Integer.parseInt(startTimeoutText.getText().trim()));
+		prefs.setValue(CodewindCorePlugin.CW_STOP_TIMEOUT, Integer.parseInt(stopTimeoutText.getText().trim()));
 		
 		// validate in validate() that this is a good integer
 		int debugTimeout = Integer.parseInt(debugTimeoutText.getText().trim());
@@ -243,7 +315,9 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	
 	@Override
 	public void performDefaults() {
-		setStopAppsSelection(prefs.getDefaultString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY));
+		if (CodewindInstall.ENABLE_STOP_APPS_OPTION) {
+			setStopAppsSelection(prefs.getDefaultString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY));
+		}
 		debugTimeoutText.setText("" + 	//$NON-NLS-1$
 				prefs.getDefaultInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
 		webBrowserCombo.select(0);

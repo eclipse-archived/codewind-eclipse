@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
@@ -36,11 +37,21 @@ public class ProcessHelper {
         }
 
         public String getOutput() {
-            return sysOut.toString();
+            return sysOut;
         }
         
         public String getError() {
-        	return sysError.toString();
+        	return sysError;
+        }
+        
+        public String getErrorMsg() {
+        	if (sysError != null && !sysError.trim().isEmpty()) {
+        		return sysError;
+        	}
+        	if (sysOut != null && !sysOut.trim().isEmpty()) {
+        		return sysOut;
+        	}
+        	return Messages.ProcessHelperUnknownError;
         }
     }
 
@@ -64,7 +75,7 @@ public class ProcessHelper {
         StringBuilder inBuilder = new StringBuilder();
         StringBuilder errBuilder = new StringBuilder();
         int iter = timeout * 1000 / pollingDelay;
-        int work = 20;
+        int work = 50;
         SubMonitor mon = SubMonitor.convert(monitor, work);
         try {
             in = p.getInputStream();

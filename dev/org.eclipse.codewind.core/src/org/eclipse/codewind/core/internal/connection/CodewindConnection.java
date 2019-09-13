@@ -31,18 +31,16 @@ import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
-import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,15 +52,12 @@ import org.json.JSONObject;
 public class CodewindConnection {
 
 	public static final String CODEWIND_WORKSPACE_PROPERTY = "org.eclipse.codewind.internal.workspace"; //$NON-NLS-1$
-	private static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
 	private static final String BRANCH_VERSION = "\\d{4}_M\\d{1,2}_\\D";
 	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	public final URI baseUrl;
-	private IPath localWorkspacePath;
-	private String versionStr;
+	private ConnectionEnv env = null;
 	private String connectionErrorMsg = null;
-	private String socketNamespace = null;
 
 	private CodewindSocket socket;
 	private CodewindFilewatcherdConnection filewatcher;
@@ -85,28 +80,14 @@ public class CodewindConnection {
 			onInitFail(NLS.bind(Messages.Connection_ErrConnection_AlreadyExists, baseUrl));
 		}
 		
-		JSONObject env = getEnvData(this.baseUrl);
+		env = new ConnectionEnv(getEnvData(this.baseUrl));
+		Logger.log("Codewind version is: " + env.getVersion());			// $NON-NLS-1$
 
-		this.versionStr = getCodewindVersion(env);
-
-//		if (UNKNOWN_VERSION.equals(versionStr)) {
-//			onInitFail(NLS.bind(Messages.Connection_ErrConnection_VersionUnknown,
-//					MCConstants.REQUIRED_MC_VERSION));
-//		} else if (!isSupportedVersion(versionStr)) {
-//			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion,
-//					versionStr, MCConstants.REQUIRED_MC_VERSION));
-//		}
-
-		Logger.log("Codewind version is: " + versionStr);			// $NON-NLS-1$
-
-		this.localWorkspacePath = getWorkspacePath(env);
-		if (localWorkspacePath == null) {
+		if (env.getWorkspacePath() == null) {
 			// Can't recover from this
 			// This should never happen since we have already determined it is a supported version of Codewind.
 			onInitFail(Messages.Connection_ErrConnection_WorkspaceErr);
 		}
-		
-		this.socketNamespace = getSocketNamespace(env);
 		
 		socket = new CodewindSocket(this);
 		if(!socket.blockUntilFirstConnection()) {
@@ -133,7 +114,7 @@ public class CodewindConnection {
 	}
 	
 	public String getSocketNamespace() {
-		return socketNamespace;
+		return env.getSocketNamespace();
 	}
 	
 	public CodewindSocket getSocket() {
@@ -161,7 +142,7 @@ public class CodewindConnection {
 			app.dispose();
 		}
 	}
-
+	
 	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
 		final URI envUrl = baseUrl.resolve(CoreConstants.APIPATH_ENV);
 
@@ -175,26 +156,19 @@ public class CodewindConnection {
 
 		return new JSONObject(envResponse);
 	}
-
-	private static String getCodewindVersion(JSONObject env) {
-		if (!env.has(CoreConstants.KEY_ENV_VERSION)) {
-			Logger.logError("Missing version from env data"); //$NON-NLS-1$
-			return UNKNOWN_VERSION;
-		}
-
+	
+	public static String getVersion(URI baseURI) {
 		try {
-			String versionStr = env.getString(CoreConstants.KEY_ENV_VERSION);
-			Logger.log("Codewind version is: " + versionStr); //$NON-NLS-1$
-			return versionStr;
-		} catch (JSONException e) {
-			// we already checked for this key so this will not happen.
-			Logger.logError(e);
-			return UNKNOWN_VERSION;
+			ConnectionEnv env = new ConnectionEnv(getEnvData(baseURI));
+			return env.getVersion();
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to get the Codewind version.", e);
 		}
+		return null;
 	}
 
-	private static boolean isSupportedVersion(String versionStr) {
-		if (UNKNOWN_VERSION.equals(versionStr)) {
+	public static boolean isSupportedVersion(String versionStr) {
+		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
 			return false;
 		}
 
@@ -208,19 +182,42 @@ public class CodewindConnection {
 			return true;
 		}
 
-		// The version will have a format like '1809', which corresponds to v18.09
 		try {
-			int version = Integer.parseInt(versionStr);
-			return version >= CoreConstants.REQUIRED_CODEWIND_VERSION;
-		}
-		catch(NumberFormatException e) {
+			String[] expectedDigits = InstallUtil.DEFAULT_INSTALL_VERSION.split("\\.");
+			String[] actualDigits = versionStr.split("\\.");
+			
+			for (int i = 0; i < expectedDigits.length; i++) {
+				int expectedVal = Integer.parseInt(expectedDigits[i]);
+				if (i >= actualDigits.length) {
+					// It is ok if the expected is longer than the actual
+					// as long as all of the extra digits are 0, if not
+					// then return false
+					if (expectedVal != 0) {
+						return false;
+					}
+				} else {
+					// If the value is less than expected, return false.
+					// If the value is greater than expected, return true.
+					// If they are the same, keep going.
+					int actualVal = Integer.parseInt(actualDigits[i]);
+					if (actualVal < expectedVal) {
+						return false;
+					} else if (actualVal > expectedVal) {
+						return true;
+					}
+				}
+			}
+			return true;
+		} catch(NumberFormatException e) {
 			Logger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
 			return false;
 		}
 	}
 	
 	public boolean checkVersion(int requiredVersion, String requiredVersionBr) {
-		if (UNKNOWN_VERSION.equals(versionStr)) {
+		String versionStr = env.getVersion();
+		
+		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
 			return false;
 		}
 		
@@ -260,38 +257,6 @@ public class CodewindConnection {
 	
 	public String getConnectionErrorMsg() {
 		return this.connectionErrorMsg;
-	}
-
-	private static Path getWorkspacePath(JSONObject env) throws JSONException {
-		// Try the internal system property first
-		String path = System.getProperty(CODEWIND_WORKSPACE_PROPERTY, null);
-		if (path != null && !path.isEmpty()) {
-			return new Path(path);
-		}
-
-		if (!env.has(CoreConstants.KEY_ENV_WORKSPACE_LOC)) {
-			Logger.logError("Missing workspace location from env data"); //$NON-NLS-1$
-			return null;
-		}
-		String workspaceLoc = env.getString(CoreConstants.KEY_ENV_WORKSPACE_LOC);
-		if (CoreUtil.isWindows() && workspaceLoc.startsWith("/")) { //$NON-NLS-1$
-			String device = workspaceLoc.substring(1, 2);
-			workspaceLoc = device + ":" + workspaceLoc.substring(2); //$NON-NLS-1$
-		}
-		return new Path(workspaceLoc);
-	}
-	
-	private static String getSocketNamespace(JSONObject env) throws JSONException {
-		if (env.has(CoreConstants.KEY_ENV_SOCKET_NAMESPACE)) {
-			Object nsObj = env.get(CoreConstants.KEY_ENV_SOCKET_NAMESPACE);
-			if (nsObj instanceof String) {
-				String namespace = (String)nsObj;
-				if (!namespace.isEmpty()) {
-					return namespace;
-				}
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -620,9 +585,13 @@ public class CodewindConnection {
 		return capabilities;
 	}
 	
-	public List<ProjectTemplateInfo> requestProjectTemplates() throws IOException, JSONException {
+	public List<ProjectTemplateInfo> requestProjectTemplates(boolean enabledOnly) throws IOException, JSONException, URISyntaxException {
 		List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_TEMPLATES);
+		URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_TEMPLATES);
+		if (enabledOnly) {
+			String query = CoreConstants.QUERY_SHOW_ENABLED_ONLY + "=true";
+			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
+		}
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		
@@ -630,49 +599,55 @@ public class CodewindConnection {
 		for (int i = 0; i < templateArray.length(); i++) {
 			templates.add(new ProjectTemplateInfo(templateArray.getJSONObject(i)));
 		}
-		
 		return templates;
 	}
 	
-	public ProjectInfo requestProjectValidate(String path) throws JSONException, IOException {
-		String endpoint = CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_VALIDATE;
-		URI uri = baseUrl.resolve(endpoint);
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_PROJECT_PATH, CoreUtil.getContainerPath(path));
+	public List<RepositoryInfo> requestRepositories() throws IOException, JSONException {
+		List<RepositoryInfo> repos = new ArrayList<RepositoryInfo>();
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
 		
-		HttpResult result = HttpUtil.post(uri, createProjectPayload);
-		checkResult(result, uri, false);
-		
-		JSONObject resultJson = new JSONObject(result.response);
-		if (CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
-			if (resultJson.has(CoreConstants.KEY_RESULT)) {
-				JSONObject typeJson = resultJson.getJSONObject(CoreConstants.KEY_RESULT);
-				String language = typeJson.getString(CoreConstants.KEY_LANGUAGE);
-				String projectType = typeJson.getString(CoreConstants.KEY_PROJECT_TYPE);
-				return new ProjectInfo(projectType, language);
-			}
-			return null;
+		JSONArray repoArray = new JSONArray(result.response);
+		for (int i = 0; i < repoArray.length(); i++) {
+			repos.add(new RepositoryInfo(repoArray.getJSONObject(i)));
 		}
-		throw new IOException("Validate failed for project: " + path);
+		return repos;
 	}
 	
-	public void requestProjectCreate(ProjectTemplateInfo templateInfo, String name)
-			throws JSONException, IOException {
-
-		String endpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-		URI uri = baseUrl.resolve(endpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_PROJECT_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_PARENT_PATH, CoreUtil.getContainerPath(localWorkspacePath.toString()));
-		createProjectPayload.put(CoreConstants.KEY_URL, templateInfo.getUrl());
-
-		HttpResult result = HttpUtil.post(uri, createProjectPayload);
+	public void requestRepoEnable(String repoUrl, boolean enable) throws IOException, JSONException {
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_BATCH_REPOSITORIES);
+		JSONArray payload = new JSONArray();
+		JSONObject obj = new JSONObject();
+		obj.put(CoreConstants.KEY_OP, CoreConstants.VALUE_OP_ENABLE);
+		obj.put(CoreConstants.KEY_URL, repoUrl);
+		obj.put(CoreConstants.KEY_VALUE, enable ? "true" : "false");
+		payload.put(obj);
+		
+		HttpResult result = HttpUtil.patch(uri, payload);
 		checkResult(result, uri, false);
-		CoreUtil.updateConnection(this);
 	}
 	
+	public void requestRepoAdd(String description, String url) throws IOException, JSONException {
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		JSONObject payload = new JSONObject();
+		payload.put(RepositoryInfo.DESCRIPTION_KEY, description);
+		payload.put(RepositoryInfo.URL_KEY, url);
+		payload.put(RepositoryInfo.ENABLED_KEY, true);
+		
+		HttpResult result = HttpUtil.post(uri, payload);
+		checkResult(result, uri, false);
+	}
+	
+	public void requestRepoRemove(String url) throws IOException, JSONException {
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		JSONObject payload = new JSONObject();
+		payload.put(RepositoryInfo.URL_KEY, url);
+		
+		HttpResult result = HttpUtil.delete(uri, payload);
+		checkResult(result, uri, false);
+	}
+
 	public void requestProjectBind(String name, String path, String language, String projectType)
 			throws JSONException, IOException {
 
@@ -692,7 +667,7 @@ public class CodewindConnection {
 		}
 		payload.put(CoreConstants.KEY_AUTO_BUILD, true);
 
-		HttpResult result = HttpUtil.post(uri, payload);
+		HttpResult result = HttpUtil.post(uri, payload, 300);
 		checkResult(result, uri, false);
 		CoreUtil.updateConnection(this);
 	}
@@ -741,8 +716,8 @@ public class CodewindConnection {
 		
 		// Reset any cached information in case it has changed
 		try {
-			JSONObject envData = getEnvData(baseUrl);
-			String version = getCodewindVersion(envData);
+			String oldSocketNS = env.getSocketNamespace();
+			env = new ConnectionEnv(getEnvData(baseUrl));
 //			if (UNKNOWN_VERSION.equals(versionStr)) {
 //				Logger.logError("Failed to get the Codewind version after reconnect");
 //				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_VersionUnknown, CoreConstants.REQUIRED_CODEWIND_VERSION);
@@ -755,21 +730,17 @@ public class CodewindConnection {
 //				CoreUtil.updateConnection(this);
 //				return;
 //			}
-			this.versionStr = version;
-			IPath path = getWorkspacePath(envData);
-			if (path == null) {
+			if (env.getWorkspacePath() == null) {
 				// This should not happen since the version was ok
 				Logger.logError("Failed to get the local workspace path after reconnect");
 				this.connectionErrorMsg = Messages.Connection_ErrConnection_WorkspaceErr;
 				CoreUtil.updateAll();
 				return;
 			}
-			this.localWorkspacePath = path;
 			
-			String socketNS = getSocketNamespace(envData);
-			if ((socketNS != null && !socketNS.equals(this.socketNamespace)) || (this.socketNamespace != null && !this.socketNamespace.equals(socketNS))) {
+			String socketNS = env.getSocketNamespace();
+			if ((socketNS != null && !socketNS.equals(oldSocketNS)) || (oldSocketNS != null && !oldSocketNS.equals(socketNS))) {
 				// The socket namespace has changed so need to recreate the socket
-				this.socketNamespace = socketNS;
 				socket.close();
 				socket = new CodewindSocket(this);
 				if(!socket.blockUntilFirstConnection()) {
@@ -797,7 +768,7 @@ public class CodewindConnection {
 	@Override
 	public String toString() {
 		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d", //$NON-NLS-1$
-				CodewindConnection.class.getSimpleName(), baseUrl, localWorkspacePath, appMap.size());
+				CodewindConnection.class.getSimpleName(), baseUrl, env.getWorkspacePath(), appMap.size());
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
@@ -808,64 +779,6 @@ public class CodewindConnection {
 		return baseUrl.toString();
 	}
 	
-	public void requestProjectCreate(ProjectType type, String name)
-			throws JSONException, IOException {
-		if (type == ProjectType.TYPE_LIBERTY) {
-			requestMicroprofileProjectCreate(name);
-		} else if (type == ProjectType.TYPE_SPRING) {
-			requestSpringProjectCreate(name);
-		} else if (type == ProjectType.TYPE_NODEJS) {
-			requestNodeProjectCreate(name);
-		} else {
-			Logger.log("Creation of projects with type " + type + " is not supported.");  //$NON-NLS-1$ //$NON-NLS-2$
-		}	
-	}
-
-	public void requestMicroprofileProjectCreate(String name)
-			throws JSONException, IOException {
-
-		String createEndpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-        URI url = baseUrl.resolve(createEndpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_LANGUAGE, "java");
-		createProjectPayload.put(CoreConstants.KEY_FRAMEWORK, "microprofile");
-
-		HttpUtil.post(url, createProjectPayload);
-	}
-	
-	public void requestSpringProjectCreate(String name)
-			throws JSONException, IOException {
-
-		String createEndpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-        URI url = baseUrl.resolve(createEndpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_LANGUAGE, "java");
-		createProjectPayload.put(CoreConstants.KEY_FRAMEWORK, "spring");
-
-		HttpUtil.post(url, createProjectPayload);
-	}
-	
-	public void requestNodeProjectCreate(String name)
-			throws JSONException, IOException {
-
-		String createEndpoint = CoreConstants.APIPATH_PROJECT_LIST;
-
-		URI uri = baseUrl.resolve(createEndpoint);
-
-		JSONObject createProjectPayload = new JSONObject();
-		createProjectPayload.put(CoreConstants.KEY_NAME, name);
-		createProjectPayload.put(CoreConstants.KEY_LANGUAGE, "nodejs");
-
-		HttpResult result = HttpUtil.post(uri, createProjectPayload);
-		checkResult(result, uri, false);
-	}
-
 	public void requestProjectDelete(String projectId)
 			throws JSONException, IOException {
 
@@ -878,7 +791,11 @@ public class CodewindConnection {
 	}
 
 	public IPath getWorkspacePath() {
-		return localWorkspacePath;
+		return env.getWorkspacePath();
+	}
+	
+	public URL getTektonDashboardURL() {
+		return env.getTektonDashboardURL(); 
 	}
 	
 	public URI getNewProjectURI() {
@@ -921,7 +838,7 @@ public class CodewindConnection {
 	public URL getPerformanceMonitorURL(CodewindApplication app) {
 		try {
 			URI uri = baseUrl;
-			uri = uri.resolve("performance/charts");
+			uri = uri.resolve(CoreConstants.PERF_MONITOR);
 			String query = CoreConstants.QUERY_PROJECT + "=" + app.projectID;
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
 			return uri.toURL();

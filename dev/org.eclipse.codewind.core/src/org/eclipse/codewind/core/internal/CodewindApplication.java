@@ -11,20 +11,23 @@
 
 package org.eclipse.codewind.core.internal;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.core.runtime.IPath;
 import org.json.JSONObject;
 
@@ -42,7 +45,8 @@ public class CodewindApplication {
 	
 	private String contextRoot;	// can be null
 	private StartMode startMode;
-	private AppState appState;
+	private AppStatus appStatus;
+	private String appStatusDetails;
 	private BuildStatus buildStatus;
 	private String buildDetails;
 	private boolean autoBuild = true;
@@ -52,8 +56,10 @@ public class CodewindApplication {
 	private String action;
 	private List<ProjectLogInfo> logInfos = new ArrayList<ProjectLogInfo>();
 	private boolean metricsAvailable = false;
+	private boolean hasConfirmedMetrics = false; 		// see confirmMetricsAvailable
 	private long lastBuild = -1;
 	private long lastImageBuild = -1;
+	private boolean isHttps = false;
 	
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -83,7 +89,7 @@ public class CodewindApplication {
 		this.fullLocalPath = CoreUtil.appendPathWithoutDupe(connection.getWorkspacePath(), pathInWorkspace);
 
 		this.startMode = StartMode.RUN;
-		this.appState = AppState.UNKNOWN;
+		this.appStatus = AppStatus.UNKNOWN;
 		this.buildStatus = BuildStatus.UNKOWN;
 	}
 
@@ -95,15 +101,23 @@ public class CodewindApplication {
 			return;
 		}
 
-		baseUrl = new URL("http", host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
+		String httpStr = getIsHttps() ? "https" : "http";
+		baseUrl = new URL(httpStr, host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
 		rootUrl = baseUrl;
 		if (contextRoot != null && !contextRoot.isEmpty()) {
 			rootUrl = new URL(baseUrl, contextRoot);
 		}
 	}
 	
-	public synchronized void setAppStatus(String appStatus) {
-		this.appState = AppState.get(appStatus);
+	public synchronized void setAppStatus(String appStatus, String appStatusDetails) {
+		if (appStatus != null) {
+			this.appStatus = AppStatus.get(appStatus);
+			if (appStatusDetails == null || appStatusDetails.trim().isEmpty()) {
+				this.appStatusDetails = null;
+			} else {
+				this.appStatusDetails = appStatusDetails;
+			}
+		}
 	}
 	
 	public synchronized void setBuildStatus(String buildStatus, String buildDetails) {
@@ -225,8 +239,44 @@ public class CodewindApplication {
 		return null;
 	}
 	
-	public synchronized AppState getAppState() {
-		return appState;
+	/**
+	 * For extension projects, the metricsAvailable may not be incorrectly 'true'.
+	 * So after the application is running, GET that page to make sure. If it fails, we set metricsAvailable to false.
+	 * 
+	 * Workaround for https://github.com/eclipse/codewind/issues/258
+	 */
+	public synchronized void confirmMetricsAvailable() {
+		if (this.hasConfirmedMetrics) {
+			return;
+		}
+		this.hasConfirmedMetrics = true;
+
+		// Only extension projects which report they DO support metrics require this extra check; 
+		// for normal projects the metricsAvailable is accurate.
+		if (!this.metricsAvailable || !this.projectType.isExtension()) {
+			return;
+		}
+		
+		try {
+			URL metricsUrl = this.getMetricsUrl();
+			if (metricsUrl == null) {
+				// we should not have made it this far
+				return;
+			}
+			HttpResult getMetricsResult = HttpUtil.get(metricsUrl.toURI());
+			this.metricsAvailable = getMetricsResult.isGoodResponse;
+		}
+		catch (IOException | URISyntaxException e) {
+			Logger.logError("An error occurred trying to confirm the application metrics status", e);
+		}		
+	}
+	
+	public synchronized AppStatus getAppStatus() {
+		return appStatus;
+	}
+	
+	public synchronized String getAppStatusDetails() {
+		return appStatusDetails;
 	}
 	
 	public synchronized BuildStatus getBuildStatus() {
@@ -262,7 +312,7 @@ public class CodewindApplication {
 	}
 	
 	public boolean isActive() {
-		return getAppState() == AppState.STARTING || getAppState() == AppState.STARTED;
+		return getAppStatus() == AppStatus.STARTING || getAppStatus() == AppStatus.STARTED;
 	}
 
 	public boolean isRunning() {
@@ -351,6 +401,14 @@ public class CodewindApplication {
 	
 	public synchronized String getContainerDebugPort() {
 		return this.containerDebugPort;
+	}
+	
+	public synchronized void setIsHttps(boolean value) {
+		isHttps = value;
+	}
+	
+	public synchronized boolean getIsHttps() {
+		return isHttps;
 	}
 
 	/**

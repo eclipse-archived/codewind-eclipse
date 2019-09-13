@@ -16,9 +16,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
@@ -57,18 +58,26 @@ public class BindProjectAction implements IObjectActionDelegate {
 			Logger.logError("BindProjectAction ran but no project was selected"); //$NON-NLS-1$
 			return;
 		}
-		
-		try {
-			if (CodewindInstall.isCodewindInstalled()) {
-				connection = setupConnection();
-			} else {
-				CodewindInstall.codewindInstallerDialog(project);
-				return;
-			}
-		} catch (InvocationTargetException e) {
-			Logger.logError("Error trying to set up Codewind to add existing project: " + project.getName(), e);
+
+		// If the installer is currently running, show a dialog to the user
+		final InstallerStatus installerStatus = CodewindManager.getManager().getInstallerStatus();
+		if (installerStatus != null) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					CodewindInstall.installerActiveDialog(installerStatus);
+				}
+			});
+			return;
 		}
 		
+		if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
+			connection = setupConnection();
+		} else {
+			CodewindInstall.codewindInstallerDialog(project);
+			return;
+		}
+
 		if (connection == null || !connection.isConnected()) {
 			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, Messages.BindProjectConnectionError);
 			return;
@@ -150,8 +159,8 @@ public class BindProjectAction implements IObjectActionDelegate {
 		if (connection != null && connection.isConnected()) {
 			return connection;
 		}
-		InstallStatus status = manager.getInstallStatus(true);
-		if (status == InstallStatus.RUNNING) {
+		InstallStatus status = manager.getInstallStatus();
+		if (status.isStarted()) {
 			return manager.createLocalConnection();
 		}
 		if (!status.isInstalled()) {
@@ -163,9 +172,11 @@ public class BindProjectAction implements IObjectActionDelegate {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					ProcessResult result = InstallUtil.startCodewind(monitor);
+					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
 					if (result.getExitValue() != 0) {
-						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + result.getError()); //$NON-NLS-1$
+						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
 					manager.createLocalConnection();
 					ViewHelper.refreshCodewindExplorerView(null);

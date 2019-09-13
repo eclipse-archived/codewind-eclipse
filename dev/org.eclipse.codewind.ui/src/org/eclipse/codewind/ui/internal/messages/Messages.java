@@ -16,6 +16,8 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.codewind.ui.internal.messages.messages"; //$NON-NLS-1$
 
+	public static String GenericNotAvailable;
+	
 	public static String ConnectionPrefsPage_AddBtn;
 	public static String ConnectionPrefsPage_PageTitle;
 	public static String ConnectionPrefsPage_RemoveBtn;
@@ -28,7 +30,7 @@ public class Messages extends NLS {
 	public static String PrefsParentPage_StopAppsNever;
 	public static String PrefsParentPage_StopAppsPrompt;
 	public static String PrefsParentPage_DebugTimeoutLabel;
-	public static String PrefsParentPage_ErrInvalidDebugTimeout;
+	public static String PrefsParentPage_ErrInvalidTimeout;
 
 	public static String NewConnectionPage_ConnectSucceeded;
 	public static String NewConnectionPage_ErrAConnectionAlreadyExists;
@@ -74,15 +76,19 @@ public class Messages extends NLS {
 	public static String CodewindErrorQualifier;
 	public static String CodewindErrorMsg;
 	public static String CodewindNotInstalledMsg;
+	public static String CodewindWrongVersionQualifier;
+	public static String CodewindWrongVersionMsg;
 	public static String CodewindNotStartedMsg;
 	public static String CodewindLocalProjects;
 	public static String CodewindConnectionLabel;
 	public static String CodewindDisconnected;
 	public static String CodewindProjectDisabled;
 	public static String CodewindConnectionNoProjects;
+	public static String CodewindDescriptionContextRoot;
 	
 	public static String InstallerActionInstallLabel;
 	public static String InstallerActionUninstallLabel;
+	public static String InstallerActionUpdateLabel;
 	public static String InstallerActionStartLabel;
 	public static String InstallerActionStopLabel;
 	
@@ -90,17 +96,45 @@ public class Messages extends NLS {
 	public static String UnbindActionLabel;
 	public static String UnbindActionTitle;
 	public static String UnbindActionMessage;
+	public static String UnbindActionMultipleMessage;
+	public static String UnbindActionDeleteContentsLabel;
+	public static String UnbindActionLocationLabel;
+	public static String UnbindActionMultipleLocationLabel;
 	public static String UnbindActionJobTitle;
+	public static String UnbindActionMultipleJobTitle;
 	public static String UnbindActionError;
 	
 	public static String InstallCodewindJobLabel;
 	public static String StartingCodewindJobLabel;
 	public static String StoppingCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
+	public static String UpdatingCodewindJobLabel;
+	public static String InstallingCodewindTask;
+	public static String UninstallingCodewindTask;
 	public static String InstallCodewindDialogTitle;
 	public static String InstallCodewindDialogMessage;
+	public static String UpgradeCodewindDialogMessage;
 	public static String InstallCodewindNewProjectMessage;
 	public static String InstallCodewindAddProjectMessage;
+	public static String InstallCodewindInstallingMessage;
+	public static String InstallCodewindUninstallingMessage;
+	public static String InstallCodewindFailNoMessage;
+	public static String CodewindStartFail;
+	public static String CodewindStopFail;
+	public static String CodewindInstallFail;
+	public static String CodewindUninstallFail;
+	public static String CodewindStartError;
+	public static String CodewindStopError;
+	public static String CodewindInstallError;
+	public static String CodewindUninstallError;
+	public static String CodewindUpdateError;
+	public static String CodewindStartTimeout;
+	public static String CodewindStopTimeout;
+	public static String CodewindInstallTimeout;
+	public static String CodewindUninstallTimeout;
+	
+	public static String UpdateCodewindDialogTitle;
+	public static String UpdateCodewindDialogMsg;
 	
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;
@@ -116,6 +150,13 @@ public class Messages extends NLS {
 	public static String SelectProjectTypePageDescription;
 	public static String SelectProjectTypePageProjectTypeLabel;
 	public static String SelectProjectTypePageLanguageLabel;
+	public static String SelectProjectTypeErrorLabel;
+	public static String SelectProjectTypeManageRepoLabel;
+	public static String SelectProjectTypeManageRepoLink;
+	public static String SelectProjectTypeManageRepoTooltip;
+	public static String SelectProjectTypeRefreshTypesTask;
+	public static String SelectProjectTypeRefreshTypesError;
+	public static String SelectProjectTypeValidateTask;
 	
 	public static String SelectProjectPageName;
 	public static String SelectProjectPageTitle;
@@ -148,6 +189,8 @@ public class Messages extends NLS {
 	public static String ActionOpenAppMonitor;
 	
 	public static String ActionOpenPerformanceMonitor;
+	
+	public static String ActionOpenTektonDashboard;
 
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;
@@ -176,6 +219,7 @@ public class Messages extends NLS {
 	public static String BrowserTooltipApp;
 	public static String BrowserTooltipAppMonitor;
 	public static String BrowserTooltipPerformanceMonitor;
+	public static String BrowserTooltipTektonDashboard;
 	
 	public static String NodeJsBrowserDialogCopyToClipboardButton;
 	public static String NodeJsBrowserDialogOpenChromeButton;
@@ -201,16 +245,23 @@ public class Messages extends NLS {
 	public static String NewProjectPage_TemplateGroupLabel;
 	public static String NewProjectPage_ProjectTypeGroup;
 	public static String NewProjectPage_FilterMessage;
+	public static String NewProjectPage_TemplateColumn;
 	public static String NewProjectPage_TypeColumn;
 	public static String NewProjectPage_LanguageColumn;
 	public static String NewProjectPage_DescriptionLabel;
 	public static String NewProjectPage_DescriptionNone;
 	public static String NewProjectPage_ImportLabel;
 	public static String NewProjectPage_ProjectNameLabel;
+	public static String NewProjectPage_ManageRepoLabel;
+	public static String NewProjectPage_ManageRepoLink;
+	public static String NewProjectPage_ManageRepoTooltip;
+	public static String NewProjectPage_RefreshTemplatesTask;
+	public static String NewProjectPage_RefreshTemplatesError;
 	public static String NewProjectPage_ProjectExistsError;
 	public static String NewProjectPage_EclipseProjectExistsError;
 	public static String NewProjectPage_EmptyProjectName;
 	public static String NewProjectPage_InvalidProjectName;
+	public static String NewProjectPage_CreateJobLabel;
 	public static String NewProjectPage_ProjectCreateErrorTitle;
 	public static String NewProjectPage_ProjectCreateErrorMsg;
 	public static String NewProjectPage_CodewindConnectError;
@@ -219,11 +270,13 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;
 	public static String AppOverviewEditorGeneralSection;
+	public static String AppOverviewEditorTypeEntry;
 	public static String AppOverviewEditorLanguageEntry;
 	public static String AppOverviewEditorLocationEntry;
 	public static String AppOverviewEditorAppUrlEntry;
 	public static String AppOverviewEditorHostAppPortEntry;
 	public static String AppOverviewEditorHostDebugPortEntry;
+	public static String AppOverviewEditorProjectIdEntry;
 	public static String AppOverviewEditorContainerIdEntry;
 	public static String AppOverviewEditorStatusEntry;
 	public static String AppOverviewEditorStatusEnabled;
@@ -233,6 +286,7 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorAppPortEntry;
 	public static String AppOverviewEditorDebugPortEntry;
 	public static String AppOverviewEditorEditProjectSettings;
+	public static String AppOverviewEditorProjectSettingsInfo;
 	public static String AppOverviewEditorBuildSection;
 	public static String AppOverviewEditorAutoBuildEntry;
 	public static String AppOverviewEditorAutoBuildOn;
@@ -243,6 +297,7 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorImageNeverBuilt;
 	public static String AppOverviewEditorRefreshButton;
 	public static String AppOverviewEditorNotAvailable;
+	public static String AppOverviewEditorDebugNotSupported;
 	public static String AppOverviewEditorOpenSettingsErrorTitle;
 	public static String AppOverviewEditorOpenSettingsErrorMsg;
 	public static String AppOverviewEditorOpenSettingsNotFound;
@@ -250,6 +305,37 @@ public class Messages extends NLS {
 	public static String StopAllDialog_Title;
 	public static String StopAllDialog_Message;
 	public static String StopAllDialog_ToggleMessage;
+	
+	public static String GenericActionNotSupported;
+	public static String AppMonitorNotSupported;
+	public static String PerfDashboardNotSupported;
+	
+	public static String RepoMgmtDialogTitle;
+	public static String RepoMgmtDialogMessage;
+	
+	public static String RepoMgmtDescription;
+	public static String RepoMgmtTableLabel;
+	public static String RepoMgmtAddButton;
+	public static String RepoMgmtRemoveButton;
+	public static String RepoMgmtDescriptionLabel;
+	public static String RepoMgmtStylesLabel;
+	public static String RepoMgmtUrlLabel;
+	public static String RepoMgmtUpdateError;
+	public static String RepoMgmtRemoveFailed;
+	public static String RepoMgmtUpdateFailed;
+	public static String RepoMgmtAddFailed;
+	
+	public static String AddRepoDialogTitle;
+	public static String AddRepoDialogMessage;
+	public static String AddRepoDialogDescriptionLabel;
+	public static String AddRepoDialogUrlLabel;
+	public static String AddRepoDialogNoDescription;
+	public static String AddRepoDialogNoUrl;
+	
+	public static String RepoUpdateTask;
+	public static String RepoUpdateErrorTitle;
+	public static String RepoListErrorTitle;
+	public static String RepoListErrorMsg;
 	
 	static {
 		// initialize resource bundle

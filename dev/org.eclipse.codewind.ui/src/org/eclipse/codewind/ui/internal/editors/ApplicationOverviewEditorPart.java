@@ -11,17 +11,15 @@
 
 package org.eclipse.codewind.ui.internal.editors;
 
+import java.net.URL;
 import java.util.Date;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
-import org.eclipse.codewind.ui.internal.actions.EnableDisableAutoBuildAction;
-import org.eclipse.codewind.ui.internal.actions.EnableDisableProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
@@ -55,6 +53,8 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.forms.ManagedForm;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
@@ -70,6 +70,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private static final String SETTINGS_FILE = ".cw-settings";
 	private static final String JSON_EDITOR_ID = "org.eclipse.wst.json.ui.JSONEditor";
+	private static final String CWSETTINGS_INFO_URL = "https://www.eclipse.org/codewind/mdteclipsemanagingprojects.html";
+	private static final String CWSETTINGS_INFO_ID = "org.eclipse.codewind.ui.overview.ProjectSettingsInfo";
 	
 	private Composite contents;
 	private String appName;
@@ -97,7 +99,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		CodewindApplication application = null;
 		if (input instanceof ApplicationOverviewEditorInput &&
-				CodewindManager.getManager().getInstallStatus(false) == InstallStatus.RUNNING) {
+				CodewindManager.getManager().getInstallStatus().isStarted()) {
 			ApplicationOverviewEditorInput appInput = (ApplicationOverviewEditorInput)input;
 			if (appInput.connectionUri != null && appInput.projectID != null) {
 				connection = CodewindConnectionManager.getActiveConnection(appInput.connectionUri);
@@ -252,13 +254,15 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private class GeneralSection {
 		
+		private final StringEntry typeEntry;
 		private final StringEntry languageEntry;
 		private final StringEntry locationEntry;
 		private final LinkEntry appURLEntry;
 		private final StringEntry hostAppPortEntry;
 		private final StringEntry hostDebugPortEntry;
+		private final StringEntry projectIdEntry;
 		private final StringEntry containerIdEntry;
-		private final BooleanEntry statusEntry;
+		private final StringEntry statusEntry;
 		
 		public GeneralSection(Composite parent, FormToolkit toolkit) {
 			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
@@ -278,6 +282,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        toolkit.paintBordersFor(composite);
 	        section.setClient(composite);
 	        
+	        typeEntry = new StringEntry(composite, Messages.AppOverviewEditorTypeEntry);
+	        addSpacer(composite);
 	        languageEntry = new StringEntry(composite, Messages.AppOverviewEditorLanguageEntry);
 	        addSpacer(composite);
 	        locationEntry = new StringEntry(composite, Messages.AppOverviewEditorLocationEntry);
@@ -295,28 +301,29 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        addSpacer(composite);
 	        hostDebugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostDebugPortEntry);
 	        addSpacer(composite);
+	        projectIdEntry = new StringEntry(composite, Messages.AppOverviewEditorProjectIdEntry);
+	        addSpacer(composite);
 	        containerIdEntry = new StringEntry(composite, Messages.AppOverviewEditorContainerIdEntry);
 	        addSpacer(composite);
-	        statusEntry = new BooleanEntry(composite, Messages.AppOverviewEditorStatusEntry, null,
-	        		Messages.AppOverviewEditorStatusEnabled, Messages.AppOverviewEditorStatusDisabled, (value) -> {
-	        	CodewindApplication app = getApp();
-	        	if (app == null) {
-	        		Logger.logError("Could not get the application for updating project enablement: " + appName); //$NON-NLS-1$
-	        		return;
-	        	}
-	        	EnableDisableProjectAction.enableDisableProject(app, value);
-	        	ApplicationOverviewEditorPart.this.enableWidgets(value);
-	        });
+	        statusEntry = new StringEntry(composite, Messages.AppOverviewEditorStatusEntry);
 		}
 		
 		public void update(CodewindApplication app) {
+			typeEntry.setValue(app.projectType.getDisplayName(), true);
 			languageEntry.setValue(app.projectLanguage.getDisplayName(), true);
 			locationEntry.setValue(app.fullLocalPath.toOSString(), true);
 			appURLEntry.setValue(app.isAvailable() && app.getRootUrl() != null ? app.getRootUrl().toString() : null, true);
 			hostAppPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);
-			hostDebugPortEntry.setValue(app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null, true);
+			String hostDebugPort = null;
+			if (app.supportsDebug()) {
+				hostDebugPort = app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null;
+			} else {
+				hostDebugPort = Messages.AppOverviewEditorDebugNotSupported;
+			}
+			hostDebugPortEntry.setValue(hostDebugPort, true);
+			projectIdEntry.setValue(app.projectID, true);
 			containerIdEntry.setValue(app.isAvailable() ? app.getContainerId() : null, true);
-			statusEntry.setValue(app.isAvailable(), true);
+			statusEntry.setValue(app.isAvailable() ? Messages.AppOverviewEditorStatusEnabled : Messages.AppOverviewEditorStatusDisabled, true);
 		}
 		
 		public void enableWidgets(boolean enable) {
@@ -329,6 +336,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final StringEntry appPortEntry;
 		private final StringEntry debugPortEntry;
 		private final Button editButton;
+		private final Button infoButton;
 		
 		public ProjectSettingsSection(Composite parent, FormToolkit toolkit) {
 			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
@@ -353,8 +361,19 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        appPortEntry = new StringEntry(composite, Messages.AppOverviewEditorAppPortEntry);
 	        addSpacer(composite);
 	        debugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorDebugPortEntry);
+	        addSpacer(composite);
 	        
-	        editButton = new Button(composite, SWT.PUSH);
+	        Composite buttonComp = toolkit.createComposite(composite);
+	        layout = new GridLayout();
+	        layout.numColumns = 2;
+	        layout.marginHeight = 0;
+	        layout.marginWidth = 0;
+	        layout.verticalSpacing = 5;
+	        layout.horizontalSpacing = 10;
+	        buttonComp.setLayout(layout);
+	        buttonComp.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
+	        
+	        editButton = new Button(buttonComp, SWT.PUSH);
 	        editButton.setText(Messages.AppOverviewEditorEditProjectSettings);
 	        editButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
 	        editButton.addSelectionListener(new SelectionAdapter() {
@@ -397,12 +416,37 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 					MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenSettingsErrorTitle, Messages.AppOverviewEditorOpenSettingsNotFound);
 				}
 	        });
+	        
+	        infoButton = new Button(buttonComp, SWT.PUSH);
+	        infoButton.setText(Messages.AppOverviewEditorProjectSettingsInfo);
+	        infoButton.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+	        infoButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					try {
+						IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
+						IWebBrowser browser = browserSupport
+								.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
+										CWSETTINGS_INFO_ID, null, null);
+						URL url = new URL(CWSETTINGS_INFO_URL);
+						browser.openURL(url);
+					} catch (Exception e) {
+						Logger.logError("Failed to open the browser for the project settings documentation: " + CWSETTINGS_INFO_URL, e); //$NON-NLS-1$
+					}
+				}
+	        });
 		}
 		
 		public void update(CodewindApplication app) {
 			contextRootEntry.setValue(app.getContextRoot() != null ? app.getContextRoot() : "/", true); //$NON-NLS-1$
 			appPortEntry.setValue(app.getContainerAppPort(), true);
-			debugPortEntry.setValue(app.getContainerDebugPort(), true);
+			String debugPort = null;
+			if (app.supportsDebug()) {
+				debugPort = app.getContainerDebugPort();
+			} else {
+				debugPort = Messages.AppOverviewEditorDebugNotSupported;
+			}
+			debugPortEntry.setValue(debugPort, true);
 		}
 		
 		public void enableWidgets(boolean enable) {
@@ -411,7 +455,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	}
 	
 	private class BuildSection {
-		private final BooleanEntry autoBuildEntry;
+		private final StringEntry autoBuildEntry;
 		private final StringEntry lastBuildEntry;
 		private final StringEntry lastImageBuildEntry;
 		
@@ -433,15 +477,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        toolkit.paintBordersFor(composite);
 	        section.setClient(composite);
 	        
-	        autoBuildEntry = new BooleanEntry(composite, Messages.AppOverviewEditorAutoBuildEntry, null,
-	        		Messages.AppOverviewEditorAutoBuildOn, Messages.AppOverviewEditorAutoBuildOff, (value) -> {
-	        	CodewindApplication app = getApp();
-	        	if (app == null) {
-	        		Logger.logError("Could not get the application for updating auto build setting for project id: " + projectID); //$NON-NLS-1$
-	        		return;
-	        	}
-	        	EnableDisableAutoBuildAction.enableDisableAutoBuild(app, value);
-	        });
+	        autoBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorAutoBuildEntry);
 	        addSpacer(composite);
 	        lastBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastBuildEntry);
 	        addSpacer(composite);
@@ -449,7 +485,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 		
 		public void update(CodewindApplication app) {
-			autoBuildEntry.setValue(app.isAutoBuild(), app.isAvailable());
+			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, app.isAvailable());
 			long lastBuild = app.getLastBuild();
 			String lastBuildStr = Messages.AppOverviewEditorProjectNeverBuilt;
 			if (lastBuild > 0) {
@@ -465,7 +501,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 		
 		public void enableWidgets(boolean enable) {
-			autoBuildEntry.enableEntry(enable);
+			// Nothing to do
 		}
 	}
 	
@@ -483,7 +519,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final Text text;
 		
 		public StringEntry(Composite composite, String name) {
-			StyledText label = new StyledText(composite, SWT.NONE);
+			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
 	        setBold(label);
 	        
@@ -497,17 +533,6 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		}
 	}
 	
-//	private void addTextEntry(Composite composite, String name, String value, boolean enabled) {
-//		StyledText label = new StyledText(composite, SWT.NONE);
-//		label.setText(name);
-//        setBold(label);
-//        
-//        Text text = new Text(composite, SWT.BORDER);
-//        text.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-//        text.setText(value != null ? value : "Not available");
-//        text.setEnabled(enabled);
-//	}
-	
 	private class BooleanEntry {
 		private final String onText, offText;
 		private final Button button;
@@ -516,7 +541,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			this.onText = onText;
 			this.offText = offText;
 			
-			StyledText label = new StyledText(composite, SWT.NONE);
+			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
 	        setBold(label);
 	        
@@ -561,7 +586,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private String linkUrl;
 		
 		public LinkEntry(Composite composite, FormToolkit toolkit, String name, LinkAction action) {
-			StyledText label = new StyledText(composite, SWT.NONE);
+			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
 			setBold(label);
 	        

@@ -69,10 +69,6 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	// in seconds
 	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
 	
-	// Old style consoles, null if not showing
-	private IConsole appConsole = null;
-	private IConsole buildConsole = null;
-	
 	// New consoles
 	private Set<SocketConsole> activeConsoles = new HashSet<SocketConsole>();
 	
@@ -83,30 +79,6 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			ProjectType projectType, ProjectLanguage language, String pathInWorkspace)
 					throws MalformedURLException {
 		super(connection, id, name, projectType, language, pathInWorkspace);
-	}
-	
-	public synchronized boolean hasAppConsole() {
-		return appConsole != null;
-	}
-	
-	public synchronized boolean hasBuildConsole() {
-		return buildConsole != null;
-	}
-	
-	public synchronized void setAppConsole(IConsole console) {
-		this.appConsole = console;
-	}
-	
-	public synchronized void setBuildConsole(IConsole console) {
-		this.buildConsole = console;
-	}
-	
-	public synchronized IConsole getAppConsole() {
-		return appConsole;
-	}
-	
-	public synchronized IConsole getBuildConsole() {
-		return buildConsole;
 	}
 	
 	public synchronized void addConsole(SocketConsole console) {
@@ -260,14 +232,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 		clearDebugger();
 		
 		// Clean up the consoles
-		List<IConsole> consoleList = new ArrayList<IConsole>();
-		if (appConsole != null) {
-			consoleList.add(appConsole);
-		}
-		if (buildConsole != null) {
-			consoleList.add(buildConsole);
-		}
-		consoleList.addAll(activeConsoles);
+		List<IConsole> consoleList = new ArrayList<IConsole>(activeConsoles);
 		if (!consoleList.isEmpty()) {
 			IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
 			consoleManager.removeConsoles(consoleList.toArray(new IConsole[consoleList.size()]));
@@ -331,8 +296,8 @@ public class CodewindEclipseApplication extends CodewindApplication {
 
 	@Override
 	public boolean supportsDebug() {
-		// Only supported for certain project types
-		if (projectType == ProjectType.TYPE_LIBERTY || projectType == ProjectType.TYPE_SPRING || projectType == ProjectType.TYPE_NODEJS) {
+		// Only supported for certain languages
+		if (projectLanguage == ProjectLanguage.LANGUAGE_JAVA || projectLanguage == ProjectLanguage.LANGUAGE_NODEJS) {
 			// And only if the project supports it
 			ProjectCapabilities capabilities = getProjectCapabilities();
 			return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();

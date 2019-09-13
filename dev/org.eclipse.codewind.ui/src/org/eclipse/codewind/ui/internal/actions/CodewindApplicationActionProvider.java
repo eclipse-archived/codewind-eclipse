@@ -26,30 +26,46 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class CodewindApplicationActionProvider extends CommonActionProvider {
 	
+	private ISelectionProvider selProvider;
 //	private ValidateAction validateAction;
+	private RestartRunModeAction restartRunAction;
+	private RestartDebugModeAction restartDebugAction;
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
+	private OpenTektonDashboardAction openTektonDashboardAction;
+	private EnableDisableProjectAction enableDisableProjectAction;
 	private UnbindProjectAction unbindProjectAction;
 	private OpenAppDoubleClickAction openAppDoubleClickAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
-        ISelectionProvider selProvider = aSite.getStructuredViewer();
+        selProvider = aSite.getStructuredViewer();
 //        validateAction = new ValidateAction(selProvider);
+        restartRunAction = new RestartRunModeAction(selProvider);
+        restartDebugAction = new RestartDebugModeAction(selProvider);
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
+        openTektonDashboardAction = new OpenTektonDashboardAction(selProvider);
+        enableDisableProjectAction = new EnableDisableProjectAction(selProvider);
         unbindProjectAction = new UnbindProjectAction(selProvider);
         openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
     }
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
+    	selProvider.setSelection(selProvider.getSelection());
 //    	if (validateAction.showAction()) {
 //    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, validateAction);
 //    	}
+    	if (restartRunAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, restartRunAction);
+    	}
+    	if (restartDebugAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, restartDebugAction);
+    	}
     	if (attachDebuggerAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, attachDebuggerAction);
     	}
@@ -59,6 +75,10 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	if (openPerfMonitorAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openPerfMonitorAction);
     	}
+    	if (openTektonDashboardAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openTektonDashboardAction);
+    	}
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, enableDisableProjectAction);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, unbindProjectAction);
     	
     }

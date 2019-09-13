@@ -16,13 +16,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.json.JSONException;
 
 public class CodewindManager {
-	
-	public static final String DEFAULT_CONNECTION_URI = "http://localhost:9090/"; //$NON-NLS-1$
 	
 	private static CodewindManager codewindManager;
 	
@@ -32,7 +30,7 @@ public class CodewindManager {
 	// Keep track of the install status and if the installer is currently running.
 	// If the installer is running, this is the status that should be reported, if
 	// not the install status should be reported (installerStatus will be null).
-	InstallStatus installStatus = null;
+	InstallStatus installStatus = InstallStatus.UNKNOWN;
 	InstallerStatus installerStatus = null;
 	
 	public enum InstallerStatus {
@@ -43,7 +41,8 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		if (getInstallStatus(true) == InstallStatus.RUNNING) {
+		refreshInstallStatus();
+		if (getInstallStatus().isStarted()) {
 			createLocalConnection();
 			if (localConnection != null) {
 				localConnection.refreshApps(null);
@@ -61,22 +60,32 @@ public class CodewindManager {
 	/**
 	 * Get the current install status for Codewind
 	 */
-	public InstallStatus getInstallStatus(boolean update) {
-		if (installStatus != null && !update) {
-			return installStatus;
-		}
+	public InstallStatus getInstallStatus() {
+		return installStatus;
+	}
+	
+	public synchronized void refreshInstallStatus() {
+		String url = null;
 		try {
 			installStatus = InstallUtil.getInstallStatus();
-			if (installStatus != InstallStatus.RUNNING) {
+			if (installStatus.isStarted()) {
+				url = installStatus.getURL();
+				localURI = new URI(url);
+			} else {
 				removeLocalConnection();
+				localURI = null;
 			}
-			return installStatus;
+			return;
 		} catch (IOException e) {
 			Logger.logError("An error occurred trying to get the installer status", e); //$NON-NLS-1$
 		} catch (TimeoutException e) {
 			Logger.logError("Timed out trying to get the installer status", e); //$NON-NLS-1$
+		} catch (JSONException e) {
+			Logger.logError("The Codewind installer status format is not recognized", e); //$NON-NLS-1$
+		} catch (URISyntaxException e) {
+			Logger.logError("The Codewind installer status command returned an invalid url: " + url, e);
 		}
-		return InstallStatus.UNKNOWN;
+		installStatus = InstallStatus.UNKNOWN;
 	}
 	
 	public InstallerStatus getInstallerStatus() {
@@ -89,15 +98,11 @@ public class CodewindManager {
 	}
 	
 	public URI getLocalURI() {
-		if (localURI == null) {
-			try {
-				localURI = new URI(DEFAULT_CONNECTION_URI);
-			} catch (URISyntaxException e) {
-				// This should not happen
-				Logger.logError("Failed to create a URI from the string: " + DEFAULT_CONNECTION_URI, e); //$NON-NLS-1$
-			}
-		}
 		return localURI;
+	}
+
+	public boolean isSupportedVersion(String version) {
+		return CodewindConnection.isSupportedVersion(version);
 	}
 	
 	public synchronized CodewindConnection getLocalConnection() {
@@ -128,6 +133,7 @@ public class CodewindManager {
 	}
 	
 	public void refresh() {
+		refreshInstallStatus();
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
 			conn.refreshApps(null);
 		}

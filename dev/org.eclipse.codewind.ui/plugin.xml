@@ -58,17 +58,7 @@
 			icon="%DEFAULT_ICON_PATH"
 			class="org.eclipse.codewind.ui.internal.views.CodewindExplorerView"/>
 	</extension>
-	
-	<extension point="org.eclipse.ui.perspectiveExtensions">
-		<perspectiveExtension 
-			targetID="org.eclipse.jst.j2ee.J2EEPerspective">
-	        <view id="org.eclipse.codewind.ui.explorerView" 
-	                relative="org.eclipse.wst.server.ui.ServersView" 
-	                relationship="stack"
-	                visible="true"/>
-		</perspectiveExtension> 
-	</extension>
-	
+
 	<extension point="org.eclipse.ui.navigator.viewer">
 		<viewerContentBinding
 			viewerId="org.eclipse.codewind.ui.explorerView">
@@ -93,6 +83,10 @@
 					<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" />
 				</or>
 			</enablement>
+			<actionProvider
+				id="org.eclipse.codewind.ui.rootActionProvider"
+				class="org.eclipse.codewind.ui.internal.actions.RootActionProvider">
+			</actionProvider>
 			<actionProvider
 				id="org.eclipse.codewind.ui.codewindActionProvider"
 				class="org.eclipse.codewind.ui.internal.actions.CodewindActionProvider">
@@ -164,20 +158,6 @@
 				label="%ACTION_IMPORT_PROJECT"
 				class="org.eclipse.codewind.ui.internal.actions.ImportProjectAction"/>
 			<action
-				id="org.eclipse.codewind.ui.restartDebugMode"
-				enablesFor="1"
-				menubarPath="group.generate"
-				icon="%DEBUG_ICON_PATH"
-				label="%ACTION_RESTART_DEBUG_MODE"
-				class="org.eclipse.codewind.ui.internal.actions.RestartDebugModeAction"/>
-			<action
-				id="org.eclipse.codewind.ui.restartRunMode"
-				enablesFor="1"
-				menubarPath="group.generate"
-				icon="%RUN_ICON_PATH"
-				label="%ACTION_RESTART_RUN_MODE"
-				class="org.eclipse.codewind.ui.internal.actions.RestartRunModeAction"/>
-			<action
 				id="org.eclipse.codewind.ui.enableDisableAutoBuild"
 				enablesFor="1"
 				menubarPath="group.build"
@@ -234,22 +214,6 @@
 		<viewContribution
 			id="org.eclipse.codewind.ui.explorerViewActions"
 			targetID="org.eclipse.codewind.ui.explorerView">
-			<action
-				id="org.eclipse.codewind.ui.restartRunModeAction"
-				label="%ACTION_RESTART_RUN_MODE"
-				menubarPath="group.top"
-				toolbarPath="group.top" 
-				icon="%RUN_ICON_PATH"
-				class="org.eclipse.codewind.ui.internal.actions.RestartRunModeAction">
-			</action>
-			<action
-				id="org.eclipse.codewind.ui.restartDebugModeAction"
-				label="%ACTION_RESTART_DEBUG_MODE"
-				menubarPath="group.top"
-				toolbarPath="group.top" 
-				icon="%DEBUG_ICON_PATH"
-				class="org.eclipse.codewind.ui.internal.actions.RestartDebugModeAction">
-			</action>
 			<action
 				id="org.eclipse.codewind.ui.openApplication"
 				label="%ACTION_OPEN_APP"
@@ -345,8 +309,19 @@
 			name="%CW_SETTINGS_CONTENT_TYPE" 
 			base-type="org.eclipse.wst.json.core.jsonsource"
 			file-names=".cw-settings">
-			<describer class=""/>
 		</content-type>
+	</extension>
+	
+	<extension point="org.eclipse.ui.perspectiveExtensions">
+		<perspectiveExtension 
+			targetID="org.eclipse.jst.j2ee.J2EEPerspective">
+	        <view id="org.eclipse.codewind.ui.explorerView" 
+	                relative="org.eclipse.wst.server.ui.ServersView" 
+	                relationship="stack"
+	                visible="true"/>
+	        <newWizardShortcut id="org.eclipse.codewind.ui.wizards.newProject"/>
+	        <viewShortcut id="org.eclipse.codewind.ui.explorerView"/>
+		</perspectiveExtension> 
 	</extension>
 
 </plugin>

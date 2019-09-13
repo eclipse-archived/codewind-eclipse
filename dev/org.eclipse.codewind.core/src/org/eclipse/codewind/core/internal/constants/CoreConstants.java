@@ -38,6 +38,8 @@ public class CoreConstants {
 			APIPATH_TEMPLATES = "templates",
 			APIPATH_PROJECT_BIND = "bind",
 			APIPATH_PROJECT_UNBIND = "unbind",
+			APIPATH_REPOSITORIES = "templates/repositories",
+			APIPATH_BATCH_REPOSITORIES = "batch/" + APIPATH_REPOSITORIES,
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -49,7 +51,7 @@ public class CoreConstants {
 			KEY_CONTEXTROOT = "contextroot",
 			KEY_CONTEXT_ROOT = "contextRoot",
 			KEY_CONTAINER_ID = "containerId",
-			KEY_CUSTOM = "custom",
+			KEY_IS_HTTPS = "isHttps",
 
 			KEY_BUILD_LOG = "build-log",
 			KEY_BUILD_LOG_LAST_MODIFIED = "build-log-last-modified",
@@ -68,7 +70,9 @@ public class CoreConstants {
 
 			KEY_STATUS = "status",
 			KEY_RESULT = "result",
+			KEY_ERROR = "error",
 			KEY_APP_STATUS = "appStatus",
+			KEY_DETAILED_APP_STATUS = "detailedAppStatus",
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
 			KEY_LAST_BUILD = "lastbuild",
@@ -80,10 +84,6 @@ public class CoreConstants {
 			KEY_INTERNAL_DEBUG_PORT = "internalDebugPort",
 			KEY_AUTO_BUILD = "autoBuild",
 
-			KEY_ENV_WORKSPACE_LOC = "workspace_location",
-			KEY_ENV_VERSION = "microclimate_version",
-			KEY_ENV_SOCKET_NAMESPACE = "socket_namespace",
-
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",
 			KEY_EXTENSION = "extension",
@@ -91,6 +91,9 @@ public class CoreConstants {
 			KEY_PARENT_PATH = "parentPath",
 			KEY_URL = "url",
 			KEY_TEMPLATE_ID = "templateID",
+			KEY_OP = "op",
+			KEY_VALUE = "value",
+			VALUE_OP_ENABLE = "enable",
 
 			KEY_START_MODE = "startMode",
 			KEY_ACTION = "action",
@@ -124,7 +127,7 @@ public class CoreConstants {
 			KEY_METRICS_AVAILABLE = "metricsAvailable",
 			
 			KEY_AUTO_GENERATE = "autoGenerate",
-
+			
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",
 			
@@ -139,11 +142,10 @@ public class CoreConstants {
 			QUERY_PROJECT = "project",
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
-			VIEW_OVERVIEW = "overview"
+			VIEW_OVERVIEW = "overview",
+			PERF_MONITOR = "performance/charts",
+			
+			QUERY_SHOW_ENABLED_ONLY = "showEnabledOnly"
 
 			;
-
-	public static final int
-			REQUIRED_CODEWIND_VERSION = 1812;
-
 }

@@ -12,7 +12,8 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.core.runtime.IPath;
@@ -46,14 +47,15 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
+    	refreshProject();
     	// Check that the old text is still there
     	pingApp(text1);
     	// Run a build
     	build();
     	CodewindApplication app = connection.getAppByName(projectName);
-    	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
-    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
+    	assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	// Check for the new text
     	pingApp(text2);
     }
@@ -68,12 +70,12 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	IPath path = connection.getWorkspacePath().append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text2, text3);
+    	refreshProject();
     	// Check that build is started automatically
-    	buildIfWindows();
     	CodewindApplication app = connection.getAppByName(projectName);
-    	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 120, 1);
-    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
+    	assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	// Check for the new text
     	pingApp(text3);
     }

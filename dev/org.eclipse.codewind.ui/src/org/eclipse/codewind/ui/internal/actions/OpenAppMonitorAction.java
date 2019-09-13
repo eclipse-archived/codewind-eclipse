@@ -16,7 +16,7 @@ import java.net.URL;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -47,7 +47,7 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication)obj;
-            	setEnabled(app.isAvailable() && app.getAppState() == AppState.STARTED);
+            	setEnabled(app.isAvailable() && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED));
             	return;
             }
         }
@@ -74,15 +74,30 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
 			Logger.logError("OpenAppMonitorAction ran but could not construct the url"); //$NON-NLS-1$
 			return;
 		}
-
-        // Use the app's ID as the browser ID so that if this is called again on the same app,
-        // the browser will be re-used
+		
+        app.confirmMetricsAvailable();
+        if (!app.getMetricsAvailable()) {
+        	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.AppMonitorNotSupported);
+        	return;
+        }
 
 		try {
+			IWebBrowser browser = null;
 			IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
-			IWebBrowser browser = browserSupport
-					.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-							app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipAppMonitor, app.name));
+			
+			if (CoreUtil.isWindows()) {
+				// Use the external browser if available since the page does not display 
+				// well in the internal browser on Windows
+				browser = browserSupport.getExternalBrowser();
+			}
+			
+			if (browser == null) {
+				// Use the app's ID as the browser ID so that if this is called again on the same app,
+				// the browser will be re-used
+				browser = browserSupport
+						.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
+								app.projectID + "_" + CoreConstants.VIEW_MONITOR, app.name, NLS.bind(Messages.BrowserTooltipAppMonitor, app.name));
+			}
 
 	        browser.openURL(url);
 		} catch (PartInitException e) {

@@ -11,28 +11,29 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -61,31 +62,31 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		Display display = Display.getDefault();
-	    Shell result = display.getActiveShell();
-
-		try {
-			if (CodewindInstall.isCodewindInstalled()) {
-				 setWindowTitle(Messages.NewProjectPage_ShellTitle);
-				 newProjectPage = new NewCodewindProjectPage(connection, templateList);
-				 addPage(newProjectPage);
-			} else {
-				result.close();
-				CodewindInstall.codewindInstallerDialog();
+		if (CodewindManager.getManager().getInstallerStatus() != null) {
+			// The installer is currently running
+			CodewindInstall.installerActiveDialog(CodewindManager.getManager().getInstallerStatus());
+			if (getContainer() != null) {
+				getContainer().getShell().close();
 			}
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} else if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
+			setWindowTitle(Messages.NewProjectPage_ShellTitle);
+			newProjectPage = new NewCodewindProjectPage(connection, templateList);
+			addPage(newProjectPage);
+		} else {
+			CodewindInstall.codewindInstallerDialog();
+			if (getContainer() != null) {
+				getContainer().getShell().close();
+			}
 		}
- 
-		
 	}
 
 	@Override
 	public boolean performCancel() {
-		CodewindConnection newConnection = newProjectPage.getConnection();
-		if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
-			newConnection.close();
+		if (newProjectPage != null) {
+			CodewindConnection newConnection = newProjectPage.getConnection();
+			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+				newConnection.close();
+			}
 		}
 		return super.performCancel();
 	}
@@ -104,22 +105,37 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			return false;
 		}
 		
-		Job job = new Job("Creating Codewind project: " + name) {
+		Job job = new Job(NLS.bind(Messages.NewProjectPage_CreateJobLabel, name)) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					newConnection.requestProjectCreate(info, name);
+					SubMonitor mon = SubMonitor.convert(monitor, 100);
+					IPath path = newConnection.getWorkspacePath().append(name);
+					InstallUtil.createProject(name, path.toOSString(), info.getUrl(), mon.split(40));
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
 					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), info.getProjectType());
 					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.worked(40);
 					newConnection.refreshApps(null);
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.worked(10);
 					CodewindApplication app = newConnection.getAppByName(name);
 					if (app != null) {
 						ImportProjectAction.importProject(app);
 					} else {
 						Logger.logError("Could not get the application for import: " + name); //$NON-NLS-1$
 					}
+					mon.worked(10);
+					mon.done();
 					ViewHelper.openCodewindExplorerView();
 					ViewHelper.refreshCodewindExplorerView(newConnection);
 					ViewHelper.expandConnection(newConnection);

@@ -12,8 +12,11 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
+import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -30,6 +33,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class CodewindActionProvider extends CommonActionProvider {
 	
+	private ISelectionProvider selProvider;
 	private InstallerAction installUninstallAction;
 	private InstallerAction startStopAction;
 	private CodewindDoubleClickAction doubleClickAction;
@@ -37,7 +41,7 @@ public class CodewindActionProvider extends CommonActionProvider {
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
-        ISelectionProvider selProvider = aSite.getStructuredViewer();
+        selProvider = aSite.getStructuredViewer();
         installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
         doubleClickAction = new CodewindDoubleClickAction(selProvider);
@@ -49,10 +53,13 @@ public class CodewindActionProvider extends CommonActionProvider {
     		// If the installer is active then the install actions should not be shown
     		return;
     	}
+    	selProvider.setSelection(selProvider.getSelection());
+    	InstallStatus status = CodewindManager.getManager().getInstallStatus();
     	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
-    	InstallStatus status = CodewindManager.getManager().getInstallStatus(false);
-    	if (status.isInstalled()) {
+    	if (status.isStarted()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
+    	} else if (status.isInstalled()) {
+	    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
     	}
     }
 
@@ -86,23 +93,22 @@ public class CodewindActionProvider extends CommonActionProvider {
 		@Override
 		public void run() {
 			if (manager != null) {
-				InstallStatus status = manager.getInstallStatus(false);
-				switch(status) {
-					case NOT_INSTALLED:
-						CodewindInstall.installCodewind(null);
-						break;
-					case INSTALLED:
-						CodewindInstall.startCodewind(null);
-						break;
-					case RUNNING:
-						ViewHelper.toggleExpansion(manager);
-						break;
-					default:
-						// do nothing
-						break;
+				InstallStatus status = manager.getInstallStatus();
+				if (status.isStarted()) {
+					ViewHelper.toggleExpansion(manager);
+				} else if (status.isInstalled()) {
+					CodewindInstall.startCodewind(status.getVersion(), null);
+				} else if (status.hasInstalledVersions()) {
+					boolean result = IDEUtil.openConfirmDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
+					if (result) {
+						CodewindInstall.updateCodewind(InstallUtil.getVersion(), true, null);
+					}
+				} else if (status.isUnknown()) {
+					// An error occurred so do nothing (the error is displayed to the user)
+				} else {
+					CodewindInstall.installCodewind(InstallUtil.getVersion(), null);
 				}
 			}
 		}
 	}
-
 }

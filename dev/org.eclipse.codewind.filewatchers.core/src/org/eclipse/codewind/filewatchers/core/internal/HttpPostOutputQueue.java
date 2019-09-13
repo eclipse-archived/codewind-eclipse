@@ -14,13 +14,16 @@ package org.eclipse.codewind.filewatchers.core.internal;
 import java.net.ConnectException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
@@ -50,9 +53,15 @@ public class HttpPostOutputQueue {
 
 	private final FWLogger log = FWLogger.getInstance();
 
+	/** Keep track of the number of worker threads that are currently POST-ing. */
+	private final AtomicInteger activeWorkerThreads_synch = new AtomicInteger();
+
 	private final Object lock = new Object();
 
 	private final String serverBaseUrl;
+
+	/** Wait up to 24 hours for a chunk group to complete, before we drop it. */
+	private static final long CHUNK_GROUP_EXPIRE_TIME_IN_NANOS = TimeUnit.NANOSECONDS.convert(24, TimeUnit.HOURS);
 
 	public HttpPostOutputQueue(String url) {
 		this.serverBaseUrl = url;
@@ -73,7 +82,8 @@ public class HttpPostOutputQueue {
 
 		log.logDebug("Added file changes to queue: " + base64Compressed.size(), projectId);
 
-		PostQueueChunkGroup chunkGroup = new PostQueueChunkGroup(timestamp, projectId, base64Compressed, this);
+		PostQueueChunkGroup chunkGroup = new PostQueueChunkGroup(timestamp, projectId, base64Compressed,
+				System.nanoTime() + CHUNK_GROUP_EXPIRE_TIME_IN_NANOS, this);
 
 		synchronized (queue_synch) {
 			queue_synch.offer(chunkGroup);
@@ -81,9 +91,51 @@ public class HttpPostOutputQueue {
 		}
 	}
 
-	/** Remove any chunk groups that have already sent all their chunks. */
+	public String generateDebugString() {
+
+		String result = "- ";
+
+		int activeWorkers = 0;
+		synchronized (activeWorkerThreads_synch) {
+			activeWorkers = activeWorkerThreads_synch.get();
+		}
+
+		synchronized (lock) {
+
+			if (disposed_sync_lock.get()) {
+				return result + "[disposed]";
+			}
+
+			result += "total-workers: " + threads_sync_lock.size() + "  active-workers:" + activeWorkers;
+		}
+
+		synchronized (queue_synch) {
+
+			result += "  chunkGroupList-size: " + queue_synch.size() + "\n";
+
+			if (queue_synch.size() > 0) {
+				result += "\n";
+				result += "- HTTP Post Chunk Group List:\n";
+
+				for (PostQueueChunkGroup group : queue_synch) {
+					result += "  - projectID: " + group.getProjectId() + "  timestamp: " + group.getTimestamp() + "\n";
+				}
+
+			}
+
+		}
+
+		return result;
+	}
+
+	/**
+	 * Remove any chunk groups that have already sent all their chunks, or that have
+	 * expired (unable to send communication for X hours, eg 24)
+	 */
 	private void cleanupChunkGroups() {
 		synchronized (queue_synch) {
+
+			long currentTime = System.nanoTime();
 
 			boolean changeMade = false;
 			for (Iterator<PostQueueChunkGroup> it = queue_synch.iterator(); it.hasNext();) {
@@ -93,10 +145,17 @@ public class HttpPostOutputQueue {
 				if (group.isGroupComplete()) {
 					it.remove();
 					changeMade = true;
+				} else if (currentTime > group.getExpireTimeInNanos()) {
+					it.remove();
+					changeMade = true;
+					log.logSevere(
+							"Chunk group expired. This implies we could not connect to server for many hours. Chunk-group project: "
+									+ group.getProjectId() + "  timestamp: " + group.getTimestamp());
 				}
 			}
 
 			if (changeMade) {
+				// Inform threads waiting for work
 				informStateChange();
 			}
 		}
@@ -121,7 +180,7 @@ public class HttpPostOutputQueue {
 				// If there is at least one chunk group available
 				if (queue_synch.size() > 0) {
 
-					// If there work available from the top chunk?
+					// Is there work available from the top chunk?
 					PostQueueChunkGroup group = queue_synch.peek();
 					Optional<PostQueueChunk> o = group.acquireNextChunkAvailableToSend();
 					if (o.isPresent()) {
@@ -209,6 +268,10 @@ public class HttpPostOutputQueue {
 				chunkToSend = getOrWaitForNextPieceOfWork();
 
 				if (chunkToSend != null && threadRunning) {
+					synchronized (activeWorkerThreads_synch) {
+						activeWorkerThreads_synch.incrementAndGet();
+					}
+
 					String url = serverBaseUrl + "/api/v1/projects/" + chunkToSend.getProjectId()
 							+ "/file-changes?timestamp=" + chunkToSend.getTimestamp() + "&chunk="
 							+ chunkToSend.getChunkId() + "&chunk_total=" + chunkToSend.getChunkTotal();
@@ -242,6 +305,12 @@ public class HttpPostOutputQueue {
 				}
 
 				sendFailed = true;
+			} finally {
+				if (chunkToSend != null) {
+					synchronized (activeWorkerThreads_synch) {
+						activeWorkerThreads_synch.decrementAndGet();
+					}
+				}
 			}
 
 			if (!sendFailed && chunkToSend != null) {
@@ -264,15 +333,37 @@ public class HttpPostOutputQueue {
 
 	}
 
+	/**
+	 * The 'chunk group' maintains the list of chunks for a specific timestamp that
+	 * we are currently trying to send to the server.
+	 * 
+	 * Each chunk in the chunk group is in one of these states:
+	 * 
+	 * <pre>
+	 * - AVAILABLE_TO_SEND: Chunks in this state are available to be sent by the next available worker. 
+	 * - WAITING_FOR_ACK: Chunks in this state are in the process of being sent by one of the workers.
+	 * - COMPLETE: Chunks in this state have been sent and acknowledged by the server.
+	 * </pre>
+	 * 
+	 * The primary goal of chunk groups is to ensure that chunks will never be sent
+	 * to the server out of ascending-timestamp order: eg we will never send the
+	 * server a chunk of 'timestamp 20', then a chunk of 'timestamp 19'. The
+	 * 'timestamp 20' chunks will wait for all of the 'timestamp 19' chunks to be
+	 * sent.
+	 * 
+	 * This class is thread safe.
+	 */
 	private static class PostQueueChunkGroup implements Comparable<PostQueueChunkGroup> {
 
 		private enum ChunkStatus {
 			AVAILABLE_TO_SEND, WAITING_FOR_ACK, COMPLETE
 		}
 
-		private final HashMap<Integer /* chunk id */, PostQueueChunk> chunkMap = new HashMap<>();
+		/** List of chunks; this map is immutable (as are the chunks themselves) */
+		private final Map<Integer /* chunk id */, PostQueueChunk> chunkMap;
 
-		private final HashMap<Integer /* chunk id */, ChunkStatus> chunkStatus_synch = new HashMap<>();
+		/** Synchronize on this before accessing. */
+		private final Map<Integer /* chunk id */, ChunkStatus> chunkStatus_synch = new HashMap<>();
 
 		private final long timestamp;
 
@@ -280,10 +371,22 @@ public class HttpPostOutputQueue {
 
 		private final FWLogger log = FWLogger.getInstance();
 
+		private final String projectId;
+
+		/**
+		 * After X hours (eg 24), give up on trying to send this chunk group to the
+		 * server. At this point the data is too stale to be useful.
+		 */
+		private final long expireTimeInNanos;
+
 		public PostQueueChunkGroup(long timestamp, String projectId, List<String> base64Compressed,
-				HttpPostOutputQueue parent) {
+				long expireTimeInNanos, HttpPostOutputQueue parent) {
 
 			this.parent = parent;
+			this.projectId = projectId;
+			this.expireTimeInNanos = expireTimeInNanos;
+
+			HashMap<Integer /* chunk id */, PostQueueChunk> chunkMap = new HashMap<>();
 
 			int chunkId = 1;
 			for (String text : base64Compressed) {
@@ -297,6 +400,8 @@ public class HttpPostOutputQueue {
 				chunkId++;
 			}
 
+			this.chunkMap = Collections.unmodifiableMap(chunkMap);
+
 			this.timestamp = timestamp;
 
 		}
@@ -308,6 +413,7 @@ public class HttpPostOutputQueue {
 			}
 		}
 
+		/** Called by a worker thread to report a successful send. */
 		public void informChunkSent(PostQueueChunk chunk) {
 			synchronized (chunkStatus_synch) {
 				ChunkStatus currStatus = chunkStatus_synch.get(chunk.getChunkId());
@@ -321,6 +427,10 @@ public class HttpPostOutputQueue {
 			parent.informStateChange();
 		}
 
+		/**
+		 * Called by a worker thread to report a failed send; we make the chunk
+		 * available to send by another worker.
+		 */
 		public void informChunkFailedToSend(PostQueueChunk chunk) {
 			synchronized (chunkStatus_synch) {
 				ChunkStatus currStatus = chunkStatus_synch.get(chunk.getChunkId());
@@ -370,14 +480,37 @@ public class HttpPostOutputQueue {
 			return result;
 
 		}
+
+		long getExpireTimeInNanos() {
+			return expireTimeInNanos;
+		}
+
+		String getProjectId() {
+			return projectId;
+		}
+
+		long getTimestamp() {
+			return timestamp;
+		}
 	}
 
+	/**
+	 * A large number of file changes will be split into 'bite-sized pieces' called
+	 * chunks. Each chunk communicates a subset of the full change list, and is
+	 * communicated on a separate HTTP POST request.
+	 * 
+	 * Instances of this class are immutable.
+	 */
 	private static class PostQueueChunk {
 
 		private final String projectId;
 		private final long timestamp;
 		private final String base64Compressed;
+
+		/** The ID of a chunk will be 1 <= id <= chunkTotal */
 		private final int chunkId;
+
+		/** The total # of chunks that will e sent for this project id and timestamp. */
 		private final int chunkTotal;
 
 		private final PostQueueChunkGroup parentGroup;

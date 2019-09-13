@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.eclipse.codewind.filewatchers.JavaNioWatchService;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
@@ -25,6 +26,15 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 
+/**
+ * This class is responsible for kicking off the Filewatcher core code (via the
+ * Filewatcher constructor), adding the resource change listener to workspace,
+ * and receiving events from that Eclipse resource change listener then passing
+ * those events to the core Filewatcher logic.
+ * 
+ * Only a single instance of this class should exist per Codewind server. This
+ * class is threadsafe.
+ */
 public class CodewindFilewatcherdConnection {
 
 	@SuppressWarnings("unused")
@@ -63,8 +73,10 @@ public class CodewindFilewatcherdConnection {
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		workspace.addResourceChangeListener(listener);
 
+		// We use the native Eclipse-resource-listener-based watch service for projects
+		// inside the workspace, and the Java-NIO-JVM-based watch service for folders
+		// outside the workspace (eg the standalone Codewind settings directory).
 		this.platformWatchService = new EclipseResourceWatchService();
-
 		this.fileWatcher = new Filewatcher(url, clientUuid, platformWatchService, new JavaNioWatchService());
 
 		this.baseHttpUrl = url;
@@ -92,6 +104,10 @@ public class CodewindFilewatcherdConnection {
 		}
 	}
 
+	/**
+	 * Called by the resource change listener with a list of changes, which we pass
+	 * along to the core file watcher.
+	 */
 	void handleResourceChanges(List<FileChangeEntryEclipse> result) {
 		if (result == null || result.size() == 0) {
 			return;
@@ -118,6 +134,13 @@ public class CodewindFilewatcherdConnection {
 
 	}
 
+	/**
+	 * The CodewindResourceChangeListener converts file/folder changes into
+	 * instances of this class, which are then converted to WatchEventEntry (above)
+	 * to be passed to the core Filewatcher plugin logic.
+	 * 
+	 * The main difference between this class and a WatchEventEntry is the IProject.
+	 */
 	public static class FileChangeEntryEclipse {
 
 		private final File f;

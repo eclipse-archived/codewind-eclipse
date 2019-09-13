@@ -15,7 +15,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.wizards.NewCodewindProjectWizard;
@@ -62,7 +62,7 @@ public class NewProjectAction extends SelectionProviderAction {
 		}
 
 		try {
-			List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
+			List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
 			NewCodewindProjectWizard wizard = new NewCodewindProjectWizard(connection, templates);
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			if (dialog.open() == Window.CANCEL) {

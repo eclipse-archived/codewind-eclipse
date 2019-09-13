@@ -19,7 +19,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -222,9 +224,12 @@ public class NewCodewindConnectionPage extends WizardPage {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					ProcessResult result = InstallUtil.startCodewind(monitor);
+					InstallStatus status = CodewindManager.getManager().getInstallStatus();
+					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
 					if (result.getExitValue() != 0) {
-						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + result.getError()); //$NON-NLS-1$
+						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
 				} catch (IOException e) {
 					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$

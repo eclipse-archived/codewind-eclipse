@@ -1,6 +1,8 @@
 # Codewind for Eclipse
 
-[![License](https://img.shields.io/badge/License-EPL%202.0-red.svg)](https://www.eclipse.org/legal/epl-2.0/)
+[![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
+[![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-eclipse%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-eclipse/job/master/)
+[![Chat](https://img.shields.io/static/v1.svg?label=chat&message=mattermost&color=145dbf)](https://mattermost.eclipse.org/eclipse/channels/eclipse-codewind)
 
 ## Installing Codewind for Eclipse
 Prerequisites
@@ -11,7 +13,7 @@ Prerequisites
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
 2. Open the **Codewind Explorer** view.
-3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB.
+3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdteclipseinstallinfo.html).
 
 ## Using Codewind for Eclipse
 Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
@@ -51,6 +53,32 @@ cd build/dev
 ```
 build/dev/ant_build/artifacts/codewind-[Version].vYYYYMMDD_hhmm.zip
 ```
+
+## Developing Codewind for Eclipse
+- Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Codewind for Eclipse is 4.11.0 (2019-03).
+- Clone the repository to your system:
+ ```
+ git clone https://github.com/eclipse/codewind-eclipse
+ ```
+- Open the **Git Repositories** view in Eclipse and click on the **Add an existing local Git Repository to this view** toolbar button.
+- Fill in the location of your repository clone and finish the wizard.
+- Right click on the repository you just created, select **Import Projects** and import all of the `org.eclipse.codewind.*` projects.
+- Modify the code as desired and then use the Eclipse self-hosting feature to test and debug your changes:
+    1. Click on **Run** > **Debug Configurations** and create a new debug launch configuration of type **Eclipse Application**.
+    2. Modify the workspace location if desired.
+    3. For **Program to Run** choose **Run a product** and select **org.eclipse.epp.package.jee.product** from the drop down list.
+    4. You can work with different versions of the Codewind images by adding the **CW_TAG** environment variable in the **Environment** tab. Set it to **latest** to get the latest images or to a specific tag such as **0.3**.
+    5. Click the **Debug** button when you are finished to launch the self-hosted Eclipse and begin your testing.
+    
+## Developing Codewind images
+- Make sure to use the **Codewind Explorer** view in Eclipse to uninstall any current Codewind images before starting. If Codewind is installed, right click on **Codewind** in the view and select **Uninstall**.
+- To work with the Codewind images, clone this repository to your system:
+ ```
+ git clone https://github.com/eclipse/codewind
+ ```
+- Use an editor of your choice to make changes to the code if desired.
+- Build and run Codewind using [`run.sh`](https://github.com/eclipse/codewind/blob/master/run.sh).
+- When it is running you can right click on **Codewind** in the **Codewind Explorer** view in Eclipse and select **Refresh** to pick up the newly running Codewind images.
 
 ## Dependencies
 | Dependency | License |

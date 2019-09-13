@@ -11,44 +11,71 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
-import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 
 public class ProjectTypeSelectionPage extends WizardPage {
 
 	private CodewindConnection connection = null;
 	private IProject project = null;
-	private ProjectType type = null;
-	private ProjectLanguage language = null;
+	private Map<String, Set<String>> typeMap;
+	private String type = null;
+	private String language = null;
 	private Text languageLabel = null;
 	private CheckboxTableViewer languageViewer = null;
 	private Text typeLabel = null;
 	private CheckboxTableViewer typeViewer = null;
+	private ProjectInfo projectInfo = null;
 
 	protected ProjectTypeSelectionPage(CodewindConnection connection, IProject project) {
 		super(Messages.SelectProjectTypePageName);
 		setTitle(Messages.SelectProjectTypePageTitle);
 		setDescription(Messages.SelectProjectTypePageDescription);
 		this.connection = connection;
-		this.project = project;
+		setProject(project);
+		this.typeMap = getProjectTypeMap();
 	}
 
 	@Override
@@ -61,17 +88,26 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
+		if (typeMap == null || typeMap.isEmpty()) {
+			Text errorLabel = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
+			errorLabel.setText(Messages.SelectProjectTypeErrorLabel);
+			setControl(composite);
+			return;
+		}
+		
 		typeLabel = new Text(composite, SWT.READ_ONLY);
 		typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
 		typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 		typeLabel.setBackground(composite.getBackground());
 		typeLabel.setForeground(composite.getForeground());
 		
-		typeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+		typeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
 		typeViewer.setInput(getProjectTypeArray());
-		typeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		GridData typeViewerData = new GridData(GridData.FILL, GridData.FILL, true, true);
+		typeViewerData.minimumHeight = 200;
+		typeViewer.getTable().setLayoutData(typeViewerData);
 	   
 		languageLabel = new Text(composite, SWT.READ_ONLY);
 		languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
@@ -79,23 +115,36 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		languageLabel.setBackground(composite.getBackground());
 		languageLabel.setForeground(composite.getForeground());
 		
-		languageViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER);
+		languageViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		languageViewer.setContentProvider(ArrayContentProvider.getInstance());
 		languageViewer.setLabelProvider(new LanguageLabelProvider());
-		languageViewer.setInput(getLanguageArray());
-		languageViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		languageViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		typeViewer.addCheckStateListener(new ICheckStateListener() {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
 					typeViewer.setCheckedElements(new Object[] {event.getElement()});
-					type = (ProjectType) event.getElement();
+					type = (String) event.getElement();
 				} else {
 					type = null;
 				}
-				languageLabel.setVisible(type == ProjectType.TYPE_DOCKER);
-				languageViewer.getTable().setVisible(type == ProjectType.TYPE_DOCKER);
+				
+				String[] languages = getLanguageArray(type);
+				if (languages != null && languages.length > 1) {
+					language = null;
+					languageLabel.setVisible(true);
+					languageViewer.setInput(languages);
+					languageViewer.getTable().setVisible(true);
+				} else {
+					if (languages.length == 1) {
+						language = languages[0];
+					} else {
+						language = null;
+					}
+					languageLabel.setVisible(false);
+					languageViewer.getTable().setVisible(false);
+				}
 				getWizard().getContainer().updateButtons();
 			}
 		});
@@ -105,11 +154,73 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
 					languageViewer.setCheckedElements(new Object[] {event.getElement()});
-					language = (ProjectLanguage) event.getElement();
+					language = (String) event.getElement();
 				} else {
 					language = null;
 				}
 				getWizard().getContainer().updateButtons();
+			}
+		});
+		
+		// Manage repositories link
+		Composite manageReposComp = new Composite(composite, SWT.NONE);
+		manageReposComp.setLayout(new GridLayout(2, false));
+		manageReposComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 1, 1));
+		
+		Label manageRepoLabel = new Label(manageReposComp, SWT.NONE);
+		manageRepoLabel.setText(Messages.SelectProjectTypeManageRepoLabel);
+		manageRepoLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		
+		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
+		manageRepoLink.setText("<a>" + Messages.SelectProjectTypeManageRepoLink + "</a>");
+		manageRepoLink.setToolTipText(Messages.SelectProjectTypeManageRepoTooltip);
+		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+
+		manageRepoLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				List<RepositoryInfo> repoList;
+				try {
+					repoList = connection.requestRepositories();
+					RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(getShell(), connection, repoList);
+					if (repoDialog.open() == Window.OK) {
+						if (repoDialog.hasChanges()) {
+							IRunnableWithProgress runnable = new IRunnableWithProgress() {
+								@Override
+								public void run(IProgressMonitor monitor) throws InvocationTargetException {
+									SubMonitor mon = SubMonitor.convert(monitor, Messages.RepoUpdateTask, 100);
+									IStatus status = repoDialog.updateRepos(mon.split(75));
+									if (!status.isOK()) {
+										throw new InvocationTargetException(status.getException(), status.getMessage());
+									}
+									if (mon.isCanceled()) {
+										return;
+									}
+									try {
+										mon = mon.split(25);
+										mon.setTaskName(Messages.SelectProjectTypeRefreshTypesTask);
+										typeMap = getProjectTypeMap();
+										mon.worked(25);
+									} catch (Exception e) {
+										throw new InvocationTargetException(e, Messages.SelectProjectTypeRefreshTypesError);
+									}
+								}
+							};
+							try {
+								getWizard().getContainer().run(true, true, runnable);
+							} catch (InvocationTargetException e) {
+								MessageDialog.openError(getShell(), Messages.RepoUpdateErrorTitle, e.getMessage());
+								return;
+							} catch (InterruptedException e) {
+								// The user cancelled the operation
+								return;
+							}
+							updateTables();
+						}
+					}
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), Messages.RepoListErrorTitle, NLS.bind(Messages.RepoListErrorMsg, e));
+				}
 			}
 		});
  
@@ -123,47 +234,53 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 
 	public boolean canFinish() {
-		if (type == null || type == ProjectType.TYPE_UNKNOWN) {
+		if (type == null) {
 			return false;
 		}
 		return true;
 	}
 	
-	private ProjectType[] getProjectTypeArray() {
-		return new ProjectType[] {ProjectType.TYPE_LIBERTY, ProjectType.TYPE_NODEJS, ProjectType.TYPE_SPRING,
-				ProjectType.TYPE_SWIFT, ProjectType.TYPE_DOCKER};
+	private String[] getProjectTypeArray() {
+		Set<String> typeSet = typeMap.keySet();
+		String[] types = typeSet.toArray(new String[typeSet.size()]);
+		Arrays.sort(types, new Comparator<String>() {
+			@Override
+			public int compare(String t1, String t2) {
+				return ProjectType.getDisplayName(t1).compareToIgnoreCase(ProjectType.getDisplayName(t2));
+			}
+		});
+		return types;
 	}
 	
-	private ProjectLanguage[] getLanguageArray() {
-		return new ProjectLanguage[] {ProjectLanguage.LANGUAGE_GO, ProjectLanguage.LANGUAGE_JAVA, ProjectLanguage.LANGUAGE_NODEJS,
-				ProjectLanguage.LANGUAGE_PYTHON, ProjectLanguage.LANGUAGE_SWIFT};
+	private String[] getLanguageArray(String type) {
+		Set<String> languageSet = typeMap.get(type);
+		if (languageSet == null || languageSet.isEmpty()) {
+			return new String[0];
+		}
+		String[] languages = languageSet.toArray(new String[languageSet.size()]);
+		Arrays.sort(languages, new Comparator<String>() {
+			@Override
+			public int compare(String l1, String l2) {
+				return ProjectLanguage.getDisplayName(l1).compareToIgnoreCase(ProjectLanguage.getDisplayName(l2));
+			}
+		});
+		return languages;
 	}
 	
 	private class ProjectTypeLabelProvider extends LabelProvider {
 
 		@Override
 		public Image getImage(Object element) {
-			switch((ProjectType)element) {
-			case TYPE_LIBERTY:
-				return CodewindUIPlugin.getImage(CodewindUIPlugin.MICROPROFILE_ICON);
-			case TYPE_NODEJS:
-				return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
-			case TYPE_SPRING:
-				return CodewindUIPlugin.getImage(CodewindUIPlugin.SPRING_ICON);
-			case TYPE_SWIFT:
-				return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
-			default:
-				return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
-			}
+			return null;
 		}
 
 		@Override
 		public String getText(Object element) {
-			return ((ProjectType)element).getDisplayName();
+			return ProjectType.getDisplayName((String)element);
 		}
 		
 	}
-	
+
 	private class LanguageLabelProvider extends LabelProvider {
 
 		@Override
@@ -173,13 +290,36 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public String getText(Object element) {
-			return ((ProjectLanguage)element).getDisplayName();
+			return ProjectLanguage.getDisplayName((String)element);
 		}
-		
 	}
-	
+
 	public void setProject(IProject project) {
 		this.project = project;
+		this.projectInfo = null;
+		if (project == null) {
+			return;
+		}
+		if (getWizard() != null && getWizard().getContainer() != null) {
+			IRunnableWithProgress runnable = new IRunnableWithProgress() {
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException {
+					SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, project.getName()), 100);
+					projectInfo = getProjectInfo(mon.split(100));
+				}
+			};
+			try {
+				getContainer().run(true, true, runnable);
+			} catch (InvocationTargetException e) {
+				Logger.logError("An error occurred getting the project info for: " + project.getName(), e);
+				return;
+			} catch (InterruptedException e) {
+				// The user cancelled the operation
+				return;
+			}
+		} else {
+			projectInfo = getProjectInfo(new NullProgressMonitor());
+		}
 		updateTables();
 	}
 	
@@ -187,63 +327,108 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		return connection;
 	}
 	
-	public ProjectType getType() {
+	public String getType() {
 		// Type should not be null since the page cannot finish until a type is selected
 		if (type == null) {
 			Logger.logError("The project type is null on the project type selection page");
-			return ProjectType.TYPE_UNKNOWN;
+			return ProjectType.TYPE_UNKNOWN.getId();
 		}
 		return type;
 	}
 	
-	public ProjectLanguage getLanguage() {
-		// Type should not be null since the page cannot finish until a type is selected
-		if (type == null) {
-			Logger.logError("The project type is null on the project type selection page");
-			return ProjectLanguage.LANGUAGE_UNKNOWN;
+	public String getLanguage() {
+		if (language == null) {
+			// The language is optional so this is not an error
+			return ProjectLanguage.LANGUAGE_UNKNOWN.getId();
 		}
-		switch(type) {
-			case TYPE_LIBERTY:
-			case TYPE_SPRING:
-				return ProjectLanguage.LANGUAGE_JAVA;
-			case TYPE_NODEJS:
-				return ProjectLanguage.LANGUAGE_NODEJS;
-			case TYPE_SWIFT:
-				return ProjectLanguage.LANGUAGE_SWIFT;
-			default:
-				if (language == null) {
-					return ProjectLanguage.LANGUAGE_UNKNOWN;
-				}
-				return language;
-		}
+		return language;
 	}
 
 	private void updateTables() {
-		ProjectInfo projectInfo = getProjectInfo();
-		if (projectInfo != null) {
-			type = projectInfo.type;
-			language = projectInfo.language;
-			typeViewer.setChecked(type, true);
-			if (type == ProjectType.TYPE_DOCKER) {
-				languageViewer.setChecked(language, true);
-				languageLabel.setVisible(true);
-				languageViewer.getTable().setVisible(true);
+		if (typeViewer == null || typeViewer.getTable().isDisposed()) {
+			return;
+		}
+		typeViewer.setInput(getProjectTypeArray());
+		if (type != null && typeMap.containsKey(type)) {
+			// Maintain the current selection
+			typeViewer.setCheckedElements(new Object[] {type});
+			String[] languages = getLanguageArray(type);
+			updateLanguages(languages, language);
+		} else {
+			// If no selection, use the project info
+			if (projectInfo != null) {
+				type = projectInfo.type.getId();
+				language = projectInfo.language.getId();
+				if (typeMap.containsKey(type)) {
+					typeViewer.setCheckedElements(new Object[] {type});
+					String[] languages = getLanguageArray(type);
+					updateLanguages(languages, language);
+				}
 			}
 		}
 	}
+	
+	private void updateLanguages(String[] languages, String language) {
+		if (languageViewer == null || languageViewer.getTable().isDisposed()) {
+			return;
+		}
+		if (languages != null && languages.length > 1) {
+			languageLabel.setVisible(true);
+			languageViewer.setInput(languages);
+			languageViewer.getTable().setVisible(true);
+			if (language != null) {
+				for (String lang : languages) {
+					if (language.equals(lang)) {
+						languageViewer.setCheckedElements(new Object[] {language});
+						break;
+					}
+				}
+			}
+			languageViewer.getTable().setVisible(true);
+		} else {
+			languageLabel.setVisible(false);
+			languageViewer.getTable().setVisible(false);
+		}
+	}
 
-	ProjectInfo getProjectInfo() {
+	private ProjectInfo getProjectInfo(IProgressMonitor monitor) {
 		if (connection == null || project == null) {
 			return null;
 		}
 
 		try {
-			return connection.requestProjectValidate(project.getLocation().toFile().getAbsolutePath());
+			return InstallUtil.validateProject(project.getName(), project.getLocation().toFile().getAbsolutePath(), monitor);
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the project type for project: " + project.getName(), e); //$NON-NLS-1$
 		}
 
 		return null;
 	}
-	
+
+	private Map<String, Set<String>> getProjectTypeMap() {
+		List<ProjectTemplateInfo> templates = null;
+		Map<String, Set<String>> typeMap = new HashMap<String, Set<String>>();
+		try {
+			templates = connection.requestProjectTemplates(true);
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to get the list of templates for connection: " + connection.baseUrl, e); //$NON-NLS-1$
+			return null;
+		}
+		if (templates == null || templates.isEmpty()) {
+			Logger.logError("Could not get the list of templates for connection: " + connection.baseUrl); //$NON-NLS-1$
+			return null;
+		}
+		for (ProjectTemplateInfo template : templates) {
+			Set<String> languages = typeMap.get(template.getProjectType());
+			if (languages == null) {
+				languages = new HashSet<String>();
+				typeMap.put(template.getProjectType(), languages);
+			}
+			if (template.getLanguage() != null && !template.getLanguage().isEmpty()) {
+				languages.add(template.getLanguage());
+			}
+		}
+		return typeMap;
+	}
+
 }

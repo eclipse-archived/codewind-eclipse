@@ -13,8 +13,10 @@ package org.eclipse.codewind.ui.internal.views;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
@@ -26,17 +28,19 @@ import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelP
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.StyledString.Styler;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.navigator.IDescriptionProvider;
 
 /**
  * Label provider for the Codewind view.
  */
-public class CodewindNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider {
+public class CodewindNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider, IDescriptionProvider {
 
 	static final Styler BOLD_FONT_STYLER = new BoldFontStyler();
 	
@@ -66,15 +70,24 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					return Messages.CodewindLabel + "[" + Messages.CodewindStoppingQualifier + "]";
 				}
 			} else {
-				switch (manager.getInstallStatus(true)) {
-					case RUNNING:
-						return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
-					case INSTALLED:
-						return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
-					case NOT_INSTALLED:
-						return Messages.CodewindLabel + " [" + Messages.CodewindNotInstalledQualifier + "] (" + Messages.CodewindNotInstalledMsg + ")";
-					default:
-						return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+				InstallStatus status = manager.getInstallStatus();
+				if (status.isStarted()) {
+					return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
+				} else if (status.isInstalled()) {
+					if (status.hasStartedVersions()) {
+						// An older version is running
+						return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "] (" +
+								NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
+					}
+					return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
+				} else if (status.hasInstalledVersions()) {
+					// An older version is installed
+					return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "] (" +
+							NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
+				} else if (status.isUnknown()) {
+					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+				} else {
+					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
 				}
 			}
 		} else if (element instanceof CodewindConnection) {
@@ -100,8 +113,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			StringBuilder builder = new StringBuilder(app.name);
 			
 			if (app.isEnabled()) {
-				AppState appState = app.getAppState();
-				String displayString = appState.getDisplayString(app.getStartMode());
+				AppStatus appStatus = app.getAppStatus();
+				String displayString = appStatus.getDisplayString(app.getStartMode());
 				builder.append(" [" + displayString + "]");
 				
 				BuildStatus buildStatus = app.getBuildStatus();
@@ -141,22 +154,28 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					break;
 				}
 			} else {
-				switch (manager.getInstallStatus(true)) {
-					case RUNNING:
-						styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
-						break;
-					case INSTALLED:
+				InstallStatus status = manager.getInstallStatus();
+				if (status.isStarted()) {
+					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+				} else if (status.isInstalled()) {
+					if (status.hasStartedVersions()) {
+						// An older version is running
+						styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
+					} else {
 						styledString.append(" [" + Messages.CodewindNotStartedQualifier + "]", StyledString.DECORATIONS_STYLER);
 						styledString.append(" (" + Messages.CodewindNotStartedMsg + ")", StyledString.QUALIFIER_STYLER);
-						break;
-					case NOT_INSTALLED:
-						styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
-						styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
-						break;
-					default:
-						styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
-						styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
-						break;
+					}
+				} else if (status.hasInstalledVersions()) {
+					// An older version is installed
+					styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
+				} else if (status.isUnknown()) {
+					styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
+				} else {
+					styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
 				}
 			}
 		} else if (element instanceof CodewindConnection) {
@@ -181,8 +200,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			styledString = new StyledString(app.name);
 			
 			if (app.isEnabled()) {
-				AppState appState = app.getAppState();
-				String displayString = appState.getDisplayString(app.getStartMode());
+				AppStatus appStatus = app.getAppStatus();
+				String displayString = appStatus.getDisplayString(app.getStartMode());
 				styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
 				
 				BuildStatus buildStatus = app.getBuildStatus();
@@ -208,36 +227,48 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		if (element instanceof CodewindManager) {
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
 		} else if (element instanceof CodewindConnection) {
-			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
+			return CodewindUIPlugin.getImage(CodewindUIPlugin.PROJECTS_ICON);
 		} else if (element instanceof CodewindApplication) {
 			ProjectType type = ((CodewindApplication)element).projectType;
-			switch (type) {
-				case TYPE_LIBERTY:
+			if (type == ProjectType.TYPE_LIBERTY) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.MICROPROFILE_ICON);
-				case TYPE_NODEJS:
+			} else if (type == ProjectType.TYPE_NODEJS) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
-				case TYPE_SPRING:
+			} else if (type == ProjectType.TYPE_SPRING) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.SPRING_ICON);
-				case TYPE_SWIFT:
+			} else if (type == ProjectType.TYPE_SWIFT) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
-				case TYPE_DOCKER:
+			} else {
 					ProjectLanguage lang = ((CodewindApplication)element).projectLanguage;
 					switch (lang) {
 						case LANGUAGE_GO:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.GO_ICON);
 						case LANGUAGE_JAVA:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.JAVA_ICON);
+						case LANGUAGE_NODEJS:
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
 						case LANGUAGE_PYTHON:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
 						default:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
 					}
-				default:
-					return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
 			}
 		}
 		return null;
 	}
+	
+    @Override
+    public String getDescription(Object element) {
+    	if (element instanceof CodewindApplication) {
+			CodewindApplication app = (CodewindApplication)element;
+			if (app.getAppStatusDetails() != null) {
+				return app.getAppStatusDetails();
+			} else if (app.getRootUrl() != null && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED)) {
+				return NLS.bind(Messages.CodewindDescriptionContextRoot, app.getRootUrl());
+			}
+    	}
+    	return null;
+    }
 
 	static class BoldFontStyler extends Styler {
 	    @Override

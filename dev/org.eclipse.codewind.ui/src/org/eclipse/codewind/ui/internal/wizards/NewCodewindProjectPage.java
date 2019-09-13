@@ -19,20 +19,28 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.InstallUtil.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
+import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.TableLayout;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -47,6 +55,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -113,7 +122,7 @@ public class NewCodewindProjectPage extends WizardPage {
 	private void createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(2, false));
-		composite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		composite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		Label label = new Label(composite, SWT.NONE);
 		label.setText(Messages.NewProjectPage_ProjectNameLabel);
@@ -123,7 +132,7 @@ public class NewCodewindProjectPage extends WizardPage {
 
 		Label spacer = new Label(composite, SWT.NONE);
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
-		
+
 		// Project template composite
 		Text templateText = new Text(composite, SWT.READ_ONLY);
 		templateText.setText(Messages.NewProjectPage_TemplateGroupLabel);
@@ -138,7 +147,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		layout.horizontalSpacing = 7;
 		layout.verticalSpacing = 7;
 		templateGroup.setLayout(layout);
-		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
 		
 		// Filter text
 		filterText = new Text(templateGroup, SWT.BORDER);
@@ -152,29 +161,38 @@ public class NewCodewindProjectPage extends WizardPage {
 		selectionTable.setLayoutData(data);
 		
 		// Columns
-		final TableColumn featureColumn = new TableColumn(selectionTable, SWT.NONE);
-		featureColumn.setText(Messages.NewProjectPage_TypeColumn);
-		featureColumn.setResizable(true);
-		featureColumn.addSelectionListener(new SelectionAdapter() {
+		final TableColumn templateColumn = new TableColumn(selectionTable, SWT.NONE);
+		templateColumn.setText(Messages.NewProjectPage_TemplateColumn);
+		templateColumn.setResizable(true);
+		templateColumn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				sortTable(selectionTable, featureColumn);
+				sortTable(selectionTable, templateColumn);
 			}
 		});
-		final TableColumn nameColumn = new TableColumn(selectionTable, SWT.NONE);
-		nameColumn.setText(Messages.NewProjectPage_LanguageColumn);
-		nameColumn.setResizable(true);
-		nameColumn.addSelectionListener(new SelectionAdapter() {
+		final TableColumn typeColumn = new TableColumn(selectionTable, SWT.NONE);
+		typeColumn.setText(Messages.NewProjectPage_TypeColumn);
+		typeColumn.setResizable(true);
+		typeColumn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				sortTable(selectionTable, nameColumn);
+				sortTable(selectionTable, typeColumn);
+			}
+		});
+		final TableColumn languageColumn = new TableColumn(selectionTable, SWT.NONE);
+		languageColumn.setText(Messages.NewProjectPage_LanguageColumn);
+		languageColumn.setResizable(true);
+		languageColumn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				sortTable(selectionTable, languageColumn);
 			}
 		});
 
 		selectionTable.setHeaderVisible(true);
 		selectionTable.setLinesVisible(false);
 		selectionTable.setSortDirection(SWT.DOWN);
-		selectionTable.setSortColumn(featureColumn);
+		selectionTable.setSortColumn(templateColumn);
 		
 		createItems(selectionTable, "");
 
@@ -197,20 +215,75 @@ public class NewCodewindProjectPage extends WizardPage {
 		descriptionScroll.getVerticalBar().setIncrement(lineHeight);
 		descriptionScroll.setBackground(templateGroup.getBackground());
 		descriptionScroll.setForeground(templateGroup.getForeground());
+		
+		
+		// Manage repositories link
+		Composite manageReposComp = new Composite(composite, SWT.NONE);
+		manageReposComp.setLayout(new GridLayout(2, false));
+		manageReposComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
+		
+		Label manageRepoLabel = new Label(manageReposComp, SWT.NONE);
+		manageRepoLabel.setText(Messages.NewProjectPage_ManageRepoLabel);
+		manageRepoLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		
+		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
+		manageRepoLink.setText("<a>" + Messages.NewProjectPage_ManageRepoLink + "</a>");
+		manageRepoLink.setToolTipText(Messages.NewProjectPage_ManageRepoTooltip);
+		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+
+		manageRepoLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				List<RepositoryInfo> repoList;
+				try {
+					repoList = connection.requestRepositories();
+					RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(getShell(), connection, repoList);
+					if (repoDialog.open() == Window.OK) {
+						if (repoDialog.hasChanges()) {
+							IRunnableWithProgress runnable = new IRunnableWithProgress() {
+								@Override
+								public void run(IProgressMonitor monitor) throws InvocationTargetException {
+									SubMonitor mon = SubMonitor.convert(monitor, Messages.RepoUpdateTask, 100);
+									IStatus status = repoDialog.updateRepos(mon.split(75));
+									if (!status.isOK()) {
+										throw new InvocationTargetException(status.getException(), status.getMessage());
+									}
+									if (mon.isCanceled()) {
+										return;
+									}
+									try {
+										mon = mon.split(25);
+										mon.setTaskName(Messages.NewProjectPage_RefreshTemplatesTask);
+										templateList = connection.requestProjectTemplates(true);
+										mon.worked(25);
+									} catch (Exception e) {
+										throw new InvocationTargetException(e, Messages.NewProjectPage_RefreshTemplatesError);
+									}
+								}
+							};
+							try {
+								getWizard().getContainer().run(true, true, runnable);
+							} catch (InvocationTargetException e) {
+								MessageDialog.openError(getShell(), Messages.RepoUpdateErrorTitle, e.getMessage());
+								return;
+							} catch (InterruptedException e) {
+								// The user cancelled the operation
+								return;
+							}
+							updateSelectionTable();
+						}
+					}
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), Messages.RepoListErrorTitle, NLS.bind(Messages.RepoListErrorMsg, e));
+				}
+			}
+		});
 
 		// Listeners
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent event) {
-				String text = filterText.getText();
-				if (text == null) {
-					text = "";
-				}
-				createItems(selectionTable, text);
-				if (selectionTable.getItemCount() > 0)
-					selectionTable.select(0);
-				updateDescription();
-				setPageComplete(validate());
+				updateSelectionTable();
 			}
 		});
 
@@ -276,7 +349,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		setErrorMessage(null);
 		return selectionTable.getSelectionCount() == 1 && projectName != null && !projectName.isEmpty();
 	}
-	
+
 	public ProjectTemplateInfo getProjectTemplateInfo() {
 		if (selectionTable != null) {
 			int index = selectionTable.getSelectionIndex();
@@ -303,18 +376,22 @@ public class NewCodewindProjectPage extends WizardPage {
 		// Create the items for the table.
 		table.removeAll();
 		pattern.setPattern("*" + filter + "*");
-		for (ProjectTemplateInfo template : templateList) {
-			String type = template.getLabel();
-			String language = template.getLanguage();
-			if (pattern.matches(type) || (language != null && pattern.matches(language))) {
+		for (ProjectTemplateInfo templateInfo : templateList) {
+			String template = templateInfo.getLabel();
+			String type = ProjectType.getDisplayName(templateInfo.getProjectType());
+			String language = ProjectLanguage.getDisplayName(templateInfo.getLanguage());
+			if (pattern.matches(template) || (type != null && pattern.matches(type)) || (language != null && pattern.matches(language))) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setForeground(table.getForeground());
 				item.setBackground(table.getBackground());
-				item.setText(0, type);
-				if (language != null) {
-					item.setText(1, language);
+				item.setText(0, template);
+				if (type != null) {
+					item.setText(1, type);
 				}
-				item.setData(template);
+				if (language != null) {
+					item.setText(2, language);
+				}
+				item.setData(templateInfo);
 			}
 		}
 	}
@@ -345,7 +422,7 @@ public class NewCodewindProjectPage extends WizardPage {
 			for (int j = i + 1; j < rows; j++) {
 				TableItem a = items[map[i]];
 				TableItem b = items[map[j]];
-				if ((a.getText(columnNum).compareTo(b.getText(columnNum)) * dir > 0)) {
+				if ((a.getText(columnNum).toLowerCase().compareTo(b.getText(columnNum).toLowerCase()) * dir > 0)) {
 					int t = map[i];
 					map[i] = map[j];
 					map[j] = t;
@@ -371,6 +448,18 @@ public class NewCodewindProjectPage extends WizardPage {
 
 		table.setSortDirection(dir == 1 ? SWT.DOWN : SWT.UP);
 		table.setSortColumn(column);
+	}
+	
+	private void updateSelectionTable() {
+		String text = filterText.getText();
+		if (text == null) {
+			text = "";
+		}
+		createItems(selectionTable, text);
+		if (selectionTable.getItemCount() > 0)
+			selectionTable.select(0);
+		updateDescription();
+		setPageComplete(validate());
 	}
 	
 	public void updateDescription() {
@@ -423,13 +512,13 @@ public class NewCodewindProjectPage extends WizardPage {
 		if (connection != null && connection.isConnected()) {
 			return;
 		}
-		InstallStatus status = manager.getInstallStatus(true);
-		if (status == InstallStatus.RUNNING) {
+		InstallStatus status = manager.getInstallStatus();
+		if (status.isStarted()) {
 			connection = manager.createLocalConnection();
 			return;
 		}
 		if (!status.isInstalled()) {
-			Logger.logError("In BindProjectAction run method and Codewind is not installed or has unknown status.");
+			Logger.logError("In NewCodewindProjectPage setupConnection method and Codewind is not installed or has unknown status.");
 			connection = null;
 			return;
 		}
@@ -439,9 +528,11 @@ public class NewCodewindProjectPage extends WizardPage {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					ProcessResult result = InstallUtil.startCodewind(monitor);
+					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
 					if (result.getExitValue() != 0) {
-						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + result.getError()); //$NON-NLS-1$
+						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
 					connection = manager.createLocalConnection();
 					ViewHelper.refreshCodewindExplorerView(null);
@@ -469,7 +560,7 @@ public class NewCodewindProjectPage extends WizardPage {
 	
 	private void getTemplates() {
 		try {
-			templateList = connection.requestProjectTemplates();
+			templateList = connection.requestProjectTemplates(true);
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
 		}

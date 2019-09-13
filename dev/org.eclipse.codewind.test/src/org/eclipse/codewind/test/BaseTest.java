@@ -12,26 +12,25 @@
 package org.eclipse.codewind.test;
 
 import java.io.IOException;
-import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.CodewindObjectFactory;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
-import org.eclipse.codewind.core.internal.console.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
-import org.eclipse.codewind.core.internal.constants.AppState;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
-import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.Condition;
@@ -45,6 +44,8 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.ui.IMarkerResolution;
@@ -58,32 +59,47 @@ import org.json.JSONException;
 import junit.framework.TestCase;
 
 public abstract class BaseTest extends TestCase {
-
-	protected static final String CODEWIND_URI = "http://localhost:9090";
 	
+	protected static final String LAGOM_ID = "lagomJavaTemplate";
+	protected static final String GO_ID = "microclimateGoTemplate";
+	protected static final String JAVA_MICROPROFILE_ID = "javaMicroProfileTemplate";
+	protected static final String NODE_EXPRESS_ID = "nodeExpressTemplate";
+	protected static final String PYTHON_ID = "SVTPythonTemplate";
+	protected static final String SPRING_JAVA_ID = "springJavaTemplate";
+	protected static final String APPSODY_JAVA_MICROPROFILE_ID = "codewind-appsody-java-microprofile";
+	protected static final String APPSODY_NODE_EXPRESS_ID = "codewind-appsody-nodejs-express";
+	protected static final String APPSODY_JAVA_SPRING_ID = "codewind-appsody-java-spring-boot2";
+
 	protected static final String MARKER_TYPE = "org.eclipse.codewind.core.validationMarker";
+	
+	protected static final String RESOURCE_PATH = "resources";
 	
 	protected static CodewindConnection connection;
 	protected static IProject project;
 	
 	protected static String projectName;
-	protected static ProjectType projectType;
-	protected static ProjectLanguage projectLanguage;
+	protected static String templateId;
 	protected static String relativeURL;
 	protected static String srcPath;
 	
 	protected static Boolean origAutoBuildSetting = null;
 	
     public void doSetup() throws Exception {
+    	// Check that Codewind is installed
+    	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus().isStarted());
+    	
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
     	
         // Create a Codewind connection
-        connection = CodewindObjectFactory.createCodewindConnection(new URI(CODEWIND_URI));
-        CodewindConnectionManager.add(connection);
+        connection = CodewindManager.getManager().getLocalConnection();
+        if (connection == null) {
+        	connection = CodewindManager.getManager().createLocalConnection();
+        }
+        assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project
-        createProject(projectType, projectLanguage, projectName);
+        createProject(templateId, projectName);
         
         // Wait for the project to be created
         assertTrue("The application " + projectName + " should be created", CodewindUtil.waitForProject(connection, projectName, 300, 5));
@@ -113,7 +129,7 @@ public abstract class BaseTest extends TestCase {
     
     public void checkApp(String text) throws Exception {
     	CodewindApplication app = connection.getAppByName(projectName);
-    	assertTrue("App should be in started state.  Current state is: " + app.getAppState(), CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 2));
+    	assertTrue("App should be in started state.  Current state is: " + app.getAppStatus(), CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 2));
     	pingApp(text);
     	checkMode(StartMode.RUN);
     	showConsoles();
@@ -154,8 +170,8 @@ public abstract class BaseTest extends TestCase {
     	CodewindApplication app = connection.getAppByName(projectName);
     	connection.requestProjectRestart(app, mode.startMode);
     	// For Java builds the states can go by quickly so don't do an assert on this
-    	CodewindUtil.waitForAppState(app, AppState.STOPPED, 30, 1);
-    	assertTrue("App should be in started state instead of: " + app.getAppState(), CodewindUtil.waitForAppState(app, AppState.STARTED, 120, 1));
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 30, 1);
+    	assertTrue("App should be in started state instead of: " + app.getAppStatus(), CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	checkMode(mode);
     }
     
@@ -198,12 +214,6 @@ public abstract class BaseTest extends TestCase {
     		}
     	}
     	assertTrue("Did not find all expected consoles", foundConsoles.size() == expectedConsoles.size());
-    }
-    
-    protected void buildIfWindows() throws Exception {
-    	if (TestUtil.isWindows()) {
-    		build();
-    	}
     }
     
     protected void build() throws Exception {
@@ -252,31 +262,30 @@ public abstract class BaseTest extends TestCase {
 		return null;
 	}
 	
-	protected void createProject(ProjectType type, ProjectLanguage language, String name) throws IOException, JSONException {
+	protected void createProject(String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
-		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates();
+		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
 		for (ProjectTemplateInfo template : templates) {
-			if (language.getId().equals(template.getLanguage())) {
-				if (language == ProjectLanguage.LANGUAGE_JAVA) {
-					String label = template.getLabel();
-					if (type == ProjectType.TYPE_LIBERTY && label.toLowerCase().contains("microprofile")) {
-						templateInfo = template;
-						break;
-					}
-					if (type == ProjectType.TYPE_SPRING && label.toLowerCase().contains("spring")) {
-						templateInfo = template;
-						break;
-					}
-				} else {
-					templateInfo = template;
-					break;
-				}
+			if (template.getUrl().toLowerCase().contains(id.toLowerCase())) {
+				templateInfo = template;
+				break;
 			}
 		}
-		assertNotNull("No template found that matches the project type: " + projectType, templateInfo);
-		connection.requestProjectCreate(templateInfo, name);
-		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, language.getId(), type.getId());
+		assertNotNull("No template found that matches the id: " + id, templateInfo);
+		IPath path = connection.getWorkspacePath().append(name);
+		InstallUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), new NullProgressMonitor());
+		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType());
 
+	}
+	
+	protected void refreshProject() throws CoreException {
+		project.refreshLocal(IProject.DEPTH_INFINITE, new NullProgressMonitor());
+	}
+	
+	protected void copyFile(String resourcesRelPath, IPath destPath) throws Exception {
+		IPath srcPath = CodewindTestPlugin.getInstallLocation();
+		srcPath = srcPath.append(RESOURCE_PATH).append(resourcesRelPath);
+		TestUtil.copyFile(srcPath, destPath);
 	}
 
 }

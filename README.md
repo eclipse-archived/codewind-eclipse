@@ -1,10 +1,13 @@
-# Codewind for Eclipse
-
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
 [![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-eclipse%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-eclipse/job/master/)
 [![Chat](https://img.shields.io/static/v1.svg?label=chat&message=mattermost&color=145dbf)](https://mattermost.eclipse.org/eclipse/channels/eclipse-codewind)
 
+# Codewind for Eclipse
+Create and develop cloud-native, containerized web applications from Eclipse.
+
 ## Installing Codewind for Eclipse
+You can install Codewind locally in Eclipse. For more information about installing Codewind, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdt-eclipse-installinfo.html).
+
 Prerequisites
 - Download and install the latest [Eclipse IDE for Java EE Developers](https://www.eclipse.org/downloads/packages/release/) or use an existing installation. The earliest supported version of the Eclipse IDE for Codewind for Eclipse is 4.11.0 (2019-03).
 - Install Docker.
@@ -13,22 +16,26 @@ Prerequisites
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
 2. Open the **Codewind Explorer** view.
-3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdteclipseinstallinfo.html).
+3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB.
 
 ## Using Codewind for Eclipse
 Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
 
-Features:</br>
-- Create new projects from application templates or add existing container-ready projects to Codewind.
-- View Codewind projects, including application and build statuses.
-- Debug **Microprofile/Java EE** and **Spring** projects in their containers.
-- Set up a Chrome debug session for **Node.js** projects.
-- View application and build logs in the **Console** view.
-- View and edit project deployment information.
-- Open a shell session into a Codewind application container.
-- Toggle project auto build and manually initiate project builds.
-- Integrate Codewind validation errors into the **Markers** view.
-- Disable, enable, and remove projects.
+[Features:](https://www.eclipse.org/codewind/mdteclipsemanagingprojects.html)</br>
+- **Open Application**: Opens the application in the default Eclipse browser. This action is only available when the application is running or debugging.
+- **Open Project Overview**: Opens the overview page for a project. You can use this action to see information about the project, enable or disable the project, turn auto build on and off, or edit project settings.
+- **Open Container Shell**: Opens a shell into your application container. This action is available only when the container is active.
+- **Open Application Monitor**: Opens the application monitor in the default Eclipse browser. Use this action to monitor the activity and health of your application. This action is available only when the application is running or debugging.
+- **Import Project**: Imports your project into the Eclipse workspace.
+- **Show Log Files**: If log files are available, this action displays a list of log files. In the Eclipse **Console** view, click a log file to open it, or click **Show All** to open all available log files. The individual log files are toggle actions. Click the log file again to remove the log file, or click **Hide All** to remove all log files from the **Console** view.
+- **Restart in Run Mode**: Restarts the application in run mode.
+- **Restart in Debug Mode**: Restarts the application in debug mode and attaches the debugger. Only MicroProfile/Java EE, Spring, and Node.js projects can be debugged. For more information, see [Debugging Codewind projects](https://www.eclipse.org/codewind/mdteclipsedebugproject.html).
+- **Attach Debugger**: If you detached the debugger accidentally or restarted Eclipse, use this action to re-attach the debugger to an application in debug mode. For more information, see [Debugging Codewind projects](https://www.eclipse.org/codewind/mdteclipsedebugproject.html).
+- **Build**: Initiate a build of your project. This action is not available if a build is already running. For more information, see [Building Codewind projects](https://www.eclipse.org/codewind/mdteclipsebuildproject.html).
+- **Disable Auto Build**: Use this to disable automatic builds if you are making a lot of changes and don't want builds to be triggered until you are done. This action is available only when auto build is enabled.
+- **Enable Auto Build**: Use this to re-enable automatic builds whenever a change is made. This action is available only when auto build is disabled.
+- **Remove**: Removes a project. This action removes the project from Codewind. You can then use Eclipse to delete the project from the Eclipse workspace and the file system.
+- **Refresh**: If the project gets out of sync, use this option to refresh it. To refresh all projects, right-click on the **Local Projects** item in the **Codewind Explorer** view and select **Refresh**.
 
 ## Enabling debug logs
 1. Create an `.options` file in your Eclipse install directory, the same directory with the `eclipse` executable. Include the following content in the new file:
@@ -43,7 +50,7 @@ org.eclipse.codewind.core/debug/info=true
  ```
  git clone https://github.com/eclipse/codewind-eclipse
  ```
-2. [Optional] To get a test build, copy the `codewind-eclipse` folder to the `build` directory to keep your source folder intact.
+2. (Optional:) To get a test build, copy the `codewind-eclipse` folder to the `build` directory to keep your source folder intact.
 3. Run a Gradle build:
 ```
 cd build/dev
@@ -62,13 +69,13 @@ build/dev/ant_build/artifacts/codewind-[Version].vYYYYMMDD_hhmm.zip
  ```
 - Open the **Git Repositories** view in Eclipse and click on the **Add an existing local Git Repository to this view** toolbar button.
 - Fill in the location of your repository clone and finish the wizard.
-- Right click on the repository you just created, select **Import Projects** and import all of the `org.eclipse.codewind.*` projects.
-- Modify the code as desired and then use the Eclipse self-hosting feature to test and debug your changes:
-    1. Click on **Run** > **Debug Configurations** and create a new debug launch configuration of type **Eclipse Application**.
-    2. Modify the workspace location if desired.
-    3. For **Program to Run** choose **Run a product** and select **org.eclipse.epp.package.jee.product** from the drop down list.
+- Right-click on the repository you just created, select **Import Projects**, and import all of the `org.eclipse.codewind.*` projects.
+- Modify the code and then use the Eclipse self-hosting feature to test and debug your changes:
+    1. Click **Run** > **Debug Configurations** and create a new debug launch configuration of type **Eclipse Application**.
+    2. Modify the workspace location if you want.
+    3. For **Program to Run**, choose **Run a product** and select **org.eclipse.epp.package.jee.product** from the drop down list.
     4. You can work with different versions of the Codewind images by adding the **CW_TAG** environment variable in the **Environment** tab. Set it to **latest** to get the latest images or to a specific tag such as **0.3**.
-    5. Click the **Debug** button when you are finished to launch the self-hosted Eclipse and begin your testing.
+    5. To launch the self-hosted Eclipse and begin your testing, click the **Debug** button when you are finished.
     
 ## Developing Codewind images
 - Make sure to use the **Codewind Explorer** view in Eclipse to uninstall any current Codewind images before starting. If Codewind is installed, right click on **Codewind** in the view and select **Uninstall**.
@@ -76,9 +83,9 @@ build/dev/ant_build/artifacts/codewind-[Version].vYYYYMMDD_hhmm.zip
  ```
  git clone https://github.com/eclipse/codewind
  ```
-- Use an editor of your choice to make changes to the code if desired.
+- Use an editor of your choice to make changes to the code.
 - Build and run Codewind using [`run.sh`](https://github.com/eclipse/codewind/blob/master/run.sh).
-- When it is running you can right click on **Codewind** in the **Codewind Explorer** view in Eclipse and select **Refresh** to pick up the newly running Codewind images.
+- When it is running you can right-click **Codewind** in the **Codewind Explorer** view in Eclipse and select **Refresh** to pick up the newly running Codewind images.
 
 ## Dependencies
 | Dependency | License |

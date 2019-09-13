@@ -1,4 +1,4 @@
-Usage: APPSODY_VERSION=0.4.3 ./pull.sh
+Usage: APPSODY_VERSION=0.4.3 ./meta-pull.sh
 
 The CLI version is the latest available from master.
 You may override the branch with CW_CLI_BRANCH in the env.

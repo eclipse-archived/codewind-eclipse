@@ -1,6 +1,6 @@
 *
 !.gitignore
-!*.sh
+!meta-pull.sh
 !README.txt
 
 **/installer-docker-compose.yaml

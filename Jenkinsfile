@@ -25,6 +25,7 @@ pipeline {
                     sh """#!/usr/bin/env bash
                         export CW_CLI_BRANCH=${params.CW_CLI_BRANCH} APPSODY_VERSION=${params.APPSODY_VERSION}
                         ./meta-pull.sh
+                        ./pull.sh
                     """
                 }
             }

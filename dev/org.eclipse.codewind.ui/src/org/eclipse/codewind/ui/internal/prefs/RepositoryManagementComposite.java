@@ -20,6 +20,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -36,19 +37,17 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -68,12 +67,9 @@ public class RepositoryManagementComposite extends Composite {
 	private List<RepoEntry> repoEntries;
 	private CheckboxTableViewer repoViewer;
 	private Button removeButton;
-	private Font boldFont;
-//	private Label descLabel;
-//	private Text descText;
-	private Label styleLabel;
-	private Text styleText;
-	private Label linkLabel;
+	private StyledText styleLabel;
+	private StyledText styleText;
+	private StyledText linkLabel;
 	private Link urlLink;
 	
 	public RepositoryManagementComposite(Composite parent, CodewindConnection connection, List<RepositoryInfo> repoList) {
@@ -179,39 +175,20 @@ public class RepositoryManagementComposite extends Composite {
 		detailsComp.setLayout(detailsLayout);
 		detailsComp.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 
-		Font font = detailsComp.getFont();
-		if (boldFont == null) {
-			Display display = getShell().getDisplay();
-			FontData[] fontData = font.getFontData();
-			fontData[0].setStyle(SWT.BOLD);
-			fontData[0].setHeight(fontData[0].getHeight());
-			boldFont = new Font(display, fontData);
-		}
-		
-		detailsComp.addDisposeListener((event) -> {
-			if (boldFont != null)
-				boldFont.dispose();
-		});
-
-//		descLabel = new Label(detailsComp, SWT.NONE);
-//		descLabel.setFont(boldFont);
-//		descLabel.setText(Messages.RepoMgmtDescriptionLabel);
-//		descText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
-//		descText.setText("");
-//		GridData descData = new GridData(GridData.FILL, GridData.FILL, false, false);
-//		descText.setLayoutData(descData);
-
-		styleLabel = new Label(detailsComp, SWT.NONE);
-		styleLabel.setFont(boldFont);
+		styleLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
 		styleLabel.setText(Messages.RepoMgmtStylesLabel);
-		styleText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+		IDEUtil.setBold(styleLabel);
+		IDEUtil.normalizeBackground(styleLabel, detailsComp);
+		styleText = new StyledText(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		styleText.setText("");
 		GridData styleData = new GridData(GridData.FILL, GridData.FILL, false, false);
 		styleText.setLayoutData(styleData);
+		IDEUtil.normalizeBackground(styleText, detailsComp);
 		
-		linkLabel = new Label(detailsComp, SWT.NONE);
-		linkLabel.setFont(boldFont);
+		linkLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
 		linkLabel.setText(Messages.RepoMgmtUrlLabel);
+		IDEUtil.setBold(linkLabel);
+		IDEUtil.normalizeBackground(linkLabel, detailsComp);
 		urlLink = new Link(detailsComp, SWT.WRAP);
 		urlLink.setText("");
 		GridData linkData = new GridData(GridData.FILL, GridData.FILL, false, false);
@@ -240,7 +217,6 @@ public class RepositoryManagementComposite extends Composite {
 		
 		detailsScroll.addListener(SWT.Resize, (event) -> {
 			  int width = detailsScroll.getClientArea().width;
-//			  descData.widthHint = width - detailsLayout.marginWidth; // Add padding to right.
 			  styleData.widthHint = width - detailsLayout.marginWidth;
 			  linkData.widthHint = width - detailsLayout.marginWidth;
 			  Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -270,11 +246,10 @@ public class RepositoryManagementComposite extends Composite {
 		}
 		updateDetails();
 		updateButtons();
-	}	   
+	}
 
 	private void updateDetails() {
 		TableItem[] items = repoViewer.getTable().getSelection();
-//		String description = "";
 		String styles = "";
 		String url = "";
 		RepoEntry entry = null;
@@ -282,15 +257,9 @@ public class RepositoryManagementComposite extends Composite {
 		if (items.length == 1) {
 			enabled = true;
 			entry = (RepoEntry)items[0].getData();
-//			description = entry.description;
-//			if (description == null || description.isEmpty()) {
-//				description = Messages.NewProjectPage_DescriptionNone;
-//			}
 			styles = entry.getStyles();
 			url = entry.url;
 		}
-//		descLabel.setEnabled(enabled);
-//		descText.setText(description);
 		styleLabel.setEnabled(enabled);
 		styleText.setText(styles);
 		linkLabel.setEnabled(enabled);
@@ -553,6 +522,12 @@ public class RepositoryManagementComposite extends Composite {
 			return composite; 
 		}
 		
+		@Override
+		protected void createButtonsForButtonBar(Composite parent) {
+			super.createButtonsForButtonBar(parent);
+			enableOKButton(false);
+		}
+
 		protected void enableOKButton(boolean value) {
 			getButton(IDialogConstants.OK_ID).setEnabled(value);
 		}

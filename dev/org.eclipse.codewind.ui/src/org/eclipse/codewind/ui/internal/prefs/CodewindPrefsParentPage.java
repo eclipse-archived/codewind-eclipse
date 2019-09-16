@@ -18,6 +18,7 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -37,7 +38,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -59,7 +59,6 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	private Text uninstallTimeoutText;
 	private Text debugTimeoutText;
 	private Combo webBrowserCombo;
-	private Text selectWebBrowserLabel;
 	private Button[] stopAppsButtons = new Button[3];
 		
 	private String browserName = null;
@@ -168,8 +167,7 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	    Text browserSelectionLabel = new Text(debugGroup, SWT.READ_ONLY | SWT.SINGLE);
 	    browserSelectionLabel.setText(Messages.BrowserSelectionLabel);
 	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 3, 1));
-	    browserSelectionLabel.setBackground(composite.getBackground());
-	    browserSelectionLabel.setForeground(composite.getForeground());
+	    IDEUtil.normalizeBackground(browserSelectionLabel, debugGroup);
 	    
 	    final Composite selectWebBrowserComposite = new Composite(debugGroup, SWT.NONE);
 	    layout = new GridLayout();
@@ -181,11 +179,9 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	    selectWebBrowserComposite.setLayout(layout);
 	    selectWebBrowserComposite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 	    
-        selectWebBrowserLabel = new Text(selectWebBrowserComposite, SWT.READ_ONLY | SWT.SINGLE );
+        Label selectWebBrowserLabel = new Label(selectWebBrowserComposite, SWT.NONE );
         selectWebBrowserLabel.setText(Messages.BrowserSelectionListLabel);	
         selectWebBrowserLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 1, 1));
-	    selectWebBrowserLabel.setBackground(selectWebBrowserComposite.getBackground());
-	    selectWebBrowserLabel.setForeground(selectWebBrowserComposite.getForeground());
         
         webBrowserCombo = new Combo(selectWebBrowserComposite, SWT.BORDER | SWT.READ_ONLY);
         

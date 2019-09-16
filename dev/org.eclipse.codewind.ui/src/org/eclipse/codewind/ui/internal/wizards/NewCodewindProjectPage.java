@@ -99,23 +99,28 @@ public class NewCodewindProjectPage extends WizardPage {
 		}
 		
 		if (templateList == null || templateList.isEmpty()) {
-			getTemplates();
-			if (templateList == null || templateList.isEmpty()) {
+			try {
+				templateList = connection.requestProjectTemplates(true);
+			} catch (Exception e) {
+				Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
 				setErrorMessage(Messages.NewProjectPage_TemplateListError);
 				setControl(composite);
 				return;
 			}
 		}
 		
-		templateList.sort(new Comparator<ProjectTemplateInfo>() {
-			@Override
-			public int compare(ProjectTemplateInfo info1, ProjectTemplateInfo info2) {
-				return info1.getLabel().compareTo(info2.getLabel());
-			}
-		});
+		if (templateList.isEmpty()) {
+			setErrorMessage(Messages.NewProjectPage_EmptyTemplateList);
+		} else {
+			templateList.sort(new Comparator<ProjectTemplateInfo>() {
+				@Override
+				public int compare(ProjectTemplateInfo info1, ProjectTemplateInfo info2) {
+					return info1.getLabel().compareTo(info2.getLabel());
+				}
+			});
+		}
 
 		createContents(composite);
-
 		setControl(composite);
 	}
 
@@ -327,8 +332,11 @@ public class NewCodewindProjectPage extends WizardPage {
 	}
 
 	private boolean validate() {
+		if (templateList == null || templateList.isEmpty()) {
+			setErrorMessage(Messages.NewProjectPage_EmptyTemplateList);
+			return false;
+		}
 		String projectName = projectNameText.getText();
-		
 		if (projectName == null || projectName.isEmpty()) {
 			setErrorMessage(Messages.NewProjectPage_EmptyProjectName);
 			return false;
@@ -555,14 +563,6 @@ public class NewCodewindProjectPage extends WizardPage {
 		
 		if (connection == null) {
 			Logger.logError("Failed to connect to Codewind at: " + manager.getLocalURI()); //$NON-NLS-1$
-		}
-	}
-	
-	private void getTemplates() {
-		try {
-			templateList = connection.requestProjectTemplates(true);
-		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
 		}
 	}
 }

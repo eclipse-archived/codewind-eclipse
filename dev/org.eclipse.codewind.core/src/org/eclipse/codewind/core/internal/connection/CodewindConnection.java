@@ -593,8 +593,12 @@ public class CodewindConnection {
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
 		}
 		HttpResult result = HttpUtil.get(uri);
-		checkResult(result, uri, true);
+		checkResult(result, uri, false);
 		
+		// A response code of 204 means there are no available templates so just return the empty template list
+		if (result.responseCode == 204) {
+			return templates;
+		}
 		JSONArray templateArray = new JSONArray(result.response);
 		for (int i = 0; i < templateArray.length(); i++) {
 			templates.add(new ProjectTemplateInfo(templateArray.getJSONObject(i)));

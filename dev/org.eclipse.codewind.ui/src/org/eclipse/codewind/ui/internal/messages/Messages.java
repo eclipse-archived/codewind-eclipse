@@ -157,6 +157,7 @@ public class Messages extends NLS {
 	public static String SelectProjectTypeRefreshTypesTask;
 	public static String SelectProjectTypeRefreshTypesError;
 	public static String SelectProjectTypeValidateTask;
+	public static String SelectProjectTypeNoProjectTypes;
 	
 	public static String SelectProjectPageName;
 	public static String SelectProjectPageTitle;
@@ -266,6 +267,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ProjectCreateErrorMsg;
 	public static String NewProjectPage_CodewindConnectError;
 	public static String NewProjectPage_TemplateListError;
+	public static String NewProjectPage_EmptyTemplateList;
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;
@@ -309,6 +311,8 @@ public class Messages extends NLS {
 	public static String GenericActionNotSupported;
 	public static String AppMonitorNotSupported;
 	public static String PerfDashboardNotSupported;
+	
+	public static String RepoMgmtActionLabel;
 	
 	public static String RepoMgmtDialogTitle;
 	public static String RepoMgmtDialogMessage;

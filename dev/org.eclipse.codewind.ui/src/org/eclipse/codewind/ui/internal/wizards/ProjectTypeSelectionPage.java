@@ -88,11 +88,14 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		if (typeMap == null || typeMap.isEmpty()) {
+		if (typeMap == null) {
 			Text errorLabel = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
 			errorLabel.setText(Messages.SelectProjectTypeErrorLabel);
 			setControl(composite);
 			return;
+		}
+		if (typeMap.isEmpty()) {
+			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
 		}
 		
 		typeLabel = new Text(composite, SWT.READ_ONLY);
@@ -348,7 +351,14 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		if (typeViewer == null || typeViewer.getTable().isDisposed()) {
 			return;
 		}
-		typeViewer.setInput(getProjectTypeArray());
+		String[] projectTypes = getProjectTypeArray();
+		typeViewer.setInput(projectTypes);
+		if (projectTypes.length == 0) {
+			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
+			updateLanguages(null, null);
+			return;
+		}
+		setErrorMessage(null);
 		if (type != null && typeMap.containsKey(type)) {
 			// Maintain the current selection
 			typeViewer.setCheckedElements(new Object[] {type});
@@ -415,8 +425,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			return null;
 		}
 		if (templates == null || templates.isEmpty()) {
-			Logger.logError("Could not get the list of templates for connection: " + connection.baseUrl); //$NON-NLS-1$
-			return null;
+			Logger.log("The list of templates is empty for connection: " + connection.baseUrl); //$NON-NLS-1$
+			return typeMap;
 		}
 		for (ProjectTemplateInfo template : templates) {
 			Set<String> languages = typeMap.get(template.getProjectType());

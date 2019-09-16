@@ -13,7 +13,7 @@ pipeline {
     }
 
     triggers {
-        upstream(upstreamProjects: "Codewind/codewind-installer/master", threshold: hudson.model.Result.SUCCESS)
+        upstream(upstreamProjects: "Codewind/codewind-installer/${env.GIT_BRANCH}", threshold: hudson.model.Result.SUCCESS)
     }
 
     parameters {
@@ -104,6 +104,23 @@ pipeline {
                     '''
                 }
             }
-        }       
+        }
+
+        stage("Report") {
+            when {
+                beforeAgent true
+                triggeredBy 'UpstreamCause'
+            }
+
+            options {
+                skipDefaultCheckout()
+            }
+
+            steps {
+                mail to: 'jspitman@ca.ibm.com, eharris@ca.ibm.com',
+                subject: "${currentBuild.currentResult}: Upstream triggered build for ${currentBuild.fullProjectName}",
+                body: "${currentBuild.absoluteUrl}\n${currentBuild.getBuildCauses()[0].shortDescription} had status ${currentBuild.currentResult}"
+            }
+        }
     }    
 }

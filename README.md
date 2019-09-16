@@ -16,18 +16,20 @@ Prerequisites
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
 2. Open the **Codewind Explorer** view. Go to **Window**>**Show View**>**Other…**>**Codewind**>**Codewind Explorer**.
-3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdteclipseinstallinfo.html).
+3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdt-eclipse-installinfo.html).
 
 ## Using Codewind for Eclipse
 Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
 
 [Features:](https://www.eclipse.org/codewind/mdteclipsemanagingprojects.html)</br>
 - **Open Application**: Opens the application in the default Eclipse browser. This action is only available when the application is running or debugging.
-- **Open Project Overview**: Opens the overview page for a project. You can use this action to see information about the project, enable or disable the project, turn auto build on and off, or edit project settings.
+- **Open Project Overview**: Opens the overview page for a project. You can use this action to see information about the project and edit project settings.
 - **Open Container Shell**: Opens a shell into your application container. This action is available only when the container is active.
 - **Open Application Monitor**: Opens the application monitor in the default Eclipse browser. Use this action to monitor the activity and health of your application. This action is available only when the application is running or debugging.
+- **Open Performance Dashboard**: Opens the performance dashboard in the default Eclipse browser. This action is available only when the application is running or debugging.
 - **Import Project**: Imports your project into the Eclipse workspace.
-- **Show Log Files**: If log files are available, this action displays a list of log files. In the Eclipse **Console** view, click a log file to open it, or click **Show All** to open all available log files. The individual log files are toggle actions. Click the log file again to remove the log file, or click **Hide All** to remove all log files from the **Console** view.
+- **Disable/Enable Project**: Disables or enables the project.
+- **Show Log Files**: If log files are available, this action displays a list of log files. In the Eclipse **Console** view, click **Show All** or an individual log file toggle action to open the log file in the Eclipse **Console** view. Click the log file again to remove the log file, or click **Hide All** to remove all log files from the **Console** view.
 - **Restart in Run Mode**: Restarts the application in run mode.
 - **Restart in Debug Mode**: Restarts the application in debug mode and attaches the debugger. Only MicroProfile/Java EE, Spring, and Node.js projects can be debugged. For more information, see [Debugging Codewind projects](https://www.eclipse.org/codewind/mdteclipsedebugproject.html).
 - **Attach Debugger**: If you detached the debugger accidentally or restarted Eclipse, use this action to re-attach the debugger to an application in debug mode. For more information, see [Debugging Codewind projects](https://www.eclipse.org/codewind/mdteclipsedebugproject.html).
@@ -35,7 +37,7 @@ Right-click the **Local Projects** entry in the view to create new projects or a
 - **Disable Auto Build**: Use this to disable automatic builds if you are making a lot of changes and don't want builds to be triggered until you are done. This action is available only when auto build is enabled.
 - **Enable Auto Build**: Use this to re-enable automatic builds whenever a change is made. This action is available only when auto build is disabled.
 - **Remove**: Removes a project. This action removes the project from Codewind. You can then use Eclipse to delete the project from the Eclipse workspace and the file system.
-- **Refresh**: If the project gets out of sync, use this option to refresh it. To refresh all projects, right-click on the **Local Projects** item in the **Codewind Explorer** view and select **Refresh**.
+- **Refresh**: If the project gets out of sync, use this option to refresh it. To refresh all projects, right-click the **Projects (Local)** item in the **Codewind Explorer** view and select **Refresh**.
 
 ## Enabling debug logs
 1. Create an `.options` file in your Eclipse install directory, the same directory with the `eclipse` executable. Include the following content in the new file:

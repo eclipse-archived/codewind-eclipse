@@ -20,6 +20,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
@@ -521,7 +522,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		public StringEntry(Composite composite, String name) {
 			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
-	        setBold(label);
+	        IDEUtil.setBold(label);
 	        
 	        text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 	        text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
@@ -543,7 +544,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			
 			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
-	        setBold(label);
+	        IDEUtil.setBold(label);
 	        
 	        button = new Button(composite, SWT.TOGGLE);
 	        button.setText(onText.length() > offText.length() ? onText : offText);
@@ -588,7 +589,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		public LinkEntry(Composite composite, FormToolkit toolkit, String name, LinkAction action) {
 			StyledText label = new StyledText(composite, SWT.READ_ONLY | SWT.SINGLE);
 			label.setText(name);
-			setBold(label);
+			IDEUtil.setBold(label);
 	        
 			// If not available then use a text field
 			text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
@@ -630,14 +631,6 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	public interface LinkAction {
 		public void execute(String url);
-	}
-	
-	private void setBold(StyledText text) {
-		StyleRange range = new StyleRange();
-        range.start = 0;
-        range.length = text.getText().length();
-        range.fontStyle = SWT.BOLD;
-        text.setStyleRange(range);
 	}
 
 	@Override

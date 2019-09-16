@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 cd $(dirname $0)
 
-branch=$GIT_BRANCH
-if [[ "$1" != "" ]]; then
-    branch=$1
-fi
-if [[ "$branch" = "" ]]; then
-    branch=master
+branch=$1
+if [[ -z $branch ]]; then
+    branch="master"
 fi
 
 for file in "pull.sh" "appsody-pull.sh" "cli-pull.sh"; do
     curl -fsSL "https://raw.githubusercontent.com/eclipse/codewind-vscode/$branch/dev/bin/$file" -o "$file"
     chmod ugo+x $file
 done
+curl -fsSL "https://raw.githubusercontent.com/eclipse/codewind-vscode/$branch/dev/bin/README.txt" -o "README-pull.txt"
 
-./pull.sh
+echo
+echo "Scripts downloaded.  Run ./pull.sh to download the binary dependencies"
+echo
 
 cd -

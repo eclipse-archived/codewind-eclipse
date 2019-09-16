@@ -1,8 +1,9 @@
-Usage: APPSODY_VERSION=0.4.3 ./meta-pull.sh
+Usage: ./meta-pull.sh
 
-The CLI version is the latest available from master.
-You may override the branch with CW_CLI_BRANCH in the env.
-The download will be skipped if the version on disk matches.
+Pulls the scripts to download the Appsody and Codewind binaries from
+the codewind-vscode repository.
 
-The Appsody version must be set in the env using APPSODY_VERSION.
-The download will always proceed and overwrite the version on disk if necessary.
+You can optionally pass a parameter to specify which branch to pull
+from.  If no branch is specified, 'master' will be used.  After
+running this script, you must run './pull.sh'.  See the downloaded
+README-pull.txt for details on how to run the pull.sh script.

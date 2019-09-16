@@ -12,19 +12,24 @@ pipeline {
         skipStagesAfterUnstable()
     }
 
+    triggers {
+        upstream(upstreamProjects: "Codewind/codewind-installer/master", threshold: hudson.model.Result.SUCCESS)
+    }
+
     parameters {
+        string(name: "CW_VSCODE_BRANCH", defaultValue: "master", description: "Codewind VScode branch from which to download the download scripts")
         string(name: "CW_CLI_BRANCH", defaultValue: "master", description: "Codewind CLI branch from which to download the latest build")
         string(name: "APPSODY_VERSION", defaultValue: "0.4.3", description: "Appsody executable version to download")
     }
-    
+
     stages {
 
         stage("Download dependency binaries") {
             steps {
                 dir("dev/org.eclipse.codewind.core/binaries") {
                     sh """#!/usr/bin/env bash
-                        export CW_CLI_BRANCH=${params.CW_CLI_BRANCH} APPSODY_VERSION=${params.APPSODY_VERSION}
-                        ./meta-pull.sh
+                        export CW_CLI_BRANCH=${params.CW_CLI_BRANCH} APPSODY_VERSION=${params.APPSODY_VERSION} CW_VSCODE_BRANCH=${params.CW_VSCODE_BRANCH}
+                        ./meta-pull.sh 
                         ./pull.sh
                     """
                 }
@@ -100,5 +105,23 @@ pipeline {
                 }
             }
         }       
+
+        stage("Report") {
+            when {
+                beforeAgent true
+                triggeredBy 'UpstreamCause'
+            }
+
+            options {
+                skipDefaultCheckout()
+            }
+
+            agent any
+            steps {
+                mail to: 'jspitman@ca.ibm.com, eharris@ca.ibm.com',
+                subject: "${currentBuild.currentResult}: Upstream triggered build for ${currentBuild.fullProjectName}",
+                body: "${currentBuild.absoluteUrl}\n${currentBuild.getBuildCauses()[0].shortDescription} had status ${currentBuild.currentResult}"
+            }
+        }
     }    
 }

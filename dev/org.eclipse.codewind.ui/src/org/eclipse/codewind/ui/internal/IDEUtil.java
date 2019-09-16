@@ -14,6 +14,10 @@ package org.eclipse.codewind.ui.internal;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
@@ -55,5 +59,18 @@ public class IDEUtil {
 		
 		return result[0];
 	}
+    
+    public static void setBold(StyledText text) {
+		StyleRange range = new StyleRange();
+		range.start = 0;
+		range.length = text.getText().length();
+		range.fontStyle = SWT.BOLD;
+		text.setStyleRange(range);
+	}
+    
+    public static void normalizeBackground(Control control, Control parent) {
+    	control.setBackground(parent.getBackground());
+    	control.setForeground(parent.getForeground());
+    }
 
 }

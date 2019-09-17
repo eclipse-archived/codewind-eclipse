@@ -17,14 +17,12 @@ import java.util.Map;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.tm.terminal.view.core.TerminalServiceFactory;
+import org.eclipse.tm.terminal.view.core.interfaces.ITerminalService;
 import org.eclipse.tm.terminal.view.core.interfaces.constants.ITerminalsConnectorConstants;
-import org.eclipse.tm.terminal.view.ui.interfaces.ILauncherDelegate;
-import org.eclipse.tm.terminal.view.ui.launcher.LauncherDelegateManager;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
@@ -36,18 +34,10 @@ public class ContainerShellAction implements IObjectActionDelegate {
 	private static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
 	
     protected CodewindApplication app;
-    protected ILauncherDelegate delegate;
-    
-    public ContainerShellAction() {
-    	delegate = LauncherDelegateManager.getInstance().getLauncherDelegate(LAUNCHER_DELEGATE_ID, false);
-    	if (delegate == null) {
-    		Logger.logError("Could not get the local terminal launcher delegate."); //$NON-NLS-1$
-    	}
-    }
 
     @Override
     public void selectionChanged(IAction action, ISelection selection) {
-        if (delegate == null || !(selection instanceof IStructuredSelection)) {
+        if (!(selection instanceof IStructuredSelection)) {
             action.setEnabled(false);
             return;
         }
@@ -77,12 +67,6 @@ public class ContainerShellAction implements IObjectActionDelegate {
 			return;
         }
         
-        if (delegate == null) {
-        	// should not be possible
-        	Logger.logError("ContainerShellAction ran but the local terminal laucher delegate is null"); //$NON-NLS-1$
-			return;
-		}
-        
         // exec bash if it's installed, else exec sh
         String command = "sh -c \"if type bash > /dev/null; then bash; else sh; fi\"";
 
@@ -90,11 +74,18 @@ public class ContainerShellAction implements IObjectActionDelegate {
         String envPath = CoreUtil.getEnvPath();
         String dockerPath = envPath != null ? envPath + "docker" : "docker"; //$NON-NLS-1$  //$NON-NLS-2$
         Map<String, Object> properties = new HashMap<>();
-        properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, delegate.getId());
+        properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, LAUNCHER_DELEGATE_ID);
+        properties.put(ITerminalsConnectorConstants.PROP_SECONDARY_ID, app.name);
         properties.put(ITerminalsConnectorConstants.PROP_TITLE, app.name);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, dockerPath);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, "exec -it " + app.getContainerId() + " " + command); //$NON-NLS-1$ //$NON-NLS-2$
-        delegate.execute(properties, null);
+        ITerminalService terminal = TerminalServiceFactory.getService();
+        if (terminal == null) {
+            // This should not happen
+            Logger.logError("ContainerShellAction ran but the terminal service is null"); //$NON-NLS-1$
+            return;
+        }
+        terminal.openConsole(properties, null);
     }
 
 	@Override

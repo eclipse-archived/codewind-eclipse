@@ -59,15 +59,15 @@ public class InstallUtil {
 	private static final Map<OperatingSystem, String> appsodyMap = new HashMap<OperatingSystem, String>();
 
 	static {
-		installMap.put(OperatingSystem.LINUX, "resources/codewind-installer-linux");
-		installMap.put(OperatingSystem.MAC, "resources/codewind-installer-macos");
-		installMap.put(OperatingSystem.WINDOWS, "resources/codewind-installer-win.exe");
+		installMap.put(OperatingSystem.LINUX, "binaries/linux/codewind-installer");
+		installMap.put(OperatingSystem.MAC, "binaries/darwin/codewind-installer");
+		installMap.put(OperatingSystem.WINDOWS, "binaries/windows/codewind-installer.exe");
 	}
 	
 	static {
-		appsodyMap.put(OperatingSystem.LINUX, "resources/appsody/linux/appsody");
-		appsodyMap.put(OperatingSystem.MAC, "resources/appsody/macos/appsody");
-		appsodyMap.put(OperatingSystem.WINDOWS, "resources/appsody/win/appsody.exe");		
+		appsodyMap.put(OperatingSystem.LINUX, "binaries/linux/appsody");
+		appsodyMap.put(OperatingSystem.MAC, "binaries/darwin/appsody");
+		appsodyMap.put(OperatingSystem.WINDOWS, "binaries/windows/appsody.exe");		
 	}
 	
 	private static final InstallOperation codewindInstall = new InstallOperation("Codewind", installMap);

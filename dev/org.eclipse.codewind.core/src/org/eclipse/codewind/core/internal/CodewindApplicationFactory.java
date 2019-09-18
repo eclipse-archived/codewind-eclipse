@@ -79,6 +79,7 @@ public class CodewindApplicationFactory {
 			if (projectID == null) {
 				for (String id : connection.getAppIds()) {
 					if (!idSet.contains(id)) {
+						Logger.log("The application is no longer in the project list so removing: " + id);
 						connection.removeApp(id);
 					}
 				}

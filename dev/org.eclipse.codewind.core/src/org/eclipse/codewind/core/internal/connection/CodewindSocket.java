@@ -433,10 +433,9 @@ public class CodewindSocket {
 		String projectID = event.getString(CoreConstants.KEY_PROJECT_ID);
 		CodewindApplication app = connection.getAppByID(projectID);
 		if (app == null) {
-			Logger.logError("No application found for project being deleted: " + projectID);
+			Logger.log("No application found for project being deleted: " + projectID);
 			return;
 		}
-		app.onProjectDelete();
 		connection.removeApp(projectID);
 	}
 

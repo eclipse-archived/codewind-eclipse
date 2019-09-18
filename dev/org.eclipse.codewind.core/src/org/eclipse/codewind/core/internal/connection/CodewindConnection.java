@@ -308,10 +308,11 @@ public class CodewindConnection {
 			app = appMap.remove(projectID);
 		}
 		if (app != null) {
+			Logger.log("Removing the " + app.name + " application with id: " + projectID);
 			CoreUtil.removeApplication(app);
 			app.dispose();
 		} else {
-			Logger.logError("No application found for project being deleted: " + projectID); //$NON-NLS-1$
+			Logger.log("No application found for deleted project: " + projectID); //$NON-NLS-1$
 		}
 	}
 

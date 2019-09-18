@@ -468,10 +468,6 @@ public class CodewindApplication {
 		// Override as needed
 	}
 	
-	public void onProjectDelete() {
-		// Override as needed
-	}
-	
 	public boolean supportsDebug() {
 		// Override as needed
 		return false;

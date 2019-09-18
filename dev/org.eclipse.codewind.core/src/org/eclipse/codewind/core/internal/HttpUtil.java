@@ -143,18 +143,22 @@ public class HttpUtil {
 	public static HttpResult post(URI uri, JSONObject payload) throws IOException {
 		return post(uri, payload, DEFAULT_READ_TIMEOUT_S);
 	}
+
+	public static HttpResult post(URI uri, JSONObject payload, int readTimoutSeconds) throws IOException {
+		return sendPayload("POST", uri, payload, DEFAULT_READ_TIMEOUT_S);
+	}
 	
 	/**
-	 * Post to the given URI passing along the payload.  The readTimeout is in seconds.
+	 * POST/PUT to the given URI passing along the payload.  The readTimeout is in seconds.
 	 */
-	public static HttpResult post(URI uri, JSONObject payload, int readTimoutSeconds) throws IOException {
+	public static HttpResult sendPayload(String method, URI uri, JSONObject payload, int readTimoutSeconds) throws IOException {
 		HttpURLConnection connection = null;
 
-		Logger.log("POST " + payload.toString() + " TO " + uri);
+		Logger.log(method + " " + payload.toString() + " TO " + uri);
 		try {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
-			connection.setRequestMethod("POST");
+			connection.setRequestMethod(method);
 			connection.setReadTimeout(readTimoutSeconds * 1000);
 			
 			if (payload != null) {
@@ -172,7 +176,7 @@ public class HttpUtil {
 			}
 		}
 	}
-	
+
 	public static HttpResult post(URI uri) throws IOException {
 		HttpURLConnection connection = null;
 
@@ -188,11 +192,26 @@ public class HttpUtil {
 			}
 		}
 	}
+
+	/**
+	 * Put to the given URI passing along the payload.  The default value is used
+	 * for the read timeout.
+	 */
+	public static HttpResult put(URI uri, JSONObject payload) throws IOException {
+		return put(uri, payload, DEFAULT_READ_TIMEOUT_S);
+	}
+
+	/**
+	 * Put to the given URI passing along the payload.  The readTimeout is in seconds.
+	 */
+	public static HttpResult put(URI uri, JSONObject payload, int readTimoutSeconds) throws IOException {
+		return sendPayload("PUT", uri, payload, DEFAULT_READ_TIMEOUT_S);
+	}
 	
 	public static HttpResult put(URI uri) throws IOException {
 		HttpURLConnection connection = null;
 
-		Logger.log("PUT " + uri);
+		Logger.log("Empty PUT TO " + uri);
 		try {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 

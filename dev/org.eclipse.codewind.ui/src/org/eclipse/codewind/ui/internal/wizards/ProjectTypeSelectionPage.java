@@ -135,7 +135,19 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				
 				String[] languages = getLanguageArray(type);
 				if (languages != null && languages.length > 1) {
-					language = null;
+					if (language != null) {
+						boolean found = false;
+						for (String lang : languages) {
+							if (language.equals(lang)) {
+								languageViewer.setCheckedElements(new Object[] {language});
+								found = true;
+								break;
+							}
+						}
+						if (!found) {
+							language = null;
+						}
+					}
 					languageLabel.setVisible(true);
 					languageViewer.setInput(languages);
 					languageViewer.getTable().setVisible(true);

@@ -16,10 +16,22 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+	// Auto build tests
+	GoAutoBuildTest.class,
+	LagomAutoBuildTest.class,
+	NodeAutoBuildTest.class,
+	PythonAutoBuildTest.class,
+	SpringAutoBuildTest.class,
+	AppsodyJavaMicroprofileAutoBuildTest.class,
+	AppsodyJavaSpringAutoBuildTest.class,
+	AppsodyNodeExpressAutoBuildTest.class,
+	
+	// Debug tests
 	LibertyDebugTest.class,
 	SpringDebugTest.class,
-	SpringAutoBuildTest.class,
-	NodeValidationTest.class
+	
+	// Validation tests (not supported yet)
+//	NodeValidationTest.class
 })
 
 public class CodewindTests {

@@ -59,6 +59,7 @@ public class CoreConstants {
 			KEY_IS_HTTPS = "isHttps",
 			KEY_DIRECTORY = "directory",
 			KEY_MSG = "msg",
+			KEY_FILE_LIST = "fileList",
 
 			KEY_BUILD_LOG = "build-log",
 			KEY_BUILD_LOG_LAST_MODIFIED = "build-log-last-modified",

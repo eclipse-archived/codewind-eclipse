@@ -25,6 +25,7 @@ import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -466,8 +467,10 @@ public class CodewindConnection {
 	public void requestProjectBuild(CodewindApplication app, String action) throws JSONException, IOException {
 
 		// Synchronise the source by clearing the old version and uploading the latest.
-		requestProjectClear(app);
-		requestUploadsRecursively(app.projectID, app.fullLocalPath.toOSString());
+		long syncTime = System.currentTimeMillis();
+		String[] fileList = requestUploadsRecursively(app.projectID, app.fullLocalPath.toOSString(), app.getLastSync());
+		requestProjectClear(app, fileList);
+		app.setLastSync(syncTime);
 
 		String buildEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" //$NON-NLS-1$
 				+ app.projectID + "/" //$NON-NLS-1$
@@ -703,6 +706,7 @@ public class CodewindConnection {
 
 		String bindStartEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_START;
 		URI bindStartUri = baseUrl.resolve(bindStartEndpoint);
+		long initialSyncTime = System.currentTimeMillis();
 
 		JSONObject bindStartPayload = new JSONObject();
 		bindStartPayload.put(CoreConstants.KEY_NAME, name);
@@ -722,10 +726,15 @@ public class CodewindConnection {
 		JSONObject projectInf = new JSONObject(bindStartResult.response);
 		String projectID = projectInf.getString(CoreConstants.KEY_PROJECT_ID);
 
-		requestUploadsRecursively(projectID, path);
+		requestUploadsRecursively(projectID, path, 0);
 
 		String bindEndEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_END;
 		URI bindEndUri = baseUrl.resolve(bindEndEndpoint);
+
+		CodewindApplication newApp = getAppByID(projectID);
+		if (newApp != null) {
+			newApp.setLastSync(initialSyncTime);
+		}
 
 		HttpResult bindEndResult = HttpUtil.post(bindEndUri);	
 		checkResult(bindEndResult, bindEndUri, false);
@@ -733,36 +742,43 @@ public class CodewindConnection {
 		CoreUtil.updateConnection(this);
 	}
 	
-	public void requestUploadsRecursively(String projectId, String path) throws JSONException, IOException {
+	public String[] requestUploadsRecursively(String projectId, String path, long lastSyncMs) throws JSONException, IOException {
 
+		List<Path> fileList = new LinkedList<Path>();
 		Path basePath = Paths.get(path);
 		Files.walk(basePath).forEach((Path fullPath) -> {
 			Path relative = basePath.relativize(fullPath);
+			fileList.add(relative);
 			try {
-				if (!Files.isDirectory(fullPath)) {
+				if (Files.getLastModifiedTime(fullPath).toMillis() > lastSyncMs && !Files.isDirectory(fullPath)) {
 					requestUpload(projectId, fullPath, relative.toString());
 				}
 			} catch (JSONException | IOException e) {
 				Logger.logError(e);
 			}
 		});
+		String[] fileArray = fileList.stream().map(Path::toString).toArray(String[]::new);
+		return fileArray;
 	}
 
 	/**
 	 * Request a clear of the source tree (prior to upload).
 	 * @param app The app to clear
 	 */
-	public void requestProjectClear(CodewindApplication app)
+	public void requestProjectClear(CodewindApplication app, String[] fileList)
 			throws JSONException, IOException {
 
 		String clearEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
 				+ app.projectID + "/" 									//$NON-NLS-1$
 				+ CoreConstants.APIPATH_PROJECT_CLEAR;
 
+		JSONObject payload = new JSONObject();
+		payload.put(CoreConstants.KEY_FILE_LIST, fileList);
+
 		URI url = baseUrl.resolve(clearEndpoint);
 
 		// This initiates the build
-		HttpUtil.post(url);
+		HttpUtil.post(url, payload);
 	}
 
 	public void requestUpload(String projectId, Path fullPath, String relativePath) throws JSONException, IOException {

@@ -59,6 +59,7 @@ public class CodewindApplication {
 	private boolean hasConfirmedMetrics = false; 		// see confirmMetricsAvailable
 	private long lastBuild = -1;
 	private long lastImageBuild = -1;
+	private long lastSync = 0;
 	private boolean isHttps = false;
 	private boolean deleteContents = false;
 	
@@ -359,6 +360,14 @@ public class CodewindApplication {
 	
 	public synchronized long getLastImageBuild() {
 		return lastImageBuild;
+	}
+
+	public synchronized long getLastSync() {
+		return lastSync;
+	}
+
+	public synchronized void setLastSync(long timestamp) {
+		this.lastSync = timestamp;
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

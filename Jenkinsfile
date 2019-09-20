@@ -19,7 +19,7 @@ pipeline {
     parameters {
         string(name: "CW_VSCODE_BRANCH", defaultValue: "master", description: "Codewind VScode branch from which to download the download scripts")
         string(name: "CW_CLI_BRANCH", defaultValue: "master", description: "Codewind CLI branch from which to download the latest build")
-        string(name: "APPSODY_VERSION", defaultValue: "0.4.3", description: "Appsody executable version to download")
+        string(name: "APPSODY_VERSION", defaultValue: "0.4.4", description: "Appsody executable version to download")
     }
 
     stages {

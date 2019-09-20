@@ -25,6 +25,14 @@ public class Messages extends NLS {
 	public static String ConnectionPrefsPage_TableTitleLabel;
 	public static String ConnectionPrefsPage_URLColumn;
 
+	public static String PrefsParentPage_GeneralGroup;
+	public static String PrefsParentPage_AutoOpenOverviewButton;
+	public static String PrefsParentPage_StartupShutdownGroup;
+	public static String PrefsParentPage_InstallTimeout;
+	public static String PrefsParentPage_UninstallTimeout;
+	public static String PrefsParentPage_StartTimeout;
+	public static String PrefsParentPage_StopTimeout;
+	public static String PrefsParentPage_DebugGroup;
 	public static String PrefsParentPage_StopAppsLabel;
 	public static String PrefsParentPage_StopAppsAlways;
 	public static String PrefsParentPage_StopAppsNever;

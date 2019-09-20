@@ -11,9 +11,12 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -23,6 +26,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -100,6 +104,11 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), projectTypePage.getLanguage(), projectTypePage.getType());
+					connection.refreshApps(null);
+					CodewindApplication app = connection.getAppByName(project.getName());
+					if (app != null && CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE)) {
+						Display.getDefault().asyncExec(() -> OpenAppOverviewAction.openAppOverview(app));
+					}
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e); //$NON-NLS-1$

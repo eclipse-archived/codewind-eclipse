@@ -51,6 +51,8 @@ import org.eclipse.ui.internal.browser.IBrowserDescriptor;
 @SuppressWarnings("restriction")
 public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenchPreferencePage {
 
+	public static final String ID = "CodewindParentPage"; //$NON-NLS-1$
+	
 	private static IPreferenceStore prefs;
 
 	private Text installTimeoutText;
@@ -117,8 +119,31 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		    new Label(composite, SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL, GridData.CENTER, true, false, 2, 1));
 	    }
 	    
+	    Group generalGroup = new Group(composite, SWT.NONE);
+	    generalGroup.setText(Messages.PrefsParentPage_GeneralGroup);
+	    layout = new GridLayout();
+	    layout.horizontalSpacing = convertHorizontalDLUsToPixels(7);
+	    layout.verticalSpacing = convertVerticalDLUsToPixels(5);
+	    layout.marginWidth = 3;
+	    layout.marginHeight = 10;
+	    layout.numColumns = 1;
+	    generalGroup.setLayout(layout);
+	    generalGroup.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
+	    
+	    Button autoOpenOverviewButton = new Button(generalGroup, SWT.CHECK);
+	    autoOpenOverviewButton.setText(Messages.PrefsParentPage_AutoOpenOverviewButton);
+	    autoOpenOverviewButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
+	    autoOpenOverviewButton.setSelection(prefs.getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE));
+	    
+	    autoOpenOverviewButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				prefs.setValue(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE, autoOpenOverviewButton.getSelection());
+			}
+		});
+	    
 	    Group installGroup = new Group(composite, SWT.NONE);
-	    installGroup.setText("Startup and Shutdown Settings");
+	    installGroup.setText(Messages.PrefsParentPage_StartupShutdownGroup);
 	    layout = new GridLayout();
 	    layout.horizontalSpacing = convertHorizontalDLUsToPixels(7);
 	    layout.verticalSpacing = convertVerticalDLUsToPixels(5);
@@ -128,13 +153,13 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	    installGroup.setLayout(layout);
 	    installGroup.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
 	    
-	    installTimeoutText = createCWTimeoutEntry(installGroup, "Codewind install timeout (s):", CodewindCorePlugin.CW_INSTALL_TIMEOUT);
-	    uninstallTimeoutText = createCWTimeoutEntry(installGroup, "Codewind uninstall timeout (s):", CodewindCorePlugin.CW_UNINSTALL_TIMEOUT);
-	    startTimeoutText = createCWTimeoutEntry(installGroup, "Codewind start timeout (s):", CodewindCorePlugin.CW_START_TIMEOUT);
-	    stopTimeoutText = createCWTimeoutEntry(installGroup, "Codewind stop timeout (s):", CodewindCorePlugin.CW_STOP_TIMEOUT);
+	    installTimeoutText = createCWTimeoutEntry(installGroup, Messages.PrefsParentPage_InstallTimeout, CodewindCorePlugin.CW_INSTALL_TIMEOUT);
+	    uninstallTimeoutText = createCWTimeoutEntry(installGroup, Messages.PrefsParentPage_UninstallTimeout, CodewindCorePlugin.CW_UNINSTALL_TIMEOUT);
+	    startTimeoutText = createCWTimeoutEntry(installGroup, Messages.PrefsParentPage_StartTimeout, CodewindCorePlugin.CW_START_TIMEOUT);
+	    stopTimeoutText = createCWTimeoutEntry(installGroup, Messages.PrefsParentPage_StopTimeout, CodewindCorePlugin.CW_STOP_TIMEOUT);
 	    
 	    Group debugGroup = new Group(composite, SWT.NONE);
-	    debugGroup.setText("Debug Settings");
+	    debugGroup.setText(Messages.PrefsParentPage_DebugGroup);
 	    layout = new GridLayout();
 	    layout.horizontalSpacing = convertHorizontalDLUsToPixels(7);
 	    layout.verticalSpacing = convertVerticalDLUsToPixels(5);
@@ -145,7 +170,7 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	    debugGroup.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
 
 		Label debugTimeoutLabel = new Label(debugGroup, SWT.READ_ONLY);
-		debugTimeoutLabel.setText(" " + Messages.PrefsParentPage_DebugTimeoutLabel);
+		debugTimeoutLabel.setText(" " + Messages.PrefsParentPage_DebugTimeoutLabel); //$NON-NLS-1$
 		debugTimeoutLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
 
 		debugTimeoutText = new Text(debugGroup, SWT.BORDER);
@@ -290,7 +315,7 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		prefs.setValue(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY, debugTimeout);
 
 		// removes any trimmed space
-		debugTimeoutText.setText("" + debugTimeout);
+		debugTimeoutText.setText("" + debugTimeout); //$NON-NLS-1$
 		
 		if (this.webBrowserCombo != null) {
 			// The first option in the webBrowserCombo is to not use the default browser.

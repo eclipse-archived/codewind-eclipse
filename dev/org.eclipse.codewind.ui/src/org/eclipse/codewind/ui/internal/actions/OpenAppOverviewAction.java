@@ -58,8 +58,11 @@ public class OpenAppOverviewAction implements IObjectActionDelegate {
         	Logger.logError("OpenAppOverviewAction ran but no application was selected"); //$NON-NLS-1$
 			return;
 		}
-        
-        IWorkbenchWindow workbenchWindow = CodewindUIPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
+        openAppOverview(app);
+    }
+    
+    public static void openAppOverview(CodewindApplication app) {
+    	IWorkbenchWindow workbenchWindow = CodewindUIPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
 		IWorkbenchPage page = workbenchWindow.getActivePage();
 		
 		try {

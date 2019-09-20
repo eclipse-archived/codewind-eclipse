@@ -17,8 +17,6 @@ pipeline {
     }
 
     parameters {
-        string(name: "CW_VSCODE_BRANCH", defaultValue: "master", description: "Codewind VScode branch from which to download the download scripts")
-        string(name: "CW_CLI_BRANCH", defaultValue: "master", description: "Codewind CLI branch from which to download the latest build")
         string(name: "APPSODY_VERSION", defaultValue: "0.4.4", description: "Appsody executable version to download")
     }
 
@@ -28,7 +26,29 @@ pipeline {
             steps {
                 dir("dev/org.eclipse.codewind.core/binaries") {
                     sh """#!/usr/bin/env bash
-                        export CW_CLI_BRANCH=${params.CW_CLI_BRANCH} APPSODY_VERSION=${params.APPSODY_VERSION} CW_VSCODE_BRANCH=${params.CW_VSCODE_BRANCH}
+                        export VSCODE_REPO="https://github.com/eclipse/codewind-vscode.git"
+                        export CW_VSCODE_BRANCH=master
+
+                        # the command below will echo the head commit if the branch exists, else it just exits
+                        if [[ -n \$(git ls-remote --heads \$VSCODE_REPO ${env.BRANCH_NAME}) ]]; then
+                            echo "Will pull scripts from  matching ${env.BRANCH_NAME} branch on \$VSCODE_REPO"
+                            export CW_VSCODE_BRANCH=${env.BRANCH_NAME}
+                        else
+                            echo "Will pull scripts from \$CW_VSCODE_BRANCH branch on \$VSCODE_REPO - no matching branch"
+                        fi
+
+                        export INSTALLER_REPO="https://github.com/eclipse/codewind-installer.git"
+                        export CW_CLI_BRANCH=master
+
+                        # the command below will echo the head commit if the branch exists, else it just exits
+                        if [[ -n \$(git ls-remote --heads \$INSTALLER_REPO ${env.BRANCH_NAME}) ]]; then
+                            echo "Will pull binaries from  matching ${env.BRANCH_NAME} branch on \$INSTALLER_REPO"
+                            export CW_CLI_BRANCH=${env.BRANCH_NAME}
+                        else
+                            echo "Will pull binaries from \$CW_CLI_BRANCH branch on \$INSTALLER_REPO - no matching branch"
+                        fi
+
+                        export APPSODY_VERSION=${params.APPSODY_VERSION}
                         ./meta-pull.sh 
                         ./pull.sh
                     """

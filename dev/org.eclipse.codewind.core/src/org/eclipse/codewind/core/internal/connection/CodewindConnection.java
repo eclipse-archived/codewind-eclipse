@@ -470,6 +470,7 @@ public class CodewindConnection {
 		long syncTime = System.currentTimeMillis();
 		String[] fileList = requestUploadsRecursively(app.projectID, app.fullLocalPath.toOSString(), app.getLastSync());
 		requestProjectClear(app, fileList);
+		Logger.log("Sync complete for " + app.name + " to "+  app.connection.baseUrl + " in " +  (System.currentTimeMillis() - syncTime) +"ms");
 		app.setLastSync(syncTime);
 
 		String buildEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" //$NON-NLS-1$
@@ -727,17 +728,17 @@ public class CodewindConnection {
 		String projectID = projectInf.getString(CoreConstants.KEY_PROJECT_ID);
 
 		requestUploadsRecursively(projectID, path, 0);
-
 		String bindEndEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_END;
 		URI bindEndUri = baseUrl.resolve(bindEndEndpoint);
+
+		HttpResult bindEndResult = HttpUtil.post(bindEndUri);
+		checkResult(bindEndResult, bindEndUri, false);
 
 		CodewindApplication newApp = getAppByID(projectID);
 		if (newApp != null) {
 			newApp.setLastSync(initialSyncTime);
 		}
-
-		HttpResult bindEndResult = HttpUtil.post(bindEndUri);	
-		checkResult(bindEndResult, bindEndUri, false);
+		Logger.log("Initial project upload complete for " + name + " to "+  baseUrl + " in " +  (System.currentTimeMillis() - initialSyncTime) +"ms");
 
 		CoreUtil.updateConnection(this);
 	}

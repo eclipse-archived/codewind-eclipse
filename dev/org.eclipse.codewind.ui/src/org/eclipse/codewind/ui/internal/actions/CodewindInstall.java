@@ -265,7 +265,7 @@ public class CodewindInstall {
 					final CodewindManager manager = CodewindManager.getManager();
 					CodewindConnection connection = manager.createLocalConnection();
 					if (connection != null && connection.isConnected()) {
-						Wizard wizard = new BindProjectWizard(connection, project);
+						Wizard wizard = new BindProjectWizard(connection, project.getLocation());
 						WizardLauncher.launchWizardWithoutSelection(wizard);
 					} else {
 						Logger.logError("Codewind not installed or has unknown status when trying to bind project: " + project.getName()); //$NON-NLS-1$

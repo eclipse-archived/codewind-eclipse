@@ -93,7 +93,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 			return;
 		}
 		
-		BindProjectWizard wizard = new BindProjectWizard(connection, project);
+		BindProjectWizard wizard = new BindProjectWizard(connection, project.getLocation());
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 		if (dialog.open() == Window.CANCEL) {
 			// If connection is new (not already registered), then close it

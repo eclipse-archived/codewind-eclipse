@@ -6,7 +6,7 @@
  * http://www.eclipse.org/legal/epl-v20.html
  *
  * Contributors:
- *     IBM Corporation - initial API and implementation
+ *	 IBM Corporation - initial API and implementation
  *******************************************************************************/
 
 package org.eclipse.codewind.ui.internal.wizards;
@@ -25,12 +25,18 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SearchPattern;
 import org.eclipse.ui.model.WorkbenchContentProvider;
@@ -41,7 +47,12 @@ public class ProjectSelectionPage extends WizardPage {
 	private final BindProjectWizard wizard;
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 	private final CodewindConnection connection;
+	private Button workspaceProject;
+	private CheckboxTableViewer projectList;
+	private Button fileSystemProject;
+	private Text pathText;
 	private IProject project = null;
+	private String projectPath = null;
 
 	protected ProjectSelectionPage(BindProjectWizard wizard, CodewindConnection connection) {
 		super(Messages.SelectProjectPageName);
@@ -54,31 +65,36 @@ public class ProjectSelectionPage extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		Composite composite = new Composite(parent, SWT.NULL);
-        GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        layout.horizontalSpacing = 5;
-        layout.verticalSpacing = 7;
-        composite.setLayout(layout);
-        composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        
-        Text projectLabel = new Text(composite, SWT.READ_ONLY);
-        projectLabel.setText(Messages.SelectProjectPageChooseProjectLabel);
-        projectLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-        projectLabel.setBackground(composite.getBackground());
-        projectLabel.setForeground(composite.getForeground());
-        
+		Composite composite = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 3;
+		layout.horizontalSpacing = 5;
+		layout.verticalSpacing = 7;
+		composite.setLayout(layout);
+		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+		// Workspace project radio button
+		workspaceProject = new Button(composite, SWT.RADIO);
+		workspaceProject.setText(Messages.SelectProjectPageWorkspaceProject);
+		workspaceProject.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false, 3, 1));
+		
 		// Filter text
 		Text filterText = new Text(composite, SWT.BORDER);
-		filterText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1);
+		data.horizontalIndent = 20;
+		filterText.setLayoutData(data);
 		filterText.setMessage(Messages.SelectProjectPageFilterText);
-        
-        CheckboxTableViewer projectList = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-        projectList.setContentProvider(new WorkbenchContentProvider());
-        projectList.setLabelProvider(new WorkbenchLabelProvider());
-        projectList.setInput(ResourcesPlugin.getWorkspace().getRoot());
-        projectList.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
-        projectList.addFilter(new ViewerFilter() {
+		
+		// Workspace project list
+		projectList = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		projectList.setContentProvider(new WorkbenchContentProvider());
+		projectList.setLabelProvider(new WorkbenchLabelProvider());
+		projectList.setInput(ResourcesPlugin.getWorkspace().getRoot());
+		data = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
+		data.heightHint = 160;
+		data.horizontalIndent = 20;
+		projectList.getTable().setLayoutData(data);
+		projectList.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElem, Object elem) {
 				if (!(elem instanceof IProject)) {
@@ -105,9 +121,18 @@ public class ProjectSelectionPage extends WizardPage {
 				}
 				return true;
 			}
-        });
-        
-        filterText.addModifyListener(new ModifyListener() {
+		});
+		
+		workspaceProject.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				filterText.setEnabled(workspaceProject.getSelection());
+				projectList.getTable().setEnabled(workspaceProject.getSelection());
+				validate();
+			}
+		});
+		
+		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent event) {
 				String filter = filterText.getText();
@@ -119,29 +144,133 @@ public class ProjectSelectionPage extends WizardPage {
 				}
 				projectList.refresh();
 			}
-        });
-        
-        projectList.addCheckStateListener(new ICheckStateListener() {
+		});
+		
+		projectList.addCheckStateListener(new ICheckStateListener() {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
 					projectList.setCheckedElements(new Object[] {event.getElement()});
-					project = (IProject) event.getElement();
-				} else {
-					project = null;
 				}
-				getWizard().getContainer().updateButtons();
+				validate();
 			}
-        });
-        
-        if (projectList.getTable().getItemCount() == 1) {
-        	Object element = projectList.getElementAt(0);
-        	projectList.setChecked(element, true);
-        	project = (IProject) element;
-        }
+		});
+		
+		// File system project radio button
+		fileSystemProject = new Button(composite, SWT.RADIO);
+		fileSystemProject.setText(Messages.SelectProjectPageFilesystemProject);
+		fileSystemProject.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false, 3, 1));
+		
+		Label label = new Label(composite, SWT.NONE);
+		label.setText(Messages.SelectProjectPagePathLabel);
+		data = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		data.horizontalIndent = 20;
+		label.setLayoutData(data);
+		
+		// Project path
+		pathText = new Text(composite, SWT.BORDER);
+		data = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		data.horizontalIndent = 20;
+		pathText.setLayoutData(data);
+		
+		// Browse button
+		Button browseButton = new Button(composite, SWT.PUSH);
+		browseButton.setText(Messages.SelectProjectPageBrowseButton);
+		data = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		data.horizontalIndent = 20;
+		browseButton.setData(data);
+		
+		fileSystemProject.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				label.setEnabled(fileSystemProject.getSelection());
+				pathText.setEnabled(fileSystemProject.getSelection());
+				browseButton.setEnabled(fileSystemProject.getSelection());
+				validate();
+			}
+		});
+		
+		pathText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				validate();
+			}
+		});
+		
+		browseButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent se) {
+				DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
+				dialog.setMessage(Messages.SelectProjectPageFilesystemDialogTitle);
+				dialog.setFilterPath(connection.getWorkspacePath().toOSString());
+				String selectedDirectory = dialog.open();
+				if (selectedDirectory != null && !selectedDirectory.trim().isEmpty()) {
+					pathText.setText(selectedDirectory.trim());
+				} else {
+					pathText.setText(""); //$NON-NLS-1$
+				}
+				validate();
+			}
+		});
+		
+		if (projectList.getTable().getItemCount() > 0) {
+			workspaceProject.setSelection(true);
+			fileSystemProject.setSelection(false);
+			filterText.setFocus();
+		} else {
+			fileSystemProject.setSelection(true);
+			workspaceProject.setSelection(false);
+			pathText.setFocus();
+		}
+		
+		filterText.setEnabled(workspaceProject.getSelection());
+		projectList.getTable().setEnabled(workspaceProject.getSelection());
+		label.setEnabled(fileSystemProject.getSelection());
+		pathText.setEnabled(fileSystemProject.getSelection());
+		browseButton.setEnabled(fileSystemProject.getSelection());
+		
+		if (workspaceProject.getSelection() && projectList.getTable().getItemCount() == 1) {
+			projectList.setChecked(projectList.getElementAt(0), true);
+		}
 
-        filterText.setFocus();
-        setControl(composite);
+		validate();
+		setControl(composite);
+	}
+	
+	private void validate() {
+		String errorMsg = null;
+		if (workspaceProject.getSelection()) {
+			Object[] checked = projectList.getCheckedElements();
+			project = checked.length == 1 ? (IProject) checked[0] : null;
+			projectPath = null;
+		} else {
+			String text = pathText.getText();
+			projectPath = text != null && !text.trim().isEmpty() ? text.trim() : null;
+			project = null;
+			if (projectPath != null) {
+				IPath path = new Path(projectPath);
+				if (!path.toFile().exists()) {
+					errorMsg = Messages.SelectProjectPageNoExistError;
+					projectPath = null;
+				} else {
+					IPath relPath = path.makeRelativeTo(connection.getWorkspacePath());
+					if (relPath == null || relPath.isEmpty() || relPath.segmentCount() > 1) {
+						// The project should be directly in the Codewind workspace folder
+						errorMsg = NLS.bind(Messages.SelectProjectPageLocationError, connection.getWorkspacePath().toOSString());
+						projectPath = null;
+					} else {
+						// It is an error if a project exists with the same name but has a different location
+						IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(relPath.lastSegment());
+						if (existingProject.exists() && !path.toFile().equals(existingProject.getLocation().toFile())) {
+							errorMsg = NLS.bind(Messages.SelectProjectPageProjectExistsError, relPath.lastSegment());
+							projectPath = null;
+						}
+					}
+				}
+			}
+		}
+		setErrorMessage(errorMsg);
+		getWizard().getContainer().updateButtons();
 	}
 
 	@Override
@@ -152,15 +281,20 @@ public class ProjectSelectionPage extends WizardPage {
 	@Override
 	public IWizardPage getNextPage() {
 		// Set the project so the next page has it.
-		wizard.setProject(project);
+		wizard.setProjectPath(getProjectPath());
 		return super.getNextPage();
 	}
 
 	public boolean canFinish() {
-		return project != null;
+		return project != null || projectPath != null;
 	}
 	
-	public IProject getProject() {
-		return project;
+	public IPath getProjectPath() {
+		if (project != null) {
+			return project.getLocation();
+		} else if (projectPath != null) {
+			return new Path(projectPath);
+		}
+		return null;
 	}
 }

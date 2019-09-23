@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -48,11 +49,14 @@ public class ProjectSelectionPage extends WizardPage {
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 	private final CodewindConnection connection;
 	private Button workspaceProject;
+	private Text filterText;
 	private CheckboxTableViewer projectList;
+	private Text noProjectsText;
 	private Button fileSystemProject;
 	private Text pathText;
 	private IProject project = null;
 	private String projectPath = null;
+	private boolean hasValidProjects = false;
 
 	protected ProjectSelectionPage(BindProjectWizard wizard, CodewindConnection connection) {
 		super(Messages.SelectProjectPageName);
@@ -61,6 +65,7 @@ public class ProjectSelectionPage extends WizardPage {
 		pattern.setPattern("*");
 		this.wizard = wizard;
 		this.connection = connection;
+		hasValidProjects = hasValidProjects();
 	}
 
 	@Override
@@ -71,101 +76,95 @@ public class ProjectSelectionPage extends WizardPage {
 		layout.horizontalSpacing = 5;
 		layout.verticalSpacing = 7;
 		composite.setLayout(layout);
-		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		GridData data = new GridData(GridData.FILL_HORIZONTAL);
+		composite.setLayoutData(data);
 
 		// Workspace project radio button
 		workspaceProject = new Button(composite, SWT.RADIO);
 		workspaceProject.setText(Messages.SelectProjectPageWorkspaceProject);
 		workspaceProject.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false, 3, 1));
 		
-		// Filter text
-		Text filterText = new Text(composite, SWT.BORDER);
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1);
-		data.horizontalIndent = 20;
-		filterText.setLayoutData(data);
-		filterText.setMessage(Messages.SelectProjectPageFilterText);
+		if (hasValidProjects) {
+			// Filter text
+			filterText = new Text(composite, SWT.BORDER);
+			data = new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1);
+			data.horizontalIndent = 20;
+			filterText.setLayoutData(data);
+			filterText.setMessage(Messages.SelectProjectPageFilterText);
+			
+			// Workspace project list
+			projectList = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+			projectList.setContentProvider(new WorkbenchContentProvider());
+			projectList.setLabelProvider(new WorkbenchLabelProvider());
+			projectList.setInput(ResourcesPlugin.getWorkspace().getRoot());
+			data = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
+			data.heightHint = 160;
+			data.horizontalIndent = 20;
+			projectList.getTable().setLayoutData(data);
+			projectList.addFilter(new ViewerFilter() {
+				@Override
+				public boolean select(Viewer viewer, Object parentElem, Object elem) {
+					if (!(elem instanceof IProject)) {
+						return false;
+					}
+					return isValidProject((IProject)elem);
+				}
+			});
+			
+			workspaceProject.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					filterText.setEnabled(workspaceProject.getSelection());
+					projectList.getTable().setEnabled(workspaceProject.getSelection());
+					validate();
+				}
+			});
+			
+			filterText.addModifyListener(new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent event) {
+					String filter = filterText.getText();
+					if (filter == null || filter.isEmpty()) {
+						filterText.setMessage(Messages.SelectProjectPageFilterText);
+						pattern.setPattern("*");
+					} else {
+						pattern.setPattern("*" + filter + "*");
+					}
+					projectList.refresh();
+				}
+			});
+			
+			projectList.addCheckStateListener(new ICheckStateListener() {
+				@Override
+				public void checkStateChanged(CheckStateChangedEvent event) {
+					if (event.getChecked()) {
+						projectList.setCheckedElements(new Object[] {event.getElement()});
+					}
+					validate();
+				}
+			});
+		} else {
+			noProjectsText = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
+			noProjectsText.setText(NLS.bind(Messages.SelectProjectPageNoWorkspaceProjects, connection.getWorkspacePath().toOSString()));
+			data = new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1);
+			data.horizontalIndent = 20;
+			data.widthHint = 150;
+			noProjectsText.setLayoutData(data);
+			IDEUtil.normalizeBackground(noProjectsText, composite);
+		}
 		
-		// Workspace project list
-		projectList = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		projectList.setContentProvider(new WorkbenchContentProvider());
-		projectList.setLabelProvider(new WorkbenchLabelProvider());
-		projectList.setInput(ResourcesPlugin.getWorkspace().getRoot());
-		data = new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1);
-		data.heightHint = 160;
-		data.horizontalIndent = 20;
-		projectList.getTable().setLayoutData(data);
-		projectList.addFilter(new ViewerFilter() {
-			@Override
-			public boolean select(Viewer viewer, Object parentElem, Object elem) {
-				if (!(elem instanceof IProject)) {
-					return false;
-				}
-				IProject project = (IProject)elem;
-				if (!project.isAccessible()) {
-					return false;
-				}
-				if (!pattern.matches(project.getName())) {
-					return false;
-				}
-				if (connection.getAppByName(project.getName()) != null) {
-					return false;
-				}
-				IPath workspacePath = connection.getWorkspacePath();
-				IPath projectPath = project.getLocation();
-				if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.WINDOWS) {
-					workspacePath = new Path(workspacePath.toPortableString().toLowerCase());
-					projectPath = new Path(projectPath.toPortableString().toLowerCase());
-				}
-				if (!workspacePath.isPrefixOf(projectPath)) {
-					return false;
-				}
-				return true;
-			}
-		});
-		
-		workspaceProject.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				filterText.setEnabled(workspaceProject.getSelection());
-				projectList.getTable().setEnabled(workspaceProject.getSelection());
-				validate();
-			}
-		});
-		
-		filterText.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent event) {
-				String filter = filterText.getText();
-				if (filter == null || filter.isEmpty()) {
-					filterText.setMessage(Messages.SelectProjectPageFilterText);
-					pattern.setPattern("*");
-				} else {
-					pattern.setPattern("*" + filter + "*");
-				}
-				projectList.refresh();
-			}
-		});
-		
-		projectList.addCheckStateListener(new ICheckStateListener() {
-			@Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				if (event.getChecked()) {
-					projectList.setCheckedElements(new Object[] {event.getElement()});
-				}
-				validate();
-			}
-		});
+		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1));
 		
 		// File system project radio button
 		fileSystemProject = new Button(composite, SWT.RADIO);
 		fileSystemProject.setText(Messages.SelectProjectPageFilesystemProject);
 		fileSystemProject.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false, 3, 1));
 		
-		Label label = new Label(composite, SWT.NONE);
-		label.setText(Messages.SelectProjectPagePathLabel);
+		Label pathLabel = new Label(composite, SWT.NONE);
+		pathLabel.setText(Messages.SelectProjectPagePathLabel);
 		data = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
 		data.horizontalIndent = 20;
-		label.setLayoutData(data);
+		pathLabel.setLayoutData(data);
 		
 		// Project path
 		pathText = new Text(composite, SWT.BORDER);
@@ -183,7 +182,7 @@ public class ProjectSelectionPage extends WizardPage {
 		fileSystemProject.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				label.setEnabled(fileSystemProject.getSelection());
+				pathLabel.setEnabled(fileSystemProject.getSelection());
 				pathText.setEnabled(fileSystemProject.getSelection());
 				browseButton.setEnabled(fileSystemProject.getSelection());
 				validate();
@@ -213,23 +212,27 @@ public class ProjectSelectionPage extends WizardPage {
 			}
 		});
 		
-		if (projectList.getTable().getItemCount() > 0) {
+		if (hasValidProjects) {
 			workspaceProject.setSelection(true);
 			fileSystemProject.setSelection(false);
 			filterText.setFocus();
 		} else {
 			fileSystemProject.setSelection(true);
 			workspaceProject.setSelection(false);
+			workspaceProject.setEnabled(false);
+			noProjectsText.setEnabled(false);
 			pathText.setFocus();
 		}
 		
-		filterText.setEnabled(workspaceProject.getSelection());
-		projectList.getTable().setEnabled(workspaceProject.getSelection());
-		label.setEnabled(fileSystemProject.getSelection());
+		if (hasValidProjects) {
+			filterText.setEnabled(workspaceProject.getSelection());
+			projectList.getTable().setEnabled(workspaceProject.getSelection());
+		}
+		pathLabel.setEnabled(fileSystemProject.getSelection());
 		pathText.setEnabled(fileSystemProject.getSelection());
 		browseButton.setEnabled(fileSystemProject.getSelection());
 		
-		if (workspaceProject.getSelection() && projectList.getTable().getItemCount() == 1) {
+		if (hasValidProjects && workspaceProject.getSelection() && projectList.getTable().getItemCount() == 1) {
 			projectList.setChecked(projectList.getElementAt(0), true);
 		}
 
@@ -237,12 +240,46 @@ public class ProjectSelectionPage extends WizardPage {
 		setControl(composite);
 	}
 	
+	private boolean hasValidProjects() {
+		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		for (IProject project : projects) {
+			if (isValidProject(project)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private boolean isValidProject(IProject project) {
+		if (!project.isAccessible()) {
+			return false;
+		}
+		if (!pattern.matches(project.getName())) {
+			return false;
+		}
+		if (connection.getAppByName(project.getName()) != null) {
+			return false;
+		}
+		IPath workspacePath = connection.getWorkspacePath();
+		IPath projectPath = project.getLocation();
+		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.WINDOWS) {
+			workspacePath = new Path(workspacePath.toPortableString().toLowerCase());
+			projectPath = new Path(projectPath.toPortableString().toLowerCase());
+		}
+		if (!workspacePath.isPrefixOf(projectPath)) {
+			return false;
+		}
+		return true;
+	}
+	
 	private void validate() {
 		String errorMsg = null;
 		if (workspaceProject.getSelection()) {
-			Object[] checked = projectList.getCheckedElements();
-			project = checked.length == 1 ? (IProject) checked[0] : null;
-			projectPath = null;
+			if (hasValidProjects) {
+				Object[] checked = projectList.getCheckedElements();
+				project = checked.length == 1 ? (IProject) checked[0] : null;
+				projectPath = null;
+			}
 		} else {
 			String text = pathText.getText();
 			projectPath = text != null && !text.trim().isEmpty() ? text.trim() : null;

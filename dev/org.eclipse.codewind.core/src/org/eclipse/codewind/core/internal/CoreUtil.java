@@ -227,7 +227,7 @@ public class CoreUtil {
     		return null;
     	}
     	path = path.trim();
-    	path = path.replaceAll("\\", "/");
+    	path = path.replace("\\", "/");
     	if (!path.endsWith("/")) {
     		path = path + "/";
     	}

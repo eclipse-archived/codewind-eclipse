@@ -790,10 +790,11 @@ public class CodewindConnection {
 
 		// zlib compress the content
 		Deflater fileDeflater = new Deflater();
-		fileDeflater.setInput(jsonContent.getBytes("UTF-8"));
+		byte[] jsonBytes = jsonContent.getBytes("UTF-8");
+		fileDeflater.setInput(jsonBytes);
 		fileDeflater.finish();
-		byte[] buffer = new byte[fileContent.length];
-		ByteArrayOutputStream compressedStream = new ByteArrayOutputStream(fileContent.length);
+		byte[] buffer = new byte[jsonBytes.length];
+		ByteArrayOutputStream compressedStream = new ByteArrayOutputStream(jsonBytes.length);
 		while (!fileDeflater.finished()) {
 			int bytesCompressed = fileDeflater.deflate(buffer);
 			compressedStream.write(buffer, 0, bytesCompressed);

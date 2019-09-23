@@ -16,9 +16,12 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -36,7 +39,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	private ProjectTypeSelectionPage projectTypePage;
 	
 	private final CodewindConnection connection;
-	private IProject project = null;
+	private IPath projectPath = null;
 	
 	// If a connection is passed in and no project then the project selection page will be shown
 	public BindProjectWizard(CodewindConnection connection) {
@@ -46,10 +49,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	}
 	
 	// If the project is passed in then the project selection page will not be shown
-	public BindProjectWizard(CodewindConnection connection, IProject project) {
+	public BindProjectWizard(CodewindConnection connection, IPath projectPath) {
 		super();
 		this.connection = connection;
-		this.project = project;
+		this.projectPath = projectPath;
 		init();
 	}
 	
@@ -67,11 +70,11 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	@Override
 	public void addPages() {
 		setWindowTitle(Messages.BindProjectWizardTitle);
-		if (project == null) {
+		if (projectPath == null) {
 			projectPage = new ProjectSelectionPage(this, connection);
 			addPage(projectPage);
 		}
-		projectTypePage = new ProjectTypeSelectionPage(connection, project);
+		projectTypePage = new ProjectTypeSelectionPage(connection, projectPath);
 		addPage(projectTypePage);
 	}
 
@@ -96,23 +99,29 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		}
 		
 		if (projectPage != null) {
-			project = projectPage.getProject();
+			projectPath = projectPage.getProjectPath();
 		}
 
-		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, project.getName())) {
+		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, projectPath.lastSegment())) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					connection.requestProjectBind(project.getName(), project.getLocation().toFile().getAbsolutePath(), projectTypePage.getLanguage(), projectTypePage.getType());
+					connection.requestProjectBind(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), projectTypePage.getLanguage(), projectTypePage.getType());
 					connection.refreshApps(null);
-					CodewindApplication app = connection.getAppByName(project.getName());
-					if (app != null && CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE)) {
-						Display.getDefault().asyncExec(() -> OpenAppOverviewAction.openAppOverview(app));
+					CodewindApplication app = connection.getAppByName(projectPath.lastSegment());
+					if (app != null) {
+						IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectPath.lastSegment());
+						if (project == null || !project.exists()) {
+							ImportProjectAction.importProject(app);
+						}
+						if (CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE)) {
+							Display.getDefault().asyncExec(() -> OpenAppOverviewAction.openAppOverview(app));
+						}
 					}
 					return Status.OK_STATUS;
 				} catch (Exception e) {
-					Logger.logError("An error occured trying to add the project to Codewind: " + project.getName(), e); //$NON-NLS-1$
-					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.BindProjectWizardError, project.getName()), e);
+					Logger.logError("An error occured trying to add the project to Codewind: " + projectPath.toOSString(), e); //$NON-NLS-1$
+					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.BindProjectWizardError, projectPath.toOSString()), e);
 				}
 			}
 		};
@@ -121,9 +130,9 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		return true;
 	}
 	
-	public void setProject(IProject project) {
+	public void setProjectPath(IPath projectPath) {
 		if (projectTypePage != null) {
-			projectTypePage.setProject(project);
+			projectTypePage.setProjectPath(projectPath);
 		}
 	}
 }

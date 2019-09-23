@@ -30,7 +30,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -59,7 +59,7 @@ import org.eclipse.swt.widgets.Text;
 public class ProjectTypeSelectionPage extends WizardPage {
 
 	private CodewindConnection connection = null;
-	private IProject project = null;
+	private IPath projectPath = null;
 	private Map<String, Set<String>> typeMap;
 	private String type = null;
 	private String language = null;
@@ -69,12 +69,12 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private CheckboxTableViewer typeViewer = null;
 	private ProjectInfo projectInfo = null;
 
-	protected ProjectTypeSelectionPage(CodewindConnection connection, IProject project) {
+	protected ProjectTypeSelectionPage(CodewindConnection connection, IPath projectPath) {
 		super(Messages.SelectProjectTypePageName);
 		setTitle(Messages.SelectProjectTypePageTitle);
 		setDescription(Messages.SelectProjectTypePageDescription);
 		this.connection = connection;
-		setProject(project);
+		setProjectPath(projectPath);
 		this.typeMap = getProjectTypeMap();
 	}
 
@@ -309,24 +309,24 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 	}
 
-	public void setProject(IProject project) {
-		this.project = project;
+	public void setProjectPath(IPath projectPath) {
+		this.projectPath = projectPath;
 		this.projectInfo = null;
-		if (project == null) {
+		if (projectPath == null) {
 			return;
 		}
 		if (getWizard() != null && getWizard().getContainer() != null) {
 			IRunnableWithProgress runnable = new IRunnableWithProgress() {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException {
-					SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, project.getName()), 100);
+					SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, projectPath.lastSegment()), 100);
 					projectInfo = getProjectInfo(mon.split(100));
 				}
 			};
 			try {
 				getContainer().run(true, true, runnable);
 			} catch (InvocationTargetException e) {
-				Logger.logError("An error occurred getting the project info for: " + project.getName(), e);
+				Logger.logError("An error occurred getting the project info for: " + projectPath.lastSegment(), e);
 				return;
 			} catch (InterruptedException e) {
 				// The user cancelled the operation
@@ -414,14 +414,14 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 
 	private ProjectInfo getProjectInfo(IProgressMonitor monitor) {
-		if (connection == null || project == null) {
+		if (connection == null || projectPath == null) {
 			return null;
 		}
 
 		try {
-			return InstallUtil.validateProject(project.getName(), project.getLocation().toFile().getAbsolutePath(), monitor);
+			return InstallUtil.validateProject(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), monitor);
 		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the project type for project: " + project.getName(), e); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to get the project type for project: " + projectPath.lastSegment(), e); //$NON-NLS-1$
 		}
 
 		return null;

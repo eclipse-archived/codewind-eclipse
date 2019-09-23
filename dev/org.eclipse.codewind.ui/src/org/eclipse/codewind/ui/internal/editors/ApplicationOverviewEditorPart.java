@@ -154,7 +154,10 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 
 	@Override
 	public void dispose() {
-		CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(connection, projectID);
+		// Dispose can be called if the part fails to init in which case these may be null
+		if (connection != null && projectID != null) {
+			CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(connection, projectID);
+		}
 		super.dispose();
 	}
 

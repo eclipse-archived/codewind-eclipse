@@ -85,7 +85,7 @@ public class CoreUtil {
 		String containerPath = hostPath;
 		if (isWindows() && hostPath.indexOf(':') == 1) { //$NON-NLS-1$
 			containerPath = "/" + hostPath.charAt(0) + hostPath.substring(2);
-			containerPath = containerPath.replaceAll("\\\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
+			containerPath = containerPath.replace("\\", "/"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return containerPath;
 	}

@@ -133,7 +133,7 @@ public class TestUtil {
 		    }
 		
 		    String Content = stringbuilder.toString();
-		    String newContent = Content.replaceAll(originalString, replaceString);
+		    String newContent = Content.replace(originalString, replaceString);
 		    writer = new FileWriter(fileNeedsUpdate);
 		
 		    writer.write(newContent);

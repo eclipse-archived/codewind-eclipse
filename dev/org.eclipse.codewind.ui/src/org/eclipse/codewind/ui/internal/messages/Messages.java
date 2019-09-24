@@ -179,6 +179,7 @@ public class Messages extends NLS {
 	public static String SelectProjectPageFilesystemDialogTitle;
 	public static String SelectProjectPageNoExistError;
 	public static String SelectProjectPageLocationError;
+	public static String SelectProjectPageCWProjectExistsError;
 	public static String SelectProjectPageProjectExistsError;
 	
 	public static String RestartInDebugMode;

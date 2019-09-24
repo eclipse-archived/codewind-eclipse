@@ -87,7 +87,7 @@ public class ProjectSelectionPage extends WizardPage {
 		if (hasValidProjects) {
 			// Filter text
 			filterText = new Text(composite, SWT.BORDER);
-			data = new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1);
+			data = new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1);
 			data.horizontalIndent = 20;
 			filterText.setLayoutData(data);
 			filterText.setMessage(Messages.SelectProjectPageFilterText);
@@ -146,7 +146,7 @@ public class ProjectSelectionPage extends WizardPage {
 		} else {
 			noProjectsText = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
 			noProjectsText.setText(NLS.bind(Messages.SelectProjectPageNoWorkspaceProjects, connection.getWorkspacePath().toOSString()));
-			data = new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1);
+			data = new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1);
 			data.horizontalIndent = 20;
 			data.widthHint = 150;
 			noProjectsText.setLayoutData(data);
@@ -162,20 +162,20 @@ public class ProjectSelectionPage extends WizardPage {
 		
 		Label pathLabel = new Label(composite, SWT.NONE);
 		pathLabel.setText(Messages.SelectProjectPagePathLabel);
-		data = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		data = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
 		data.horizontalIndent = 20;
 		pathLabel.setLayoutData(data);
 		
 		// Project path
 		pathText = new Text(composite, SWT.BORDER);
-		data = new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1);
+		data = new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1);
 		data.horizontalIndent = 20;
 		pathText.setLayoutData(data);
 		
 		// Browse button
 		Button browseButton = new Button(composite, SWT.PUSH);
 		browseButton.setText(Messages.SelectProjectPageBrowseButton);
-		data = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 1);
+		data = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
 		data.horizontalIndent = 20;
 		browseButton.setData(data);
 		
@@ -294,6 +294,10 @@ public class ProjectSelectionPage extends WizardPage {
 					if (relPath == null || relPath.isEmpty() || relPath.segmentCount() > 1) {
 						// The project should be directly in the Codewind workspace folder
 						errorMsg = NLS.bind(Messages.SelectProjectPageLocationError, connection.getWorkspacePath().toOSString());
+						projectPath = null;
+					} else if (connection.getAppByName(relPath.lastSegment()) != null) {
+						// It is an error if a Codewind project already exists with the same name
+						errorMsg = NLS.bind(Messages.SelectProjectPageCWProjectExistsError, relPath.lastSegment());
 						projectPath = null;
 					} else {
 						// It is an error if a project exists with the same name but has a different location

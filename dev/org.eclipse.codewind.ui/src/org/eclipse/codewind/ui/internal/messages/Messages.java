@@ -173,6 +173,7 @@ public class Messages extends NLS {
 	public static String SelectProjectPageWorkspaceProject;
 	public static String SelectProjectPageFilesystemProject;
 	public static String SelectProjectPageFilterText;
+	public static String SelectProjectPageNoWorkspaceProjects;
 	public static String SelectProjectPagePathLabel;
 	public static String SelectProjectPageBrowseButton;
 	public static String SelectProjectPageFilesystemDialogTitle;

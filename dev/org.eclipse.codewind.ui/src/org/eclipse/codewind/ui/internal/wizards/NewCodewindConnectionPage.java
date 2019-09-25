@@ -17,31 +17,30 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.InstallStatus;
+import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
@@ -51,7 +50,9 @@ import org.eclipse.swt.widgets.Text;
  */
 public class NewCodewindConnectionPage extends WizardPage {
 
-	private Text hostnameText, portText;
+	private Text connNameText;
+	private Text connURLText, connUserText, connPassText;
+	private Button connTestButton;
 
 	private CodewindConnection connection;
 
@@ -63,94 +64,111 @@ public class NewCodewindConnectionPage extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		Composite shell = new Composite(parent, SWT.NULL);
-		shell.setLayout(new GridLayout());
-
-		createHostnameAndPortFields(shell);
-
-		setControl(shell);
+		GridData data;
+		
+		Composite composite = new Composite(parent, SWT.NULL);
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 2;
+        layout.horizontalSpacing = 5;
+        layout.verticalSpacing = 7;
+        composite.setLayout(layout);
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL));
+        
+        createLabel("Connection name:", composite, 1, 0);
+        connNameText = createConnText(composite, SWT.NONE, 1);
+        
+        Group connGroup = new Group(composite, SWT.NONE);
+        layout = new GridLayout();
+        layout.numColumns = 2;
+        layout.marginHeight = 0;
+        layout.horizontalSpacing = 5;
+        layout.verticalSpacing = 7;
+        connGroup.setLayout(layout);
+        data = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1);
+        connGroup.setLayoutData(data);
+        
+        Text connGroupLabel = new Text(connGroup, SWT.READ_ONLY);
+        connGroupLabel.setText("Deployment Info:");
+        connGroupLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
+        IDEUtil.normalizeBackground(connGroupLabel, composite);
+       
+        createLabel("URL:", connGroup, 1, 15);
+        connURLText = createConnText(connGroup, SWT.NONE, 1);
+        
+        createLabel("User name:", connGroup, 1, 15);
+        connUserText = createConnText(connGroup, SWT.NONE, 1);
+        
+        createLabel("Password:", connGroup, 1, 15);
+        connPassText = createConnText(connGroup, SWT.PASSWORD, 1);
+        
+        connTestButton = new Button(connGroup, SWT.PUSH);
+        connTestButton.setText("Test Connection");
+        connTestButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false, 2, 1));
+        connTestButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent se) {
+				testConnection();
+				validateAndUpdate();
+			}
+		});
+        
+        validate();
+        connNameText.setFocus();
+		setControl(composite);
+	}
+	
+	private void createLabel(String labelStr, Composite parent, int horizontalSpan, int horizontalIndent) {
+		Label label = new Label(parent, SWT.NONE);
+		label.setText(labelStr);
+		GridData data = new GridData(SWT.FILL, SWT.CENTER, false, false, horizontalSpan, 1);
+		data.horizontalIndent = horizontalIndent;
+		label.setLayoutData(data);
 	}
 
-	private void createHostnameAndPortFields(Composite shell) {
-		Composite hostPortGroup = new Composite(shell, SWT.NONE);
-		//gridData.verticalSpan = 2;
-		hostPortGroup.setLayout(new GridLayout(3, false));
-		hostPortGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-
-		GridData hostnamePortLabelData = new GridData(GridData.FILL, GridData.FILL, false, false);
-
-		Label hostnameLabel = new Label(hostPortGroup, SWT.NONE);
-		hostnameLabel.setText(Messages.NewConnectionPage_HostnameLabel);
-		hostnameLabel.setLayoutData(hostnamePortLabelData);
-
-		// Only localhost supported now so make read only and set to localhost
-		hostnameText = new Text(hostPortGroup, SWT.BORDER | SWT.READ_ONLY);
-		GridData hostnamePortTextData = new GridData(GridData.FILL, GridData.BEGINNING, true, false, 2, 1);
-		hostnameText.setLayoutData(hostnamePortTextData);
-		Color bg = hostnameText.getBackground();
-		Color fg = hostnameText.getForeground();
-        final Color gray = new Color(bg.getDevice(), (bg.getRed() + fg.getRed()) / 2, (bg.getGreen() + fg.getGreen()) / 2, (bg.getBlue() + fg.getBlue()) / 2);
-        hostnameText.addDisposeListener(new DisposeListener() {
-            @Override
-            public void widgetDisposed(DisposeEvent event) {
-                gray.dispose();
-            }
-        });
-        hostnameText.setForeground(gray);
-		hostnameText.setText("localhost"); //$NON-NLS-1$
-		final String localhostOnly = Messages.NewConnectionPage_OnlyLocalhostSupported;
-		hostnameLabel.setToolTipText(localhostOnly);
-		hostnameText.setToolTipText(localhostOnly);
-
-		// Invalidate the wizard when the host or port are changed so that the user has to test the connection again.
-		ModifyListener modifyListener = new ModifyListener() {
+	private Text createConnText(Composite parent, int styles, int horizontalSpan) {
+		Text text = new Text(parent, SWT.BORDER | styles);
+		text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, horizontalSpan, 1));
+		text.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
 				removePreviousConnection();
-
-				setErrorMessage(null);
-				setMessage(Messages.NewConnectionPage_TestToProceed);
-				getWizard().getContainer().updateButtons();
-			}
-		};
-
-		hostnameText.addModifyListener(modifyListener);
-
-		Label portLabel = new Label(hostPortGroup, SWT.NONE);
-		portLabel.setText(Messages.NewConnectionPage_PortLabel);
-		portLabel.setLayoutData(hostnamePortLabelData);
-
-		portText = new Text(hostPortGroup, SWT.BORDER);
-		portText.setLayoutData(hostnamePortTextData);
-		portText.setText("9090"); //$NON-NLS-1$
-
-		portText.addModifyListener(modifyListener);
-
-		final Button testConnectionBtn = new Button(hostPortGroup, SWT.PUSH);
-		testConnectionBtn.setText(Messages.NewConnectionPage_TestConnectionBtn);
-		testConnectionBtn.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				// Block the Test Connection button while we test it
-				testConnectionBtn.setEnabled(false);
-				testConnection();
-				testConnectionBtn.setEnabled(true);
-				testConnectionBtn.setFocus();
+				validateAndUpdate();
 			}
 		});
-		testConnectionBtn.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-
-		// In the Local case, the user can only create one connection,
-		// so if they have one already, block the Add button.
-		if (CodewindConnectionManager.activeConnectionsCount() > 0) {
-			testConnectionBtn.setEnabled(false);
-			String existingConnectionUrl = CodewindConnectionManager.activeConnections().get(0).baseUrl.toString();
-			setErrorMessage(
-					NLS.bind(Messages.NewConnectionPage_ErrAConnectionAlreadyExists,
-					existingConnectionUrl));
-		} else {
-			testConnectionBtn.setFocus();
+		return text;
+	}
+	
+	private void validateAndUpdate() {
+		setErrorMessage(validate());
+		getWizard().getContainer().updateButtons();
+	}
+	
+	private String validate() {
+		String name = connNameText.getText();
+		if (name == null || name.isEmpty()) {
+			return "Fill in a name for the connection.";
 		}
+		String url = connURLText.getText();
+		String user = connUserText.getText();
+		String pass = connPassText.getText();
+		if (url == null || url.isEmpty() || user == null || user.isEmpty() || pass == null || pass.isEmpty()) {
+			connTestButton.setEnabled(false);
+			return "Fill in all of the deployment info fields.";
+		}
+		connTestButton.setEnabled(true);
+		if (connection == null) {
+			return "Click `Test Connection` to validate the deployment info.";
+		}
+		return null;
+	}
+	
+	@Override
+	public boolean canFlipToNextPage() {
+		return canFinish();
+	}
+	
+	public boolean canFinish() {
+		return connection != null && connection.isConnected();
 	}
 
 	void removePreviousConnection() {
@@ -164,20 +182,12 @@ public class NewCodewindConnectionPage extends WizardPage {
 		removePreviousConnection();
 
 		// Try to connect to Codewind at the given hostname:port
-		String hostname = hostnameText.getText().trim();
-		String portStr = portText.getText().trim();
+		String urlStr = connURLText.getText().trim();
 
 		URI uri = null;
 		try {
-			int port = Integer.parseInt(portStr);
-
-			uri = CodewindConnection.buildUrl(hostname, port);
-		}
-		catch(NumberFormatException e) {
-			Logger.logError(e);
-			setErrorMessage(NLS.bind(Messages.NewConnectionPage_NotValidPortNum, portStr));
-		}
-		catch(URISyntaxException e) {
+			uri = new URI(urlStr);
+		} catch(URISyntaxException e) {
 			Logger.logError(e);
 			setErrorMessage(e.getMessage());
 		}

@@ -27,6 +27,7 @@ import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -113,12 +114,12 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 100);
-					IPath path = newConnection.getWorkspacePath().append(name);
-					InstallUtil.createProject(name, path.toOSString(), info.getUrl(), mon.split(40));
+					IPath localPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(name);
+					InstallUtil.createProject(name, localPath.toOSString(), info.getUrl(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), info.getProjectType());
+					newConnection.requestProjectBind(name, localPath.toOSString(), info.getLanguage(), info.getProjectType());
 					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}

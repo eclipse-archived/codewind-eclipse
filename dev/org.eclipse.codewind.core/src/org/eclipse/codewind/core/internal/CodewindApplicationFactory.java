@@ -21,6 +21,8 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -113,9 +115,12 @@ public class CodewindApplicationFactory {
 				Logger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 			}
 
-			String loc = appJso.getString(CoreConstants.KEY_LOC_DISK);
+			String ws = appJso.getString(CoreConstants.KEY_WORKSPACE);
+			ws = CoreUtil.getHostPath(ws);
+			String dir = appJso.getString(CoreConstants.KEY_DIRECTORY);
+			IPath localPath = (new Path(ws)).append(dir);
 			
-			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, loc);
+			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, localPath);
 			
 			updateApp(app, appJso);
 			return app;

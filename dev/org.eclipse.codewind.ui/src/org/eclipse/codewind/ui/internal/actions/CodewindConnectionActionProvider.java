@@ -29,6 +29,7 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
 	private ManageReposAction manageReposAction;
+	private RemoveConnectionAction removeConnectionAction;
 	
 	@Override
 	public void init(ICommonActionExtensionSite aSite) {
@@ -37,6 +38,7 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 		newProjectAction = new NewProjectAction(selProvider);
 		bindAction = new BindAction(selProvider);
 		manageReposAction = new ManageReposAction(selProvider);
+		removeConnectionAction = new RemoveConnectionAction(selProvider);
 	}
 	
 	@Override
@@ -53,7 +55,10 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 			if (obj instanceof CodewindConnection) {
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
-				menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, manageReposAction);
+				menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageReposAction);
+				if (removeConnectionAction.showAction()) {
+					menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, removeConnectionAction);
+				}
 			}
 		}
 	}

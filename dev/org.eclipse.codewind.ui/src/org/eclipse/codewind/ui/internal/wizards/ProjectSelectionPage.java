@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
-import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -256,15 +255,6 @@ public class ProjectSelectionPage extends WizardPage {
 			return false;
 		}
 		if (connection.getAppByName(project.getName()) != null) {
-			return false;
-		}
-		IPath workspacePath = connection.getWorkspacePath();
-		IPath projectPath = project.getLocation();
-		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.WINDOWS) {
-			workspacePath = new Path(workspacePath.toPortableString().toLowerCase());
-			projectPath = new Path(projectPath.toPortableString().toLowerCase());
-		}
-		if (!workspacePath.isPrefixOf(projectPath)) {
 			return false;
 		}
 		return true;

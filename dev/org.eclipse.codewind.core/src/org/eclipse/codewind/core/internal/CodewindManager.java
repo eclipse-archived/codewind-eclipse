@@ -151,5 +151,12 @@ public class CodewindManager {
 		}
 		return false;
 	}
+	
+	public boolean isLocalConnection(CodewindConnection connection) {
+		if (localURI == null) {
+			return false;
+		}
+		return (localURI.equals(connection.baseUrl));
+	}
 
 }

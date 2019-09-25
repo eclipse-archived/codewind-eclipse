@@ -589,7 +589,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        
 	        text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 	        text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
-	        text.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+	        text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, false));
 		}
 		
 		public void setValue(String value, boolean enabled) {

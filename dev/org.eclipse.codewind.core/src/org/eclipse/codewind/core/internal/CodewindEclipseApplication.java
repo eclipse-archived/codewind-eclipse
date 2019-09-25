@@ -76,9 +76,9 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	private ILaunch launch = null;
 
 	CodewindEclipseApplication(CodewindConnection connection, String id, String name,
-			ProjectType projectType, ProjectLanguage language, String pathInWorkspace)
+			ProjectType projectType, ProjectLanguage language, IPath localPath)
 					throws MalformedURLException {
-		super(connection, id, name, projectType, language, pathInWorkspace);
+		super(connection, id, name, projectType, language, localPath);
 	}
 	
 	public synchronized void addConsole(SocketConsole console) {

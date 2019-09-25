@@ -46,7 +46,7 @@ public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean canFinish() {
-		return newConnectionPage.getConnection() != null;
+		return newConnectionPage.canFinish();
 	}
 
 	@Override

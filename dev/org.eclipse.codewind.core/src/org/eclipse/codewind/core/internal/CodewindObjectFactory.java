@@ -16,6 +16,7 @@ import java.net.URI;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.core.runtime.IPath;
 
 /**
  * Factory for creating the correct Codewind objects.  This is used to keep the Eclipse
@@ -31,8 +32,8 @@ public class CodewindObjectFactory {
 	}
 	
 	public static CodewindApplication createCodewindApplication(CodewindConnection connection,
-			String id, String name, ProjectType projectType, ProjectLanguage language, String pathInWorkspace) throws Exception {
-		return new CodewindEclipseApplication(connection, id, name, projectType, language, pathInWorkspace);
+			String id, String name, ProjectType projectType, ProjectLanguage language, IPath localPath) throws Exception {
+		return new CodewindEclipseApplication(connection, id, name, projectType, language, localPath);
 	}
 
 }

@@ -57,6 +57,7 @@ public class CoreConstants {
 			KEY_CONTEXT_ROOT = "contextRoot",
 			KEY_CONTAINER_ID = "containerId",
 			KEY_IS_HTTPS = "isHttps",
+			KEY_WORKSPACE = "workspace",
 			KEY_DIRECTORY = "directory",
 			KEY_MSG = "msg",
 			KEY_FILE_LIST = "fileList",

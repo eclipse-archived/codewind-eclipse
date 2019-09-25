@@ -36,6 +36,7 @@ public class CodewindActionProvider extends CommonActionProvider {
 	private ISelectionProvider selProvider;
 	private InstallerAction installUninstallAction;
 	private InstallerAction startStopAction;
+	private AddConnectionAction addConnectionAction;
 	private CodewindDoubleClickAction doubleClickAction;
 	
     @Override
@@ -44,6 +45,7 @@ public class CodewindActionProvider extends CommonActionProvider {
         selProvider = aSite.getStructuredViewer();
         installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
+        addConnectionAction = new AddConnectionAction(selProvider);
         doubleClickAction = new CodewindDoubleClickAction(selProvider);
     }
     
@@ -56,10 +58,9 @@ public class CodewindActionProvider extends CommonActionProvider {
     	selProvider.setSelection(selProvider.getSelection());
     	InstallStatus status = CodewindManager.getManager().getInstallStatus();
     	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, installUninstallAction);
-    	if (status.isStarted()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
-    	} else if (status.isInstalled()) {
+    	if (status.isInstalled()) {
 	    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, startStopAction);
+	    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, addConnectionAction);
     	}
     }
 

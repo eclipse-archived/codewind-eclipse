@@ -76,7 +76,7 @@ public class CodewindApplication {
 	private String containerAppPort = null, containerDebugPort = null;
 
 	CodewindApplication(CodewindConnection connection, String id, String name, 
-			ProjectType projectType, ProjectLanguage projectLanguage, String pathInWorkspace)
+			ProjectType projectType, ProjectLanguage projectLanguage, IPath localPath)
 					throws MalformedURLException {
 
 		this.connection = connection;
@@ -86,9 +86,7 @@ public class CodewindApplication {
 		this.projectLanguage = projectLanguage;
 		this.host = connection.baseUrl.getHost();
 
-		// The connection.localWorkspacePath will end with the workspace folder
-		// and the path passed here will start with the workspace folder, so here we fix the duplication.
-		this.fullLocalPath = CoreUtil.appendPathWithoutDupe(connection.getWorkspacePath(), pathInWorkspace);
+		this.fullLocalPath = localPath;
 
 		this.startMode = StartMode.RUN;
 		this.appStatus = AppStatus.UNKNOWN;
@@ -110,7 +108,7 @@ public class CodewindApplication {
 			rootUrl = new URL(baseUrl, contextRoot);
 		}
 	}
-	
+
 	public synchronized void setAppStatus(String appStatus, String appStatusDetails) {
 		if (appStatus != null) {
 			this.appStatus = AppStatus.get(appStatus);

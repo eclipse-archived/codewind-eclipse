@@ -28,7 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,8 +45,6 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
-import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
@@ -63,7 +60,9 @@ public class CodewindConnection {
 	private static final String BRANCH_VERSION = "\\d{4}_M\\d{1,2}_\\D";
 	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
+	private String name;
 	public final URI baseUrl;
+	public final boolean isLocal;
 	private ConnectionEnv env = null;
 	private String connectionErrorMsg = null;
 
@@ -78,39 +77,19 @@ public class CodewindConnection {
 		return new URI("http", null, host, port, null, null, null); //$NON-NLS-1$
 	}
 
-	public CodewindConnection (URI uri) throws IOException, URISyntaxException, JSONException {
+	public CodewindConnection(String name, URI uri, boolean isLocal) throws IOException, URISyntaxException, JSONException {
+		this.name = name;
 		if (!uri.toString().endsWith("/")) { //$NON-NLS-1$
 			uri = uri.resolve("/"); //$NON-NLS-1$
 		}
 		this.baseUrl = uri;
+		this.isLocal = isLocal;
 
 		if (CodewindConnectionManager.getActiveConnection(uri.toString()) != null) {
 			onInitFail(NLS.bind(Messages.Connection_ErrConnection_AlreadyExists, baseUrl));
 		}
 		
-		if (!waitForReady()) {
-			Logger.logError("Timed out waiting for Codewind to go into ready state.");
-			isConnected = false;
-			connectionErrorMsg = Messages.Connection_ErrConnection_CodewindNotReady;
-			return;
-		}
-		
-		env = new ConnectionEnv(getEnvData(this.baseUrl));
-		Logger.log("Codewind version is: " + env.getVersion());			// $NON-NLS-1$
-
-		if (env.getWorkspacePath() == null) {
-			// Can't recover from this
-			// This should never happen since we have already determined it is a supported version of Codewind.
-			onInitFail(Messages.Connection_ErrConnection_WorkspaceErr);
-		}
-		
-		socket = new CodewindSocket(this);
-		if(!socket.blockUntilFirstConnection()) {
-			close();
-			throw new CodewindConnectionException(socket.socketUri);
-		}
-
-		refreshApps(null);
+		connect();
 		
 //		filewatcher = new CodewindFilewatcherdConnection(baseUrl.toString(), new ICodewindProjectTranslator() {
 //			@Override
@@ -126,6 +105,50 @@ public class CodewindConnection {
 //		});
 
 		Logger.log("Created " + this); //$NON-NLS-1$
+	}
+	
+	public void connect() throws IOException, URISyntaxException, JSONException {
+		connectionErrorMsg = null;
+		
+		if (!waitForReady()) {
+			Logger.logError("Timed out waiting for Codewind to go into ready state.");
+			isConnected = false;
+			connectionErrorMsg = getConnectionFailedMsg();
+			return;
+		}
+		
+		env = new ConnectionEnv(getEnvData(this.baseUrl));
+		Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
+		if (!isSupportedVersion(env.getVersion())) {
+			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUrl);	// $NON-NLS-1$	// $NON-NLS-2$
+			this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION);
+			return;
+		}
+
+		if (env.getWorkspacePath() == null) {
+			// Can't recover from this
+			// This should never happen since we have already determined it is a supported version of Codewind.
+			onInitFail(Messages.Connection_ErrConnection_WorkspaceErr);
+		}
+		
+		socket = new CodewindSocket(this);
+		if(!socket.blockUntilFirstConnection()) {
+			Logger.logError("Socket failed to connect: " + socket.socketUri);
+			close();
+			isConnected = false;
+			connectionErrorMsg = getConnectionFailedMsg();
+			return;
+		}
+
+		refreshApps(null);
+	}
+	
+	private String getConnectionFailedMsg() {
+		if (isLocal) {
+			return Messages.Connection_ErrConnection_ConnectionFailedLocal;
+		} else {
+			return Messages.Connection_ErrConnection_ConnectionFailed;
+		}
 	}
 	
 	public String getSocketNamespace() {
@@ -156,6 +179,17 @@ public class CodewindConnection {
 		for (CodewindApplication app : appMap.values()) {
 			app.dispose();
 		}
+	}
+	
+	public String getName() {
+		if (name == null) {
+			return "";
+		}
+		return name;
+	}
+	
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
@@ -862,18 +896,12 @@ public class CodewindConnection {
 		try {
 			String oldSocketNS = env.getSocketNamespace();
 			env = new ConnectionEnv(getEnvData(baseUrl));
-//			if (UNKNOWN_VERSION.equals(versionStr)) {
-//				Logger.logError("Failed to get the Codewind version after reconnect");
-//				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_VersionUnknown, CoreConstants.REQUIRED_CODEWIND_VERSION);
-//				CoreUtil.updateConnection(this);
-//				return;
-//			}
-//			if (!isSupportedVersion(version)) {
-//				Logger.logError("The detected version of Codewind after reconnect is not supported: " + version);
-//				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, versionStr, CoreConstants.REQUIRED_CODEWIND_VERSION);
-//				CoreUtil.updateConnection(this);
-//				return;
-//			}
+			if (!isSupportedVersion(env.getVersion())) {
+				Logger.logError("The detected version of Codewind after reconnect is not supported: " + env.getVersion());
+				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION);
+				CoreUtil.updateConnection(this);
+				return;
+			}
 			if (env.getWorkspacePath() == null) {
 				// This should not happen since the version was ok
 				Logger.logError("Failed to get the local workspace path after reconnect");

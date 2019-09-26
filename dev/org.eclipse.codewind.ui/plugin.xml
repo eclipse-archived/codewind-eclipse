@@ -83,6 +83,10 @@
 					<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" />
 				</or>
 			</enablement>
+			<commonSorter
+					class="org.eclipse.codewind.ui.internal.views.CodewindNavigatorSorter"
+					id="org.eclipse.codewind.ui.codewindNavigatorSorter">
+			</commonSorter>
 			<actionProvider
 				id="org.eclipse.codewind.ui.rootActionProvider"
 				class="org.eclipse.codewind.ui.internal.actions.RootActionProvider">

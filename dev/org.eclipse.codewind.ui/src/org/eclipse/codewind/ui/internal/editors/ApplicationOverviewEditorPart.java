@@ -188,7 +188,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		layout.horizontalSpacing = 0;
 		leftColumnComp.setLayout(layout);
 		GridData data = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL);
-		data.widthHint = 120;
+		data.widthHint = 250;
 		leftColumnComp.setLayoutData(data);
 		
 		generalSection = new GeneralSection(leftColumnComp, toolkit);

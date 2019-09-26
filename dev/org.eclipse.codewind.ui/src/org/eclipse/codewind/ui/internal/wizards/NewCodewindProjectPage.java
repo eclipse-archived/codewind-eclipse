@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
@@ -53,7 +54,9 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -68,7 +71,8 @@ import org.eclipse.ui.dialogs.SearchPattern;
 public class NewCodewindProjectPage extends WizardPage {
 	
 	private static final Pattern projectNamePattern = Pattern.compile("^[a-zA-Z0-9_.-]+$"); //$NON-NLS-1$
-	
+	private static final String defaultLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString();
+			
 	private CodewindConnection connection;
 	private List<ProjectTemplateInfo> templateList;
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
@@ -77,6 +81,14 @@ public class NewCodewindProjectPage extends WizardPage {
 	private Text descriptionLabel;
 	private Text sourceLabel;
 	private Text projectNameText;
+	private String projectName;
+	private String location = defaultLocation;
+	private String savedLocation = "";
+	private Button defaultLocationButton;
+	private Label locationLabel;
+	private Text locationText;
+	private Button locationBrowse;
+	
 
 	protected NewCodewindProjectPage(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
 		super(Messages.NewProjectPage_ShellTitle);
@@ -129,28 +141,94 @@ public class NewCodewindProjectPage extends WizardPage {
 
 	private void createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayout(new GridLayout(2, false));
-		composite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		GridLayout layout = new GridLayout(2, false);
+		layout.horizontalSpacing = 8;
+		layout.verticalSpacing = 20;
+		composite.setLayout(layout);
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
+		// Project name
 		Label label = new Label(composite, SWT.NONE);
 		label.setText(Messages.NewProjectPage_ProjectNameLabel);
 		
 		projectNameText = new Text(composite, SWT.BORDER);
 		projectNameText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 
-		Label spacer = new Label(composite, SWT.NONE);
-		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+		// Project location
+		Group locationGroup = new Group(composite, SWT.NONE);
+		locationGroup.setText(Messages.NewProjectPage_LocationGroupLabel);
+		locationGroup.setLayout(new GridLayout(3, false));
+		locationGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+		
+		defaultLocationButton = new Button(locationGroup, SWT.CHECK);
+		defaultLocationButton.setText(Messages.NewProjectPage_LocationDefaultButton);
+		defaultLocationButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 3, 1));
+		
+		locationLabel = new Label(locationGroup, SWT.NONE);
+		locationLabel.setText(Messages.NewProjectPage_LocationTextLabel);
+		locationLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		
+		locationText = new Text(locationGroup, SWT.BORDER);
+		locationText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
+		
+		locationBrowse = new Button(locationGroup, SWT.PUSH);
+		locationBrowse.setText(Messages.NewProjectPage_LocationBrowseButton);
+		
+		defaultLocationButton.setSelection(true);
+		locationText.setText(defaultLocation);
+		enableLocationWidgets(false);
+		
+		defaultLocationButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent se) {
+				boolean selected = defaultLocationButton.getSelection();
+				if (selected) {
+					savedLocation = locationText.getText().trim();
+					location = getDefaultLocation(projectName);
+					locationText.setText(location);
+				} else {
+					locationText.setText(savedLocation);
+					location = savedLocation;
+				}
+				enableLocationWidgets(!selected);
+				setPageComplete(validate());
+			}
+		});
+		
+		locationText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				location = locationText.getText().trim();
+				setPageComplete(validate());
+			}
+		});
+		
+		locationBrowse.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent se) {
+				DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
+				String selectedDirectory = dialog.open();
+				if (selectedDirectory != null && !selectedDirectory.trim().isEmpty()) {
+					locationText.setText(selectedDirectory.trim());
+					location = selectedDirectory.trim();
+				} else {
+					locationText.setText(""); //$NON-NLS-1$
+					location = null;
+				}
+				setPageComplete(validate());
+			}
+		});
 
 		// Project template composite
 		Group templateGroup = new Group(composite, SWT.NONE);
-		GridLayout layout = new GridLayout();
+		templateGroup.setText(Messages.NewProjectPage_TemplateGroupLabel);
+		layout = new GridLayout();
 		layout.marginHeight = 8;
 		layout.marginWidth = 8;
 		layout.horizontalSpacing = 7;
 		layout.verticalSpacing = 7;
 		templateGroup.setLayout(layout);
 		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
-		templateGroup.setText(Messages.NewProjectPage_TemplateGroupLabel);
 		
 		Text templateText = new Text(templateGroup, SWT.READ_ONLY);
 		templateText.setText(Messages.NewProjectPage_TemplateGroupDesc);
@@ -327,6 +405,10 @@ public class NewCodewindProjectPage extends WizardPage {
 		projectNameText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
+				projectName = projectNameText.getText().trim();
+				if (defaultLocationButton.getSelection()) {
+					locationText.setText(getDefaultLocation(projectName));
+				}
 				setPageComplete(validate());
 			}
 		});
@@ -350,13 +432,22 @@ public class NewCodewindProjectPage extends WizardPage {
 		updateDetails();
 		projectNameText.setFocus();
 	}
+	
+	private void enableLocationWidgets(boolean enabled) {
+		locationLabel.setEnabled(enabled);
+		locationText.setEnabled(enabled);
+		locationBrowse.setEnabled(enabled);
+	}
+	
+	private String getDefaultLocation(String name) {
+		return name.isEmpty() ? defaultLocation : defaultLocation + File.separator + name;
+	}
 
 	private boolean validate() {
 		if (templateList == null || templateList.isEmpty()) {
 			setErrorMessage(Messages.NewProjectPage_EmptyTemplateList);
 			return false;
 		}
-		String projectName = projectNameText.getText();
 		if (projectName == null || projectName.isEmpty()) {
 			setErrorMessage(Messages.NewProjectPage_EmptyProjectName);
 			return false;
@@ -374,8 +465,21 @@ public class NewCodewindProjectPage extends WizardPage {
 			setErrorMessage(NLS.bind(Messages.NewProjectPage_EclipseProjectExistsError, projectName));
 			return false;
 		}
+		if (location == null || location.isEmpty()) {
+			setErrorMessage(Messages.NewProjectPage_NoLocationError);
+			return false;
+		}
+		File file = new File(location);
+		if (file.exists() && !file.isDirectory()) {
+			setErrorMessage(Messages.NewProjectPage_LocationNotValid);
+			return false;
+		}
+		if (selectionTable.getSelectionCount() != 1) {
+			setErrorMessage(Messages.NewProjectPage_NoTemplateSelected);
+			return false;
+		}
 		setErrorMessage(null);
-		return selectionTable.getSelectionCount() == 1 && projectName != null && !projectName.isEmpty();
+		return true;
 	}
 
 	public ProjectTemplateInfo getProjectTemplateInfo() {
@@ -394,10 +498,11 @@ public class NewCodewindProjectPage extends WizardPage {
 	}
 	
 	public String getProjectName() {
-		if (projectNameText != null) {
-			return projectNameText.getText();
-		}
-		return null;
+		return projectName;
+	}
+	
+	public String getLocation() {
+		return location;
 	}
 
 	private void createItems(Table table, String filter) {

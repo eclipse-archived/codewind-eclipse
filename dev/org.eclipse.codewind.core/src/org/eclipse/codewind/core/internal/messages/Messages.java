@@ -18,6 +18,8 @@ public class Messages extends NLS {
 
 	public static String GenericUnknown;
 	
+	public static String CodewindLocalConnectionName;
+	
 	public static String Connection_ErrConnection_AlreadyExists;
 	public static String Connection_ErrConnection_OldVersion;
 	public static String Connection_ErrConnection_VersionUnknown;
@@ -26,7 +28,8 @@ public class Messages extends NLS {
 	public static String Connection_ErrContactingServerDialogTitle;
 	public static String Connection_ErrGettingProjectListTitle;
 	public static String Connection_ErrConnection_UpdateCacheException;
-	public static String Connection_ErrConnection_CodewindNotReady;
+	public static String Connection_ErrConnection_ConnectionFailedLocal;
+	public static String Connection_ErrConnection_ConnectionFailed;
 
 	public static String ConnectionException_ConnectingToMCFailed;
 

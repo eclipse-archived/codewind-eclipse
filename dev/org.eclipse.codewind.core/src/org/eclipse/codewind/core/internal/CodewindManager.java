@@ -18,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.messages.Messages;
 import org.json.JSONException;
 
 public class CodewindManager {
@@ -114,7 +115,7 @@ public class CodewindManager {
 			return localConnection;
 		}
 		try {
-			CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(getLocalURI());
+			CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(Messages.CodewindLocalConnectionName, getLocalURI(), true);
 			localConnection = connection;
 			CodewindConnectionManager.add(connection);
 			return connection;
@@ -151,12 +152,4 @@ public class CodewindManager {
 		}
 		return false;
 	}
-	
-	public boolean isLocalConnection(CodewindConnection connection) {
-		if (localURI == null) {
-			return false;
-		}
-		return (localURI.equals(connection.baseUrl));
-	}
-
 }

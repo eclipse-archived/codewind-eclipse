@@ -75,7 +75,14 @@ public class NewCodewindConnectionPage extends WizardPage {
         composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL));
         
         createLabel("Connection name:", composite, 1, 0);
-        connNameText = createConnText(composite, SWT.NONE, 1);
+        connNameText = new Text(composite, SWT.BORDER);
+        connNameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+        connNameText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				validateAndUpdate();
+			}
+		});
         
         Group connGroup = new Group(composite, SWT.NONE);
         layout = new GridLayout();
@@ -112,7 +119,7 @@ public class NewCodewindConnectionPage extends WizardPage {
 			}
 		});
         
-        validate();
+        connTestButton.setEnabled(false);
         connNameText.setFocus();
 		setControl(composite);
 	}
@@ -139,27 +146,60 @@ public class NewCodewindConnectionPage extends WizardPage {
 	}
 	
 	private void validateAndUpdate() {
-		setErrorMessage(validate());
+		validate();
 		getWizard().getContainer().updateButtons();
 	}
 	
-	private String validate() {
-		String name = connNameText.getText();
-		if (name == null || name.isEmpty()) {
-			return "Fill in a name for the connection.";
+	private void validate() {
+		
+		// Check that connection name is set
+		String name = connNameText.getText().trim();
+		if (name.isEmpty()) {
+			setErrorMessage("Fill in a name for the connection.");
+			return;
 		}
-		String url = connURLText.getText();
-		String user = connUserText.getText();
-		String pass = connPassText.getText();
-		if (url == null || url.isEmpty() || user == null || user.isEmpty() || pass == null || pass.isEmpty()) {
+		
+		// Check that the connection name is not already used
+		CodewindConnection existingConnection = CodewindConnectionManager.getActiveConnectionByName(name);
+		if (existingConnection != null) {
+			setErrorMessage("The name " + name + " is already used for an existing connection");
+			return;
+		}
+		
+		// Check that the url is valid and not already used
+		String url = connURLText.getText().trim();
+		if (!url.isEmpty()) { //$NON-NLS-1$
+			try {
+				new URI(url);
+			} catch (URISyntaxException e) {
+				connTestButton.setEnabled(false);
+				setErrorMessage("The url is not valid: " + url);
+				return;
+			}
+			existingConnection = CodewindConnectionManager.getActiveConnection(url.endsWith("/") ? url : url + "/");
+			if (existingConnection != null) {
+				connTestButton.setEnabled(false);
+				setErrorMessage("The " + existingConnection.getName() + " connection is already using url: " + url);
+				return;
+			}
+		}
+
+		// Check that all of the connection fields are filled in
+		String user = connUserText.getText().trim();
+		String pass = connPassText.getText().trim();
+		if (url.isEmpty() || user.isEmpty() || pass.isEmpty()) {
 			connTestButton.setEnabled(false);
-			return "Fill in all of the deployment info fields.";
+			setErrorMessage("Fill in all of the deployment info fields.");
+			return;
 		}
+		
 		connTestButton.setEnabled(true);
 		if (connection == null) {
-			return "Click `Test Connection` to validate the deployment info.";
+			setErrorMessage("Click `Test Connection` to validate the deployment info.");
+			return;
 		}
-		return null;
+		
+		setErrorMessage(null);
 	}
 	
 	@Override
@@ -198,7 +238,7 @@ public class NewCodewindConnectionPage extends WizardPage {
 
 		Logger.log("Validating connection: " + uri); //$NON-NLS-1$
 
-		connection = createConnection(uri);
+		connection = createConnection(connNameText.getText().trim(), uri);
 
 		if(connection != null) {
 			setErrorMessage(null);
@@ -219,13 +259,16 @@ public class NewCodewindConnectionPage extends WizardPage {
 
 	void performFinish() {
 		if (connection != null) {
+			// In case the name was changed after the connection was tested
+			connection.setName(connNameText.getText().trim());
+			
 			CodewindConnectionManager.add(connection);
 		}
 	}
 	
-	private CodewindConnection createConnection(URI uri) {
+	private CodewindConnection createConnection(String name, URI uri) {
 		try {
-			return CodewindObjectFactory.createCodewindConnection(uri);
+			return CodewindObjectFactory.createCodewindConnection(name, uri, false);
 		} catch (Exception e) {
 			// Ignore
 		}
@@ -262,7 +305,7 @@ public class NewCodewindConnectionPage extends WizardPage {
 		CodewindConnection connection = null;
 		for (int i = 0; i < 10; i++) {
 			try {
-				connection = CodewindObjectFactory.createCodewindConnection(uri);
+				connection = CodewindObjectFactory.createCodewindConnection(name, uri, false);
 				break;
 			} catch (Exception e) {
 				try {

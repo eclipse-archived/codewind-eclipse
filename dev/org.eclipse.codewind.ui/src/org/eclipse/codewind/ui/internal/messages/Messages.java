@@ -242,7 +242,12 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ShellTitle;
 	public static String NewProjectPage_WizardDescription;
 	public static String NewProjectPage_WizardTitle;
+	public static String NewProjectPage_LocationGroupLabel;
+	public static String NewProjectPage_LocationDefaultButton;
+	public static String NewProjectPage_LocationTextLabel;
+	public static String NewProjectPage_LocationBrowseButton;
 	public static String NewProjectPage_TemplateGroupLabel;
+	public static String NewProjectPage_TemplateGroupMsg;
 	public static String NewProjectPage_ProjectTypeGroup;
 	public static String NewProjectPage_FilterMessage;
 	public static String NewProjectPage_TemplateColumn;
@@ -267,6 +272,9 @@ public class Messages extends NLS {
 	public static String NewProjectPage_CodewindConnectError;
 	public static String NewProjectPage_TemplateListError;
 	public static String NewProjectPage_EmptyTemplateList;
+	public static String NewProjectPage_NoLocationError;
+	public static String NewProjectPage_LocationNotValid;
+	public static String NewProjectPage_NoTemplateSelected;
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;

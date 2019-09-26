@@ -92,12 +92,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			}
 		} else if (element instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)element;
-			String text = null;
-			if (connection.baseUrl.equals(CodewindManager.getManager().getLocalURI())) {
-				text = Messages.CodewindLocalProjects;
-			} else {
-				text = Messages.CodewindConnectionLabel + " " + connection.baseUrl;
-			}
+			String text = connection.getName();
 			if (!connection.isConnected()) {
 				String errorMsg = connection.getConnectionErrorMsg();
 				if (errorMsg == null) {
@@ -180,11 +175,9 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			}
 		} else if (element instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)element;
-			if (connection.baseUrl.equals(CodewindManager.getManager().getLocalURI())) {
-				styledString = new StyledString(Messages.CodewindLocalProjects);
-			} else {
-				styledString = new StyledString(Messages.CodewindConnectionLabel + " " );
-				styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
+			styledString = new StyledString(connection.getName());
+			if (!connection.isLocal) {
+				styledString.append(" " + connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
 			}
 			if (!connection.isConnected()) {
 				String errorMsg = connection.getConnectionErrorMsg();

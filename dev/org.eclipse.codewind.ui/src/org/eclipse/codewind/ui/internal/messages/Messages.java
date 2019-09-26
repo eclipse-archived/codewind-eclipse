@@ -87,7 +87,6 @@ public class Messages extends NLS {
 	public static String CodewindWrongVersionQualifier;
 	public static String CodewindWrongVersionMsg;
 	public static String CodewindNotStartedMsg;
-	public static String CodewindLocalProjects;
 	public static String CodewindConnectionLabel;
 	public static String CodewindDisconnected;
 	public static String CodewindProjectDisabled;

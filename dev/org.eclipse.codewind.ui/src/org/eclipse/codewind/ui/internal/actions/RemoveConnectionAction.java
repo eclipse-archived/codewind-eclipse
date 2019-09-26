@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -40,7 +39,7 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindConnection) {
 				connection = (CodewindConnection) obj;
-				setEnabled(connection != null && !CodewindManager.getManager().isLocalConnection(connection));
+				setEnabled(connection != null && !connection.isLocal);
 				return;
 			}
 		}
@@ -63,6 +62,6 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 	}
 	
 	public boolean showAction() {
-		return connection != null && !CodewindManager.getManager().isLocalConnection(connection);
+		return connection != null && !connection.isLocal;
 	}
 }

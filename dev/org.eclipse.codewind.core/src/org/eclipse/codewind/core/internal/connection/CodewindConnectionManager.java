@@ -22,6 +22,9 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Singleton class to keep track of the list of current Codewind connections,
@@ -32,16 +35,17 @@ public class CodewindConnectionManager {
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static CodewindConnectionManager instance;
 
-	public static final String CONNECTION_LIST_PREFSKEY = "mcc-connections"; //$NON-NLS-1$
+	public static final String CONNECTION_LIST_PREFSKEY = "codewindConnections"; //$NON-NLS-1$
+	public static final String NAME_KEY = "name"; //$NON-NLS-1$
+	public static final String URI_KEY = "uri"; //$NON-NLS-1$
+	
 	
 	private List<CodewindConnection> connections = new ArrayList<>();
-	// this list tracks the URLs of connections that have never successfully connected
-	private List<String> brokenConnections = new ArrayList<>();
 
 	private CodewindConnectionManager() {
 		instance = this;
 
-//		loadFromPreferences();
+		loadFromPreferences();
 
 		// Add a preference listener to reload the cached list of connections each time it's modified.
 //		CodewindCorePlugin.getDefault().getPreferenceStore()
@@ -74,7 +78,7 @@ public class CodewindConnectionManager {
 
 		instance().connections.add(connection);
 		Logger.log("Added a new connection: " + connection.baseUrl); //$NON-NLS-1$
-//		instance().writeToPreferences();
+		instance().writeToPreferences();
 	}
 
 	/**
@@ -85,9 +89,18 @@ public class CodewindConnectionManager {
 	}
 
 	public synchronized static CodewindConnection getActiveConnection(String baseUrl) {
-		for(CodewindConnection mcc : activeConnections()) {
-			if(mcc.baseUrl.toString().equals(baseUrl)) {
-				return mcc;
+		for(CodewindConnection conn : activeConnections()) {
+			if(conn.baseUrl.toString().equals(baseUrl)) {
+				return conn;
+			}
+		}
+		return null;
+	}
+	
+	public synchronized static CodewindConnection getActiveConnectionByName(String name) {
+		for(CodewindConnection conn : activeConnections()) {
+			if(name != null && name.equals(conn.getName())) {
+				return conn;
 			}
 		}
 		return null;
@@ -112,15 +125,13 @@ public class CodewindConnectionManager {
 			connection.close();
 			removeResult = instance().connections.remove(connection);
 			CoreUtil.removeConnection(apps);
-		} else {
-			removeResult = instance().brokenConnections.remove(baseUrl);
 		}
 
 		if (!removeResult) {
 			Logger.logError("Tried to remove connection " + baseUrl + ", but it didn't exist"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-//		instance().writeToPreferences();
+		instance().writeToPreferences();
 		CoreUtil.updateAll();
 		return removeResult;
 	}
@@ -140,37 +151,27 @@ public class CodewindConnectionManager {
 		}
 	}
 
-	/**
-	 * @return An <b>unmodifiable</b> copy of the list of broken MC Connection URLs.
-	 */
-	public synchronized static List<String> brokenConnections() {
-		return Collections.unmodifiableList(instance().brokenConnections);
-	}
-
-	public synchronized static String getBrokenConnection(String url) {
-		for (String brokenConnectionUrl : brokenConnections()) {
-			if (brokenConnectionUrl.toString().equals(url)) {
-				return brokenConnectionUrl;
-			}
-		}
-		return null;
-	}
-
 	// Preferences serialization
 	private void writeToPreferences() {
-		StringBuilder prefsBuilder = new StringBuilder();
-
-		for (CodewindConnection mcc : activeConnections()) {
-			prefsBuilder.append(mcc.toPrefsString()).append('\n');
+		JSONArray jsonArray = new JSONArray();
+		
+		for (CodewindConnection conn : activeConnections()) {
+			if (!conn.isLocal) {
+				try {
+					JSONObject obj = new JSONObject();
+					obj.put(NAME_KEY, conn.getName());
+					obj.put(URI_KEY, conn.baseUrl);
+					jsonArray.put(obj);
+				} catch (JSONException e) {
+					Logger.logError("An error occurred trying to add connection to the preferences: " + conn.baseUrl, e);
+				}
+			}
 		}
-		for (String mcc : brokenConnections()) {
-			prefsBuilder.append(mcc).append('\n');
-		}
 
-		Logger.log("Writing connections to preferences: " + prefsBuilder.toString()); //$NON-NLS-1$
+		Logger.log("Writing connections to preferences: " + jsonArray.toString()); //$NON-NLS-1$
 
 		CodewindCorePlugin.getDefault().getPreferenceStore()
-				.setValue(CONNECTION_LIST_PREFSKEY, prefsBuilder.toString());
+				.setValue(CONNECTION_LIST_PREFSKEY, jsonArray.toString());
 	}
 
 	private void loadFromPreferences() {
@@ -179,31 +180,31 @@ public class CodewindConnectionManager {
 		String storedConnections = CodewindCorePlugin.getDefault()
 				.getPreferenceStore()
 				.getString(CONNECTION_LIST_PREFSKEY).trim();
-
-		Logger.log("Reading connections from preferences: \"" + storedConnections + "\""); //$NON-NLS-1$ //$NON-NLS-2$
-
-		for(String line : storedConnections.split("\n")) { //$NON-NLS-1$
-			line = line.trim();
-			if(line.isEmpty()) {
-				continue;
-			}
-
-			try {
-				// Assume all connections are active. If they are broken they will be handled in the catch below.
-				URI uri = new URI(line);
-				CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(uri);
-				add(connection);
-			}
-			catch (CodewindConnectionException mce) {
-				// The MC instance we wanted to connect to is down.
-				brokenConnections.add(mce.connectionUrl.toString());
-				CodewindReconnectJob.createAndStart(mce.connectionUrl);
-			}
-			catch (Exception e) {
-				Logger.logError("Error loading connection from preferences", e); //$NON-NLS-1$
-			}
+		
+		if (storedConnections == null || storedConnections.isEmpty()) {
+			Logger.log("The preferences do not contain any connections");
+			return;
 		}
 
+		Logger.log("Reading connections from preferences: \"" + storedConnections + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		try {
+			JSONArray array = new JSONArray(storedConnections);
+			for (int i = 0; i < array.length(); i++) {
+				try {
+					JSONObject obj = array.getJSONObject(i);
+					String name = obj.getString(NAME_KEY);
+					String uriStr = obj.getString(URI_KEY);
+					URI uri = new URI(uriStr);
+					CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(name, uri, false);
+					CodewindConnectionManager.add(connection);
+				} catch (CodewindConnectionException e) {
+					Logger.logError("Fatal error trying to create connection for url: " + e.connectionUrl, e);
+				}
+			}
+		} catch (Exception e) {
+			Logger.logError("Error loading connection from preferences", e); //$NON-NLS-1$
+		}
 	}
 
 	public static boolean removeConnection(String connectionUrl) {

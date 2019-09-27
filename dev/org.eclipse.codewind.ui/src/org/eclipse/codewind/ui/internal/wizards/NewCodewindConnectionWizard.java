@@ -26,15 +26,16 @@ import org.eclipse.ui.IWorkbench;
 public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 
 	private NewCodewindConnectionPage newConnectionPage;
+	
+	public NewCodewindConnectionWizard() {
+		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
+		setHelpAvailable(false);
+		setNeedsProgressMonitor(true);		
+	}
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-
-		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
-
-		// TODO help
-		setHelpAvailable(false);
-		setNeedsProgressMonitor(true);
+		// Empty
 	}
 
 	@Override

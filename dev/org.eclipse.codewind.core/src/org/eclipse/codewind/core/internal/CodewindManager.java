@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.json.JSONException;
 
 public class CodewindManager {
@@ -116,6 +117,7 @@ public class CodewindManager {
 		}
 		try {
 			CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(Messages.CodewindLocalConnectionName, getLocalURI(), true);
+			connection.connect(new NullProgressMonitor());
 			localConnection = connection;
 			CodewindConnectionManager.add(connection);
 			return connection;

@@ -27,7 +27,7 @@ import org.eclipse.core.runtime.IPath;
  */
 public class CodewindObjectFactory {
 	
-	public static CodewindConnection createCodewindConnection(String name, URI uri, boolean isLocal) throws Exception {
+	public static CodewindConnection createCodewindConnection(String name, URI uri, boolean isLocal) {
 		return new CodewindConnection(name, uri, isLocal);
 	}
 	

@@ -42,14 +42,14 @@ public class Messages extends NLS {
 
 	public static String NewConnectionPage_ConnectSucceeded;
 	public static String NewConnectionPage_ErrAConnectionAlreadyExists;
-	public static String NewConnectionPage_ErrCouldNotConnectToMC;
+	public static String NewConnectionPage_ErrCouldNotConnect;
 	public static String NewConnectionPage_HostnameLabel;
 	public static String NewConnectionPage_NotValidPortNum;
 	public static String NewConnectionPage_OnlyLocalhostSupported;
 	public static String NewConnectionPage_PortLabel;
 	public static String NewConnectionPage_ShellTitle;
 	public static String NewConnectionPage_TestConnectionBtn;
-	public static String NewConnectionPage_TestToProceed;
+	public static String NewConnectionPage_TestConnectionJobLabel;
 	public static String NewConnectionPage_WizardDescription;
 	public static String NewConnectionPage_WizardTitle;
 	public static String NewConnectionWizard_ShellTitle;

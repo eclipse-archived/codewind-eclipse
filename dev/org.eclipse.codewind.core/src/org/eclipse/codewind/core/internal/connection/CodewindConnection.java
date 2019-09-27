@@ -46,6 +46,9 @@ import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,7 +72,7 @@ public class CodewindConnection {
 	private CodewindSocket socket;
 	private CodewindFilewatcherdConnection filewatcher;
 	
-	private volatile boolean isConnected = true;
+	private volatile boolean isConnected = false;
 
 	private Map<String, CodewindApplication> appMap = new LinkedHashMap<String, CodewindApplication>();
 
@@ -77,7 +80,7 @@ public class CodewindConnection {
 		return new URI("http", null, host, port, null, null, null); //$NON-NLS-1$
 	}
 
-	public CodewindConnection(String name, URI uri, boolean isLocal) throws IOException, URISyntaxException, JSONException {
+	public CodewindConnection(String name, URI uri, boolean isLocal) {
 		this.name = name;
 		if (!uri.toString().endsWith("/")) { //$NON-NLS-1$
 			uri = uri.resolve("/"); //$NON-NLS-1$
@@ -85,12 +88,6 @@ public class CodewindConnection {
 		this.baseUrl = uri;
 		this.isLocal = isLocal;
 
-		if (CodewindConnectionManager.getActiveConnection(uri.toString()) != null) {
-			onInitFail(NLS.bind(Messages.Connection_ErrConnection_AlreadyExists, baseUrl));
-		}
-		
-		connect();
-		
 //		filewatcher = new CodewindFilewatcherdConnection(baseUrl.toString(), new ICodewindProjectTranslator() {
 //			@Override
 //			public Optional<String> getProjectId(IProject project) {
@@ -104,53 +101,62 @@ public class CodewindConnection {
 //			}
 //		});
 
-		Logger.log("Created " + this); //$NON-NLS-1$
 	}
 	
-	public void connect() throws IOException, URISyntaxException, JSONException {
-		connectionErrorMsg = null;
-		
-		if (!waitForReady()) {
-			Logger.logError("Timed out waiting for Codewind to go into ready state.");
-			isConnected = false;
-			connectionErrorMsg = getConnectionFailedMsg();
+	public void connect(IProgressMonitor monitor) throws IOException, URISyntaxException, JSONException {
+		if (isConnected) {
 			return;
 		}
 		
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
+		if (!waitForReady(mon.split(20))) {
+			if (mon.isCanceled()) {
+				return;
+			}
+			Logger.logError("Timed out waiting for Codewind to go into ready state.");
+			onInitFail(Messages.Connection_ErrConnection_CodewindNotReady);
+		}
+		
+		mon.split(25);
 		env = new ConnectionEnv(getEnvData(this.baseUrl));
 		Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
 		if (!isSupportedVersion(env.getVersion())) {
 			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUrl);	// $NON-NLS-1$	// $NON-NLS-2$
-			this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION);
+			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
+		}
+		if (mon.isCanceled()) {
 			return;
 		}
 
+		mon.split(5);
 		if (env.getWorkspacePath() == null) {
 			// Can't recover from this
 			// This should never happen since we have already determined it is a supported version of Codewind.
 			onInitFail(Messages.Connection_ErrConnection_WorkspaceErr);
 		}
-		
-		socket = new CodewindSocket(this);
-		if(!socket.blockUntilFirstConnection()) {
-			Logger.logError("Socket failed to connect: " + socket.socketUri);
-			close();
-			isConnected = false;
-			connectionErrorMsg = getConnectionFailedMsg();
+		if (mon.isCanceled()) {
 			return;
 		}
+		
+		socket = new CodewindSocket(this);
+		if(!socket.blockUntilFirstConnection(mon.split(30))) {
+			Logger.logError("Socket failed to connect: " + socket.socketUri);
+			close();
+			throw new CodewindConnectionException(socket.socketUri);
+		}
+		if (mon.isCanceled()) {
+			socket.close();
+			return;
+		}
+		
+		isConnected = true;
 
+		Logger.log("Connected to: " + this); //$NON-NLS-1$
+		
+		mon.split(20);
 		refreshApps(null);
 	}
-	
-	private String getConnectionFailedMsg() {
-		if (isLocal) {
-			return Messages.Connection_ErrConnection_ConnectionFailedLocal;
-		} else {
-			return Messages.Connection_ErrConnection_ConnectionFailed;
-		}
-	}
-	
+
 	public String getSocketNamespace() {
 		return env.getSocketNamespace();
 	}
@@ -379,14 +385,22 @@ public class CodewindConnection {
 		return null;
 	}
 	
-	public boolean waitForReady() throws IOException {
+	public boolean waitForReady(IProgressMonitor monitor) throws IOException {
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		IOException exception = null;
 		for (int i = 0; i < 10; i++) {
 			try {
-				if (requestCodewindReady()) {
+				mon.split(10);
+				if (requestCodewindReady(500, 500)) {
 					return true;
 				}
-				Thread.sleep(1000);
+				if (mon.isCanceled()) {
+					return false;
+				}
+				Thread.sleep(500);
+				if (mon.isCanceled()) {
+					return false;
+				}
 			} catch (IOException e) {
 				exception = e;
 			} catch (InterruptedException e) {
@@ -399,10 +413,10 @@ public class CodewindConnection {
 		return false;
 	}
 	
-	public boolean requestCodewindReady() throws IOException {
+	public boolean requestCodewindReady(int connectTimeoutMS, int readTimeoutMS) throws IOException {
 		String endpoint = CoreConstants.APIPATH_READY;
 		URI uri = baseUrl.resolve(endpoint);
-		HttpResult result = HttpUtil.get(uri);
+		HttpResult result = HttpUtil.get(uri, connectTimeoutMS, readTimeoutMS);
 		checkResult(result, uri, true);
 		return "true".equals(result.response);
 	}
@@ -933,7 +947,7 @@ public class CodewindConnection {
 				// The socket namespace has changed so need to recreate the socket
 				socket.close();
 				socket = new CodewindSocket(this);
-				if(!socket.blockUntilFirstConnection()) {
+				if(!socket.blockUntilFirstConnection(new NullProgressMonitor())) {
 					// Still not connected
 					Logger.logError("Failed to create a new socket with updated URI: " + socket.socketUri);
 					// Clear the message so that it just shows the basic disconnected message
@@ -957,8 +971,8 @@ public class CodewindConnection {
 
 	@Override
 	public String toString() {
-		return String.format("%s @ baseUrl=%s workspacePath=%s numApps=%d", //$NON-NLS-1$
-				CodewindConnection.class.getSimpleName(), baseUrl, env.getWorkspacePath(), appMap.size());
+		return String.format("%s @ name=%s baseUrl=%s", //$NON-NLS-1$
+				CodewindConnection.class.getSimpleName(), name, baseUrl);
 	}
 
 	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store

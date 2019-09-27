@@ -22,6 +22,7 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -197,6 +198,7 @@ public class CodewindConnectionManager {
 					String uriStr = obj.getString(URI_KEY);
 					URI uri = new URI(uriStr);
 					CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(name, uri, false);
+					connection.connect(new NullProgressMonitor());
 					CodewindConnectionManager.add(connection);
 				} catch (CodewindConnectionException e) {
 					Logger.logError("Fatal error trying to create connection for url: " + e.connectionUrl, e);

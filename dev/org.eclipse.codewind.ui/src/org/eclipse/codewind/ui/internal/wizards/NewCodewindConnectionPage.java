@@ -11,23 +11,21 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
-import org.eclipse.codewind.core.internal.InstallStatus;
-import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
@@ -87,7 +85,6 @@ public class NewCodewindConnectionPage extends WizardPage {
         Group connGroup = new Group(composite, SWT.NONE);
         layout = new GridLayout();
         layout.numColumns = 2;
-        layout.marginHeight = 0;
         layout.horizontalSpacing = 5;
         layout.verticalSpacing = 7;
         connGroup.setLayout(layout);
@@ -95,7 +92,7 @@ public class NewCodewindConnectionPage extends WizardPage {
         connGroup.setLayoutData(data);
         
         Text connGroupLabel = new Text(connGroup, SWT.READ_ONLY);
-        connGroupLabel.setText("Deployment Info:");
+        connGroupLabel.setText("Fill in the deployment information:");
         connGroupLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
         IDEUtil.normalizeBackground(connGroupLabel, composite);
        
@@ -115,7 +112,7 @@ public class NewCodewindConnectionPage extends WizardPage {
 			@Override
 			public void widgetSelected(SelectionEvent se) {
 				testConnection();
-				validateAndUpdate();
+				getWizard().getContainer().updateButtons();
 			}
 		});
         
@@ -240,11 +237,11 @@ public class NewCodewindConnectionPage extends WizardPage {
 
 		connection = createConnection(connNameText.getText().trim(), uri);
 
-		if(connection != null) {
+		if(connection != null && connection.isConnected()) {
 			setErrorMessage(null);
 			setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, connection.baseUrl));
 		} else {
-			setErrorMessage(NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnectToMC, uri));
+			setErrorMessage(NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnect, uri));
 		}
 
 		getWizard().getContainer().updateButtons();
@@ -267,57 +264,47 @@ public class NewCodewindConnectionPage extends WizardPage {
 	}
 	
 	private CodewindConnection createConnection(String name, URI uri) {
-		try {
-			return CodewindObjectFactory.createCodewindConnection(name, uri, false);
-		} catch (Exception e) {
-			// Ignore
-		}
+		Exception exception = null;
+		final Boolean[] isCanceled = new Boolean[] {false};
+		CodewindConnection conn = CodewindObjectFactory.createCodewindConnection(name, uri, false);
 		
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					InstallStatus status = CodewindManager.getManager().getInstallStatus();
-					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
-					if (result.getExitValue() != 0) {
-						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
-						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + errorText); //$NON-NLS-1$
-					}
-				} catch (IOException e) {
-					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
-				} catch (TimeoutException e) {
-					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage()); //$NON-NLS-1$
+					SubMonitor mon = SubMonitor.convert(monitor, 100);
+					mon.setTaskName(NLS.bind(Messages.NewConnectionPage_TestConnectionJobLabel, uri));
+					conn.connect(mon.split(100));
+				} catch (Exception e) {
+					throw new InvocationTargetException(e, "An error occurred trying to connect to Codewind: " + e.getMessage()); //$NON-NLS-1$
 				}
+				isCanceled[0] = monitor.isCanceled();
 			}
 		};
 		try {
 			getWizard().getContainer().run(true, true, runnable);
 		} catch (InvocationTargetException e) {
-			Logger.logError("An error occurred trying to start Codewind", e); //$NON-NLS-1$
-			return null;
+			Logger.logError("An error occurred trying to connect to Codewind at: " + uri, e); //$NON-NLS-1$
+			exception = e;
 		} catch (InterruptedException e) {
-			Logger.logError("Codewind start was interrupted", e); //$NON-NLS-1$
-			return null;
+			Logger.logError("Codewind connect was interrupted", e); //$NON-NLS-1$
+			exception = e;
 		}
 
-		// Try again to create a connection
-		CodewindConnection connection = null;
-		for (int i = 0; i < 10; i++) {
-			try {
-				connection = CodewindObjectFactory.createCodewindConnection(name, uri, false);
-				break;
-			} catch (Exception e) {
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e1) {
-					// Ignore
-				}
+		if (isCanceled[0]) {
+			return null;
+		}
+		if (!conn.isConnected()) {
+			if (exception != null) {
+				Logger.logError("Failed to connect to Codewind at: " + uri.toString(), exception); //$NON-NLS-1$
+				IStatus errorStatus = IDEUtil.getMultiStatus("An error occurred trying to connect to Codewind at: " + uri, exception);
+				ErrorDialog.openError(getShell(), "Codewind Connect Error", "An error occurred trying to connect to Codewind at: " + uri, errorStatus);
+			} else {
+				// This should not happen as there should be an exception
+				Logger.logError("Failed to connect to Codewind at: " + uri.toString());
+				MessageDialog.openError(getShell(), "Codewind Connect Error", "Connecting to Codewind was not successful. Check workspace logs for details.");
 			}
 		}
-		if (connection == null) {
-			Logger.logError("Failed to connect to Codewind at: " + uri.toString()); //$NON-NLS-1$
-		}
-		return connection;
+		return conn;
 	}
 }

@@ -28,6 +28,8 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -556,11 +558,13 @@ public class CodewindSocket {
 		return false;
 	}
 
-	boolean blockUntilFirstConnection() {
+	boolean blockUntilFirstConnection(IProgressMonitor monitor) {
+		SubMonitor mon = SubMonitor.convert(monitor, 2500);
 		final int delay = 100;
 		final int timeout = 2500;
 		int waited = 0;
 		while(!hasConnected && waited < timeout) {
+			mon.split(100);
 			try {
 				Thread.sleep(delay);
 				waited += delay;
@@ -571,6 +575,9 @@ public class CodewindSocket {
 			}
 			catch(InterruptedException e) {
 				Logger.logError(e);
+			}
+			if (mon.isCanceled()) {
+				return false;
 			}
 		}
 		Logger.log("CodewindSocket initialized in time ? " + hasConnected); //$NON-NLS-1$

@@ -9,23 +9,13 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.codewind.ui.internal.views;
+package org.eclipse.codewind.core.internal.connection;
 
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.jface.viewers.ViewerComparator;
+import java.net.URI;
 
-public class CodewindNavigatorSorter extends ViewerComparator {
-
-	@Override
-	public int category(Object element) {
-		if (element instanceof CodewindConnection) {
-			if (((CodewindConnection) element).isLocal()) {
-				return 0;
-			} else {
-				return 1;
-			}
-		}
-		return super.category(element);
+public class RemoteConnection extends CodewindConnection {
+	
+	public RemoteConnection(String name, URI uri) {
+		super(name, uri);
 	}
-
 }

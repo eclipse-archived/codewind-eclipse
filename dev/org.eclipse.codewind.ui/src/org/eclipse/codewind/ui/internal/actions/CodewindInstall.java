@@ -263,7 +263,7 @@ public class CodewindInstall {
 				if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle,
 						NLS.bind(Messages.InstallCodewindAddProjectMessage, project.getName()))) {
 					final CodewindManager manager = CodewindManager.getManager();
-					CodewindConnection connection = manager.createLocalConnection();
+					CodewindConnection connection = manager.getLocalConnection();
 					if (connection != null && connection.isConnected()) {
 						Wizard wizard = new BindProjectWizard(connection, project.getLocation());
 						WizardLauncher.launchWizardWithoutSelection(wizard);

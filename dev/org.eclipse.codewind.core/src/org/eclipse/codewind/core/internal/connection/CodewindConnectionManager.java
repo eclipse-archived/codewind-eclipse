@@ -78,7 +78,7 @@ public class CodewindConnectionManager {
 		}
 
 		instance().connections.add(connection);
-		Logger.log("Added a new connection: " + connection.baseUrl); //$NON-NLS-1$
+		Logger.log("Added a new connection: " + connection.getBaseURI()); //$NON-NLS-1$
 		instance().writeToPreferences();
 	}
 
@@ -91,7 +91,7 @@ public class CodewindConnectionManager {
 
 	public synchronized static CodewindConnection getActiveConnection(String baseUrl) {
 		for(CodewindConnection conn : activeConnections()) {
-			if(conn.baseUrl.toString().equals(baseUrl)) {
+			if(conn.getBaseURI().toString().equals(baseUrl)) {
 				return conn;
 			}
 		}
@@ -157,14 +157,14 @@ public class CodewindConnectionManager {
 		JSONArray jsonArray = new JSONArray();
 		
 		for (CodewindConnection conn : activeConnections()) {
-			if (!conn.isLocal) {
+			if (!conn.isLocal()) {
 				try {
 					JSONObject obj = new JSONObject();
 					obj.put(NAME_KEY, conn.getName());
-					obj.put(URI_KEY, conn.baseUrl);
+					obj.put(URI_KEY, conn.getBaseURI());
 					jsonArray.put(obj);
 				} catch (JSONException e) {
-					Logger.logError("An error occurred trying to add connection to the preferences: " + conn.baseUrl, e);
+					Logger.logError("An error occurred trying to add connection to the preferences: " + conn.getBaseURI(), e);
 				}
 			}
 		}

@@ -59,17 +59,10 @@ public class CodewindNavigatorContentProvider implements ITreeContentProvider {
 	@Override
 	public boolean hasChildren(Object obj) {
 		if (obj instanceof CodewindManager) {
-			CodewindManager manager = (CodewindManager) obj;
-			if (manager.getInstallStatus().isStarted()) {
-				// Make sure the local connection is there if Codewind is running
-				if (manager.getLocalConnection() == null) {
-					manager.createLocalConnection();
-				}
-				return !CodewindConnectionManager.activeConnections().isEmpty();
-			}
+			return !CodewindConnectionManager.activeConnections().isEmpty();
 		} else if (obj instanceof CodewindConnection) {
 			CodewindConnection connection = (CodewindConnection)obj;
-			return !connection.getApps().isEmpty();
+			return connection.isConnected() && !connection.getApps().isEmpty();
 		}
 		return false;
 	}

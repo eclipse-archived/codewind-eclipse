@@ -166,7 +166,7 @@ public class CodewindConnectionPrefsPage extends PreferencePage implements IWork
 		}
 
 		for(CodewindConnection mcc : CodewindConnectionManager.activeConnections()) {
-			addTableRow(mcc.baseUrl.toString(),	false);
+			addTableRow(mcc.getBaseURI().toString(),	false);
 		}
 	}
 

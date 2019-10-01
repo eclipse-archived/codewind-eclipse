@@ -88,7 +88,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 	public boolean performCancel() {
 		if (newProjectPage != null) {
 			CodewindConnection newConnection = newProjectPage.getConnection();
-			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
 				newConnection.close();
 			}
 		}
@@ -121,7 +121,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 						return Status.CANCEL_STATUS;
 					}
 					newConnection.requestProjectBind(name, localPath.toOSString(), info.getLanguage(), info.getProjectType());
-					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+					if (CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}
 					if (mon.isCanceled()) {

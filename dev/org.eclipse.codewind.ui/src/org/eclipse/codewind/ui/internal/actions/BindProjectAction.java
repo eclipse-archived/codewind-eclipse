@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
@@ -87,7 +86,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 		if (projectError != null) {
 			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, projectError);
 			// If connection is new (not already registered), then close it
-			if (CodewindConnectionManager.getActiveConnection(connection.baseUrl.toString()) == null) {
+			if (CodewindConnectionManager.getActiveConnection(connection.getBaseURI().toString()) == null) {
 				connection.close();
 			}
 			return;
@@ -97,12 +96,12 @@ public class BindProjectAction implements IObjectActionDelegate {
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 		if (dialog.open() == Window.CANCEL) {
 			// If connection is new (not already registered), then close it
-			if (CodewindConnectionManager.getActiveConnection(connection.baseUrl.toString()) == null) {
+			if (CodewindConnectionManager.getActiveConnection(connection.getBaseURI().toString()) == null) {
 				connection.close();
 			}
 		} else {
 			// Add the connection if not already registered
-			if (CodewindConnectionManager.getActiveConnection(connection.baseUrl.toString()) == null) {
+			if (CodewindConnectionManager.getActiveConnection(connection.getBaseURI().toString()) == null) {
 				CodewindConnectionManager.add(connection);
 			}
 			ViewHelper.openCodewindExplorerView();
@@ -161,7 +160,12 @@ public class BindProjectAction implements IObjectActionDelegate {
 		}
 		InstallStatus status = manager.getInstallStatus();
 		if (status.isStarted()) {
-			return manager.createLocalConnection();
+			if (!connection.isConnected()) {
+				// This should not happen since the connection should be established as part of the start action
+				Logger.logError("Local Codewind is started but the connection has not been established or is down");
+				return null;
+			}
+			return connection;
 		}
 		if (!status.isInstalled()) {
 			Logger.logError("In BindProjectAction run method and Codewind is not installed or has unknown status."); //$NON-NLS-1$
@@ -178,12 +182,12 @@ public class BindProjectAction implements IObjectActionDelegate {
 						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
-					manager.createLocalConnection();
-					ViewHelper.refreshCodewindExplorerView(null);
-				} catch (IOException e) {
-					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
+					CodewindConnection connection = CodewindManager.getManager().getLocalConnection();
+					ViewHelper.refreshCodewindExplorerView(connection);
 				} catch (TimeoutException e) {
 					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage()); //$NON-NLS-1$
+				} catch (Exception e) {
+					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
 				}
 			}
 		};

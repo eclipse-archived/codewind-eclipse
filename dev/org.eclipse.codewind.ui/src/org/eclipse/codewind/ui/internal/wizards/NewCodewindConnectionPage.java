@@ -67,8 +67,8 @@ public class NewCodewindConnectionPage extends WizardPage {
 		Composite composite = new Composite(parent, SWT.NULL);
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
-        layout.horizontalSpacing = 5;
-        layout.verticalSpacing = 7;
+        layout.horizontalSpacing = 8;
+        layout.verticalSpacing = 20;
         composite.setLayout(layout);
         composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL));
         
@@ -85,11 +85,14 @@ public class NewCodewindConnectionPage extends WizardPage {
         Group connGroup = new Group(composite, SWT.NONE);
         layout = new GridLayout();
         layout.numColumns = 2;
-        layout.horizontalSpacing = 5;
-        layout.verticalSpacing = 7;
+        layout.marginHeight = 8;
+		layout.marginWidth = 8;
+		layout.horizontalSpacing = 7;
+		layout.verticalSpacing = 7;
         connGroup.setLayout(layout);
         data = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1);
         connGroup.setLayoutData(data);
+        connGroup.setText("Deployment");
         
         Text connGroupLabel = new Text(connGroup, SWT.READ_ONLY);
         connGroupLabel.setText("Fill in the deployment information:");
@@ -239,7 +242,7 @@ public class NewCodewindConnectionPage extends WizardPage {
 
 		if(connection != null && connection.isConnected()) {
 			setErrorMessage(null);
-			setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, connection.baseUrl));
+			setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, connection.getBaseURI()));
 		} else {
 			setErrorMessage(NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnect, uri));
 		}

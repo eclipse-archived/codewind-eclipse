@@ -15,6 +15,7 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -61,15 +62,29 @@ public class RefreshAction implements IObjectActionDelegate {
     		Job job = new Job(Messages.RefreshCodewindJobLabel) {
     			@Override
     			protected IStatus run(IProgressMonitor monitor) {
-    				((CodewindManager)codewindObject).refresh();
+    				((CodewindManager)codewindObject).refresh(monitor);
 		        	ViewHelper.refreshCodewindExplorerView(codewindObject);
+		        	return Status.OK_STATUS;
+    			}
+    		};
+    		job.schedule();
+    	} else if (codewindObject instanceof LocalConnection) {
+    		final LocalConnection connection = (LocalConnection) codewindObject;
+    		Job job = new Job(NLS.bind(Messages.RefreshConnectionJobLabel, connection.getName())) {
+    			@Override
+    			protected IStatus run(IProgressMonitor monitor) {
+    				CodewindManager.getManager().refreshInstallStatus(monitor);
+    				if (connection.isConnected()) {
+    					connection.refreshApps(null);
+    				}
+		        	ViewHelper.refreshCodewindExplorerView(connection);
 		        	return Status.OK_STATUS;
     			}
     		};
     		job.schedule();
     	} else if (codewindObject instanceof CodewindConnection) {
         	final CodewindConnection connection = (CodewindConnection) codewindObject;
-        	Job job = new Job(NLS.bind(Messages.RefreshConnectionJobLabel, connection.baseUrl.toString())) {
+        	Job job = new Job(NLS.bind(Messages.RefreshConnectionJobLabel, connection.getName())) {
     			@Override
     			protected IStatus run(IProgressMonitor monitor) {
 		        	connection.refreshApps(null);

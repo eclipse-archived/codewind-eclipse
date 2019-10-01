@@ -59,9 +59,9 @@ public class InstallUtil {
 	private static final Map<OperatingSystem, String> appsodyMap = new HashMap<OperatingSystem, String>();
 
 	static {
-		installMap.put(OperatingSystem.LINUX, "binaries/linux/codewind-installer");
-		installMap.put(OperatingSystem.MAC, "binaries/darwin/codewind-installer");
-		installMap.put(OperatingSystem.WINDOWS, "binaries/windows/codewind-installer.exe");
+		installMap.put(OperatingSystem.LINUX, "binaries/linux/cwctl");
+		installMap.put(OperatingSystem.MAC, "binaries/darwin/cwctl");
+		installMap.put(OperatingSystem.WINDOWS, "binaries/windows/cwctl.exe");
 	}
 	
 	static {

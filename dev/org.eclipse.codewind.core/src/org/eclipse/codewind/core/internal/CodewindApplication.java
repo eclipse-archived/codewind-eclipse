@@ -89,7 +89,7 @@ public class CodewindApplication {
 		this.name = name;
 		this.projectType = projectType;
 		this.projectLanguage = projectLanguage;
-		this.host = connection.baseUrl.getHost();
+		this.host = connection.getBaseURI().getHost();
 
 		this.fullLocalPath = localPath;
 

@@ -101,7 +101,7 @@ public class UpdateHandler implements IUpdateHandler {
 		}
 		
 		public AppKey(CodewindConnection conn, String projectID) {
-			this.connectionURI = conn.baseUrl.toString();
+			this.connectionURI = conn.getBaseURI().toString();
 			this.projectID = projectID;
 		}
 		

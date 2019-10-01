@@ -64,8 +64,7 @@ public class CodewindConnection {
 	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	private String name;
-	public final URI baseUrl;
-	public final boolean isLocal;
+	private URI baseUri;
 	private ConnectionEnv env = null;
 	private String connectionErrorMsg = null;
 
@@ -76,17 +75,9 @@ public class CodewindConnection {
 
 	private Map<String, CodewindApplication> appMap = new LinkedHashMap<String, CodewindApplication>();
 
-	public static URI buildUrl(String host, int port) throws URISyntaxException {
-		return new URI("http", null, host, port, null, null, null); //$NON-NLS-1$
-	}
-
-	public CodewindConnection(String name, URI uri, boolean isLocal) {
-		this.name = name;
-		if (!uri.toString().endsWith("/")) { //$NON-NLS-1$
-			uri = uri.resolve("/"); //$NON-NLS-1$
-		}
-		this.baseUrl = uri;
-		this.isLocal = isLocal;
+	public CodewindConnection(String name, URI uri) {
+		setName(name);
+		setBaseURI(uri);
 
 //		filewatcher = new CodewindFilewatcherdConnection(baseUrl.toString(), new ICodewindProjectTranslator() {
 //			@Override
@@ -109,6 +100,7 @@ public class CodewindConnection {
 		}
 		
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
+		mon.setTaskName(NLS.bind(Messages.Connection_JobLabel, this.baseUri));
 		if (!waitForReady(mon.split(20))) {
 			if (mon.isCanceled()) {
 				return;
@@ -118,10 +110,10 @@ public class CodewindConnection {
 		}
 		
 		mon.split(25);
-		env = new ConnectionEnv(getEnvData(this.baseUrl));
+		env = new ConnectionEnv(getEnvData(this.baseUri));
 		Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
 		if (!isSupportedVersion(env.getVersion())) {
-			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUrl);	// $NON-NLS-1$	// $NON-NLS-2$
+			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUri);	// $NON-NLS-1$	// $NON-NLS-2$
 			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
 		}
 		if (mon.isCanceled()) {
@@ -176,6 +168,7 @@ public class CodewindConnection {
 	 */
 	public void close() {
 		Logger.log("Closing " + this); //$NON-NLS-1$
+		isConnected = false;
 		if (socket != null) {
 			socket.close();
 		}
@@ -196,6 +189,18 @@ public class CodewindConnection {
 	
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public URI getBaseURI() {
+		return this.baseUri;
+	}
+	
+	public void setBaseURI(URI uri) {
+		if (uri != null && !uri.toString().endsWith("/")) { //$NON-NLS-1$
+			this.baseUri = uri.resolve("/"); //$NON-NLS-1$
+		} else {
+			this.baseUri = uri;
+		}
 	}
 	
 	private static JSONObject getEnvData(URI baseUrl) throws JSONException, IOException {
@@ -320,7 +325,7 @@ public class CodewindConnection {
 	 */
 	public void refreshApps(String projectID) {
 
-		final URI projectsURL = baseUrl.resolve(CoreConstants.APIPATH_PROJECT_LIST);
+		final URI projectsURL = baseUri.resolve(CoreConstants.APIPATH_PROJECT_LIST);
 
 		try {
 			String projectsResponse = HttpUtil.get(projectsURL).response;
@@ -415,7 +420,7 @@ public class CodewindConnection {
 	
 	public boolean requestCodewindReady(int connectTimeoutMS, int readTimeoutMS) throws IOException {
 		String endpoint = CoreConstants.APIPATH_READY;
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.get(uri, connectTimeoutMS, readTimeoutMS);
 		checkResult(result, uri, true);
 		return "true".equals(result.response);
@@ -428,7 +433,7 @@ public class CodewindConnection {
 				+ app.projectID + "/" 										//$NON-NLS-1$
 				+ CoreConstants.APIPATH_RESTART;
 
-        URI url = baseUrl.resolve(restartEndpoint);
+        URI url = baseUri.resolve(restartEndpoint);
 
 		JSONObject restartProjectPayload = new JSONObject();
 		restartProjectPayload.put(CoreConstants.KEY_START_MODE, launchMode);
@@ -452,7 +457,7 @@ public class CodewindConnection {
 				+ app.projectID + "/" 										//$NON-NLS-1$
 				+ action;
 
-		URI url = baseUrl.resolve(restartEndpoint);
+		URI url = baseUri.resolve(restartEndpoint);
 
 		// This initiates the restart
 		HttpResult result = HttpUtil.put(url);
@@ -470,7 +475,7 @@ public class CodewindConnection {
 	 * 	or null if the project is not found in the status info.
 	 */
 	public JSONObject requestProjectStatus(CodewindApplication app) throws IOException, JSONException {
-		final URI statusUrl = baseUrl.resolve(CoreConstants.APIPATH_PROJECT_LIST);
+		final URI statusUrl = baseUri.resolve(CoreConstants.APIPATH_PROJECT_LIST);
 
 		HttpResult result = HttpUtil.get(statusUrl);
 
@@ -502,7 +507,7 @@ public class CodewindConnection {
 				+ app.projectID + "/" 								//$NON-NLS-1$
 				+ CoreConstants.APIPATH_METRICS_STATUS;
 
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		return new JSONObject(result.response);
@@ -518,14 +523,14 @@ public class CodewindConnection {
 		long syncTime = System.currentTimeMillis();
 		String[] fileList = requestUploadsRecursively(app.projectID, app.fullLocalPath.toOSString(), app.getLastSync());
 		requestProjectClear(app, fileList);
-		Logger.log("Sync complete for " + app.name + " to "+  app.connection.baseUrl + " in " +  (System.currentTimeMillis() - syncTime) +"ms");
+		Logger.log("Sync complete for " + app.name + " to "+  app.connection.baseUri + " in " +  (System.currentTimeMillis() - syncTime) +"ms");
 		app.setLastSync(syncTime);
 
 		String buildEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" //$NON-NLS-1$
 				+ app.projectID + "/" //$NON-NLS-1$
 				+ CoreConstants.APIPATH_BUILD;
 
-		URI url = baseUrl.resolve(buildEndpoint);
+		URI url = baseUri.resolve(buildEndpoint);
 
 		JSONObject buildPayload = new JSONObject();
 		buildPayload.put(CoreConstants.KEY_ACTION, action);
@@ -541,7 +546,7 @@ public class CodewindConnection {
 				+ app.projectID + "/"								//$NON-NLS-1$
 				+ CoreConstants.APIPATH_LOGS;
 		
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
         
@@ -584,7 +589,7 @@ public class CodewindConnection {
 				+ logInfo.type + "/"								//$NON-NLS-1$
 				+ logInfo.logName;
 		
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.post(uri);
         checkResult(result, uri, false);
 	}
@@ -596,7 +601,7 @@ public class CodewindConnection {
 				+ logInfo.type + "/"								//$NON-NLS-1$
 				+ logInfo.logName;
 		
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.delete(uri);
         checkResult(result, uri, false);
 	}
@@ -615,7 +620,7 @@ public class CodewindConnection {
 					
 		}
 		
-		URI url = baseUrl.resolve(endpoint);
+		URI url = baseUri.resolve(endpoint);
 		
 		JSONObject buildPayload = new JSONObject();
 		if (!projectIdInPath) {
@@ -645,7 +650,7 @@ public class CodewindConnection {
 					
 		}
 		
-		URI url = baseUrl.resolve(endpoint);
+		URI url = baseUri.resolve(endpoint);
 		
 		JSONObject buildPayload = new JSONObject();
 		if (!projectIdInPath) {
@@ -666,7 +671,7 @@ public class CodewindConnection {
 	}
 	
 	public JSONObject requestProjectCapabilities(CodewindApplication app) throws IOException, JSONException {
-		final URI statusUrl = baseUrl.resolve(CoreConstants.APIPATH_PROJECT_LIST + "/" + app.projectID + "/" + CoreConstants.APIPATH_CAPABILITIES);
+		final URI statusUrl = baseUri.resolve(CoreConstants.APIPATH_PROJECT_LIST + "/" + app.projectID + "/" + CoreConstants.APIPATH_CAPABILITIES);
 
 		HttpResult result = HttpUtil.get(statusUrl);
 
@@ -685,7 +690,7 @@ public class CodewindConnection {
 	
 	public List<ProjectTemplateInfo> requestProjectTemplates(boolean enabledOnly) throws IOException, JSONException, URISyntaxException {
 		List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
-		URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_TEMPLATES);
+		URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_TEMPLATES);
 		if (enabledOnly) {
 			String query = CoreConstants.QUERY_SHOW_ENABLED_ONLY + "=true";
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
@@ -706,7 +711,7 @@ public class CodewindConnection {
 	
 	public List<RepositoryInfo> requestRepositories() throws IOException, JSONException {
 		List<RepositoryInfo> repos = new ArrayList<RepositoryInfo>();
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		
@@ -718,7 +723,7 @@ public class CodewindConnection {
 	}
 	
 	public void requestRepoEnable(String repoUrl, boolean enable) throws IOException, JSONException {
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_BATCH_REPOSITORIES);
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_BATCH_REPOSITORIES);
 		JSONArray payload = new JSONArray();
 		JSONObject obj = new JSONObject();
 		obj.put(CoreConstants.KEY_OP, CoreConstants.VALUE_OP_ENABLE);
@@ -731,7 +736,7 @@ public class CodewindConnection {
 	}
 	
 	public void requestRepoAdd(String url, String name, String description) throws IOException, JSONException {
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
 		JSONObject payload = new JSONObject();
 		payload.put(RepositoryInfo.URL_KEY, url);
 		if (name != null && !name.isEmpty()) {
@@ -747,7 +752,7 @@ public class CodewindConnection {
 	}
 	
 	public void requestRepoRemove(String url) throws IOException, JSONException {
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
 		JSONObject payload = new JSONObject();
 		payload.put(RepositoryInfo.URL_KEY, url);
 		
@@ -759,7 +764,7 @@ public class CodewindConnection {
 			throws JSONException, IOException {
 
 		String bindStartEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_START;
-		URI bindStartUri = baseUrl.resolve(bindStartEndpoint);
+		URI bindStartUri = baseUri.resolve(bindStartEndpoint);
 		long initialSyncTime = System.currentTimeMillis();
 
 		JSONObject bindStartPayload = new JSONObject();
@@ -782,7 +787,7 @@ public class CodewindConnection {
 
 		requestUploadsRecursively(projectID, path, 0);
 		String bindEndEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_END;
-		URI bindEndUri = baseUrl.resolve(bindEndEndpoint);
+		URI bindEndUri = baseUri.resolve(bindEndEndpoint);
 
 		HttpResult bindEndResult = HttpUtil.post(bindEndUri);
 		checkResult(bindEndResult, bindEndUri, false);
@@ -791,7 +796,7 @@ public class CodewindConnection {
 		if (newApp != null) {
 			newApp.setLastSync(initialSyncTime);
 		}
-		Logger.log("Initial project upload complete for " + name + " to "+  baseUrl + " in " +  (System.currentTimeMillis() - initialSyncTime) +"ms");
+		Logger.log("Initial project upload complete for " + name + " to "+  baseUri + " in " +  (System.currentTimeMillis() - initialSyncTime) +"ms");
 
 		CoreUtil.updateConnection(this);
 	}
@@ -829,7 +834,7 @@ public class CodewindConnection {
 		JSONObject payload = new JSONObject();
 		payload.put(CoreConstants.KEY_FILE_LIST, fileList);
 
-		URI url = baseUrl.resolve(clearEndpoint);
+		URI url = baseUri.resolve(clearEndpoint);
 
 		// This initiates the build
 		HttpUtil.post(url, payload);
@@ -864,14 +869,14 @@ public class CodewindConnection {
 
 		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectId + "/"
 				+ CoreConstants.APIPATH_PROJECT_UPLOAD;
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.put(uri, body, 300);
 		checkResult(result, uri, false);
 	}
 
 	public void requestProjectUnbind(String projectID) throws IOException {
 		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + CoreConstants.APIPATH_PROJECT_UNBIND;
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 		HttpResult result = HttpUtil.post(uri);
 		checkResult(result, uri, false);
 		CoreUtil.updateConnection(this);
@@ -879,7 +884,7 @@ public class CodewindConnection {
 	
 	public List<ProjectTypeInfo> requestProjectTypes() throws IOException, JSONException {
 		List<ProjectTypeInfo> projectTypes = new ArrayList<ProjectTypeInfo>();
-		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_PROJECT_TYPES);
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_PROJECT_TYPES);
 		HttpResult result = HttpUtil.get(uri);
 		checkResult(result, uri, true);
 		
@@ -909,7 +914,7 @@ public class CodewindConnection {
 	 * Called by the CodewindSocket when the socket.io connection goes down.
 	 */
 	public synchronized void onConnectionError() {
-		Logger.log("Connection to " + baseUrl + " lost"); //$NON-NLS-1$ //$NON-NLS-2$
+		Logger.log("Connection to " + baseUri + " lost"); //$NON-NLS-1$ //$NON-NLS-2$
 		isConnected = false;
 		synchronized(appMap) {
 			appMap.clear();
@@ -922,12 +927,12 @@ public class CodewindConnection {
 	 * Called by the CodewindSocket when the socket.io connection is working.
 	 */
 	public synchronized void clearConnectionError() {
-		Logger.log("Connection to " + baseUrl + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
+		Logger.log("Connection to " + baseUri + " restored"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		// Reset any cached information in case it has changed
 		try {
 			String oldSocketNS = env.getSocketNamespace();
-			env = new ConnectionEnv(getEnvData(baseUrl));
+			env = new ConnectionEnv(getEnvData(baseUri));
 			if (!isSupportedVersion(env.getVersion())) {
 				Logger.logError("The detected version of Codewind after reconnect is not supported: " + env.getVersion());
 				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION);
@@ -972,23 +977,15 @@ public class CodewindConnection {
 	@Override
 	public String toString() {
 		return String.format("%s @ name=%s baseUrl=%s", //$NON-NLS-1$
-				CodewindConnection.class.getSimpleName(), name, baseUrl);
+				CodewindConnection.class.getSimpleName(), name, baseUri == null ? "unknown" : baseUri);
 	}
 
-	// Note that toPrefsString and fromPrefsString are used to save and load connections from the preferences store
-	// in CodewindConnectionManager, so be careful modifying these.
-
-	public String toPrefsString() {
-		// No newlines allowed!
-		return baseUrl.toString();
-	}
-	
 	public void requestProjectDelete(String projectId)
 			throws JSONException, IOException {
 
 		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectId;
 
-		URI uri = baseUrl.resolve(endpoint);
+		URI uri = baseUri.resolve(endpoint);
 
 		HttpResult result = HttpUtil.delete(uri);
 		checkResult(result, uri, false);
@@ -1012,7 +1009,7 @@ public class CodewindConnection {
 	
 	private URI getProjectURI(String projectQuery) {
 		try {
-			URI uri = baseUrl;
+			URI uri = baseUri;
 			String query = projectQuery + "=" + CoreConstants.VALUE_TRUE;
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
 			return uri;
@@ -1028,7 +1025,7 @@ public class CodewindConnection {
 
 	public URL getAppViewURL(CodewindApplication app, String view) {
 		try {
-			URI uri = baseUrl;
+			URI uri = baseUri;
 			String query = CoreConstants.QUERY_PROJECT + "=" + app.projectID;
 			query = query + "&" + CoreConstants.QUERY_VIEW + "=" + view;
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
@@ -1041,7 +1038,7 @@ public class CodewindConnection {
 	
 	public URL getPerformanceMonitorURL(CodewindApplication app) {
 		try {
-			URI uri = baseUrl;
+			URI uri = baseUri;
 			uri = uri.resolve(CoreConstants.PERF_MONITOR);
 			String query = CoreConstants.QUERY_PROJECT + "=" + app.projectID;
 			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
@@ -1050,5 +1047,9 @@ public class CodewindConnection {
 			Logger.logError("Failed to get the performance monitor URL for the " + app.name + "application.", e);  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$ 
 		}
 		return null;
+	}
+	
+	public boolean isLocal() {
+		return false;
 	}
 }

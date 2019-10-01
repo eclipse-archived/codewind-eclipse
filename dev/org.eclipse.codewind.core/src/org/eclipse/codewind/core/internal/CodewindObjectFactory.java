@@ -14,6 +14,8 @@ package org.eclipse.codewind.core.internal;
 import java.net.URI;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.LocalConnection;
+import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.core.runtime.IPath;
@@ -28,7 +30,10 @@ import org.eclipse.core.runtime.IPath;
 public class CodewindObjectFactory {
 	
 	public static CodewindConnection createCodewindConnection(String name, URI uri, boolean isLocal) {
-		return new CodewindConnection(name, uri, isLocal);
+		if (isLocal) {
+			return new LocalConnection(name, uri);
+		}
+		return new RemoteConnection(name, uri);
 	}
 	
 	public static CodewindApplication createCodewindApplication(CodewindConnection connection,

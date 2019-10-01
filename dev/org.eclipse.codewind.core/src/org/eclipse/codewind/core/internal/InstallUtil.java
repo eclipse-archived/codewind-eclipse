@@ -34,7 +34,6 @@ import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -98,8 +97,8 @@ public class InstallUtil {
 	
 	private static String installVersion = null;
 	
-	public static InstallStatus getInstallStatus() throws IOException, JSONException, TimeoutException {
-		ProcessResult result = statusCodewind();
+	public static InstallStatus getInstallStatus(IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		ProcessResult result = statusCodewind(monitor);
 		if (result.getExitValue() != 0) {
 			String error = result.getError();
 			if (error == null || error.isEmpty()) {
@@ -125,7 +124,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus();
+			CodewindManager.getManager().refreshInstallStatus(mon.split(10));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -136,13 +135,13 @@ public class InstallUtil {
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
 		    process = runInstaller(stopAll ? STOP_ALL_CMD : STOP_CMD);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT), mon);
+		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT), mon.split(95));
 		    return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus();
+			CodewindManager.getManager().refreshInstallStatus(mon.split(5));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -153,13 +152,13 @@ public class InstallUtil {
 		try {
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.INSTALLING);
 		    process = runInstaller(INSTALL_CMD, TAG_OPTION, version);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, getPrefs().getInt(CodewindCorePlugin.CW_INSTALL_TIMEOUT), mon);
+		    ProcessResult result = ProcessHelper.waitForProcess(process, 1000, getPrefs().getInt(CodewindCorePlugin.CW_INSTALL_TIMEOUT), mon.split(95));
 		    return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus();
+			CodewindManager.getManager().refreshInstallStatus(mon.split(5));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -174,13 +173,13 @@ public class InstallUtil {
 			} else {
 				process = runInstaller(REMOVE_CMD);
 			}
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_UNINSTALL_TIMEOUT), mon);
+		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_UNINSTALL_TIMEOUT), mon.split(90));
 		    return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus();
+			CodewindManager.getManager().refreshInstallStatus(mon.split(10));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -248,11 +247,12 @@ public class InstallUtil {
 		}
 	}
 	
-	private static ProcessResult statusCodewind() throws IOException, TimeoutException {
+	private static ProcessResult statusCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.CodewindStatusJobLabel, 100);
 		Process process = null;
 		try {
 			process = runInstaller(STATUS_CMD, JSON_OPTION);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 120, new NullProgressMonitor());
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 120, mon);
 			return result;
 		} finally {
 			if (process != null && process.isAlive()) {

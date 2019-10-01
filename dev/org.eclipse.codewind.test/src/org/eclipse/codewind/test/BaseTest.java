@@ -91,11 +91,8 @@ public abstract class BaseTest extends TestCase {
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
     	
-        // Create a Codewind connection
+        // Get the local Codewind connection
         connection = CodewindManager.getManager().getLocalConnection();
-        if (connection == null) {
-        	connection = CodewindManager.getManager().createLocalConnection();
-        }
         assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project

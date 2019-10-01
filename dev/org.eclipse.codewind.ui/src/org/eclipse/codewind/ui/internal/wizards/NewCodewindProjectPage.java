@@ -627,7 +627,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		}
 		InstallStatus status = manager.getInstallStatus();
 		if (status.isStarted()) {
-			connection = manager.createLocalConnection();
+			connection = manager.getLocalConnection();
 			return;
 		}
 		if (!status.isInstalled()) {
@@ -647,8 +647,8 @@ public class NewCodewindProjectPage extends WizardPage {
 						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
-					connection = manager.createLocalConnection();
-					ViewHelper.refreshCodewindExplorerView(null);
+					connection = manager.getLocalConnection();
+					ViewHelper.refreshCodewindExplorerView(connection);
 				} catch (IOException e) {
 					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
 				} catch (TimeoutException e) {
@@ -664,10 +664,6 @@ public class NewCodewindProjectPage extends WizardPage {
 		} catch (InterruptedException e) {
 			Logger.logError("Codewind start was interrupted", e); //$NON-NLS-1$
 			return;
-		}
-		
-		if (connection == null) {
-			Logger.logError("Failed to connect to Codewind at: " + manager.getLocalURI()); //$NON-NLS-1$
 		}
 	}
 }

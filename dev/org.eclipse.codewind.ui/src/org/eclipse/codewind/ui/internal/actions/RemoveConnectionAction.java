@@ -39,7 +39,7 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindConnection) {
 				connection = (CodewindConnection) obj;
-				setEnabled(connection != null && !connection.isLocal);
+				setEnabled(connection != null);
 				return;
 			}
 		}
@@ -55,13 +55,9 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 		}
 
 		try {
-			CodewindConnectionManager.removeConnection(connection.baseUrl.toString());
+			CodewindConnectionManager.removeConnection(connection.getBaseURI().toString());
 		} catch (Exception e) {
-			Logger.logError("Error removing connection: " + connection.baseUrl.toString(), e); //$NON-NLS-1$
+			Logger.logError("Error removing connection: " + connection.getBaseURI().toString(), e); //$NON-NLS-1$
 		}
-	}
-	
-	public boolean showAction() {
-		return connection != null && !connection.isLocal;
 	}
 }

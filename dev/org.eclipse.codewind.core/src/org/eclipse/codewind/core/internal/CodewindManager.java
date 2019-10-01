@@ -19,7 +19,9 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.json.JSONException;
 
 public class CodewindManager {
@@ -27,7 +29,6 @@ public class CodewindManager {
 	private static CodewindManager codewindManager;
 	
 	CodewindConnection localConnection = null;
-	URI localURI = null;
 	
 	// Keep track of the install status and if the installer is currently running.
 	// If the installer is running, this is the status that should be reported, if
@@ -43,13 +44,9 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		refreshInstallStatus();
-		if (getInstallStatus().isStarted()) {
-			createLocalConnection();
-			if (localConnection != null) {
-				localConnection.refreshApps(null);
-			}
-		}
+		localConnection = CodewindObjectFactory.createCodewindConnection(Messages.CodewindLocalConnectionName, null, true);
+		CodewindConnectionManager.add(localConnection);
+		refreshInstallStatus(new NullProgressMonitor());
 	}
 
 	public static CodewindManager getManager() {
@@ -66,16 +63,21 @@ public class CodewindManager {
 		return installStatus;
 	}
 	
-	public synchronized void refreshInstallStatus() {
-		String url = null;
+	public synchronized void refreshInstallStatus(IProgressMonitor monitor) {
+		String urlStr = null;
 		try {
-			installStatus = InstallUtil.getInstallStatus();
+			SubMonitor mon = SubMonitor.convert(monitor, 100);
+			installStatus = InstallUtil.getInstallStatus(mon.split(60));
 			if (installStatus.isStarted()) {
-				url = installStatus.getURL();
-				localURI = new URI(url);
+				urlStr = installStatus.getURL();
+				if (!localConnection.isConnected()) {
+					URI uri = new URI(urlStr);
+					localConnection.setBaseURI(uri);
+					localConnection.connect(mon.split(40));
+				}
 			} else {
-				removeLocalConnection();
-				localURI = null;
+				localConnection.close();
+				localConnection.setBaseURI(null);
 			}
 			return;
 		} catch (IOException e) {
@@ -85,7 +87,7 @@ public class CodewindManager {
 		} catch (JSONException e) {
 			Logger.logError("The Codewind installer status format is not recognized", e); //$NON-NLS-1$
 		} catch (URISyntaxException e) {
-			Logger.logError("The Codewind installer status command returned an invalid url: " + url, e);
+			Logger.logError("The Codewind installer status command returned an invalid url: " + urlStr, e);
 		}
 		installStatus = InstallStatus.UNKNOWN;
 	}
@@ -98,10 +100,6 @@ public class CodewindManager {
 		this.installerStatus = status;
 		CoreUtil.updateAll();
 	}
-	
-	public URI getLocalURI() {
-		return localURI;
-	}
 
 	public boolean isSupportedVersion(String version) {
 		return CodewindConnection.isSupportedVersion(version);
@@ -111,32 +109,8 @@ public class CodewindManager {
 		return localConnection;
 	}
 
-	public synchronized CodewindConnection createLocalConnection() {
-		if (localConnection != null) {
-			return localConnection;
-		}
-		try {
-			CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(Messages.CodewindLocalConnectionName, getLocalURI(), true);
-			connection.connect(new NullProgressMonitor());
-			localConnection = connection;
-			CodewindConnectionManager.add(connection);
-			return connection;
-		} catch(Exception e) {
-			Logger.log("Attempting to connect to Codewind failed: " + e.getMessage()); //$NON-NLS-1$
-		}
-		return null;
-	}
-	
-	public synchronized void removeLocalConnection() {
-		if (localConnection != null) {
-			localConnection.close();
-			CodewindConnectionManager.removeConnection(localConnection.baseUrl.toString());
-			localConnection = null;
-		}
-	}
-	
-	public void refresh() {
-		refreshInstallStatus();
+	public void refresh(IProgressMonitor monitor) {
+		refreshInstallStatus(monitor);
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
 			if (conn.isConnected()) {
 				conn.refreshApps(null);

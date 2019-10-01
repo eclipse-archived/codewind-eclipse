@@ -101,11 +101,20 @@
 				</enablement>
 			</actionProvider>
 			<actionProvider
-				id="org.eclipse.codewind.ui.connectionActionProvider"
-				class="org.eclipse.codewind.ui.internal.actions.CodewindConnectionActionProvider">
+				id="org.eclipse.codewind.ui.localConnectionActionProvider"
+				class="org.eclipse.codewind.ui.internal.actions.LocalConnectionActionProvider">
 				<enablement>
 					<or>
-						<instanceof value="org.eclipse.codewind.core.internal.connection.CodewindConnection" />
+						<instanceof value="org.eclipse.codewind.core.internal.connection.LocalConnection" />
+					</or>
+				</enablement>
+			</actionProvider>
+			<actionProvider
+				id="org.eclipse.codewind.ui.remoteConnectionActionProvider"
+				class="org.eclipse.codewind.ui.internal.actions.RemoteConnectionActionProvider">
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.codewind.core.internal.connection.RemoteConnection" />
 					</or>
 				</enablement>
 			</actionProvider>

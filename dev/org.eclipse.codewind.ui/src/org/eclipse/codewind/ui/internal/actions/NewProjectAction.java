@@ -69,7 +69,7 @@ public class NewProjectAction extends SelectionProviderAction {
 				return;
 			}
 		} catch (Exception e) {
-			Logger.logError("An error occurred running the new project action on connection: " + connection.baseUrl, e); //$NON-NLS-1$
+			Logger.logError("An error occurred running the new project action on connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
 		}
 	}
 }

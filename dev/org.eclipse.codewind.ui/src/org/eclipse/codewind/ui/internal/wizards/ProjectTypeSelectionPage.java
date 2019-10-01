@@ -433,11 +433,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		try {
 			templates = connection.requestProjectTemplates(true);
 		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the list of templates for connection: " + connection.baseUrl, e); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to get the list of templates for connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
 			return null;
 		}
 		if (templates == null || templates.isEmpty()) {
-			Logger.log("The list of templates is empty for connection: " + connection.baseUrl); //$NON-NLS-1$
+			Logger.log("The list of templates is empty for connection: " + connection.getBaseURI()); //$NON-NLS-1$
 			return typeMap;
 		}
 		for (ProjectTemplateInfo template : templates) {

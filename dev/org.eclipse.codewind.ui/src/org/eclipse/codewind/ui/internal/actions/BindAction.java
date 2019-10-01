@@ -69,7 +69,7 @@ public class BindAction extends SelectionProviderAction {
 			ViewHelper.refreshCodewindExplorerView(null);
 			ViewHelper.expandConnection(connection);
 		} catch (Exception e) {
-			Logger.logError("An error occurred running the bind action on connection: " + connection.baseUrl, e); //$NON-NLS-1$
+			Logger.logError("An error occurred running the bind action on connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
 		}
 	}
 }

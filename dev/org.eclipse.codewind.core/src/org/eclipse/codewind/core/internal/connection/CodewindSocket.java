@@ -78,7 +78,7 @@ public class CodewindSocket {
 	public CodewindSocket(CodewindConnection connection) throws URISyntaxException {
 		this.connection = connection;
 		
-		URI uri = connection.baseUrl;
+		URI uri = connection.getBaseURI();
 		if (connection.getSocketNamespace() != null) {
 			uri = uri.resolve(connection.getSocketNamespace());
 		}
@@ -90,7 +90,6 @@ public class CodewindSocket {
 			@Override
 			public void call(Object... arg0) {
 				Logger.log("SocketIO connect success @ " + socketUri); //$NON-NLS-1$
-
 				if (!hasConnected) {
 					hasConnected = true;
 				}

@@ -14,6 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -50,7 +51,7 @@ public class InstallerAction extends SelectionProviderAction {
 	public void selectionChanged(IStructuredSelection sel) {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
-			if (obj instanceof CodewindManager) {
+			if (obj instanceof LocalConnection) {
 				InstallStatus status = CodewindManager.getManager().getInstallStatus();
 				if (actionType == ActionType.INSTALL_UNINSTALL) {
 					if (status.isInstalled()) {

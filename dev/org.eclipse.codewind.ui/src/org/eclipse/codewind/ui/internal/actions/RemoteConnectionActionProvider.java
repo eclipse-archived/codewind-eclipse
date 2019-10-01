@@ -11,7 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -24,7 +24,7 @@ import org.eclipse.ui.navigator.ICommonViewerSite;
 /**
  * Action provider for a Codewind connection.
  */
-public class CodewindConnectionActionProvider extends CommonActionProvider {
+public class RemoteConnectionActionProvider extends CommonActionProvider {
 	
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
@@ -52,13 +52,11 @@ public class CodewindConnectionActionProvider extends CommonActionProvider {
 		IStructuredSelection sel = (IStructuredSelection) selection;
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
-			if (obj instanceof CodewindConnection) {
+			if (obj instanceof RemoteConnection) {
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
 				menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
 				menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageReposAction);
-				if (removeConnectionAction.showAction()) {
-					menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, removeConnectionAction);
-				}
+				menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, removeConnectionAction);
 			}
 		}
 	}

@@ -158,6 +158,7 @@ public class Messages extends NLS {
 	public static String SelectProjectTypePageDescription;
 	public static String SelectProjectTypePageProjectTypeLabel;
 	public static String SelectProjectTypePageLanguageLabel;
+	public static String SelectProjectTypePageSubtypeLabel;
 	public static String SelectProjectTypeErrorLabel;
 	public static String SelectProjectTypeManageRepoLabel;
 	public static String SelectProjectTypeManageRepoLink;

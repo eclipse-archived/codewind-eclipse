@@ -33,6 +33,23 @@ public class ProjectTypeInfo {
 			label = json.getString(LABEL_KEY);
 			description = json.optString(DESCRIPTION_KEY);
 		}
+
+		@Override
+		public int hashCode() {
+			return id.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			
+			if (this == obj)
+				return true;
+			
+			if (obj instanceof ProjectSubtypeInfo)
+				return id.equals(((ProjectSubtypeInfo) obj).id);
+			
+			return false;
+		}
 	}
 	
 	private static final String PROJECT_TYPE_KEY = "projectType";
@@ -73,5 +90,9 @@ public class ProjectTypeInfo {
 	
 	public List<ProjectSubtypeInfo> getProjectSubtypes() {
 		return projectSubtypes;
+	}
+	
+	public void addProjectSubtypes(List<ProjectSubtypeInfo> projectSubtypes) {
+		this.projectSubtypes.addAll(projectSubtypes);
 	}
 }

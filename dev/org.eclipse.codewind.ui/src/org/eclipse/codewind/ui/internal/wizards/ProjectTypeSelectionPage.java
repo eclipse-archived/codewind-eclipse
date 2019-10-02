@@ -12,10 +12,8 @@
 package org.eclipse.codewind.ui.internal.wizards;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,7 +21,8 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
+import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
@@ -42,6 +41,7 @@ import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
@@ -60,9 +60,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 	private CodewindConnection connection = null;
 	private IPath projectPath = null;
-	private Map<String, Set<String>> typeMap;
+	private Map<String, ProjectTypeInfo> typeMap;
 	private String type = null;
-	private String language = null;
+	private ProjectSubtypeInfo subtype = null;
+//	private String language = null;
 	private Text subtypeLabel = null;
 	private CheckboxTableViewer subtypeViewer = null;
 	private Text typeLabel = null;
@@ -107,7 +108,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
-		typeViewer.setInput(getProjectTypeArray());
+		typeViewer.setComparator(new ViewerComparator());
+		typeViewer.setInput(typeMap.keySet());
 		GridData typeViewerData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		typeViewerData.minimumHeight = 200;
 		typeViewer.getTable().setLayoutData(typeViewerData);
@@ -121,6 +123,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		subtypeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
 		subtypeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		subtypeViewer.setLabelProvider(new ProjectSubtypeLabelProvider());
+		subtypeViewer.setComparator(new ViewerComparator());
 		subtypeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		typeViewer.addCheckStateListener(new ICheckStateListener() {
@@ -133,29 +136,29 @@ public class ProjectTypeSelectionPage extends WizardPage {
 					type = null;
 				}
 				
-				String[] languages = getLanguageArray(type);
-				if (languages != null && languages.length > 1) {
-					if (language != null) {
+				List<ProjectSubtypeInfo> projectSubtypes = getProjectSubtypes(type);
+				if (projectSubtypes.size() > 1) {
+					if (subtype != null) {
 						boolean found = false;
-						for (String lang : languages) {
-							if (language.equals(lang)) {
-								subtypeViewer.setCheckedElements(new Object[] {language});
+						for (ProjectSubtypeInfo projectSubtype : projectSubtypes) {
+							if (subtype.equals(projectSubtype)) {
+								subtypeViewer.setCheckedElements(new Object[] {subtype});
 								found = true;
 								break;
 							}
 						}
 						if (!found) {
-							language = null;
+							subtype = null;
 						}
 					}
 					subtypeLabel.setVisible(true);
-					subtypeViewer.setInput(languages);
+					subtypeViewer.setInput(projectSubtypes);
 					subtypeViewer.getTable().setVisible(true);
 				} else {
-					if (languages.length == 1) {
-						language = languages[0];
+					if (projectSubtypes.size() == 1) {
+						subtype = projectSubtypes.get(0);
 					} else {
-						language = null;
+						subtype = null;
 					}
 					subtypeLabel.setVisible(false);
 					subtypeViewer.getTable().setVisible(false);
@@ -169,9 +172,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
 					subtypeViewer.setCheckedElements(new Object[] {event.getElement()});
-					language = (String) event.getElement();
+					subtype = (ProjectSubtypeInfo) event.getElement();
 				} else {
-					language = null;
+					subtype = null;
 				}
 				getWizard().getContainer().updateButtons();
 			}
@@ -249,37 +252,15 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 
 	public boolean canFinish() {
-		if (type == null) {
+		if (type == null || subtype == null) {
 			return false;
 		}
 		return true;
 	}
 	
-	private String[] getProjectTypeArray() {
-		Set<String> typeSet = typeMap.keySet();
-		String[] types = typeSet.toArray(new String[typeSet.size()]);
-		Arrays.sort(types, new Comparator<String>() {
-			@Override
-			public int compare(String t1, String t2) {
-				return ProjectType.getDisplayName(t1).compareToIgnoreCase(ProjectType.getDisplayName(t2));
-			}
-		});
-		return types;
-	}
-	
-	private String[] getLanguageArray(String type) {
-		Set<String> languageSet = typeMap.get(type);
-		if (languageSet == null || languageSet.isEmpty()) {
-			return new String[0];
-		}
-		String[] languages = languageSet.toArray(new String[languageSet.size()]);
-		Arrays.sort(languages, new Comparator<String>() {
-			@Override
-			public int compare(String l1, String l2) {
-				return ProjectLanguage.getDisplayName(l1).compareToIgnoreCase(ProjectLanguage.getDisplayName(l2));
-			}
-		});
-		return languages;
+	private List<ProjectSubtypeInfo> getProjectSubtypes(String type) {
+		ProjectTypeInfo projectType = typeMap.get(type);
+		return projectType == null ? Collections.emptyList() : projectType.getProjectSubtypes();
 	}
 	
 	private class ProjectTypeLabelProvider extends LabelProvider {
@@ -305,7 +286,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public String getText(Object element) {
-			return ProjectLanguage.getDisplayName((String)element);
+			String label = ((ProjectSubtypeInfo) element).label;
+			return ProjectLanguage.getDisplayName(label);
 		}
 	}
 
@@ -352,56 +334,56 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 	
 	public String getLanguage() {
-		if (language == null) {
+//		if (language == null) {
 			// The language is optional so this is not an error
 			return ProjectLanguage.LANGUAGE_UNKNOWN.getId();
-		}
-		return language;
+//		}
+//		return language;
 	}
 
 	private void updateTables() {
 		if (typeViewer == null || typeViewer.getTable().isDisposed()) {
 			return;
 		}
-		String[] projectTypes = getProjectTypeArray();
+		Set<String> projectTypes = typeMap.keySet();
 		typeViewer.setInput(projectTypes);
-		if (projectTypes.length == 0) {
+		if (projectTypes.size() == 0) {
 			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
-			updateLanguages(null, null);
+			updateSubtypes(null, null);
 			return;
 		}
 		setErrorMessage(null);
 		if (type != null && typeMap.containsKey(type)) {
 			// Maintain the current selection
 			typeViewer.setCheckedElements(new Object[] {type});
-			String[] languages = getLanguageArray(type);
-			updateLanguages(languages, language);
+			List<ProjectSubtypeInfo> projectSubtypes = getProjectSubtypes(type);
+			updateSubtypes(projectSubtypes, subtype);
 		} else {
 			// If no selection, use the project info
 			if (projectInfo != null) {
 				type = projectInfo.type.getId();
-				language = projectInfo.language.getId();
+//				language = projectInfo.language.getId();
 				if (typeMap.containsKey(type)) {
 					typeViewer.setCheckedElements(new Object[] {type});
-					String[] languages = getLanguageArray(type);
-					updateLanguages(languages, language);
+					List<ProjectSubtypeInfo> projectSubtypes = getProjectSubtypes(type);
+					updateSubtypes(projectSubtypes, subtype);
 				}
 			}
 		}
 	}
 	
-	private void updateLanguages(String[] languages, String language) {
+	private void updateSubtypes(List<ProjectSubtypeInfo> projectSubtypes, ProjectSubtypeInfo subtype) {
 		if (subtypeViewer == null || subtypeViewer.getTable().isDisposed()) {
 			return;
 		}
-		if (languages != null && languages.length > 1) {
+		if (projectSubtypes != null && projectSubtypes.size() > 1) {
 			subtypeLabel.setVisible(true);
-			subtypeViewer.setInput(languages);
+			subtypeViewer.setInput(projectSubtypes);
 			subtypeViewer.getTable().setVisible(true);
-			if (language != null) {
-				for (String lang : languages) {
-					if (language.equals(lang)) {
-						subtypeViewer.setCheckedElements(new Object[] {language});
+			if (subtype != null) {
+				for (ProjectSubtypeInfo projectSubtype : projectSubtypes) {
+					if (subtype.equals(projectSubtype)) {
+						subtypeViewer.setCheckedElements(new Object[] {subtype});
 						break;
 					}
 				}
@@ -427,27 +409,26 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		return null;
 	}
 
-	private Map<String, Set<String>> getProjectTypeMap() {
-		List<ProjectTemplateInfo> templates = null;
-		Map<String, Set<String>> typeMap = new HashMap<String, Set<String>>();
+	private Map<String, ProjectTypeInfo> getProjectTypeMap() {
+		List<ProjectTypeInfo> types = null;
+		Map<String, ProjectTypeInfo> typeMap = new HashMap<String, ProjectTypeInfo>();
 		try {
-			templates = connection.requestProjectTemplates(true);
+			types = connection.requestProjectTypes();
 		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the list of templates for connection: " + connection.baseUrl, e); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to get the list of project types for connection: " + connection.baseUrl, e); //$NON-NLS-1$
 			return null;
 		}
-		if (templates == null || templates.isEmpty()) {
-			Logger.log("The list of templates is empty for connection: " + connection.baseUrl); //$NON-NLS-1$
+		if (types == null || types.isEmpty()) {
+			Logger.log("The list of project types is empty for connection: " + connection.baseUrl); //$NON-NLS-1$
 			return typeMap;
 		}
-		for (ProjectTemplateInfo template : templates) {
-			Set<String> languages = typeMap.get(template.getProjectType());
-			if (languages == null) {
-				languages = new HashSet<String>();
-				typeMap.put(template.getProjectType(), languages);
+		for (ProjectTypeInfo type : types) {
+			ProjectTypeInfo existingType = typeMap.get(type.getProjectType());
+			if (existingType == null) {
+				typeMap.put(type.getProjectType(), type);
 			}
-			if (template.getLanguage() != null && !template.getLanguage().isEmpty()) {
-				languages.add(template.getLanguage());
+			else {
+				existingType.addProjectSubtypes(type.getProjectSubtypes());
 			}
 		}
 		return typeMap;

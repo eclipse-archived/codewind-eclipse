@@ -63,8 +63,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private Map<String, Set<String>> typeMap;
 	private String type = null;
 	private String language = null;
-	private Text languageLabel = null;
-	private CheckboxTableViewer languageViewer = null;
+	private Text subtypeLabel = null;
+	private CheckboxTableViewer subtypeViewer = null;
 	private Text typeLabel = null;
 	private CheckboxTableViewer typeViewer = null;
 	private ProjectInfo projectInfo = null;
@@ -112,16 +112,16 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewerData.minimumHeight = 200;
 		typeViewer.getTable().setLayoutData(typeViewerData);
 	   
-		languageLabel = new Text(composite, SWT.READ_ONLY);
-		languageLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
-		languageLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-		languageLabel.setBackground(composite.getBackground());
-		languageLabel.setForeground(composite.getForeground());
+		subtypeLabel = new Text(composite, SWT.READ_ONLY);
+		subtypeLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
+		subtypeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		subtypeLabel.setBackground(composite.getBackground());
+		subtypeLabel.setForeground(composite.getForeground());
 		
-		languageViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
-		languageViewer.setContentProvider(ArrayContentProvider.getInstance());
-		languageViewer.setLabelProvider(new LanguageLabelProvider());
-		languageViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		subtypeViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+		subtypeViewer.setContentProvider(ArrayContentProvider.getInstance());
+		subtypeViewer.setLabelProvider(new ProjectSubtypeLabelProvider());
+		subtypeViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		typeViewer.addCheckStateListener(new ICheckStateListener() {
 			@Override
@@ -139,7 +139,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 						boolean found = false;
 						for (String lang : languages) {
 							if (language.equals(lang)) {
-								languageViewer.setCheckedElements(new Object[] {language});
+								subtypeViewer.setCheckedElements(new Object[] {language});
 								found = true;
 								break;
 							}
@@ -148,27 +148,27 @@ public class ProjectTypeSelectionPage extends WizardPage {
 							language = null;
 						}
 					}
-					languageLabel.setVisible(true);
-					languageViewer.setInput(languages);
-					languageViewer.getTable().setVisible(true);
+					subtypeLabel.setVisible(true);
+					subtypeViewer.setInput(languages);
+					subtypeViewer.getTable().setVisible(true);
 				} else {
 					if (languages.length == 1) {
 						language = languages[0];
 					} else {
 						language = null;
 					}
-					languageLabel.setVisible(false);
-					languageViewer.getTable().setVisible(false);
+					subtypeLabel.setVisible(false);
+					subtypeViewer.getTable().setVisible(false);
 				}
 				getWizard().getContainer().updateButtons();
 			}
 		});
 
-		languageViewer.addCheckStateListener(new ICheckStateListener() {
+		subtypeViewer.addCheckStateListener(new ICheckStateListener() {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
-					languageViewer.setCheckedElements(new Object[] {event.getElement()});
+					subtypeViewer.setCheckedElements(new Object[] {event.getElement()});
 					language = (String) event.getElement();
 				} else {
 					language = null;
@@ -239,8 +239,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			}
 		});
  
-		languageLabel.setVisible(false);
-		languageViewer.getTable().setVisible(false);
+		subtypeLabel.setVisible(false);
+		subtypeViewer.getTable().setVisible(false);
 
 		updateTables();
 
@@ -296,7 +296,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		
 	}
 
-	private class LanguageLabelProvider extends LabelProvider {
+	private class ProjectSubtypeLabelProvider extends LabelProvider {
 
 		@Override
 		public Image getImage(Object element) {
@@ -391,25 +391,25 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 	
 	private void updateLanguages(String[] languages, String language) {
-		if (languageViewer == null || languageViewer.getTable().isDisposed()) {
+		if (subtypeViewer == null || subtypeViewer.getTable().isDisposed()) {
 			return;
 		}
 		if (languages != null && languages.length > 1) {
-			languageLabel.setVisible(true);
-			languageViewer.setInput(languages);
-			languageViewer.getTable().setVisible(true);
+			subtypeLabel.setVisible(true);
+			subtypeViewer.setInput(languages);
+			subtypeViewer.getTable().setVisible(true);
 			if (language != null) {
 				for (String lang : languages) {
 					if (language.equals(lang)) {
-						languageViewer.setCheckedElements(new Object[] {language});
+						subtypeViewer.setCheckedElements(new Object[] {language});
 						break;
 					}
 				}
 			}
-			languageViewer.getTable().setVisible(true);
+			subtypeViewer.getTable().setVisible(true);
 		} else {
-			languageLabel.setVisible(false);
-			languageViewer.getTable().setVisible(false);
+			subtypeLabel.setVisible(false);
+			subtypeViewer.getTable().setVisible(false);
 		}
 	}
 

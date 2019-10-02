@@ -65,6 +65,11 @@ public class CodewindApplication {
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
+	
+	// Application base url
+	private String appBaseUrl;
+	
+	// Full application url ((appUrl if set or baseUrl) + context root)
 	private URL rootUrl;
 
 	// These are set by the CodewindSocket so we have to make sure the reads and writes are synchronized
@@ -104,9 +109,17 @@ public class CodewindApplication {
 
 		String httpStr = getIsHttps() ? "https" : "http";
 		baseUrl = new URL(httpStr, host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
-		rootUrl = baseUrl;
+		
+		// If the app url was set in the project info, use it
+		URL appUrl = null;
+		if (appBaseUrl != null && !appBaseUrl.isEmpty()) {
+			appUrl = new URL(appBaseUrl);
+		}
+		rootUrl = appUrl != null ? appUrl : baseUrl;
+		
+		// Add the context root if there is one
 		if (contextRoot != null && !contextRoot.isEmpty()) {
-			rootUrl = new URL(baseUrl, contextRoot);
+			rootUrl = new URL(rootUrl, contextRoot);
 		}
 	}
 	
@@ -134,6 +147,15 @@ public class CodewindApplication {
 			if (hasChanged && newStatus.isComplete()) {
 				buildComplete();
 			}
+		}
+	}
+	
+	public synchronized void setAppBaseUrl(String baseUrl) {
+		this.appBaseUrl = baseUrl;
+		try {
+			setUrls();
+		} catch (MalformedURLException e) {
+			Logger.logError("An error occurred updating the application base url to: " + baseUrl, e);
 		}
 	}
 	
@@ -287,7 +309,7 @@ public class CodewindApplication {
 	public synchronized String getBuildDetails() {
 		return buildDetails;
 	}
-
+	
 	public synchronized int getHttpPort() {
 		return httpPort;
 	}

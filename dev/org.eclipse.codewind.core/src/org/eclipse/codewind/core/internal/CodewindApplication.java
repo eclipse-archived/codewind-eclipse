@@ -69,7 +69,7 @@ public class CodewindApplication {
 	// Application base url
 	private String appBaseUrl;
 	
-	// Full application url ((appUrl if set or baseUrl) + context root)
+	// Full application url ((appBaseUrl if set or baseUrl) + context root)
 	private URL rootUrl;
 
 	// These are set by the CodewindSocket so we have to make sure the reads and writes are synchronized
@@ -150,12 +150,12 @@ public class CodewindApplication {
 		}
 	}
 	
-	public synchronized void setAppBaseUrl(String baseUrl) {
-		this.appBaseUrl = baseUrl;
+	public synchronized void setAppBaseUrl(String appBaseUrl) {
+		this.appBaseUrl = appBaseUrl;
 		try {
 			setUrls();
 		} catch (MalformedURLException e) {
-			Logger.logError("An error occurred updating the application base url to: " + baseUrl, e);
+			Logger.logError("An error occurred updating the application base url to: " + appBaseUrl, e);
 		}
 	}
 	
@@ -428,6 +428,11 @@ public class CodewindApplication {
 	
 	public synchronized void setIsHttps(boolean value) {
 		isHttps = value;
+		try {
+			setUrls();
+		} catch (MalformedURLException e) {
+			Logger.logError("An error occurred updating isHttps to: " + value, e);
+		}
 	}
 	
 	public synchronized boolean getIsHttps() {

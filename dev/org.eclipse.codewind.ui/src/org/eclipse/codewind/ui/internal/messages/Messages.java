@@ -348,8 +348,10 @@ public class Messages extends NLS {
 	
 	public static String AddRepoDialogTitle;
 	public static String AddRepoDialogMessage;
+	public static String AddRepoDialogNameLabel;
 	public static String AddRepoDialogDescriptionLabel;
 	public static String AddRepoDialogUrlLabel;
+	public static String AddRepoDialogNoName;
 	public static String AddRepoDialogNoDescription;
 	public static String AddRepoDialogNoUrl;
 	

@@ -67,6 +67,8 @@ public class RepositoryManagementComposite extends Composite {
 	private List<RepoEntry> repoEntries;
 	private CheckboxTableViewer repoViewer;
 	private Button removeButton;
+	private StyledText descLabel;
+	private StyledText descText;
 	private StyledText styleLabel;
 	private StyledText styleText;
 	private StyledText linkLabel;
@@ -174,6 +176,16 @@ public class RepositoryManagementComposite extends Composite {
 		detailsLayout.numColumns = 1;
 		detailsComp.setLayout(detailsLayout);
 		detailsComp.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		
+		descLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
+		descLabel.setText(Messages.RepoMgmtDescriptionLabel);
+		IDEUtil.setBold(descLabel);
+		IDEUtil.normalizeBackground(descLabel, detailsComp);
+		descText = new StyledText(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+		descText.setText("");
+		GridData descData = new GridData(GridData.FILL, GridData.FILL, false, false);
+		descText.setLayoutData(descData);
+		IDEUtil.normalizeBackground(descText, detailsComp);
 
 		styleLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
 		styleLabel.setText(Messages.RepoMgmtStylesLabel);
@@ -250,6 +262,7 @@ public class RepositoryManagementComposite extends Composite {
 
 	private void updateDetails() {
 		TableItem[] items = repoViewer.getTable().getSelection();
+		String desc = "";
 		String styles = "";
 		String url = "";
 		RepoEntry entry = null;
@@ -257,9 +270,12 @@ public class RepositoryManagementComposite extends Composite {
 		if (items.length == 1) {
 			enabled = true;
 			entry = (RepoEntry)items[0].getData();
+			desc = entry.description;
 			styles = entry.getStyles();
 			url = entry.url;
 		}
+		descLabel.setEnabled(enabled);
+		descText.setText(desc);
 		styleLabel.setEnabled(enabled);
 		styleText.setText(styles);
 		linkLabel.setEnabled(enabled);
@@ -295,7 +311,11 @@ public class RepositoryManagementComposite extends Composite {
 	private static class RepoLabelProvider extends LabelProvider {
 		@Override
 		public String getText(Object element) {
-			return ((RepoEntry)element).description;
+			String name = ((RepoEntry)element).name;
+			if (name == null || name.isEmpty()) {
+				name = ((RepoEntry)element).description;
+			}
+			return name;
 		}
 	}
 	
@@ -399,18 +419,21 @@ public class RepositoryManagementComposite extends Composite {
 	}
 	
 	private static class RepoEntry {
+		public final String name;
 		public final String description;
 		public final String url;
 		public boolean enabled;
 		public RepositoryInfo info;
 		
-		public RepoEntry(String description, String url) {
+		public RepoEntry(String name, String description, String url) {
+			this.name = name;
 			this.description = description;
 			this.url = url;
 			this.enabled = true;
 		}
 		
 		public RepoEntry(RepositoryInfo info) {
+			this.name = info.getName();
 			this.description = info.getDescription();
 			this.url = info.getURL();
 			this.enabled = info.getEnabled();
@@ -448,6 +471,7 @@ public class RepositoryManagementComposite extends Composite {
 	
 	private static class AddDialog extends TitleAreaDialog {
 		
+		private String name;
 		private String description;
 		private String url;
 		
@@ -490,31 +514,46 @@ public class RepositoryManagementComposite extends Composite {
 			composite.setFont(parent.getFont());
 			
 			Label label = new Label(composite, SWT.NONE);
-			label.setText(Messages.AddRepoDialogDescriptionLabel);
-			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-			
-			Text descriptionText = new Text(composite, SWT.BORDER);
-			descriptionText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
-			
-			label = new Label(composite, SWT.NONE);
 			label.setText(Messages.AddRepoDialogUrlLabel);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			
 			Text urlText = new Text(composite, SWT.BORDER);
 			urlText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
-			descriptionText.addModifyListener(new ModifyListener() {
-				@Override
-				public void modifyText(ModifyEvent e) {
-					description = descriptionText.getText().trim();
-					enableOKButton(validate());
-				}
-			});
+			label = new Label(composite, SWT.NONE);
+			label.setText(Messages.AddRepoDialogNameLabel);
+			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			
+			Text nameText = new Text(composite, SWT.BORDER);
+			nameText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+			
+			label = new Label(composite, SWT.NONE);
+			label.setText(Messages.AddRepoDialogDescriptionLabel);
+			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			
+			Text descriptionText = new Text(composite, SWT.BORDER);
+			descriptionText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
 			urlText.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e) {
 					url = urlText.getText().trim();
+					enableOKButton(validate());
+				}
+			});
+			
+			nameText.addModifyListener(new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent e) {
+					name = nameText.getText().trim();
+					enableOKButton(validate());
+				}
+			});
+			
+			descriptionText.addModifyListener(new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent e) {
+					description = descriptionText.getText().trim();
 					enableOKButton(validate());
 				}
 			});
@@ -533,12 +572,16 @@ public class RepositoryManagementComposite extends Composite {
 		}
 		
 		private boolean validate() {
-			if (description == null || description.isEmpty()) {
-				setErrorMessage(Messages.AddRepoDialogNoDescription);
-				return false;
-			}
 			if (url == null || url.isEmpty()) {
 				setErrorMessage(Messages.AddRepoDialogNoUrl);
+				return false;
+			}
+			if (name == null || name.isEmpty()) {
+				setErrorMessage(Messages.AddRepoDialogNoName);
+				return false;
+			}
+			if (description == null || description.isEmpty()) {
+				setErrorMessage(Messages.AddRepoDialogNoDescription);
 				return false;
 			}
 			
@@ -547,9 +590,10 @@ public class RepositoryManagementComposite extends Composite {
 		}
 		
 		public RepoEntry getRepoEntry() {
-			if (description != null && !description.isEmpty() &&
+			if (name != null && !name.isEmpty() &&
+				description != null && !description.isEmpty() &&
 				url != null && !url.isEmpty()) {
-				return new RepoEntry(description, url);
+				return new RepoEntry(name, description, url);
 			}
 			return null;
 		}

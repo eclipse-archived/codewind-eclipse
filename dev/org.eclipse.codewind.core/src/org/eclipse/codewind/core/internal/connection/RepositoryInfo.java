@@ -18,6 +18,7 @@ import org.json.JSONObject;
 public class RepositoryInfo extends JSONObjectResult {
 	
 	public static final String URL_KEY = "url";
+	public static final String NAME_KEY = "name";
 	public static final String DESCRIPTION_KEY = "description";
 	public static final String ENABLED_KEY = "enabled";
 	public static final String PROTECTED_KEY = "protected";
@@ -29,6 +30,10 @@ public class RepositoryInfo extends JSONObjectResult {
 
 	public String getURL() {
 		return getString(URL_KEY);
+	}
+	
+	public String getName() {
+		return getString(NAME_KEY);
 	}
 	
 	public String getDescription() {

@@ -188,6 +188,13 @@ public class CodewindApplicationFactory {
 				}
 			}
 			
+			// Set the application base URL
+			String appBaseUrl = null;
+			if (appJso.has(CoreConstants.KEY_APP_BASE_URL)) {
+				appBaseUrl = appJso.getString(CoreConstants.KEY_APP_BASE_URL);
+			}
+			app.setAppBaseUrl(appBaseUrl);
+			
 			// Set isHttps
 			boolean isHttps = false;
 			if (appJso.has(CoreConstants.KEY_IS_HTTPS)) {

@@ -84,6 +84,7 @@ public class CoreConstants {
 			KEY_EXPOSED_DEBUG_PORT = "exposedDebugPort",
 			KEY_INTERNAL_DEBUG_PORT = "internalDebugPort",
 			KEY_AUTO_BUILD = "autoBuild",
+			KEY_APP_BASE_URL = "appBaseURL",
 
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",

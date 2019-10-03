@@ -95,4 +95,23 @@ public class ProjectTypeInfo {
 	public void addProjectSubtypes(List<ProjectSubtypeInfo> projectSubtypes) {
 		this.projectSubtypes.addAll(projectSubtypes);
 	}
+
+	@Override
+	public int hashCode() {
+		return projectType.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj)
+			return true;
+		
+		if (obj instanceof ProjectTypeInfo)
+			return projectType.equals(((ProjectTypeInfo) obj).projectType);
+		
+		return false;
+	}
+	
+	
 }

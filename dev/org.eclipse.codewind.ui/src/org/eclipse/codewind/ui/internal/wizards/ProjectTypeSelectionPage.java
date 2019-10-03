@@ -12,11 +12,11 @@
 package org.eclipse.codewind.ui.internal.wizards;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
@@ -61,7 +61,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private CodewindConnection connection = null;
 	private IPath projectPath = null;
 	private Map<String, ProjectTypeInfo> typeMap;
-	private String type = null;
+	private ProjectTypeInfo type = null;
 	private ProjectSubtypeInfo subtype = null;
 //	private String language = null;
 	private Text subtypeLabel = null;
@@ -109,13 +109,12 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
 		typeViewer.setComparator(new ViewerComparator());
-		typeViewer.setInput(typeMap.keySet());
+		typeViewer.setInput(typeMap.values());
 		GridData typeViewerData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		typeViewerData.minimumHeight = 200;
 		typeViewer.getTable().setLayoutData(typeViewerData);
 	   
 		subtypeLabel = new Text(composite, SWT.READ_ONLY);
-		subtypeLabel.setText(Messages.SelectProjectTypePageLanguageLabel);
 		subtypeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 		subtypeLabel.setBackground(composite.getBackground());
 		subtypeLabel.setForeground(composite.getForeground());
@@ -131,12 +130,12 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
 					typeViewer.setCheckedElements(new Object[] {event.getElement()});
-					type = (String) event.getElement();
+					type = (ProjectTypeInfo) event.getElement();
 				} else {
 					type = null;
 				}
 				
-				List<ProjectSubtypeInfo> projectSubtypes = getProjectSubtypes(type);
+				List<ProjectSubtypeInfo> projectSubtypes = type == null ? Collections.emptyList() : type.getProjectSubtypes();
 				if (projectSubtypes.size() > 1) {
 					if (subtype != null) {
 						boolean found = false;
@@ -151,9 +150,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 							subtype = null;
 						}
 					}
-					subtypeLabel.setVisible(true);
-					subtypeViewer.setInput(projectSubtypes);
-					subtypeViewer.getTable().setVisible(true);
+					enableSubtypes(type);
 				} else {
 					if (projectSubtypes.size() == 1) {
 						subtype = projectSubtypes.get(0);
@@ -252,15 +249,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 
 	public boolean canFinish() {
-		if (type == null || subtype == null) {
+		if (type == null) {
 			return false;
 		}
 		return true;
-	}
-	
-	private List<ProjectSubtypeInfo> getProjectSubtypes(String type) {
-		ProjectTypeInfo projectType = typeMap.get(type);
-		return projectType == null ? Collections.emptyList() : projectType.getProjectSubtypes();
 	}
 	
 	private class ProjectTypeLabelProvider extends LabelProvider {
@@ -272,7 +264,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		@Override
 		public String getText(Object element) {
-			return ProjectType.getDisplayName((String)element);
+			String label = ((ProjectTypeInfo) element).getProjectType();
+			return ProjectType.getDisplayName(label);
 		}
 		
 	}
@@ -317,6 +310,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		} else {
 			projectInfo = getProjectInfo(new NullProgressMonitor());
 		}
+		type = null;
 		updateTables();
 	}
 	
@@ -330,7 +324,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			Logger.logError("The project type is null on the project type selection page");
 			return ProjectType.TYPE_UNKNOWN.getId();
 		}
-		return type;
+		return type.getProjectType();
 	}
 	
 	public String getLanguage() {
@@ -345,7 +339,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		if (typeViewer == null || typeViewer.getTable().isDisposed()) {
 			return;
 		}
-		Set<String> projectTypes = typeMap.keySet();
+		Collection<ProjectTypeInfo> projectTypes = typeMap.values();
 		typeViewer.setInput(projectTypes);
 		if (projectTypes.size() == 0) {
 			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
@@ -353,48 +347,56 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			return;
 		}
 		setErrorMessage(null);
-		if (type != null && typeMap.containsKey(type)) {
+		if (type != null && typeMap.containsValue(type)) {
 			// Maintain the current selection
 			typeViewer.setCheckedElements(new Object[] {type});
-			List<ProjectSubtypeInfo> projectSubtypes = getProjectSubtypes(type);
-			updateSubtypes(projectSubtypes, subtype);
+			updateSubtypes(type, subtype);
 		} else {
 			// If no selection, use the project info
 			if (projectInfo != null) {
-				type = projectInfo.type.getId();
+				type = typeMap.get(projectInfo.type.getId());
 //				language = projectInfo.language.getId();
-				if (typeMap.containsKey(type)) {
+				if (type != null) {
 					typeViewer.setCheckedElements(new Object[] {type});
-					List<ProjectSubtypeInfo> projectSubtypes = getProjectSubtypes(type);
-					updateSubtypes(projectSubtypes, subtype);
+					updateSubtypes(type, subtype);
 				}
 			}
 		}
 	}
 	
-	private void updateSubtypes(List<ProjectSubtypeInfo> projectSubtypes, ProjectSubtypeInfo subtype) {
+	private void updateSubtypes(ProjectTypeInfo projectType, ProjectSubtypeInfo subtype) {
 		if (subtypeViewer == null || subtypeViewer.getTable().isDisposed()) {
 			return;
 		}
-		if (projectSubtypes != null && projectSubtypes.size() > 1) {
-			subtypeLabel.setVisible(true);
-			subtypeViewer.setInput(projectSubtypes);
-			subtypeViewer.getTable().setVisible(true);
+		if (projectType != null && projectType.getProjectSubtypes().size() > 1) {
 			if (subtype != null) {
-				for (ProjectSubtypeInfo projectSubtype : projectSubtypes) {
+				for (ProjectSubtypeInfo projectSubtype : projectType.getProjectSubtypes()) {
 					if (subtype.equals(projectSubtype)) {
 						subtypeViewer.setCheckedElements(new Object[] {subtype});
 						break;
 					}
 				}
 			}
-			subtypeViewer.getTable().setVisible(true);
+			enableSubtypes(projectType);
 		} else {
 			subtypeLabel.setVisible(false);
 			subtypeViewer.getTable().setVisible(false);
 		}
 	}
-
+	
+	private void enableSubtypes(ProjectTypeInfo projectType) {
+		String label = projectType.getProjectSubtypesLabel();
+		if ("".equals(label))
+			label = Messages.SelectProjectTypePageLanguageLabel;
+		else
+			label = Messages.bind(Messages.SelectProjectTypePageSubtypeLabel, label);
+		subtypeLabel.setText(label);
+		subtypeLabel.pack();
+		subtypeLabel.setVisible(true);
+		subtypeViewer.setInput(projectType.getProjectSubtypes());
+		subtypeViewer.getTable().setVisible(true);
+	}
+	
 	private ProjectInfo getProjectInfo(IProgressMonitor monitor) {
 		if (connection == null || projectPath == null) {
 			return null;

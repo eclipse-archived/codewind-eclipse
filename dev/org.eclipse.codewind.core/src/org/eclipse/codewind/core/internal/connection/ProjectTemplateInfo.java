@@ -20,6 +20,7 @@ public class ProjectTemplateInfo extends JSONObjectResult {
 	public static final String URL_KEY = "url";
 	public static final String LANGUAGE_KEY = "language";
 	public static final String PROJECT_TYPE_KEY = "projectType";
+	public static final String SOURCE_KEY = "source";
 	
 	public ProjectTemplateInfo(JSONObject projectInfo) {
 		super(projectInfo, "project template");
@@ -43,5 +44,9 @@ public class ProjectTemplateInfo extends JSONObjectResult {
 	
 	public String getProjectType() {
 		return getString(PROJECT_TYPE_KEY);
+	}
+	
+	public String getSource() {
+		return getString(SOURCE_KEY);
 	}
 }

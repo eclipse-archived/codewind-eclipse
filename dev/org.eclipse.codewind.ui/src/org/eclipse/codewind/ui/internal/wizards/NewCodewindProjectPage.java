@@ -28,6 +28,7 @@ import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
@@ -49,6 +50,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -73,6 +75,7 @@ public class NewCodewindProjectPage extends WizardPage {
 	private Text filterText;
 	private Table selectionTable;
 	private Text descriptionLabel;
+	private Text sourceLabel;
 	private Text projectNameText;
 
 	protected NewCodewindProjectPage(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
@@ -133,18 +136,12 @@ public class NewCodewindProjectPage extends WizardPage {
 		label.setText(Messages.NewProjectPage_ProjectNameLabel);
 		
 		projectNameText = new Text(composite, SWT.BORDER);
-		projectNameText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		projectNameText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 
 		Label spacer = new Label(composite, SWT.NONE);
 		spacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 
 		// Project template composite
-		Text templateText = new Text(composite, SWT.READ_ONLY);
-		templateText.setText(Messages.NewProjectPage_TemplateGroupLabel);
-		templateText.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 2, 1));
-		templateText.setBackground(composite.getBackground());
-		templateText.setForeground(composite.getForeground());
-		
 		Group templateGroup = new Group(composite, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 8;
@@ -153,15 +150,21 @@ public class NewCodewindProjectPage extends WizardPage {
 		layout.verticalSpacing = 7;
 		templateGroup.setLayout(layout);
 		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
+		templateGroup.setText(Messages.NewProjectPage_TemplateGroupLabel);
+		
+		Text templateText = new Text(templateGroup, SWT.READ_ONLY);
+		templateText.setText(Messages.NewProjectPage_TemplateGroupDesc);
+		templateText.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		IDEUtil.normalizeBackground(templateText, templateGroup);
 		
 		// Filter text
 		filterText = new Text(templateGroup, SWT.BORDER);
-		filterText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+		filterText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		filterText.setMessage(Messages.NewProjectPage_FilterMessage);
 
 		// Table
 		selectionTable = new Table(templateGroup, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.heightHint = 100;
 		selectionTable.setLayoutData(data);
 		
@@ -203,24 +206,30 @@ public class NewCodewindProjectPage extends WizardPage {
 
 		resizeColumns(selectionTable);
 		
-		// Description text
-		ScrolledComposite descriptionScroll = new ScrolledComposite(templateGroup, SWT.V_SCROLL);
-		descriptionLabel = new Text(descriptionScroll, SWT.WRAP | SWT.READ_ONLY);
-		descriptionLabel.setText(NLS.bind(Messages.NewProjectPage_DescriptionLabel, ""));
-		descriptionLabel.setBackground(templateGroup.getBackground());
-		descriptionLabel.setForeground(templateGroup.getForeground());
-		descriptionScroll.setContent(descriptionLabel);
-		
+		// Details
+		ScrolledComposite detailsScroll = new ScrolledComposite(templateGroup, SWT.V_SCROLL);
 		data = new GridData(GridData.FILL, GridData.FILL, true, false);
-		int lineHeight = filterText.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-		data.heightHint = lineHeight * 2;
-		data.horizontalSpan = 2;
-		descriptionScroll.setLayoutData(data);
-		descriptionScroll.getVerticalBar().setPageIncrement(lineHeight);
-		descriptionScroll.getVerticalBar().setIncrement(lineHeight);
-		descriptionScroll.setBackground(templateGroup.getBackground());
-		descriptionScroll.setForeground(templateGroup.getForeground());
+		data.widthHint = 300;
+		data.heightHint = 70;
+		detailsScroll.setLayoutData(data);
 		
+		Composite detailsComp = new Composite(detailsScroll, SWT.NONE);
+		final GridLayout detailsLayout = new GridLayout();
+		detailsLayout.numColumns = 1;
+		detailsComp.setLayout(detailsLayout);
+		detailsComp.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		
+		descriptionLabel = new Text(detailsComp, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+		descriptionLabel.setText("");
+		GridData descData = new GridData(GridData.FILL, GridData.CENTER, false, false);
+		descriptionLabel.setLayoutData(descData);
+		IDEUtil.normalizeBackground(descriptionLabel, detailsComp);
+		
+		sourceLabel = new Text(detailsComp, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+		sourceLabel.setText("");
+		GridData sourceData = new GridData(GridData.FILL, GridData.CENTER, false, false);
+		descriptionLabel.setLayoutData(sourceData);
+		IDEUtil.normalizeBackground(sourceLabel, detailsComp);
 		
 		// Manage repositories link
 		Composite manageReposComp = new Composite(composite, SWT.NONE);
@@ -298,7 +307,7 @@ public class NewCodewindProjectPage extends WizardPage {
 				if (event.keyCode == SWT.ARROW_DOWN) {
 					if (selectionTable.getItemCount() > 0) {
 						selectionTable.setSelection(0);
-						updateDescription();
+						updateDetails();
 						selectionTable.setFocus();
 					}
 					event.doit = false;
@@ -310,7 +319,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		selectionTable.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				updateDescription();
+				updateDetails();
 				setPageComplete(validate());
 			}
 		});
@@ -322,12 +331,23 @@ public class NewCodewindProjectPage extends WizardPage {
 			}
 		});
 		
+		detailsScroll.addListener(SWT.Resize, (event) -> {
+			int width = detailsScroll.getClientArea().width;
+			descData.widthHint = width - detailsLayout.marginWidth;
+			sourceData.widthHint = width - detailsLayout.marginWidth;
+			Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+			detailsScroll.setMinSize(size);
+		});
+		
+		detailsScroll.setContent(detailsComp);
+		detailsScroll.setExpandHorizontal(true);
+		detailsScroll.setExpandVertical(true);
+		detailsScroll.setMinSize(detailsScroll.getContent().computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		
 		if (selectionTable.getItemCount() > 0) {
 			selectionTable.setSelection(0);
 		}
-		updateDescription();
-		// resize description since the UI isn't visible yet
-		descriptionLabel.setSize(descriptionLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		updateDetails();
 		projectNameText.setFocus();
 	}
 
@@ -388,7 +408,10 @@ public class NewCodewindProjectPage extends WizardPage {
 			String template = templateInfo.getLabel();
 			String type = ProjectType.getDisplayName(templateInfo.getProjectType());
 			String language = ProjectLanguage.getDisplayName(templateInfo.getLanguage());
-			if (pattern.matches(template) || (type != null && pattern.matches(type)) || (language != null && pattern.matches(language))) {
+			String description = templateInfo.getDescription();
+			String source = templateInfo.getSource();
+			if (pattern.matches(template) || (type != null && pattern.matches(type)) || (language != null && pattern.matches(language)) ||
+					(description != null && pattern.matches(description)) || (source != null && pattern.matches(source))) {
 				TableItem item = new TableItem(table, SWT.NONE);
 				item.setForeground(table.getForeground());
 				item.setBackground(table.getBackground());
@@ -466,37 +489,48 @@ public class NewCodewindProjectPage extends WizardPage {
 		createItems(selectionTable, text);
 		if (selectionTable.getItemCount() > 0)
 			selectionTable.select(0);
-		updateDescription();
+		updateDetails();
 		setPageComplete(validate());
 	}
 	
-	public void updateDescription() {
+	public void updateDetails() {
 		// Update the description
 		TableItem[] items = selectionTable.getSelection();
 		String description = "";
+		String source = "";
 		boolean enabled = false;
 		if (items.length == 1) {
 			enabled = true;
 			description = ((ProjectTemplateInfo)items[0].getData()).getDescription();
 			if (description == null || description.isEmpty()) {
-				description = Messages.NewProjectPage_DescriptionNone;
+				description = Messages.NewProjectPage_DetailsNone;
+			}
+			source = ((ProjectTemplateInfo)items[0].getData()).getSource();
+			if (source == null || source.isEmpty()) {
+				source = Messages.NewProjectPage_DetailsNone;
 			}
 		}
-		String text = NLS.bind(Messages.NewProjectPage_DescriptionLabel, description);
 		
-		descriptionLabel.setText(text);
-		
-		// resize label to make scroll bars appear
-		int width = descriptionLabel.getParent().getClientArea().width;
-		descriptionLabel.setSize(width, descriptionLabel.computeSize(width, SWT.DEFAULT).y);
-		
-		// resize again if scroll bar added or removed
-		int newWidth = descriptionLabel.getParent().getClientArea().width;
-		if (newWidth != width) {
-			descriptionLabel.setSize(newWidth, descriptionLabel.computeSize(newWidth, SWT.DEFAULT).y);
-		}
+		descriptionLabel.setText(NLS.bind(Messages.NewProjectPage_DescriptionLabel, description));
+		sourceLabel.setText(NLS.bind(Messages.NewProjectPage_SourceLabel, source));
 		
 		descriptionLabel.setEnabled(enabled);
+		sourceLabel.setEnabled(enabled);
+		
+		resizeEntry(descriptionLabel);
+		resizeEntry(sourceLabel);
+	}
+	
+	private void resizeEntry(Text text) {
+		// resize label to make scroll bars appear
+		int width = text.getParent().getClientArea().width;
+		text.setSize(width, text.computeSize(width, SWT.DEFAULT).y);
+		
+		// resize again if scroll bar added or removed
+		int newWidth = text.getParent().getClientArea().width;
+		if (newWidth != width) {
+			text.setSize(newWidth, text.computeSize(newWidth, SWT.DEFAULT).y);
+		}
 	}
 	
 	public void resizeColumns(Table table) {

@@ -261,13 +261,15 @@ public class Messages extends NLS {
 	public static String NewProjectPage_WizardDescription;
 	public static String NewProjectPage_WizardTitle;
 	public static String NewProjectPage_TemplateGroupLabel;
+	public static String NewProjectPage_TemplateGroupDesc;
 	public static String NewProjectPage_ProjectTypeGroup;
 	public static String NewProjectPage_FilterMessage;
 	public static String NewProjectPage_TemplateColumn;
 	public static String NewProjectPage_TypeColumn;
 	public static String NewProjectPage_LanguageColumn;
 	public static String NewProjectPage_DescriptionLabel;
-	public static String NewProjectPage_DescriptionNone;
+	public static String NewProjectPage_SourceLabel;
+	public static String NewProjectPage_DetailsNone;
 	public static String NewProjectPage_ImportLabel;
 	public static String NewProjectPage_ProjectNameLabel;
 	public static String NewProjectPage_ManageRepoLabel;

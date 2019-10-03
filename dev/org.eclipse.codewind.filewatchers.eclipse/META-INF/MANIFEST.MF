@@ -1,8 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Eclipse
-Bundle-SymbolicName: org.eclipse.codewind.filewatchers.eclipse
+Bundle-Name: Codewind Filewatcher Eclipse Plug-in
+Bundle-SymbolicName: org.eclipse.codewind.filewatchers.eclipse;singleton:=true
 Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: Eclipse.org
 Export-Package: org.eclipse.codewind.filewatchers.eclipse
 Import-Package: org.eclipse.codewind.filewatchers,
  org.eclipse.codewind.filewatchers.core,

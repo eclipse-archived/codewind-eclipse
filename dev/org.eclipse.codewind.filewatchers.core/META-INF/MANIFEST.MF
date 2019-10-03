@@ -1,8 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Core
-Bundle-SymbolicName: org.eclipse.codewind.filewatchers.core
+Bundle-Name: Codewind Filewatcher Core Plug-in
+Bundle-SymbolicName: org.eclipse.codewind.filewatchers.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: Eclipse.org
 Bundle-ClassPath: .,
  lib/grizzly-framework-2.4.4.jar,
  lib/grizzly-http-2.4.4.jar,

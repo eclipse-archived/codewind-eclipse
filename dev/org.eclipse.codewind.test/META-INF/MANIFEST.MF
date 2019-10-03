@@ -1,13 +1,13 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Codewind Test Plugin
-Bundle-SymbolicName: org.eclipse.codewind.test
+Bundle-Name: Codewind Test Plug-in
+Bundle-SymbolicName: org.eclipse.codewind.test;singleton:=true
 Bundle-Version: 1.2.0.qualifier
 Bundle-Activator: org.eclipse.codewind.test.CodewindTestPlugin
-Bundle-Vendor: IBM
+Bundle-Vendor: Eclipse.org
 Require-Bundle: org.eclipse.core.runtime
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Automatic-Module-Name: org.eclipse.codewind.test
+Automatic-Module-Name: org.eclipse.codewind.test;singleton:=true
 Bundle-ActivationPolicy: lazy
 Import-Package: io.socket.client,
  io.socket.emitter,

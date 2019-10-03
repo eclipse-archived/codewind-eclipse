@@ -364,7 +364,7 @@ public class RepositoryManagementComposite extends Composite {
 			if (info == null) {
 				// Add the repository
 				try {
-					connection.requestRepoAdd(entry.description, entry.url);
+					connection.requestRepoAdd(entry.url, entry.name, entry.description);
 				} catch (Exception e) {
 					Logger.logError("Failed to add repository: " + entry.url, e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtAddFailed, entry.url), e));

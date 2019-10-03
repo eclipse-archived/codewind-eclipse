@@ -668,11 +668,16 @@ public class CodewindConnection {
 		checkResult(result, uri, false);
 	}
 	
-	public void requestRepoAdd(String description, String url) throws IOException, JSONException {
+	public void requestRepoAdd(String url, String name, String description) throws IOException, JSONException {
 		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REPOSITORIES);
 		JSONObject payload = new JSONObject();
-		payload.put(RepositoryInfo.DESCRIPTION_KEY, description);
 		payload.put(RepositoryInfo.URL_KEY, url);
+		if (name != null && !name.isEmpty()) {
+			payload.put(RepositoryInfo.NAME_KEY, name);
+		}
+		if (description != null && !description.isEmpty()) {
+			payload.put(RepositoryInfo.DESCRIPTION_KEY, description);
+		}
 		payload.put(RepositoryInfo.ENABLED_KEY, true);
 		
 		HttpResult result = HttpUtil.post(uri, payload);

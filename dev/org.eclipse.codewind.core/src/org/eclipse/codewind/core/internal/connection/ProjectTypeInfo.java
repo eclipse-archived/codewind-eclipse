@@ -14,6 +14,7 @@ package org.eclipse.codewind.core.internal.connection;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -100,6 +101,10 @@ public class ProjectTypeInfo {
 		this._subtypes.addAll(subtypes);
 	}
 
+	public boolean eq(ProjectType type) {
+		return _id.equals(type.getId());
+	}
+	
 	@Override
 	public int hashCode() {
 		return _id.hashCode();

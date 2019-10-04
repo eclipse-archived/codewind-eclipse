@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import static org.eclipse.codewind.core.internal.constants.ProjectType.TYPE_DOCKER;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -226,7 +228,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		if (projectType == null)
 			return false;
 		
-		// TODO
+		// for docker type language selection is optional
+		// for non-docker when selected type is different than the detected type,
+		// user need to choose a subtype to proceed
+		if (!projectType.eq(TYPE_DOCKER) && !projectType.eq(projectInfo.type))
+			return subtypeViewer.getCheckedElements().length != 0;
 		
 		return true;
 	}
@@ -306,10 +312,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		// no subtype if:
 		// 1. no type is selected
 		// 2. selected type has no subtypes label; it is a Codewind built-in type which has language, not subtype
-		// 3. not currently allowing subtypes selection
+		// 3. selected type is same as detected type; user does not need to choose subtype
 		if (projectType == null ||  
 			projectType.getSubtypesLabel().length() == 0 || 
-			!allowSecondarySelection(projectType)) {
+			projectType.eq(projectInfo.type)) {
 			return null;
 		}
 		
@@ -370,16 +376,6 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 	}
 	
-	// allow subtype/language selection for:
-	// 1. project type of docker (select language)
-	// 2. project type different than the detected one
-	//    e.g. project was detected as docker, then user switch selection to an 
-	//    extension project type, they should be allowed to choose the subtype
-	private boolean allowSecondarySelection(ProjectTypeInfo projectType) {
-		String type = projectType.getId();
-		return type.equals(ProjectType.TYPE_DOCKER.getId()) || !type.equals(projectInfo.type.getId());
-	}
-	
 	private void updateSubtypes(ProjectTypeInfo projectType) {
 		
 		if (subtypeViewer == null || subtypeViewer.getTable().isDisposed()) {
@@ -398,8 +394,13 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			if (projectSubtypes.size() == 1) {
 				subtypeViewer.setCheckedElements(new Object[] { projectSubtypes.get(0) });
 			}
-			// otherwise if more than 1 choice and check if subtype/language selection is allowed
-			else if (projectSubtypes.size() > 1 && allowSecondarySelection(projectType)) {
+			// otherwise if more than 1 choice, allow subtype/language selection if:
+			// 1. selected type is docker (can select language)
+			// 2. selected type is different than the detected type
+			//    e.g. project was detected as docker, then user switch selection to an 
+			//    extension project type, they should be allowed to choose the subtype
+			else if (projectSubtypes.size() > 1 && 
+					(projectType.eq(TYPE_DOCKER) || !projectType.eq(projectInfo.type))) {
 					
 				shouldShow = true;
 				

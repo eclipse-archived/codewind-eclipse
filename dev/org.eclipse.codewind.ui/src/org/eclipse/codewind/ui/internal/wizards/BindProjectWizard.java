@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
@@ -103,20 +104,28 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectPath = projectPage.getProjectPath();
 		}
 
+		final String name = projectPath.lastSegment();
+		
 		final String type = projectTypePage.getType().getId();
 		ProjectSubtypeInfo projectSubtype = projectTypePage.getSubtype();
 		final String subtype = (projectSubtype == null) ? null : projectSubtype.id;
-		final String language = projectTypePage.getLanguage();
+		final String language = projectTypePage.getLanguage();		
 		
-		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, projectPath.lastSegment())) {
+		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, name)) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					connection.requestProjectBind(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), language, type);
+					String path = projectPath.toFile().getAbsolutePath();
+					// call validate again with type and subtype hint
+					// allows it to run extension commands if defined for that type and subtype
+					if (subtype != null) {
+						InstallUtil.validateProject(name, path, type + ":" + subtype, monitor);
+					}
+					connection.requestProjectBind(name, path, language, type);
 					connection.refreshApps(null);
-					CodewindApplication app = connection.getAppByName(projectPath.lastSegment());
+					CodewindApplication app = connection.getAppByName(name);
 					if (app != null) {
-						IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectPath.lastSegment());
+						IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
 						if (project == null || !project.exists()) {
 							ImportProjectAction.importProject(app);
 						}

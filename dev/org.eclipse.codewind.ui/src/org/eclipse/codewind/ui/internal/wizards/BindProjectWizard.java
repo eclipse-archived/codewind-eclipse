@@ -15,6 +15,7 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
@@ -102,11 +103,16 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectPath = projectPage.getProjectPath();
 		}
 
+		final String type = projectTypePage.getType().getId();
+		ProjectSubtypeInfo projectSubtype = projectTypePage.getSubtype();
+		final String subtype = (projectSubtype == null) ? null : projectSubtype.id;
+		final String language = projectTypePage.getLanguage();
+		
 		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, projectPath.lastSegment())) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					connection.requestProjectBind(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), projectTypePage.getLanguage(), projectTypePage.getType());
+					connection.requestProjectBind(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), language, type);
 					connection.refreshApps(null);
 					CodewindApplication app = connection.getAppByName(projectPath.lastSegment());
 					if (app != null) {

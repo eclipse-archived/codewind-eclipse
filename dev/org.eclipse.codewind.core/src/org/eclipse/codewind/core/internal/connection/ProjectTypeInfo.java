@@ -20,6 +20,14 @@ import org.json.JSONObject;
 
 public class ProjectTypeInfo {
 	
+	private static final String PROJECT_TYPE_KEY = "projectType";
+	private static final String PROJECT_SUBTYPES_KEY = "projectSubtypes";
+	private static final String ITEMS_KEY = "items";
+	private static final String ID_KEY = "id";
+	private static final String VERSION_KEY = "version";
+	private static final String LABEL_KEY = "label";
+	private static final String DESCRIPTION_KEY = "description";
+	
 	public static class ProjectSubtypeInfo {
 		
 		public String id;
@@ -52,53 +60,43 @@ public class ProjectTypeInfo {
 		}
 	}
 	
-	private static final String PROJECT_TYPE_KEY = "projectType";
-	private static final String PROJECT_SUBTYPES_KEY = "projectSubtypes";
-	
-	private static final String LABEL_KEY = "label";
-	private static final String ITEMS_KEY = "items";
-	
-	private static final String ID_KEY = "id";
-	private static final String VERSION_KEY = "version";
-	private static final String DESCRIPTION_KEY = "description";
-	
-	private String projectType;
-	private String projectSubtypesLabel;
-	private List<ProjectSubtypeInfo> projectSubtypes = new ArrayList<ProjectSubtypeInfo>();
+	private String _id;
+	private String _subtypesLabel;
+	private List<ProjectSubtypeInfo> _subtypes = new ArrayList<ProjectSubtypeInfo>();
 	
 	public ProjectTypeInfo(JSONObject json) throws JSONException {
 		
-		projectType = json.getString(PROJECT_TYPE_KEY);
+		_id = json.getString(PROJECT_TYPE_KEY);
 		
 		JSONObject subtypes = json.getJSONObject(PROJECT_SUBTYPES_KEY);
-		projectSubtypesLabel = subtypes.optString(LABEL_KEY);
+		_subtypesLabel = subtypes.optString(LABEL_KEY);
 		
 		JSONArray items = subtypes.getJSONArray(ITEMS_KEY);
 		for (int i = 0; i < items.length(); i++) {
 			JSONObject item = items.getJSONObject(i);
-			projectSubtypes.add(new ProjectSubtypeInfo(item));
+			_subtypes.add(new ProjectSubtypeInfo(item));
 		}
 	}
 	
-	public String getProjectType() {
-		return projectType;
+	public String getId() {
+		return _id;
 	}
 	
-	public String getProjectSubtypesLabel() {
-		return projectSubtypesLabel;
+	public String getSubtypesLabel() {
+		return _subtypesLabel;
 	}
 	
-	public List<ProjectSubtypeInfo> getProjectSubtypes() {
-		return projectSubtypes;
+	public List<ProjectSubtypeInfo> getSubtypes() {
+		return _subtypes;
 	}
 	
-	public void addProjectSubtypes(List<ProjectSubtypeInfo> projectSubtypes) {
-		this.projectSubtypes.addAll(projectSubtypes);
+	public void addSubtypes(List<ProjectSubtypeInfo> subtypes) {
+		this._subtypes.addAll(subtypes);
 	}
 
 	@Override
 	public int hashCode() {
-		return projectType.hashCode();
+		return _id.hashCode();
 	}
 
 	@Override
@@ -108,7 +106,7 @@ public class ProjectTypeInfo {
 			return true;
 		
 		if (obj instanceof ProjectTypeInfo)
-			return projectType.equals(((ProjectTypeInfo) obj).projectType);
+			return _id.equals(((ProjectTypeInfo) obj)._id);
 		
 		return false;
 	}

@@ -276,8 +276,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, projectPath.lastSegment()), 100);
 				if (typeMap == null) {
-					projectInfo = getProjectInfo(mon.split(50));
-					typeMap = getProjectTypeMap(mon.split(50));
+					projectInfo = getProjectInfo(mon.split(75));
+					typeMap = getProjectTypeMap(mon.split(25));
 				}
 				else
 					projectInfo = getProjectInfo(mon.split(100));

@@ -147,7 +147,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	
 	public void setProjectPath(IPath projectPath) {
 		if (projectTypePage != null) {
-			projectTypePage.setProjectPath(projectPath);
+			projectTypePage.setProjectPath(projectPath, true);
 		}
 	}
 }

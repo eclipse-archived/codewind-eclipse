@@ -33,7 +33,6 @@ import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -56,6 +55,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 
 public class ProjectTypeSelectionPage extends WizardPage {
 
@@ -74,7 +74,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		setDescription(Messages.SelectProjectTypePageDescription);
 		this.connection = connection;
 		this.projectPath = projectPath;
-		this.typeMap = getProjectTypeMap();
+//		this.typeMap = getProjectTypeMap();
 	}
 
 	@Override
@@ -87,15 +87,15 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
-		if (typeMap == null) {
-			Text errorLabel = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
-			errorLabel.setText(Messages.SelectProjectTypeErrorLabel);
-			setControl(composite);
-			return;
-		}
-		if (typeMap.isEmpty()) {
-			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
-		}
+//		if (typeMap == null) {
+//			Text errorLabel = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
+//			errorLabel.setText(Messages.SelectProjectTypeErrorLabel);
+//			setControl(composite);
+//			return;
+//		}
+//		if (typeMap.isEmpty()) {
+//			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
+//		}
 		
 		typeLabel = new Text(composite, SWT.READ_ONLY);
 		typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
@@ -107,7 +107,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
 		typeViewer.setComparator(new ViewerComparator());
-		typeViewer.setInput(typeMap.values());
+//		typeViewer.setInput(typeMap.values());
 		GridData typeViewerData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		typeViewerData.minimumHeight = 200;
 		typeViewer.getTable().setLayoutData(typeViewerData);
@@ -184,8 +184,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 									try {
 										mon = mon.split(25);
 										mon.setTaskName(Messages.SelectProjectTypeRefreshTypesTask);
-										typeMap = getProjectTypeMap();
-										mon.worked(25);
+										typeMap = getProjectTypeMap(mon);
 									} catch (Exception e) {
 										throw new InvocationTargetException(e, Messages.SelectProjectTypeRefreshTypesError);
 									}
@@ -212,7 +211,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		subtypeLabel.setVisible(false);
 		subtypeViewer.getTable().setVisible(false);
 
-		setProjectPath(projectPath);
+		setProjectPath(projectPath, false);
 
 		typeViewer.getTable().setFocus();
 		setControl(composite);
@@ -265,33 +264,40 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 	}
 
-	public void setProjectPath(IPath projectPath) {
+	public void setProjectPath(IPath projectPath, boolean fromPrevPage) {
 		this.projectPath = projectPath;
 		this.projectInfo = null;
 		if (projectPath == null) {
 			return;
 		}
-		if (getWizard() != null && getWizard().getContainer() != null) {
-			IRunnableWithProgress runnable = new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException {
-					SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, projectPath.lastSegment()), 100);
-					projectInfo = getProjectInfo(mon.split(100));
+		
+		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+			@Override
+			public void run(IProgressMonitor monitor) throws InvocationTargetException {
+				SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, projectPath.lastSegment()), 100);
+				if (typeMap == null) {
+					projectInfo = getProjectInfo(mon.split(50));
+					typeMap = getProjectTypeMap(mon.split(50));
 				}
-			};
-			try {
-				getContainer().run(true, true, runnable);
-			} catch (InvocationTargetException e) {
-				Logger.logError("An error occurred getting the project info for: " + projectPath.lastSegment(), e);
-				return;
-			} catch (InterruptedException e) {
-				// The user cancelled the operation
-				return;
+				else
+					projectInfo = getProjectInfo(mon.split(100));
 			}
-		} else {
-			projectInfo = getProjectInfo(new NullProgressMonitor());
+		};
+			
+		try {
+			if (fromPrevPage && getWizard() != null && getWizard().getContainer() != null)
+				getContainer().run(true, true, runnable);
+			else
+				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
+			updateTables(true);
+			
+		} catch (InvocationTargetException e) {
+			Logger.logError("An error occurred getting the project info for: " + projectPath.lastSegment(), e);
+			return;
+		} catch (InterruptedException e) {
+			// The user cancelled the operation
+			return;
 		}
-		updateTables(true);
 	}
 	
 	public CodewindConnection getConnection() {
@@ -442,14 +448,16 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		return null;
 	}
 
-	private Map<String, ProjectTypeInfo> getProjectTypeMap() {
+	private Map<String, ProjectTypeInfo> getProjectTypeMap(IProgressMonitor monitor) {
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		List<ProjectTypeInfo> projectTypes = null;
 		Map<String, ProjectTypeInfo> typeMap = new HashMap<String, ProjectTypeInfo>();
 		try {
 			projectTypes = connection.requestProjectTypes();
+			mon.worked(100);
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the list of project types for connection: " + connection.baseUrl, e); //$NON-NLS-1$
-			return null;
+			return typeMap;
 		}
 		if (projectTypes == null || projectTypes.isEmpty()) {
 			Logger.log("The list of project types is empty for connection: " + connection.baseUrl); //$NON-NLS-1$

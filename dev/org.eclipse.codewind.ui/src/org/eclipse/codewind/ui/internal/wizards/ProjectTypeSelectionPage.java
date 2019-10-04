@@ -134,7 +134,6 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				else {
 					updateSubtypes(null);
 				}
-				getWizard().getContainer().updateButtons();
 			}
 		});
 
@@ -416,6 +415,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		
 		subtypeLabel.setVisible(shouldShow);
 		subtypeViewer.getTable().setVisible(shouldShow);
+		getWizard().getContainer().updateButtons();
 	}
 	
 	private ProjectInfo getProjectInfo(IProgressMonitor monitor) {

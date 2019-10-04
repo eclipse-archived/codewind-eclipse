@@ -32,9 +32,9 @@ public class ProjectTypeInfo {
 	public class ProjectSubtypeInfo {
 		
 		public String id;
-		public String version;
+		public String version = "";
 		public String label;
-		public String description;
+		public String description = "";
 		
 		private ProjectSubtypeInfo(JSONObject json) throws JSONException {
 			id = json.getString(ID_KEY);
@@ -43,6 +43,11 @@ public class ProjectTypeInfo {
 			description = json.optString(DESCRIPTION_KEY);
 		}
 
+		public ProjectSubtypeInfo(String language) {
+			id = language;
+			label = language;
+		}
+		
 		private ProjectTypeInfo getParent() {
 			return ProjectTypeInfo.this;
 		}

@@ -129,10 +129,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				if (event.getChecked()) {
 					Object element = event.getElement();
 					typeViewer.setCheckedElements(new Object[] { element });
-					updateSubtypes((ProjectTypeInfo) element);
+					updateSubtypes(false, (ProjectTypeInfo) element);
 				}
 				else {
-					updateSubtypes(null);
+					updateSubtypes(false, null);
 				}
 			}
 		});
@@ -352,7 +352,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewer.setInput(projectTypes);
 		if (projectTypes.size() == 0) {
 			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
-			updateSubtypes(null);
+			updateSubtypes(init, null);
 			return;
 		}
 		setErrorMessage(null);
@@ -364,18 +364,18 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				typeViewer.setCheckedElements(new Object[] { projectType });
 			else
 				typeViewer.setAllChecked(false);
-			updateSubtypes(projectType);
+			updateSubtypes(init, projectType);
 		}
 		// otherwise, see if anything got unchecked
 		// e.g. removing a repo that contained previously selected type
 		else {
 			Object[] checked = typeViewer.getCheckedElements();
 			if (checked.length == 0)
-				updateSubtypes(null);
+				updateSubtypes(init, null);
 		}
 	}
 	
-	private void updateSubtypes(ProjectTypeInfo projectType) {
+	private void updateSubtypes(boolean init, ProjectTypeInfo projectType) {
 		
 		if (subtypeViewer == null || subtypeViewer.getTable().isDisposed()) {
 			return;
@@ -398,18 +398,28 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			// 2. selected type is different than the detected type
 			//    e.g. project was detected as docker, then user switch selection to an 
 			//    extension project type, they should be allowed to choose the subtype
-			else if (projectSubtypes.size() > 1 && 
-					(projectType.eq(TYPE_DOCKER) || !projectType.eq(projectInfo.type))) {
-					
-				shouldShow = true;
+			else if (projectSubtypes.size() > 1) {
 				
-				String label = projectType.getSubtypesLabel();
-				if ("".equals(label))
-					label = Messages.SelectProjectTypePageLanguageLabel;
-				else
-					label = Messages.bind(Messages.SelectProjectTypePageSubtypeLabel, label);
-				subtypeLabel.setText(label);
-				subtypeLabel.pack();
+				boolean isDocker = projectType.eq(TYPE_DOCKER);
+			
+				if (isDocker || !projectType.eq(projectInfo.type)) {
+					
+					// if possible, select language that was detected
+					if (init && isDocker) {
+						subtypeViewer.setCheckedElements(
+								new Object[] { projectType.new ProjectSubtypeInfo(projectInfo.language.getId()) });
+					}
+					
+					shouldShow = true;
+					
+					String label = projectType.getSubtypesLabel();
+					if ("".equals(label))
+						label = Messages.SelectProjectTypePageLanguageLabel;
+					else
+						label = Messages.bind(Messages.SelectProjectTypePageSubtypeLabel, label);
+					subtypeLabel.setText(label);
+					subtypeLabel.pack();
+				}
 			}
 		}
 		

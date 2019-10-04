@@ -339,7 +339,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
-					if (project != null && project.exists() && project.getLocation().toFile().equals(fullLocalPath.toFile())) {
+					if (project != null && project.exists() && project.getLocation().equals(fullLocalPath)) {
 						project.delete(true, true, monitor);
 					} else if (fullLocalPath.toFile().exists()) {
 						FileUtil.deleteDirectory(fullLocalPath.toOSString(), true);

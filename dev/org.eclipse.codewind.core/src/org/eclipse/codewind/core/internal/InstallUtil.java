@@ -97,6 +97,7 @@ public class InstallUtil {
 	public static final String URL_KEY = "url";
 	
 	private static String installVersion = null;
+	private static String requestedVersion = null;
 	
 	public static InstallStatus getInstallStatus() throws IOException, JSONException, TimeoutException {
 		ProcessResult result = statusCodewind();
@@ -351,18 +352,24 @@ public class InstallUtil {
 		return stateLoc.append(INSTALLER_DIR).toOSString();
 	}
 	
-	public static String getVersion() {
-		if (installVersion == null) {
+	public static String getRequestedVersion() {
+		if (requestedVersion == null) {
 			String value = System.getenv(CW_TAG_VAR);
 			if (value == null || value.isEmpty()) {
 				// Try the old env var
 				value = System.getenv(INSTALL_VERSION_VAR);
 			}
 			if (value != null && !value.isEmpty()) {
-				installVersion = value;
-			} else {
-				installVersion = DEFAULT_INSTALL_VERSION;
+				requestedVersion = value;
 			}
+		}
+		return requestedVersion;
+	}
+	
+	public static String getVersion() {
+		if (installVersion == null) {
+			String requestedVersion = getRequestedVersion();
+			installVersion = requestedVersion != null ? requestedVersion : DEFAULT_INSTALL_VERSION;
 		}
 		return installVersion;
 	}

@@ -28,23 +28,27 @@ public class ProjectTypeInfo {
 	private static final String LABEL_KEY = "label";
 	private static final String DESCRIPTION_KEY = "description";
 	
-	public static class ProjectSubtypeInfo {
+	public class ProjectSubtypeInfo {
 		
 		public String id;
 		public String version;
 		public String label;
 		public String description;
 		
-		public ProjectSubtypeInfo(JSONObject json) throws JSONException {
+		private ProjectSubtypeInfo(JSONObject json) throws JSONException {
 			id = json.getString(ID_KEY);
 			version = json.optString(VERSION_KEY);
 			label = json.getString(LABEL_KEY);
 			description = json.optString(DESCRIPTION_KEY);
 		}
 
+		private ProjectTypeInfo getParent() {
+			return ProjectTypeInfo.this;
+		}
+		
 		@Override
 		public int hashCode() {
-			return id.hashCode();
+			return getParent().hashCode() + id.hashCode();
 		}
 
 		@Override
@@ -53,8 +57,10 @@ public class ProjectTypeInfo {
 			if (this == obj)
 				return true;
 			
-			if (obj instanceof ProjectSubtypeInfo)
-				return id.equals(((ProjectSubtypeInfo) obj).id);
+			if (obj instanceof ProjectSubtypeInfo) {
+				ProjectSubtypeInfo other = (ProjectSubtypeInfo) obj;
+				return getParent().equals(other.getParent()) && id.equals(other.id);
+			}
 			
 			return false;
 		}
@@ -110,6 +116,4 @@ public class ProjectTypeInfo {
 		
 		return false;
 	}
-	
-	
 }

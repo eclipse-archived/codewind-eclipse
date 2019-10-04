@@ -294,6 +294,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 	
 	public ProjectTypeInfo getType() {
+		// return what's selected in the types viewer
 		Object[] checked = typeViewer.getCheckedElements();		
 		return (checked.length == 0) ? null : (ProjectTypeInfo) checked[0];
 	}
@@ -301,12 +302,18 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	public ProjectSubtypeInfo getSubtype() {
 		
 		ProjectTypeInfo projectType = getType();
-		if (projectType == null || 
-				projectType.getSubtypesLabel().length() == 0 || 
-				!shouldShowSubtypes(projectType)) {
+		
+		// no subtype if:
+		// 1. no type is selected
+		// 2. selected type has no subtypes label; it is a Codewind built-in type which has language, not subtype
+		// 3. not currently allowing subtypes selection
+		if (projectType == null ||  
+			projectType.getSubtypesLabel().length() == 0 || 
+			!allowSecondarySelection(projectType)) {
 			return null;
 		}
 		
+		// return what's selected in the subtypes viewer
 		Object[] checked = subtypeViewer.getCheckedElements();
 		return (checked.length == 0) ? null : (ProjectSubtypeInfo) checked[0];
 	}
@@ -314,15 +321,19 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	public String getLanguage() {
 		
 		ProjectTypeInfo projectType = getType();
+		
+		// no language if no type is selected
 		if (projectType == null)
 			return null;
 		
+		// selected type has no subtypes label; it is a Codewind built-in type
+		// what's selected in the subtypes viewer is the language
 		if (projectType.getSubtypesLabel().length() == 0) {
 			Object[] checked = subtypeViewer.getCheckedElements();
 			return (checked.length == 0) ? ProjectLanguage.LANGUAGE_UNKNOWN.getId() : ((ProjectSubtypeInfo) checked[0]).id;
 		}
 		
-		// fallback to what was detected
+		// for non-Codewind types, fallback to detected language
 		return projectInfo.language.getId();
 	}
 
@@ -341,24 +352,30 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 		setErrorMessage(null);
 
-		ProjectTypeInfo projectType = null;
-		if (init) {
-			projectType = typeMap.get(projectInfo.type.getId());
+		// when first entering the wizard, attempt to select type that matches the detected type
+		if (init) { 
+			ProjectTypeInfo projectType = typeMap.get(projectInfo.type.getId());
 			if (projectType != null)
 				typeViewer.setCheckedElements(new Object[] { projectType });
 			else
 				typeViewer.setAllChecked(false);
+			updateSubtypes(projectType);
 		}
+		// otherwise, see if anything got unchecked
+		// e.g. removing a repo that contained previously selected type
 		else {
 			Object[] checked = typeViewer.getCheckedElements();
-			if (checked.length > 0)
-				projectType = (ProjectTypeInfo) checked[0];
+			if (checked.length == 0)
+				updateSubtypes(null);
 		}
-		
-		updateSubtypes(projectType);
 	}
 	
-	private boolean shouldShowSubtypes(ProjectTypeInfo projectType) {
+	// allow subtype/language selection for:
+	// 1. project type of docker (select language)
+	// 2. project type different than the detected one
+	//    e.g. project was detected as docker, then user switch selection to an 
+	//    extension project type, they should be allowed to choose the subtype
+	private boolean allowSecondarySelection(ProjectTypeInfo projectType) {
 		String type = projectType.getId();
 		return type.equals(ProjectType.TYPE_DOCKER.getId()) || !type.equals(projectInfo.type.getId());
 	}
@@ -377,24 +394,22 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			List<ProjectSubtypeInfo> projectSubtypes = projectType.getSubtypes();
 			subtypeViewer.setInput(projectSubtypes);
 			
+			// only 1 possible choice, select it
 			if (projectSubtypes.size() == 1) {
 				subtypeViewer.setCheckedElements(new Object[] { projectSubtypes.get(0) });
 			}
-			else if (projectSubtypes.size() > 1) {
+			// otherwise if more than 1 choice and check if subtype/language selection is allowed
+			else if (projectSubtypes.size() > 1 && allowSecondarySelection(projectType)) {
+					
+				shouldShow = true;
 				
-				// TODO
-				if (shouldShowSubtypes(projectType)) {
-					
-					shouldShow = true;
-					
-					String label = projectType.getSubtypesLabel();
-					if ("".equals(label))
-						label = Messages.SelectProjectTypePageLanguageLabel;
-					else
-						label = Messages.bind(Messages.SelectProjectTypePageSubtypeLabel, label);
-					subtypeLabel.setText(label);
-					subtypeLabel.pack();
-				}
+				String label = projectType.getSubtypesLabel();
+				if ("".equals(label))
+					label = Messages.SelectProjectTypePageLanguageLabel;
+				else
+					label = Messages.bind(Messages.SelectProjectTypePageSubtypeLabel, label);
+				subtypeLabel.setText(label);
+				subtypeLabel.pack();
 			}
 		}
 		

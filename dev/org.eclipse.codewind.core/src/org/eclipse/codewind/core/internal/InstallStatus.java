@@ -88,17 +88,14 @@ public class InstallStatus {
 	}
 	
 	private String getSupportedVersion(JSONArray versions) throws JSONException {
-		String version = null;
+		String requestedVersion = InstallUtil.getRequestedVersion();
 		for (int i = 0; i < versions.length(); i++) {
-			try {
-				if (CodewindConnection.isSupportedVersion(versions.getString(i))) {
-					version = versions.getString(i);
-				}
-			} catch (NumberFormatException e) {
-				Logger.logError("The Codewind installer status contained an invalid version", e); //$NON-NLS-1$
+			String version = versions.getString(i);
+			if (CodewindConnection.isSupportedVersion(version) && (requestedVersion == null || requestedVersion.equals(version))) {
+				return version;
 			}
 		}
-		return version;
+		return null;
 	}
 	
 	private InstallStatus(Status status) {

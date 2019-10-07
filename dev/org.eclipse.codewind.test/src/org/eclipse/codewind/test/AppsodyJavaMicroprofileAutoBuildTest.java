@@ -21,6 +21,7 @@ public class AppsodyJavaMicroprofileAutoBuildTest extends BaseBuildTest {
 
 	static {
 		projectName = "appsodyjavamicroprofileautobuildtest";
+		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_JAVA_MICROPROFILE_ID;
 		relativeURL = "/starter/hello";
 		srcPath = "src/main/java/dev/appsody/starter/hello/Hello.java";

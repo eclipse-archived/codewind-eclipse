@@ -60,15 +60,16 @@ import junit.framework.TestCase;
 
 public abstract class BaseTest extends TestCase {
 	
+	protected static final String APPSODY_PROJECT_TYPE="appsodyExtension";
 	protected static final String LAGOM_ID = "lagomJavaTemplate";
 	protected static final String GO_ID = "microclimateGoTemplate";
 	protected static final String JAVA_MICROPROFILE_ID = "javaMicroProfileTemplate";
 	protected static final String NODE_EXPRESS_ID = "nodeExpressTemplate";
 	protected static final String PYTHON_ID = "SVTPythonTemplate";
 	protected static final String SPRING_JAVA_ID = "springJavaTemplate";
-	protected static final String APPSODY_JAVA_MICROPROFILE_ID = "codewind-appsody-java-microprofile";
-	protected static final String APPSODY_NODE_EXPRESS_ID = "codewind-appsody-nodejs-express";
-	protected static final String APPSODY_JAVA_SPRING_ID = "codewind-appsody-java-spring-boot2";
+	protected static final String APPSODY_JAVA_MICROPROFILE_ID = "java-microprofile.*default";
+	protected static final String APPSODY_NODE_EXPRESS_ID = "nodejs-express.*simple";
+	protected static final String APPSODY_JAVA_SPRING_ID = "spring-boot2.*default";
 
 	protected static final String MARKER_TYPE = "org.eclipse.codewind.core.validationMarker";
 	
@@ -78,6 +79,7 @@ public abstract class BaseTest extends TestCase {
 	protected static IProject project;
 	
 	protected static String projectName;
+	protected static String projectType = null;
 	protected static String templateId;
 	protected static String relativeURL;
 	protected static String srcPath;
@@ -99,7 +101,7 @@ public abstract class BaseTest extends TestCase {
         assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project
-        createProject(templateId, projectName);
+        createProject(projectType, templateId, projectName);
         
         // Wait for the project to be created
         assertTrue("The application " + projectName + " should be created", CodewindUtil.waitForProject(connection, projectName, 300, 5));
@@ -262,11 +264,12 @@ public abstract class BaseTest extends TestCase {
 		return null;
 	}
 	
-	protected void createProject(String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
+	protected void createProject(String type, String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
 		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
 		for (ProjectTemplateInfo template : templates) {
-			if (template.getUrl().toLowerCase().contains(id.toLowerCase())) {
+			if ((type == null || type.equals(template.getProjectType())) && 
+					template.getUrl().toLowerCase().matches(".*" + id.toLowerCase() + ".*")) {
 				templateInfo = template;
 				break;
 			}

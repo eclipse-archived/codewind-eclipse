@@ -15,6 +15,7 @@ public class AppsodyNodeExpressAutoBuildTest extends BaseBuildTest {
 
 	static {
 		projectName = "appsodynodeexpressautobuildtest";
+		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_NODE_EXPRESS_ID;
 		relativeURL = "";
 		srcPath = "app.js";

@@ -15,9 +15,10 @@ public class AppsodyJavaSpringAutoBuildTest extends BaseBuildTest {
 
 	static {
 		projectName = "appsodyjavaspringautobuildtest";
+		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_JAVA_SPRING_ID;
 		relativeURL = "/actuator/liveness";
-		srcPath = "src/main/java/application/Main.java";
+		srcPath = "src/main/java/application/LivenessEndpoint.java";
 		text1 = "UP";
 		text2 = "ALIVE";
 	}

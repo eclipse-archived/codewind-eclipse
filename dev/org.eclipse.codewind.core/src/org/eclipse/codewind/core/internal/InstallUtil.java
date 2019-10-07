@@ -214,11 +214,12 @@ public class InstallUtil {
 		}
 	}
 	
-	public static ProjectInfo validateProject(String name, String path, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+	public static ProjectInfo validateProject(String name, String path, String hint, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.ValidateProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			process = runInstaller(PROJECT_CMD, path);
+			process = (hint == null) ? 
+					runInstaller(PROJECT_CMD, path) : runInstaller(PROJECT_CMD, path, "-t", hint);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -247,6 +248,10 @@ public class InstallUtil {
 				process.destroy();
 			}
 		}
+	}
+	
+	public static ProjectInfo validateProject(String name, String path, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		return validateProject(name, path, null, monitor);
 	}
 	
 	private static ProcessResult statusCodewind() throws IOException, TimeoutException {

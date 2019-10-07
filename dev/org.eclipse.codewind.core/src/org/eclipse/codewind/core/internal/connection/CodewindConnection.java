@@ -725,6 +725,19 @@ public class CodewindConnection {
 		CoreUtil.updateConnection(this);
 	}
 	
+	public List<ProjectTypeInfo> requestProjectTypes() throws IOException, JSONException {
+		List<ProjectTypeInfo> projectTypes = new ArrayList<ProjectTypeInfo>();
+		final URI uri = baseUrl.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_PROJECT_TYPES);
+		HttpResult result = HttpUtil.get(uri);
+		checkResult(result, uri, true);
+		
+		JSONArray array = new JSONArray(result.response);
+		for (int i = 0; i < array.length(); i++) {
+			projectTypes.add(new ProjectTypeInfo(array.getJSONObject(i)));
+		}
+		return projectTypes;
+	}
+	
 	private void checkResult(HttpResult result, URI uri, boolean checkContent) throws IOException {
 		if (!result.isGoodResponse) {
 			final String msg = String.format("Received bad response code %d for uri %s with error message %s", //$NON-NLS-1$

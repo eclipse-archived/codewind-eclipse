@@ -41,6 +41,7 @@ public class CoreConstants {
 			APIPATH_PROJECT_UNBIND = "unbind",
 			APIPATH_REPOSITORIES = "templates/repositories",
 			APIPATH_BATCH_REPOSITORIES = "batch/" + APIPATH_REPOSITORIES,
+			APIPATH_PROJECT_TYPES = "project-types",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",

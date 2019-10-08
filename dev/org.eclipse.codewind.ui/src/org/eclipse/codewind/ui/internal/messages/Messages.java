@@ -163,9 +163,9 @@ public class Messages extends NLS {
 	public static String SelectProjectTypeManageRepoLabel;
 	public static String SelectProjectTypeManageRepoLink;
 	public static String SelectProjectTypeManageRepoTooltip;
+	public static String SelectProjectTypeGatherTypesTask;
 	public static String SelectProjectTypeRefreshTypesTask;
 	public static String SelectProjectTypeRefreshTypesError;
-	public static String SelectProjectTypeValidateTask;
 	public static String SelectProjectTypeNoProjectTypes;
 	
 	public static String SelectProjectPageName;
@@ -182,6 +182,14 @@ public class Messages extends NLS {
 	public static String SelectProjectPageLocationError;
 	public static String SelectProjectPageCWProjectExistsError;
 	public static String SelectProjectPageProjectExistsError;
+	
+	public static String ProjectValidationPageName;
+	public static String ProjectValidationPageTitle;
+	public static String ProjectValidationPageDescription;
+	public static String ProjectValidationPageMsg;
+	public static String ProjectValidationPageFailMsg;
+	public static String ProjectValidationPageProjectTypeLabel;
+	public static String ProjectValidationTask;
 	
 	public static String RestartInDebugMode;
 	public static String RestartInRunMode;

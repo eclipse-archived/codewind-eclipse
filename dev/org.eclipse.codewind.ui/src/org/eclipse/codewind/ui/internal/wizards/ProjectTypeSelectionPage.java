@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
@@ -30,7 +29,6 @@ import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.SubMonitor;
@@ -55,12 +53,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.PlatformUI;
 
 public class ProjectTypeSelectionPage extends WizardPage {
 
 	private CodewindConnection connection = null;
-	private IPath projectPath = null;
 	private Map<String, ProjectTypeInfo> typeMap;
 	private Text subtypeLabel = null;
 	private CheckboxTableViewer subtypeViewer = null;
@@ -68,13 +64,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private CheckboxTableViewer typeViewer = null;
 	private ProjectInfo projectInfo = null;
 
-	protected ProjectTypeSelectionPage(CodewindConnection connection, IPath projectPath) {
+	protected ProjectTypeSelectionPage(CodewindConnection connection) {
 		super(Messages.SelectProjectTypePageName);
 		setTitle(Messages.SelectProjectTypePageTitle);
 		setDescription(Messages.SelectProjectTypePageDescription);
 		this.connection = connection;
-		this.projectPath = projectPath;
-//		this.typeMap = getProjectTypeMap();
 	}
 
 	@Override
@@ -86,17 +80,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		layout.verticalSpacing = 7;
 		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-//		if (typeMap == null) {
-//			Text errorLabel = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
-//			errorLabel.setText(Messages.SelectProjectTypeErrorLabel);
-//			setControl(composite);
-//			return;
-//		}
-//		if (typeMap.isEmpty()) {
-//			setErrorMessage(Messages.SelectProjectTypeNoProjectTypes);
-//		}
-		
+
 		typeLabel = new Text(composite, SWT.READ_ONLY);
 		typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
 		typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
@@ -107,7 +91,6 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewer.setContentProvider(ArrayContentProvider.getInstance());
 		typeViewer.setLabelProvider(new ProjectTypeLabelProvider());
 		typeViewer.setComparator(new ViewerComparator());
-//		typeViewer.setInput(typeMap.values());
 		GridData typeViewerData = new GridData(GridData.FILL, GridData.FILL, true, true);
 		typeViewerData.minimumHeight = 200;
 		typeViewer.getTable().setLayoutData(typeViewerData);
@@ -211,10 +194,15 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		subtypeLabel.setVisible(false);
 		subtypeViewer.getTable().setVisible(false);
 
-		setProjectPath(projectPath, false);
+		initTypeMap();
+		updateTables(true);
 
 		typeViewer.getTable().setFocus();
 		setControl(composite);
+	}
+	
+	public boolean isActivePage() {
+		return isCurrentPage();
 	}
 
 	public boolean canFinish() {
@@ -229,8 +217,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		// for docker type language selection is optional
 		// for non-docker when selected type is different than the detected type,
 		// user need to choose a subtype to proceed
-		if (!projectType.eq(TYPE_DOCKER) && !projectType.eq(projectInfo.type))
+		if (!projectType.eq(TYPE_DOCKER) && !projectType.eq(projectInfo.type)) {
 			return subtypeViewer.getCheckedElements().length != 0;
+		}
 		
 		return true;
 	}
@@ -263,36 +252,25 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			return ProjectLanguage.getDisplayName(label);
 		}
 	}
+	
+	public void setProjectInfo(ProjectInfo projectInfo) {
+		this.projectInfo = projectInfo;
+		updateTables(true);
+	}
 
-	public void setProjectPath(IPath projectPath, boolean fromPrevPage) {
-		this.projectPath = projectPath;
-		this.projectInfo = null;
-		if (projectPath == null) {
-			return;
-		}
-		
+	public void initTypeMap() {
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
-				SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.SelectProjectTypeValidateTask, projectPath.lastSegment()), 100);
-				if (typeMap == null) {
-					projectInfo = getProjectInfo(mon.split(75));
-					typeMap = getProjectTypeMap(mon.split(25));
-				}
-				else
-					projectInfo = getProjectInfo(mon.split(100));
+				SubMonitor mon = SubMonitor.convert(monitor, Messages.SelectProjectTypeGatherTypesTask, 100);
+				typeMap = getProjectTypeMap(mon.split(100));
 			}
 		};
 			
 		try {
-			if (fromPrevPage && getWizard() != null && getWizard().getContainer() != null)
-				getContainer().run(true, true, runnable);
-			else
-				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
-			updateTables(true);
-			
+			getContainer().run(true, true, runnable);
 		} catch (InvocationTargetException e) {
-			Logger.logError("An error occurred getting the project info for: " + projectPath.lastSegment(), e);
+			Logger.logError("An error occurred gathering the project types for connection: " + connection.baseUrl, e);
 			return;
 		} catch (InterruptedException e) {
 			// The user cancelled the operation
@@ -364,7 +342,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		setErrorMessage(null);
 
 		// when first entering the wizard, attempt to select type that matches the detected type
-		if (init) { 
+		if (init && projectInfo != null) { 
 			ProjectTypeInfo projectType = typeMap.get(projectInfo.type.getId());
 			if (projectType != null)
 				typeViewer.setCheckedElements(new Object[] { projectType });
@@ -434,20 +412,6 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		getWizard().getContainer().updateButtons();
 	}
 	
-	private ProjectInfo getProjectInfo(IProgressMonitor monitor) {
-		if (connection == null || projectPath == null) {
-			return null;
-		}
-
-		try {
-			return InstallUtil.validateProject(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), monitor);
-		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the project type for project: " + projectPath.lastSegment(), e); //$NON-NLS-1$
-		}
-
-		return null;
-	}
-
 	private Map<String, ProjectTypeInfo> getProjectTypeMap(IProgressMonitor monitor) {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		List<ProjectTypeInfo> projectTypes = null;

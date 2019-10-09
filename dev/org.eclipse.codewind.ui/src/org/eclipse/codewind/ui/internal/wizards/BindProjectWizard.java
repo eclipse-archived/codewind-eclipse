@@ -16,7 +16,9 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
@@ -38,6 +40,7 @@ import org.eclipse.ui.IWorkbench;
 public class BindProjectWizard extends Wizard implements INewWizard {
 
 	private ProjectSelectionPage projectPage;
+	private ProjectValidationPage projectValidationPage;
 	private ProjectTypeSelectionPage projectTypePage;
 	
 	private final CodewindConnection connection;
@@ -45,9 +48,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	
 	// If a connection is passed in and no project then the project selection page will be shown
 	public BindProjectWizard(CodewindConnection connection) {
-		super();
-		this.connection = connection;
-		init();
+		this(connection, null);
 	}
 	
 	// If the project is passed in then the project selection page will not be shown
@@ -55,10 +56,6 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		super();
 		this.connection = connection;
 		this.projectPath = projectPath;
-		init();
-	}
-	
-	private void init() {
 		setNeedsProgressMonitor(true);
 		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
 		setHelpAvailable(false);
@@ -76,17 +73,25 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectPage = new ProjectSelectionPage(this, connection);
 			addPage(projectPage);
 		}
-		projectTypePage = new ProjectTypeSelectionPage(connection, projectPath);
+		projectValidationPage = new ProjectValidationPage(this, connection, projectPath);
+		projectTypePage = new ProjectTypeSelectionPage(connection);
+		addPage(projectValidationPage);
 		addPage(projectTypePage);
 	}
 
 	@Override
 	public boolean canFinish() {
-		boolean canFinish = projectTypePage.canFinish();
-		if (projectPage != null) {
-			canFinish &= projectPage.canFinish();
+		// The user must select a project
+		if (projectPage != null && !projectPage.canFinish()) {
+			return false;
 		}
-		return canFinish;
+		// If the validation page is active and can finish then return true, the user does not need
+		// to go to the type selection page unless they want to
+		if (projectValidationPage.isActivePage() && projectValidationPage.canFinish()) {
+			return true;
+		}
+		// Finally, check if the type selection page can finish
+		return projectTypePage.isActivePage() && projectTypePage.canFinish();
 	}
 
 	@Override
@@ -106,9 +111,11 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 
 		final String name = projectPath.lastSegment();
 		
-		final String type = projectTypePage.getType().getId();
-		ProjectSubtypeInfo projectSubtype = projectTypePage.getSubtype();
-		final String subtype = (projectSubtype == null) ? null : projectSubtype.id;
+		// Use the detected type if the validation page is active
+		final ProjectInfo projectInfo = projectValidationPage.isActivePage() ? projectValidationPage.getProjectInfo() : null;
+		
+		final ProjectTypeInfo type = projectTypePage.getType();
+		final ProjectSubtypeInfo projectSubtype = projectTypePage.getSubtype();
 		final String language = projectTypePage.getLanguage();		
 		
 		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, name)) {
@@ -116,12 +123,16 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					String path = projectPath.toFile().getAbsolutePath();
-					// call validate again with type and subtype hint
-					// allows it to run extension commands if defined for that type and subtype
-					if (subtype != null) {
-						InstallUtil.validateProject(name, path, type + ":" + subtype, monitor);
+					if (projectInfo != null) {
+						connection.requestProjectBind(name, path, projectInfo.language.getId(), projectInfo.type.getId());
+					} else {
+						// call validate again with type and subtype hint
+						// allows it to run extension commands if defined for that type and subtype
+						if (projectSubtype != null) {
+							InstallUtil.validateProject(name, path, type + ":" + projectSubtype.id, monitor);
+						}
+						connection.requestProjectBind(name, path, language, type.getId());
 					}
-					connection.requestProjectBind(name, path, language, type);
 					connection.refreshApps(null);
 					CodewindApplication app = connection.getAppByName(name);
 					if (app != null) {
@@ -145,9 +156,15 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		return true;
 	}
 	
-	public void setProjectPath(IPath projectPath) {
+	public void setProjectInfo(ProjectInfo projectInfo) {
 		if (projectTypePage != null) {
-			projectTypePage.setProjectPath(projectPath, true);
+			projectTypePage.setProjectInfo(projectInfo);
+		}
+	}
+	
+	public void setProjectPath(IPath projectPath) {
+		if (projectValidationPage != null) {
+			projectValidationPage.setProjectPath(projectPath, true);
 		}
 	}
 }

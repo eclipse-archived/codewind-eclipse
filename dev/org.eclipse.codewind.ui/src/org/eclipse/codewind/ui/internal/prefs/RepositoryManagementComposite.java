@@ -101,12 +101,8 @@ public class RepositoryManagementComposite extends Composite {
 		
 		new Label(this, SWT.NONE);
 		
-		Text tableText = new Text(this, SWT.READ_ONLY);
-		tableText.setText(Messages.RepoMgmtTableLabel);
-		tableText.setBackground(this.getBackground());
-		tableText.setForeground(this.getForeground());
- 
 		Group composite = new Group(this, SWT.NONE);
+		composite.setText(Messages.RepoMgmtTableLabel);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.marginHeight = 8;

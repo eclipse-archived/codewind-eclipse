@@ -79,6 +79,7 @@ public class ProjectValidationPage extends WizardPage {
 		
 		setProjectPath(projectPath, false);
 
+		validateMsg.setFocus();
 		setControl(composite);
 	}
 

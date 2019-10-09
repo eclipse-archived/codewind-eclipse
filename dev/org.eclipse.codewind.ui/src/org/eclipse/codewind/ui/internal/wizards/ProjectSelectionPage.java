@@ -205,8 +205,6 @@ public class ProjectSelectionPage extends WizardPage {
 				String selectedDirectory = dialog.open();
 				if (selectedDirectory != null && !selectedDirectory.trim().isEmpty()) {
 					pathText.setText(selectedDirectory.trim());
-				} else {
-					pathText.setText(""); //$NON-NLS-1$
 				}
 				validate();
 			}

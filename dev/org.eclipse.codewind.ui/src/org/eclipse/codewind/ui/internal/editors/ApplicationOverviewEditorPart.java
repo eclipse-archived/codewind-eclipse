@@ -489,10 +489,28 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 				debugPort = Messages.AppOverviewEditorDebugNotSupported;
 			}
 			debugPortEntry.setValue(debugPort, true);
+			boolean hasSettingsFile = hasSettingsFile(app);
+			IDEUtil.setControlVisibility(editButton, hasSettingsFile);
+			IDEUtil.setControlVisibility(infoButton, hasSettingsFile);
 		}
 		
 		public void enableWidgets(boolean enable) {
 			// Nothing to do
+		}
+		
+		private boolean hasSettingsFile(CodewindApplication app) {
+			IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
+			if (project != null && project.isAccessible()) {
+				IFile file = project.getFile(SETTINGS_FILE);
+				if (file != null && file.exists()) {
+					return true;
+				}
+			}
+			IPath path = app.fullLocalPath.append(SETTINGS_FILE);
+			if (path.toFile().exists()) {
+				return true;
+			}
+			return false;
 		}
 	}
 	
@@ -660,16 +678,12 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			this.linkUrl = linkUrl;
 			if (linkUrl != null && !linkUrl.isEmpty()) {
 				link.setText(linkUrl);
-				link.setVisible(true);
-				((GridData)link.getLayoutData()).exclude = false;
-				text.setVisible(false);
-				((GridData)text.getLayoutData()).exclude = true;
+				IDEUtil.setControlVisibility(link, true);
+				IDEUtil.setControlVisibility(text, false);
 				link.setEnabled(enabled);
 			} else {
-				link.setVisible(false);
-				((GridData)link.getLayoutData()).exclude = true;
-				text.setVisible(true);
-				((GridData)text.getLayoutData()).exclude = false;
+				IDEUtil.setControlVisibility(link, false);
+				IDEUtil.setControlVisibility(text, true);
 			}
 		}
 	}

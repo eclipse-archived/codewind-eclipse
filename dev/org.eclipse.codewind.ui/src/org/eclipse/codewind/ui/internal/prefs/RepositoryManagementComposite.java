@@ -49,7 +49,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
@@ -84,47 +83,34 @@ public class RepositoryManagementComposite extends Composite {
 	
 	protected void createControl() {
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.horizontalSpacing = 5;
+		layout.numColumns = 2;
+		layout.marginHeight = 8;
+		layout.marginWidth = 8;
+		layout.horizontalSpacing = 7;
 		layout.verticalSpacing = 5;
 		setLayout(layout);
-		
-		new Label(this, SWT.NONE);
 		
 		Text description = new Text(this, SWT.READ_ONLY | SWT.WRAP | SWT.MULTI);
 		description.setText("");
 		description.setBackground(this.getBackground());
 		description.setForeground(this.getForeground());
-		description.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+		description.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 		
-		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 2, 1));
 		
-		Group composite = new Group(this, SWT.NONE);
-		composite.setText(Messages.RepoMgmtTableLabel);
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.marginHeight = 8;
-		layout.marginWidth = 8;
-		layout.horizontalSpacing = 7;
-		layout.verticalSpacing = 7;
-		composite.setLayout(layout);
-		GridData data = new GridData(GridData.FILL, GridData.FILL, true, true);
-		data.heightHint = 300;
-		composite.setLayoutData(data);
-		
-		repoViewer = CheckboxTableViewer.newCheckList(composite, SWT.BORDER | SWT.V_SCROLL);
+		repoViewer = CheckboxTableViewer.newCheckList(this, SWT.BORDER | SWT.V_SCROLL);
 		repoViewer.setContentProvider(new RepoContentProvider());
 		repoViewer.setLabelProvider(new RepoLabelProvider());
 		repoViewer.setInput(repoEntries.toArray(new RepoEntry[repoEntries.size()]));
-		repoViewer.getTable().setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 1, 3));
+		GridData tableData = new GridData(GridData.FILL, GridData.FILL, true, true, 1, 2);
+		tableData.horizontalIndent = 1;
+		repoViewer.getTable().setLayoutData(tableData);
 		
-		Button addButton = new Button(composite, SWT.PUSH);
+		Button addButton = new Button(this, SWT.PUSH);
 		addButton.setText(Messages.RepoMgmtAddButton);
 		addButton.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false));
 		
-		removeButton = new Button(composite, SWT.PUSH);
+		removeButton = new Button(this, SWT.PUSH);
 		removeButton.setText(Messages.RepoMgmtRemoveButton);
 		removeButton.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false));
 		
@@ -162,8 +148,8 @@ public class RepositoryManagementComposite extends Composite {
 			}
 		});
 		
-		ScrolledComposite detailsScroll = new ScrolledComposite(composite, SWT.V_SCROLL);
-		data = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
+		ScrolledComposite detailsScroll = new ScrolledComposite(this, SWT.V_SCROLL);
+		GridData data = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
 		data.widthHint = 300;
 		detailsScroll.setLayoutData(data);
 		
@@ -225,6 +211,7 @@ public class RepositoryManagementComposite extends Composite {
 		
 		detailsScroll.addListener(SWT.Resize, (event) -> {
 			  int width = detailsScroll.getClientArea().width;
+			  descData.widthHint = width - detailsLayout.marginWidth;
 			  styleData.widthHint = width - detailsLayout.marginWidth;
 			  linkData.widthHint = width - detailsLayout.marginWidth;
 			  Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
@@ -279,7 +266,24 @@ public class RepositoryManagementComposite extends Composite {
 		if (entry != null) {
 			urlLink.setData(entry);
 		}
+		
+		resizeEntry(descText);
+		resizeEntry(styleText);
+		resizeEntry(urlLink);
 	}
+	
+	private void resizeEntry(Control control) {
+		// resize label to make scroll bars appear
+		int width = control.getParent().getClientArea().width;
+		control.setSize(width, control.computeSize(width, SWT.DEFAULT).y);
+		
+		// resize again if scroll bar added or removed
+		int newWidth = control.getParent().getClientArea().width;
+		if (newWidth != width) {
+			control.setSize(newWidth, control.computeSize(newWidth, SWT.DEFAULT).y);
+		}
+	}
+	
 
 	private void updateButtons() {
 		boolean enabled = true;

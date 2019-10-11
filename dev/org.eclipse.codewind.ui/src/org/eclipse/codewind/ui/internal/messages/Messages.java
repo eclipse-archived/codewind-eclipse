@@ -346,6 +346,7 @@ public class Messages extends NLS {
 	public static String RepoMgmtDialogMessage;
 	
 	public static String RepoMgmtDescription;
+	public static String RepoMgmtLearnMoreLink;
 	public static String RepoMgmtTableLabel;
 	public static String RepoMgmtAddButton;
 	public static String RepoMgmtRemoveButton;

@@ -61,6 +61,8 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 public class RepositoryManagementComposite extends Composite {
 	
+	private static final String DOC_URL = "https://www.eclipse.org/codewind/mdteclipseusingadifferenttemplate.html";
+	
 	private final CodewindConnection connection;
 	private final List<RepositoryInfo> repoList;
 	private List<RepoEntry> repoEntries;
@@ -94,7 +96,25 @@ public class RepositoryManagementComposite extends Composite {
 		description.setText("");
 		description.setBackground(this.getBackground());
 		description.setForeground(this.getForeground());
-		description.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
+		description.setLayoutData(new GridData(GridData.FILL, GridData.END, true, false, 1, 1));
+		
+		Link learnMoreLink = new Link(this, SWT.NONE);
+		learnMoreLink.setText("<a>" + Messages.RepoMgmtLearnMoreLink + "</a>");
+		learnMoreLink.setLayoutData(new GridData(GridData.END, GridData.END, false, false, 1, 1));
+		
+		learnMoreLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
+					IWebBrowser browser = browserSupport.getExternalBrowser();
+					URL url = new URL(DOC_URL);
+					browser.openURL(url);
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to open an external browser at: " + DOC_URL, e); //$NON-NLS-1$
+				}
+			}
+		});
 		
 		new Label(this, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 2, 1));
 		

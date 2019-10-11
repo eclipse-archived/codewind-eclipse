@@ -17,6 +17,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -72,5 +73,10 @@ public class IDEUtil {
     	control.setBackground(parent.getBackground());
     	control.setForeground(parent.getForeground());
     }
+    
+	public static void setControlVisibility(Control control, boolean visible) {
+		control.setVisible(visible);
+		((GridData)control.getLayoutData()).exclude = !visible;
+	}
 
 }

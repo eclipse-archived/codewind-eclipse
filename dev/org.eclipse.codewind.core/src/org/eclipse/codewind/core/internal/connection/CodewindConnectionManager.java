@@ -91,7 +91,7 @@ public class CodewindConnectionManager {
 
 	public synchronized static CodewindConnection getActiveConnection(String baseUrl) {
 		for(CodewindConnection conn : activeConnections()) {
-			if(conn.getBaseURI().toString().equals(baseUrl)) {
+			if(conn.getBaseURI() != null && conn.getBaseURI().toString().equals(baseUrl)) {
 				return conn;
 			}
 		}

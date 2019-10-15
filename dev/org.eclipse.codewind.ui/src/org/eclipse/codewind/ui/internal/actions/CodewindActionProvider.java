@@ -11,20 +11,9 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallStatus;
-import org.eclipse.codewind.core.internal.InstallUtil;
-import org.eclipse.codewind.ui.internal.IDEUtil;
-import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
-import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.navigator.CommonActionProvider;
-import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
 import org.eclipse.ui.navigator.ICommonMenuConstants;
 

@@ -35,7 +35,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.eclipse.codewind.core"; //$NON-NLS-1$
 
-	public static final String DEFAULT_ICON_PATH = "icons/codewind.ico"; //$NON-NLS-1$
+	public static final String DEFAULT_ICON_PATH = "icons/codewind.png"; //$NON-NLS-1$
 	
 	public static final String CW_INSTALL_TIMEOUT = "cwInstallTimeout";
 	public static final String CW_START_TIMEOUT = "cwStartTimeout";

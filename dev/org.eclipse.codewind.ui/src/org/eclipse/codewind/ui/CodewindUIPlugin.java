@@ -41,14 +41,14 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 	
 	public static final String
 			ICON_BASE_PATH = "icons/",
-			CODEWIND_ICON = "codewind.ico",
+			CODEWIND_ICON = "codewind.png",
 			CODEWIND_BANNER = "codewindBanner.png",
-			ERROR_ICON_PATH = "error.gif",
+			ERROR_ICON_PATH = "error.png",
 			OPEN_APP_ICON = "elcl16/open_app.png",
 			BUILD_ICON = "elcl16/build_exec.png",
 			IMPORT_ICON = "elcl16/import_wiz.png",
-			LAUNCH_DEBUG_ICON = "elcl16/launch_debug.gif",
-			LAUNCH_RUN_ICON = "elcl16/launch_run.gif",
+			LAUNCH_DEBUG_ICON = "elcl16/debug_exc.png",
+			LAUNCH_RUN_ICON = "elcl16/run_exc.png",
 			REFRESH_ICON = "elcl16/refresh.png",
 			CLOUD_ICON = "obj16/cloud.png",
 			GO_ICON = "obj16/go.png",
@@ -123,6 +123,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
             ICON_BASE_URL = plugin.getBundle().getEntry(ICON_BASE_PATH);
 
         registerImage(registry, CODEWIND_ICON, ICON_BASE_URL + CODEWIND_ICON);
+        registerImage(registry, CODEWIND_BANNER, ICON_BASE_URL + CODEWIND_BANNER);
         registerImage(registry, OPEN_APP_ICON, ICON_BASE_URL + OPEN_APP_ICON);
         registerImage(registry, BUILD_ICON, ICON_BASE_URL + BUILD_ICON);
         registerImage(registry, IMPORT_ICON, ICON_BASE_URL + IMPORT_ICON);

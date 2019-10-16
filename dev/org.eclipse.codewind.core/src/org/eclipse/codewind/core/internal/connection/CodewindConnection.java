@@ -12,6 +12,7 @@
 package org.eclipse.codewind.core.internal.connection;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
@@ -28,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +47,8 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
+import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -78,20 +82,6 @@ public class CodewindConnection {
 	public CodewindConnection(String name, URI uri) {
 		setName(name);
 		setBaseURI(uri);
-
-//		filewatcher = new CodewindFilewatcherdConnection(baseUrl.toString(), new ICodewindProjectTranslator() {
-//			@Override
-//			public Optional<String> getProjectId(IProject project) {
-//				if (project != null) {
-//					CodewindApplication app = getAppByName(project.getName());
-//					if (app != null) {
-//						return Optional.of(app.projectID);
-//					}
-//				}
-//				return Optional.empty();
-//			}
-//		});
-
 	}
 	
 	public void connect(IProgressMonitor monitor) throws IOException, URISyntaxException, JSONException {
@@ -138,6 +128,24 @@ public class CodewindConnection {
 		}
 		if (mon.isCanceled()) {
 			socket.close();
+			return;
+		}
+		
+		File cwcli = new File(InstallUtil.getInstallerExecutable(InstallUtil.codewindInstall));
+		filewatcher = new CodewindFilewatcherdConnection(baseUri.toString(), cwcli, new ICodewindProjectTranslator() {
+			@Override
+			public Optional<String> getProjectId(IProject project) {
+				if (project != null) {
+					CodewindApplication app = getAppByName(project.getName());
+					if (app != null) {
+						return Optional.of(app.projectID);
+					}
+				}
+				return Optional.empty();
+			}
+		});
+		if (mon.isCanceled()) {
+			close();
 			return;
 		}
 		
@@ -865,7 +873,7 @@ public class CodewindConnection {
 
 		JSONObject body = new JSONObject();
 		body.put(CoreConstants.KEY_DIRECTORY, false);
-		body.put(CoreConstants.KEY_PATH, relativePath);
+		body.put(CoreConstants.KEY_PATH, relativePath.replace('\\', '/'));
 		body.put(CoreConstants.KEY_MSG, base64Compressed);
 
 		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectId + "/"

@@ -51,7 +51,9 @@ public class Main {
 
 		IPlatformWatchService platformWatchService = new JavaNioWatchService();
 
-		Filewatcher fw = new Filewatcher(url, UUID.randomUUID().toString(), platformWatchService, null);
+		String pathToCli = System.getenv("MOCK_CWCTL_INSTALLER_PATH");
+
+		Filewatcher fw = new Filewatcher(url, UUID.randomUUID().toString(), platformWatchService, null, pathToCli);
 
 		while (true) {
 			FilewatcherUtils.sleepIgnoreInterrupt(1000);

@@ -320,7 +320,7 @@
 	<extension point="org.eclipse.ui.editors">
 	    <editor id="org.eclipse.codewind.ui.editors.appOverview"
 	        name="Application Overview"
-	        icon="icons/codewind.ico"
+	        icon="icons/codewind.png"
 	        class="org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorPart"/>
 	</extension>
 	

@@ -69,8 +69,8 @@ public class InstallUtil {
 		appsodyMap.put(OperatingSystem.WINDOWS, "binaries/windows/appsody.exe");		
 	}
 	
-	private static final InstallOperation codewindInstall = new InstallOperation("Codewind", installMap);
-	private static final InstallOperation appsodyInstall = new InstallOperation("Appsody", appsodyMap);
+	public static final InstallOperation codewindInstall = new InstallOperation("Codewind", installMap);
+	public static final InstallOperation appsodyInstall = new InstallOperation("Appsody", appsodyMap);
 	
 	private static final InstallOperation[] installOperations = {codewindInstall, appsodyInstall};
 	

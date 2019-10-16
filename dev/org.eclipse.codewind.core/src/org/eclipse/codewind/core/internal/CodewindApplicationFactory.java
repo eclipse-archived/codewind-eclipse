@@ -115,12 +115,10 @@ public class CodewindApplicationFactory {
 				Logger.logError(e.getMessage() + " in: " + appJso); //$NON-NLS-1$
 			}
 
-			String ws = appJso.getString(CoreConstants.KEY_WORKSPACE);
-			ws = CoreUtil.getHostPath(ws);
-			String dir = appJso.getString(CoreConstants.KEY_DIRECTORY);
-			IPath localPath = (new Path(ws)).append(dir);
+			String localPath = appJso.getString(CoreConstants.KEY_LOC_DISK);
+			localPath = CoreUtil.getHostPath(localPath);
 			
-			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, localPath);
+			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, new Path(localPath));
 			
 			updateApp(app, appJso);
 			return app;

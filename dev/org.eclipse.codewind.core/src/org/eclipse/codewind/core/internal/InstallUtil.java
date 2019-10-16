@@ -83,6 +83,7 @@ public class InstallUtil {
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
 	private static final String PROJECT_CMD = "project";
+	private static final String CREATE_OPTION = "create";
 	
 	public static final String DEFAULT_INSTALL_VERSION = "0.5.0";
 	
@@ -189,7 +190,7 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			process = runInstaller(PROJECT_CMD, path, URL_OPTION, url);
+			process = runInstaller(PROJECT_CMD, CREATE_OPTION, path, URL_OPTION, url);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

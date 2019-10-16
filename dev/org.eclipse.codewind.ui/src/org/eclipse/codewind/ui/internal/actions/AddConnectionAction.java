@@ -40,11 +40,8 @@ public class AddConnectionAction extends SelectionProviderAction {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindManager) {
-				InstallStatus status = CodewindManager.getManager().getInstallStatus();
-				if (status.isInstalled()) {
-					setEnabled(true);
-					return;
-				}
+				setEnabled(true);
+				return;
 			}
 		}
 		setEnabled(false);

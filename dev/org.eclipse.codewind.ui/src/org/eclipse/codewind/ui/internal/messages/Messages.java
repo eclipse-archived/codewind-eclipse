@@ -206,6 +206,15 @@ public class Messages extends NLS {
 	public static String EnableDisableAutoBuildJob;
 	public static String ErrorOnEnableDisableAutoBuild;
 	
+	public static String ConnectActionLabel;
+	public static String DisconnectActionLabel;
+	public static String ConnectJobLabel;
+	public static String DisconnectJobLabel;
+	public static String ConnectJobError;
+	public static String DisconnectJobError;
+	
+	public static String RemoveConnectionActionLabel;
+	
 	public static String ShowLogFilesMenu;
 	public static String ShowAllLogFilesAction;
 	public static String HideAllLogFilesAction;

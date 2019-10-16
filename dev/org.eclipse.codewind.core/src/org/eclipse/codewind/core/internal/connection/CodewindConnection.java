@@ -178,6 +178,7 @@ public class CodewindConnection {
 		for (CodewindApplication app : appMap.values()) {
 			app.dispose();
 		}
+		appMap.clear();
 	}
 	
 	public String getName() {

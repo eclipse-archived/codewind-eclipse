@@ -50,7 +50,16 @@ public class CodewindFilewatcherdConnection {
 
 	private final String clientUuid;
 
-	public CodewindFilewatcherdConnection(String baseHttpUrl, ICodewindProjectTranslator translator) {
+	public CodewindFilewatcherdConnection(String baseHttpUrl, File pathToCwctl, ICodewindProjectTranslator translator) {
+
+		if(pathToCwctl == null) {
+			throw new RuntimeException("A valid path to the Codewind CLI is required: "+pathToCwctl);
+		}
+		
+		if (!pathToCwctl.exists() || !pathToCwctl.canExecute()) {
+			throw new RuntimeException(
+					this.getClass().getSimpleName() + " was passed an invalid installer path: " + pathToCwctl.getPath());
+		}
 
 		this.clientUuid = UUID.randomUUID().toString();
 
@@ -77,7 +86,8 @@ public class CodewindFilewatcherdConnection {
 		// inside the workspace, and the Java-NIO-JVM-based watch service for folders
 		// outside the workspace (eg the standalone Codewind settings directory).
 		this.platformWatchService = new EclipseResourceWatchService();
-		this.fileWatcher = new Filewatcher(url, clientUuid, platformWatchService, new JavaNioWatchService());
+		this.fileWatcher = new Filewatcher(url, clientUuid, platformWatchService, new JavaNioWatchService(),
+				pathToCwctl.getPath());
 
 		this.baseHttpUrl = url;
 

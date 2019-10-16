@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils.ExponentialBackoffUtil;
 import org.eclipse.codewind.filewatchers.core.IPlatformWatchService.IPlatformWatchListener;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch.ProjectToWatchFromWebSocket;
+import org.eclipse.codewind.filewatchers.core.internal.CLIState;
 import org.eclipse.codewind.filewatchers.core.internal.DebugTimer;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil.ChangedFileEntry;
@@ -70,12 +71,17 @@ public class Filewatcher {
 
 	private final String clientUuid;
 
+	private final Optional<String> pathToInstaller;
+
 	public Filewatcher(String urlParam, String clientUuid, IPlatformWatchService internalWatchService,
-			IPlatformWatchService externalWatchService) {
+			IPlatformWatchService externalWatchService, String pathToInstallerParam) {
 
 		this.url = FilewatcherUtils.stripTrailingSlash(urlParam);
 
 		this.clientUuid = clientUuid;
+		this.pathToInstaller = pathToInstallerParam != null && !pathToInstallerParam.trim().isEmpty()
+				? Optional.of(pathToInstallerParam)
+				: Optional.empty();
 
 		String calculatedWsUrl = this.url;
 		{
@@ -219,6 +225,36 @@ public class Filewatcher {
 
 		}
 
+	}
+
+	/**
+	 * Indirectly call the CWCTL CLI. Called by receiveWatchSuccessStatus and
+	 * FileChangeEventBatchUtil
+	 */
+	public void internal_informCwctlOfFileChanges(String projectId) {
+		synchronized (disposed_synch) {
+			if (disposed_synch.get()) {
+				return;
+			}
+		}
+
+		if (!pathToInstaller.isPresent() || pathToInstaller.get().trim().isEmpty()) {
+			log.logDebug("Skipping invocation of CLI command due to no installer path.");
+			return;
+		}
+
+		ProjectObject po;
+		synchronized (projectsMap_synch) {
+			po = projectsMap_synch.get(projectId);
+
+		}
+
+		if (po == null) {
+			log.logSevere("Asked to invoke CLI on a project that wasn't in the projects map: " + projectId);
+			return;
+		}
+
+		po.informCwctlOfFileChanges();
 	}
 
 	private void removeSingleProjectToWatch(ProjectToWatch removedProject) {
@@ -532,7 +568,11 @@ public class Filewatcher {
 		}
 	}
 
-	void receiveWatchSuccessStatus(ProjectToWatch ptw, boolean successParam) {
+	private void receiveWatchSuccessStatus(ProjectToWatch ptw, boolean successParam) {
+
+		if (successParam) {
+			internal_informCwctlOfFileChanges(ptw.getProjectId());
+		}
 
 		// Start a new thread to inform the server that the watch has succeeded (or
 		// failed). Keep trying until success.
@@ -591,6 +631,8 @@ public class Filewatcher {
 
 		private final IPlatformWatchService watchService;
 
+		private final Optional<CLIState> cliState;
+
 		private final Object lock = new Object();
 
 		public ProjectObject(String projectId, ProjectToWatch project, Filewatcher parent,
@@ -603,6 +645,17 @@ public class Filewatcher {
 			this.project_synch_lock = project;
 			this.batchUtil = new FileChangeEventBatchUtil(parent, projectId);
 			this.watchService = watchService;
+
+			if (parent.pathToInstaller.isPresent()) {
+				// Here we convert the path to an absolute, canonical OS path for use by cwctl
+				cliState = Optional.of(new CLIState(projectId, parent.pathToInstaller.get(),
+						PathUtils.convertAbsoluteUnixStyleNormalizedPathToLocalFile(project.getPathToMonitor())));
+
+			} else {
+
+				cliState = Optional.empty();
+			}
+
 		}
 
 		private FileChangeEventBatchUtil getEventBatchUtil() {
@@ -613,6 +666,13 @@ public class Filewatcher {
 			synchronized (lock) {
 				return project_synch_lock;
 			}
+		}
+
+		private void informCwctlOfFileChanges() {
+			if (cliState.isPresent()) {
+				cliState.get().onFileChangeEvent();
+			}
+
 		}
 
 		private void updateProjectToWatch(ProjectToWatch newProjectToWatch) {

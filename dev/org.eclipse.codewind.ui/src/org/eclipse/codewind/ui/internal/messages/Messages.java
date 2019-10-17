@@ -148,11 +148,23 @@ public class Messages extends NLS {
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;
 	public static String BindProjectAlreadyExistsError;
-	public static String BindProjectBadLocationError;
 	
 	public static String BindProjectWizardTitle;
+	public static String BindProjectWizardRemoveTask;
+	public static String BindProjectWizardDisableTask;
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
+	
+	public static String ProjectDeployedDialogShell;
+	public static String ProjectDeployedDialogTitle;
+	public static String ProjectDeployedDialogMessage;
+	public static String ProjectDeployedDialogGroupLabel;
+	public static String ProjectDeployedDialogRemoveLabel;
+	public static String ProjectDeployedDialogRemoveTooltip;
+	public static String ProjectDeployedDialogDisableLabel;
+	public static String ProjectDeployedDialogDisableTooltip;
+	public static String ProjectDeployedDialogMaintainLabel;
+	public static String ProjectDeployedDialogMaintainTooltip;
 	
 	public static String SelectProjectTypePageName;
 	public static String SelectProjectTypePageTitle;

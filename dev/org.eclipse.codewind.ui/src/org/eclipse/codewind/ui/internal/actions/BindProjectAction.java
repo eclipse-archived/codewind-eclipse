@@ -20,7 +20,6 @@ import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -28,9 +27,7 @@ import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.codewind.ui.internal.wizards.BindProjectWizard;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -113,15 +110,6 @@ public class BindProjectAction implements IObjectActionDelegate {
 	private String getProjectError(CodewindConnection connection, IProject project) {
 		if (connection.getAppByName(project.getName()) != null) {
 			return NLS.bind(Messages.BindProjectAlreadyExistsError,  project.getName());
-		}
-		IPath workspacePath = connection.getWorkspacePath();
-		IPath projectPath = project.getLocation();
-		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.WINDOWS) {
-			workspacePath = new Path(workspacePath.toPortableString().toLowerCase());
-			projectPath = new Path(projectPath.toPortableString().toLowerCase());
-		}
-		if (!workspacePath.isPrefixOf(projectPath)) {
-			return NLS.bind(Messages.BindProjectBadLocationError, project.getName(), connection.getWorkspacePath().toOSString());
 		}
 		return null;
 	}

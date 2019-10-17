@@ -217,7 +217,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		// for docker type language selection is optional
 		// for non-docker when selected type is different than the detected type,
 		// user need to choose a subtype to proceed
-		if (!projectType.eq(TYPE_DOCKER) && !projectType.eq(projectInfo.type)) {
+		if (!projectType.eq(TYPE_DOCKER) && (projectInfo == null || !projectType.eq(projectInfo.type))) {
 			return subtypeViewer.getCheckedElements().length != 0;
 		}
 		

@@ -11,11 +11,15 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
@@ -29,6 +33,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -111,6 +116,28 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 
 		final String name = projectPath.lastSegment();
 		
+		final List<CodewindApplication> existingDeployments = new ArrayList<CodewindApplication>();
+		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
+			if (conn.isConnected()) {
+				CodewindApplication app = conn.getAppByName(name);
+				if (app != null && app.isEnabled()) {
+					existingDeployments.add(app);
+				}
+			}
+		}
+		
+		final ProjectDeployedDialog.Behaviour selectedBehaviour;
+		if (!existingDeployments.isEmpty()) {
+			ProjectDeployedDialog dialog = new ProjectDeployedDialog(getShell(), name);
+			if (dialog.open() == IStatus.OK) {
+				selectedBehaviour = dialog.getSelectedBehaviour();
+			} else {
+				return false;
+			}
+		} else {
+			selectedBehaviour = null;
+		}
+		
 		// Use the detected type if the validation page is active
 		final ProjectInfo projectInfo = projectValidationPage.isActivePage() ? projectValidationPage.getProjectInfo() : null;
 		
@@ -122,6 +149,48 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
+					SubMonitor mon = SubMonitor.convert(monitor, 100);
+					if (selectedBehaviour != null) {
+						switch (selectedBehaviour) {
+							case REMOVE:
+								mon.setTaskName(Messages.BindProjectWizardRemoveTask);
+								mon.split(10 * existingDeployments.size());
+								for (CodewindApplication app : existingDeployments) {
+									try {
+										app.connection.requestProjectUnbind(app.projectID);
+									} catch (Exception e) {
+										Logger.logError("An error occurred trying to unbind the " + app.name + " project from connection: " + app.connection.getBaseURI()); //$NON-NLS-1$ //$NON-NLS-2$
+									}
+									if (mon.isCanceled()) {
+										return Status.CANCEL_STATUS;
+									}
+									mon.worked(10);
+								}
+								break;
+							case DISABLE:
+								mon.setTaskName(Messages.BindProjectWizardDisableTask);
+								mon.split(10 * existingDeployments.size());
+								for (CodewindApplication app : existingDeployments) {
+									try {
+										app.connection.requestProjectOpenClose(app, false);
+									} catch (Exception e) {
+										Logger.logError("An error occurred trying to disable the " + app.name + " project on connection: " + app.connection.getBaseURI()); //$NON-NLS-1$ //$NON-NLS-2$
+									}
+									if (mon.isCanceled()) {
+										return Status.CANCEL_STATUS;
+									}
+									mon.worked(10);
+								}
+								break;
+							case MAINTAIN:
+							default:
+								// Do nothing
+								break;
+						}
+					}
+					mon.setWorkRemaining(40);
+					mon.setTaskName(NLS.bind(Messages.BindProjectWizardJobLabel, name));
+					mon.split(20);
 					String path = projectPath.toFile().getAbsolutePath();
 					if (projectInfo != null) {
 						connection.requestProjectBind(name, path, projectInfo.language.getId(), projectInfo.type.getId());
@@ -133,7 +202,15 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						}
 						connection.requestProjectBind(name, path, language, type.getId());
 					}
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.split(10);
 					connection.refreshApps(null);
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.split(10);
 					CodewindApplication app = connection.getAppByName(name);
 					if (app != null) {
 						IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
@@ -144,6 +221,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 							Display.getDefault().asyncExec(() -> OpenAppOverviewAction.openAppOverview(app));
 						}
 					}
+					mon.done();
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + projectPath.toOSString(), e); //$NON-NLS-1$

@@ -12,6 +12,7 @@
 package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
@@ -65,11 +66,14 @@ public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 			return false;
 		}
 
-		newConnectionPage.performFinish();
+		CodewindConnection connection = newConnectionPage.getConnection();
+		if (connection != null) {
+			CodewindConnectionManager.add(connection);
+		}
 
 		ViewHelper.openCodewindExplorerView();
 		ViewHelper.refreshCodewindExplorerView(null);
-		ViewHelper.expandConnection(newConnectionPage.getConnection());
+		ViewHelper.expandConnection(connection);
 
 		return true;
 	}

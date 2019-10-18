@@ -18,7 +18,6 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
-import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -189,24 +188,19 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 			}
 		});
 		 	    
-	    Text browserSelectionLabel = new Text(debugGroup, SWT.READ_ONLY | SWT.SINGLE);
-	    browserSelectionLabel.setText(Messages.BrowserSelectionLabel);
-	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 3, 1));
-	    IDEUtil.normalizeBackground(browserSelectionLabel, debugGroup);
-	    
 	    final Composite selectWebBrowserComposite = new Composite(debugGroup, SWT.NONE);
 	    layout = new GridLayout();
 		layout.horizontalSpacing = convertHorizontalDLUsToPixels(4);
 		layout.verticalSpacing = convertVerticalDLUsToPixels(3);
-		layout.marginWidth = 20;
+		layout.marginWidth = 3;
 		layout.marginHeight = 2;
-	    layout.numColumns = 3;
+	    layout.numColumns = 2;
 	    selectWebBrowserComposite.setLayout(layout);
 	    selectWebBrowserComposite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 	    
-        Label selectWebBrowserLabel = new Label(selectWebBrowserComposite, SWT.NONE );
-        selectWebBrowserLabel.setText(Messages.BrowserSelectionListLabel);	
-        selectWebBrowserLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 1, 1));
+	    Label browserSelectionLabel = new Label(selectWebBrowserComposite, SWT.NONE);
+	    browserSelectionLabel.setText(Messages.BrowserSelectionLabel);
+	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 2, 1));
         
         webBrowserCombo = new Combo(selectWebBrowserComposite, SWT.BORDER | SWT.READ_ONLY);
         

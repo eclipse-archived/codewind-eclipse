@@ -90,7 +90,7 @@ public class CodewindConnection {
 		}
 		
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
-		mon.setTaskName(NLS.bind(Messages.Connection_JobLabel, this.baseUri));
+		mon.setTaskName(NLS.bind(Messages.Connection_TaskLabel, this.baseUri));
 		if (!waitForReady(mon.split(20))) {
 			if (mon.isCanceled()) {
 				return;

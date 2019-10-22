@@ -16,12 +16,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 
 public class CodewindManager {
@@ -47,9 +52,24 @@ public class CodewindManager {
 		localConnection = CodewindObjectFactory.createCodewindConnection(Messages.CodewindLocalConnectionName, null, true);
 		CodewindConnectionManager.add(localConnection);
 		refreshInstallStatus(new NullProgressMonitor());
+		if (installStatus.isStarted()) {
+			Job job = new Job(NLS.bind(Messages.Connection_JobLabel, localConnection.getName())) {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					try {
+						localConnection.connect(monitor);
+						return Status.OK_STATUS;
+					} catch (Exception e) {
+						Logger.logError("An error occurred trying to connect to the local Codewind instance at:" + localConnection.getBaseURI(), e); //$NON-NLS-1$
+						return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.Connection_JobError, new String[] {localConnection.getName(), localConnection.getBaseURI().toString()}), e);
+					}
+				}
+			};
+			job.schedule();
+		}
 	}
 
-	public static CodewindManager getManager() {
+	public static synchronized CodewindManager getManager() {
 		if (codewindManager == null) {
 			codewindManager = new CodewindManager();
 		}

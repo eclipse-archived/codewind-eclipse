@@ -22,6 +22,7 @@ public class Messages extends NLS {
 	
 	public static String Connection_JobLabel;
 	public static String Connection_JobError;
+	public static String Connection_TaskLabel;
 	
 	public static String Connection_ErrConnection_AlreadyExists;
 	public static String Connection_ErrConnection_OldVersion;

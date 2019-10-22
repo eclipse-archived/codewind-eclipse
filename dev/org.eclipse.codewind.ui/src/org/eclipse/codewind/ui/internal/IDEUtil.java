@@ -11,8 +11,14 @@
 
 package org.eclipse.codewind.ui.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
@@ -78,5 +84,15 @@ public class IDEUtil {
 		control.setVisible(visible);
 		((GridData)control.getLayoutData()).exclude = !visible;
 	}
+
+    public static MultiStatus getMultiStatus(String msg, Exception e) {
+    	List<Status> statusList = new ArrayList<Status>();
+    	StackTraceElement[] elems = e.getStackTrace();
+    	for (StackTraceElement elem : elems) {
+    		statusList.add(new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, elem.toString()));
+    	}
+    	return new MultiStatus(CodewindUIPlugin.PLUGIN_ID, IStatus.ERROR,
+    			statusList.toArray(new Status[statusList.size()]), e.toString(), e);
+    }
 
 }

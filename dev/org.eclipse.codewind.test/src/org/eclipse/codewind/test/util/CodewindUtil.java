@@ -70,7 +70,7 @@ public class CodewindUtil {
 			}
 		}
 		
-		CodewindConnectionManager.removeConnection(connection.baseUrl.toString());
+		CodewindConnectionManager.removeConnection(connection.getBaseURI().toString());
 	}
 	
 	public static boolean waitForAppState(CodewindApplication app, AppStatus status, long timeout, long interval) {

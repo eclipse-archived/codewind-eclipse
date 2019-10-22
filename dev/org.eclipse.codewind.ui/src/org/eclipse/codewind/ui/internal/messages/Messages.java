@@ -42,14 +42,14 @@ public class Messages extends NLS {
 
 	public static String NewConnectionPage_ConnectSucceeded;
 	public static String NewConnectionPage_ErrAConnectionAlreadyExists;
-	public static String NewConnectionPage_ErrCouldNotConnectToMC;
+	public static String NewConnectionPage_ErrCouldNotConnect;
 	public static String NewConnectionPage_HostnameLabel;
 	public static String NewConnectionPage_NotValidPortNum;
 	public static String NewConnectionPage_OnlyLocalhostSupported;
 	public static String NewConnectionPage_PortLabel;
 	public static String NewConnectionPage_ShellTitle;
 	public static String NewConnectionPage_TestConnectionBtn;
-	public static String NewConnectionPage_TestToProceed;
+	public static String NewConnectionPage_TestConnectionJobLabel;
 	public static String NewConnectionPage_WizardDescription;
 	public static String NewConnectionPage_WizardTitle;
 	public static String NewConnectionWizard_ShellTitle;
@@ -87,9 +87,10 @@ public class Messages extends NLS {
 	public static String CodewindWrongVersionQualifier;
 	public static String CodewindWrongVersionMsg;
 	public static String CodewindNotStartedMsg;
-	public static String CodewindLocalProjects;
 	public static String CodewindConnectionLabel;
+	public static String CodewindConnected;
 	public static String CodewindDisconnected;
+	public static String CodewindDisconnectedDetails;
 	public static String CodewindProjectDisabled;
 	public static String CodewindConnectionNoProjects;
 	public static String CodewindDescriptionContextRoot;
@@ -147,11 +148,23 @@ public class Messages extends NLS {
 	public static String BindProjectErrorTitle;
 	public static String BindProjectConnectionError;
 	public static String BindProjectAlreadyExistsError;
-	public static String BindProjectBadLocationError;
 	
 	public static String BindProjectWizardTitle;
+	public static String BindProjectWizardRemoveTask;
+	public static String BindProjectWizardDisableTask;
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
+	
+	public static String ProjectDeployedDialogShell;
+	public static String ProjectDeployedDialogTitle;
+	public static String ProjectDeployedDialogMessage;
+	public static String ProjectDeployedDialogGroupLabel;
+	public static String ProjectDeployedDialogRemoveLabel;
+	public static String ProjectDeployedDialogRemoveTooltip;
+	public static String ProjectDeployedDialogDisableLabel;
+	public static String ProjectDeployedDialogDisableTooltip;
+	public static String ProjectDeployedDialogMaintainLabel;
+	public static String ProjectDeployedDialogMaintainTooltip;
 	
 	public static String SelectProjectTypePageName;
 	public static String SelectProjectTypePageTitle;
@@ -204,6 +217,15 @@ public class Messages extends NLS {
 	public static String DisableAutoBuildLabel;
 	public static String EnableDisableAutoBuildJob;
 	public static String ErrorOnEnableDisableAutoBuild;
+	
+	public static String ConnectActionLabel;
+	public static String DisconnectActionLabel;
+	public static String ConnectJobLabel;
+	public static String DisconnectJobLabel;
+	public static String ConnectJobError;
+	public static String DisconnectJobError;
+	
+	public static String RemoveConnectionActionLabel;
 	
 	public static String ShowLogFilesMenu;
 	public static String ShowAllLogFilesAction;
@@ -269,6 +291,10 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ShellTitle;
 	public static String NewProjectPage_WizardDescription;
 	public static String NewProjectPage_WizardTitle;
+	public static String NewProjectPage_LocationGroupLabel;
+	public static String NewProjectPage_LocationDefaultButton;
+	public static String NewProjectPage_LocationTextLabel;
+	public static String NewProjectPage_LocationBrowseButton;
 	public static String NewProjectPage_TemplateGroupLabel;
 	public static String NewProjectPage_TemplateGroupDesc;
 	public static String NewProjectPage_ProjectTypeGroup;
@@ -296,6 +322,9 @@ public class Messages extends NLS {
 	public static String NewProjectPage_CodewindConnectError;
 	public static String NewProjectPage_TemplateListError;
 	public static String NewProjectPage_EmptyTemplateList;
+	public static String NewProjectPage_NoLocationError;
+	public static String NewProjectPage_LocationNotValid;
+	public static String NewProjectPage_NoTemplateSelected;
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;

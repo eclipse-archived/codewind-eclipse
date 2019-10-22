@@ -14,40 +14,41 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action to remove a Codewind connection.
  */
-public class RemoveConnectionAction implements IObjectActionDelegate {
-
+public class RemoveConnectionAction extends SelectionProviderAction {
+	
 	protected CodewindConnection connection;
 
-	@Override
-	public void selectionChanged(IAction action, ISelection selection) {
-		if (!(selection instanceof IStructuredSelection)) {
-			action.setEnabled(false);
-			return;
-		}
+	public RemoveConnectionAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.RemoveConnectionActionLabel);
+		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
+		selectionChanged(getStructuredSelection());
+	}
 
-		IStructuredSelection sel = (IStructuredSelection) selection;
+
+	@Override
+	public void selectionChanged(IStructuredSelection sel) {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindConnection) {
 				connection = (CodewindConnection) obj;
-				action.setEnabled(true);
+				setEnabled(connection != null);
 				return;
 			}
 		}
-		action.setEnabled(false);
+		setEnabled(false);
 	}
 
 	@Override
-	public void run(IAction action) {
+	public void run() {
 		if (connection == null) {
 			// should not be possible
 			Logger.logError("RemoveConnectionAction ran but no connection was selected"); //$NON-NLS-1$
@@ -55,14 +56,9 @@ public class RemoveConnectionAction implements IObjectActionDelegate {
 		}
 
 		try {
-			CodewindConnectionManager.removeConnection(connection.baseUrl.toString());
+			CodewindConnectionManager.removeConnection(connection.getBaseURI().toString());
 		} catch (Exception e) {
-			Logger.logError("Error removing connection: " + connection.baseUrl.toString(), e); //$NON-NLS-1$
+			Logger.logError("Error removing connection: " + connection.getBaseURI().toString(), e); //$NON-NLS-1$
 		}
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
 	}
 }

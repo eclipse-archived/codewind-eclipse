@@ -11,12 +11,11 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
+import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
-import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.codewind.ui.internal.views.ViewHelper;
-import org.eclipse.codewind.ui.internal.wizards.BindProjectWizard;
+import org.eclipse.codewind.ui.internal.wizards.NewCodewindConnectionWizard;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -27,12 +26,10 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 /**
  * Action to create a new project.
  */
-public class BindAction extends SelectionProviderAction {
+public class AddConnectionAction extends SelectionProviderAction {
 
-	protected CodewindConnection connection;
-	
-	public BindAction(ISelectionProvider selectionProvider) {
-		super(selectionProvider, Messages.BindActionLabel);
+	public AddConnectionAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, "New Connection");
 		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
 		selectionChanged(getStructuredSelection());
 	}
@@ -42,9 +39,8 @@ public class BindAction extends SelectionProviderAction {
 	public void selectionChanged(IStructuredSelection sel) {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
-			if (obj instanceof CodewindConnection) {
-				connection = (CodewindConnection)obj;
-				setEnabled(connection.isConnected());
+			if (obj instanceof CodewindManager) {
+				setEnabled(true);
 				return;
 			}
 		}
@@ -53,23 +49,14 @@ public class BindAction extends SelectionProviderAction {
 
 	@Override
 	public void run() {
-		if (connection == null) {
-			// should not be possible
-			Logger.logError("BindAction ran but no Codewind connection was selected"); //$NON-NLS-1$
-			return;
-		}
-
 		try {
-			BindProjectWizard wizard = new BindProjectWizard(connection);
+			NewCodewindConnectionWizard wizard = new NewCodewindConnectionWizard();
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			if (dialog.open() == Window.CANCEL) {
 				return;
 			}
-			ViewHelper.openCodewindExplorerView();
-			ViewHelper.refreshCodewindExplorerView(null);
-			ViewHelper.expandConnection(connection);
 		} catch (Exception e) {
-			Logger.logError("An error occurred running the bind action on connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
+			Logger.logError("An error occurred running the new connection action", e); //$NON-NLS-1$
 		}
 	}
 }

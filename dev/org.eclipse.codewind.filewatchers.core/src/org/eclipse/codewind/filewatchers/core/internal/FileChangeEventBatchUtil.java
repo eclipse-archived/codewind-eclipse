@@ -83,9 +83,16 @@ public class FileChangeEventBatchUtil {
 
 	private static final boolean DEBUG_PRINT_COMPRESSION_RATIO = false;
 
+	private final boolean DISABLE_CWCTL_CLI_SYNC; // Enable this for debugging purposes.
+
 	public FileChangeEventBatchUtil(Filewatcher parent, String projectId) {
 		this.parent = parent;
 		this.projectId = projectId;
+
+		String val = System.getenv("DISABLE_CWCTL_CLI_SYNC");
+
+		DISABLE_CWCTL_CLI_SYNC = val != null && val.trim().equalsIgnoreCase("true");
+
 	}
 
 	/**
@@ -276,52 +283,64 @@ public class FileChangeEventBatchUtil {
 			log.logInfo(
 					"Batch change summary for " + projectId + "@ " + mostRecentEntryTimestamp + ": " + changeSummary);
 
-			// Split the entries into separate requests (chunks), to ensure that each
-			// request is no larger then a given size.
-			List<JSONArray> fileListsToSend = new ArrayList<>();
-			while (entries.size() > 0) {
+			if (!DISABLE_CWCTL_CLI_SYNC) {
+				// Use CWCTL CLI SYNC command
+				parent.internal_informCwctlOfFileChanges(projectId);
 
-				// Remove at most MAX_REQUEST_SIZE_IN_PATHS paths from paths
-				List<JSONObject> currList = new ArrayList<>();
-				while (currList.size() < MAX_REQUEST_SIZE_IN_PATHS && entries.size() > 0) {
+			} else {
 
-					// Oldest entries will be at the end of the list, and we want to send those
-					// first.
-					ChangedFileEntry nextPath = entries.remove(entries.size() - 1);
-					try {
-						currList.add(nextPath.toJsonObject());
-					} catch (JSONException e1) {
-						log.logSevere("Unable to convert changed file entry to json", e1, projectId);
+				// Use the old way of communicating file values.
+
+				// TODO: Remove this entire else block once CWCTL sync is mature.
+
+				// Split the entries into separate requests (chunks), to ensure that each
+				// request is no larger then a given size.
+				List<JSONArray> fileListsToSend = new ArrayList<>();
+				while (entries.size() > 0) {
+
+					// Remove at most MAX_REQUEST_SIZE_IN_PATHS paths from paths
+					List<JSONObject> currList = new ArrayList<>();
+					while (currList.size() < MAX_REQUEST_SIZE_IN_PATHS && entries.size() > 0) {
+
+						// Oldest entries will be at the end of the list, and we want to send those
+						// first.
+						ChangedFileEntry nextPath = entries.remove(entries.size() - 1);
+						try {
+							currList.add(nextPath.toJsonObject());
+						} catch (JSONException e1) {
+							log.logSevere("Unable to convert changed file entry to json", e1, projectId);
+						}
 					}
+
+					if (currList.size() > 0) {
+						fileListsToSend.add(new JSONArray(currList));
+					}
+
 				}
 
-				if (currList.size() > 0) {
-					fileListsToSend.add(new JSONArray(currList));
+				// Compress, convert to base64, then send
+				List<String> base64Compressed = new ArrayList<>();
+				for (JSONArray array : fileListsToSend) {
+
+					String json = array.toString();
+
+					byte[] compressedData = compressString(json);
+					base64Compressed.add(Base64.getEncoder().encodeToString(compressedData));
+
+					if (DEBUG_PRINT_COMPRESSION_RATIO) {
+						int uncompressedSize = json.getBytes().length;
+						int compressedSize = compressedData.length;
+						System.out.println("Compression ratio: " + uncompressedSize + " -> " + compressedSize
+								+ " (ratio: " + (int) ((100 * compressedSize) / uncompressedSize) + ") [per path: "
+								+ (compressedSize / array.length()) + "]");
+					}
+
 				}
 
-			}
-
-			// Compress, convert to base64, then send
-			List<String> base64Compressed = new ArrayList<>();
-			for (JSONArray array : fileListsToSend) {
-
-				String json = array.toString();
-
-				byte[] compressedData = compressString(json);
-				base64Compressed.add(Base64.getEncoder().encodeToString(compressedData));
-
-				if (DEBUG_PRINT_COMPRESSION_RATIO) {
-					int uncompressedSize = json.getBytes().length;
-					int compressedSize = compressedData.length;
-					System.out.println("Compression ratio: " + uncompressedSize + " -> " + compressedSize + " (ratio: "
-							+ (int) ((100 * compressedSize) / uncompressedSize) + ") [per path: "
-							+ (compressedSize / array.length()) + "]");
+				if (base64Compressed.size() > 0) {
+					parent.internal_sendBulkFileChanges(projectId, mostRecentEntryTimestamp, base64Compressed);
 				}
 
-			}
-
-			if (base64Compressed.size() > 0) {
-				parent.internal_sendBulkFileChanges(projectId, mostRecentEntryTimestamp, base64Compressed);
 			}
 
 		}

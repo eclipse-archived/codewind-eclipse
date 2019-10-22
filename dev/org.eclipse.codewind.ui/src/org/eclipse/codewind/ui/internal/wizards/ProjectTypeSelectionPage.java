@@ -217,7 +217,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		// for docker type language selection is optional
 		// for non-docker when selected type is different than the detected type,
 		// user need to choose a subtype to proceed
-		if (!projectType.eq(TYPE_DOCKER) && !projectType.eq(projectInfo.type)) {
+		if (!projectType.eq(TYPE_DOCKER) && (projectInfo == null || !projectType.eq(projectInfo.type))) {
 			return subtypeViewer.getCheckedElements().length != 0;
 		}
 		
@@ -270,7 +270,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		try {
 			getContainer().run(true, true, runnable);
 		} catch (InvocationTargetException e) {
-			Logger.logError("An error occurred gathering the project types for connection: " + connection.baseUrl, e);
+			Logger.logError("An error occurred gathering the project types for connection: " + connection.getBaseURI(), e);
 			return;
 		} catch (InterruptedException e) {
 			// The user cancelled the operation
@@ -420,11 +420,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			projectTypes = connection.requestProjectTypes();
 			mon.worked(100);
 		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the list of project types for connection: " + connection.baseUrl, e); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to get the list of project types for connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
 			return typeMap;
 		}
 		if (projectTypes == null || projectTypes.isEmpty()) {
-			Logger.log("The list of project types is empty for connection: " + connection.baseUrl); //$NON-NLS-1$
+			Logger.log("The list of project types is empty for connection: " + connection.getBaseURI()); //$NON-NLS-1$
 			return typeMap;
 		}
 		for (ProjectTypeInfo projectType : projectTypes) {

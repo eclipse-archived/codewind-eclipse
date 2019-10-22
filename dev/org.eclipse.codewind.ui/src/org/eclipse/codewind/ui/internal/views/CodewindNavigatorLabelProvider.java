@@ -16,6 +16,8 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.LocalConnection;
+import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
@@ -57,47 +59,50 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	@Override
 	public String getText(Object element) {
 		if (element instanceof CodewindManager) {
-			CodewindManager manager = (CodewindManager) element;
+			return Messages.CodewindLabel;
+		} else if (element instanceof LocalConnection) {
+			LocalConnection connection = (LocalConnection)element;
+			String name = connection.getName();
+			CodewindManager manager = CodewindManager.getManager();
 			if (manager.getInstallerStatus() != null) {
 				switch(manager.getInstallerStatus()) {
 				case INSTALLING:
-					return Messages.CodewindLabel + "[" + Messages.CodewindInstallingQualifier + "]";
+					return name + "[" + Messages.CodewindInstallingQualifier + "]";
 				case UNINSTALLING:
-					return Messages.CodewindLabel + "[" + Messages.CodewindUninstallingQualifier + "]";
+					return name + "[" + Messages.CodewindUninstallingQualifier + "]";
 				case STARTING:
-					return Messages.CodewindLabel + "[" + Messages.CodewindStartingQualifier + "]";
+					return name + "[" + Messages.CodewindStartingQualifier + "]";
 				case STOPPING:
-					return Messages.CodewindLabel + "[" + Messages.CodewindStoppingQualifier + "]";
+					return name + "[" + Messages.CodewindStoppingQualifier + "]";
 				}
 			} else {
 				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
-					return Messages.CodewindLabel + " [" + Messages.CodewindRunningQualifier + "]";
+					String text = name + " [" + Messages.CodewindRunningQualifier + "]";
+					if (connection.getApps().size() == 0) {
+						text = text + " (" + Messages.CodewindConnectionNoProjects + ")";
+					}
+					return text;
 				} else if (status.isInstalled()) {
 					if (status.hasStartedVersions()) {
 						// An older version is running
-						return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "] (" +
+						return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "] (" +
 								NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
 					}
-					return Messages.CodewindLabel + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
+					return name + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
 				} else if (status.hasInstalledVersions()) {
 					// An older version is installed
-					return Messages.CodewindLabel + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "] (" +
+					return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "] (" +
 							NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
 				} else if (status.isUnknown()) {
-					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+					return name + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
 				} else {
-					return Messages.CodewindLabel + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+					return name + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
 				}
 			}
-		} else if (element instanceof CodewindConnection) {
-			CodewindConnection connection = (CodewindConnection)element;
-			String text = null;
-			if (connection.baseUrl.equals(CodewindManager.getManager().getLocalURI())) {
-				text = Messages.CodewindLocalProjects;
-			} else {
-				text = Messages.CodewindConnectionLabel + " " + connection.baseUrl;
-			}
+		} else if (element instanceof RemoteConnection) {
+			RemoteConnection connection = (RemoteConnection) element;
+			String text = connection.getName();
 			if (!connection.isConnected()) {
 				String errorMsg = connection.getConnectionErrorMsg();
 				if (errorMsg == null) {
@@ -136,8 +141,11 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	public StyledString getStyledText(Object element) {
 		StyledString styledString;
 		if (element instanceof CodewindManager) {
-			CodewindManager manager = (CodewindManager) element;
-			styledString = new StyledString(Messages.CodewindLabel);
+			return new StyledString(Messages.CodewindLabel);
+		} else if (element instanceof LocalConnection) {
+			LocalConnection connection = (LocalConnection)element;
+			CodewindManager manager = CodewindManager.getManager();
+			styledString = new StyledString(connection.getName());
 			if (manager.getInstallerStatus() != null) {
 				switch(manager.getInstallerStatus()) {
 				case INSTALLING:
@@ -157,6 +165,9 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
 					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+					if (connection.getApps().size() == 0) {
+						styledString.append(" (" + Messages.CodewindConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
+					}
 				} else if (status.isInstalled()) {
 					if (status.hasStartedVersions()) {
 						// An older version is running
@@ -178,22 +189,22 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
 				}
 			}
-		} else if (element instanceof CodewindConnection) {
-			CodewindConnection connection = (CodewindConnection)element;
-			if (connection.baseUrl.equals(CodewindManager.getManager().getLocalURI())) {
-				styledString = new StyledString(Messages.CodewindLocalProjects);
+		} else if (element instanceof RemoteConnection) {
+			RemoteConnection connection = (RemoteConnection) element;
+			styledString = new StyledString(connection.getName());
+			if (connection.isConnected()) {
+				styledString.append(" [" + Messages.CodewindConnected + "]", StyledString.DECORATIONS_STYLER);
+				if (connection.getApps().size() == 0) {
+					styledString.append(" (" + Messages.CodewindConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
+				}
 			} else {
-				styledString = new StyledString(Messages.CodewindConnectionLabel + " " );
-				styledString.append(connection.baseUrl.toString(), StyledString.QUALIFIER_STYLER);
-			}
-			if (!connection.isConnected()) {
+				styledString.append(" [" + Messages.CodewindDisconnected + "]", StyledString.DECORATIONS_STYLER);
 				String errorMsg = connection.getConnectionErrorMsg();
 				if (errorMsg == null) {
-					errorMsg = Messages.CodewindDisconnected;
+					styledString.append(" (" + Messages.CodewindDisconnectedDetails + ")", StyledString.QUALIFIER_STYLER);
+				} else {
+					styledString.append(" (" + errorMsg + ")", ERROR_STYLER);
 				}
-				styledString.append(" (" + errorMsg + ")", ERROR_STYLER);
-			} else if (connection.getApps().size() == 0) {
-				styledString.append(" (" + Messages.CodewindConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
 			}
 		} else if (element instanceof CodewindApplication) {
 			CodewindApplication app = (CodewindApplication)element;
@@ -259,7 +270,12 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	
     @Override
     public String getDescription(Object element) {
-    	if (element instanceof CodewindApplication) {
+    	if (element instanceof RemoteConnection) {
+    		RemoteConnection connection = (RemoteConnection) element;
+    		if (connection.getBaseURI() != null) {
+    			return connection.getBaseURI().toString();
+    		}
+    	} else if (element instanceof CodewindApplication) {
 			CodewindApplication app = (CodewindApplication)element;
 			if (app.getAppStatusDetails() != null) {
 				return app.getAppStatusDetails();

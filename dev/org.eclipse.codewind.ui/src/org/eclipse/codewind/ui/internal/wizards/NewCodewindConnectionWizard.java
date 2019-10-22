@@ -12,6 +12,7 @@
 package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
@@ -26,15 +27,16 @@ import org.eclipse.ui.IWorkbench;
 public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 
 	private NewCodewindConnectionPage newConnectionPage;
+	
+	public NewCodewindConnectionWizard() {
+		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
+		setHelpAvailable(false);
+		setNeedsProgressMonitor(true);		
+	}
 
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-
-		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
-
-		// TODO help
-		setHelpAvailable(false);
-		setNeedsProgressMonitor(true);
+		// Empty
 	}
 
 	@Override
@@ -46,7 +48,7 @@ public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 
 	@Override
 	public boolean canFinish() {
-		return newConnectionPage.getConnection() != null;
+		return newConnectionPage.canFinish();
 	}
 
 	@Override
@@ -64,11 +66,14 @@ public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 			return false;
 		}
 
-		newConnectionPage.performFinish();
+		CodewindConnection connection = newConnectionPage.getConnection();
+		if (connection != null) {
+			CodewindConnectionManager.add(connection);
+		}
 
 		ViewHelper.openCodewindExplorerView();
 		ViewHelper.refreshCodewindExplorerView(null);
-		ViewHelper.expandConnection(newConnectionPage.getConnection());
+		ViewHelper.expandConnection(connection);
 
 		return true;
 	}

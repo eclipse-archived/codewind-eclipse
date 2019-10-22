@@ -14,8 +14,11 @@ package org.eclipse.codewind.core.internal;
 import java.net.URI;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.LocalConnection;
+import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.core.runtime.IPath;
 
 /**
  * Factory for creating the correct Codewind objects.  This is used to keep the Eclipse
@@ -26,13 +29,16 @@ import org.eclipse.codewind.core.internal.constants.ProjectType;
  */
 public class CodewindObjectFactory {
 	
-	public static CodewindConnection createCodewindConnection(URI uri) throws Exception {
-		return new CodewindConnection(uri);
+	public static CodewindConnection createCodewindConnection(String name, URI uri, boolean isLocal) {
+		if (isLocal) {
+			return new LocalConnection(name, uri);
+		}
+		return new RemoteConnection(name, uri);
 	}
 	
 	public static CodewindApplication createCodewindApplication(CodewindConnection connection,
-			String id, String name, ProjectType projectType, ProjectLanguage language, String pathInWorkspace) throws Exception {
-		return new CodewindEclipseApplication(connection, id, name, projectType, language, pathInWorkspace);
+			String id, String name, ProjectType projectType, ProjectLanguage language, IPath localPath) throws Exception {
+		return new CodewindEclipseApplication(connection, id, name, projectType, language, localPath);
 	}
 
 }

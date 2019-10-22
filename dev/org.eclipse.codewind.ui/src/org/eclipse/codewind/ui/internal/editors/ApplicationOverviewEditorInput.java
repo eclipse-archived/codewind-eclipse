@@ -30,7 +30,7 @@ public class ApplicationOverviewEditorInput implements IEditorInput, IPersistabl
 	public final String projectName;
 	
 	public ApplicationOverviewEditorInput(CodewindApplication app) {
-		this.connectionUri = app.connection.baseUrl.toString();
+		this.connectionUri = app.connection.getBaseURI().toString();
 		this.projectID = app.projectID;
 		this.projectName = app.name;
 	}

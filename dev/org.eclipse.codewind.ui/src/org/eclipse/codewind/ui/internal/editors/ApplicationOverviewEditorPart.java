@@ -15,7 +15,6 @@ import java.net.URL;
 import java.util.Date;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -103,12 +102,11 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		CodewindApplication application = null;
-		if (input instanceof ApplicationOverviewEditorInput &&
-				CodewindManager.getManager().getInstallStatus().isStarted()) {
+		if (input instanceof ApplicationOverviewEditorInput) {
 			ApplicationOverviewEditorInput appInput = (ApplicationOverviewEditorInput)input;
 			if (appInput.connectionUri != null && appInput.projectID != null) {
 				connection = CodewindConnectionManager.getActiveConnection(appInput.connectionUri);
-				if (connection != null) {
+				if (connection != null && connection.isConnected()) {
 					application = connection.getAppByID(appInput.projectID);
 				}
 			}
@@ -198,7 +196,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		layout.horizontalSpacing = 0;
 		leftColumnComp.setLayout(layout);
 		GridData data = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL);
-		data.widthHint = 120;
+		data.widthHint = 250;
 		leftColumnComp.setLayoutData(data);
 		
 		generalSection = new GeneralSection(leftColumnComp, toolkit);
@@ -589,7 +587,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        
 	        text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 	        text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
-	        text.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+	        text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, false));
 		}
 		
 		public void setValue(String value, boolean enabled) {

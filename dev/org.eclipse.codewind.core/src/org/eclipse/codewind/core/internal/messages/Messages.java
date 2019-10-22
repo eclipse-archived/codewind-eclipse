@@ -18,6 +18,11 @@ public class Messages extends NLS {
 
 	public static String GenericUnknown;
 	
+	public static String CodewindLocalConnectionName;
+	
+	public static String Connection_JobLabel;
+	public static String Connection_JobError;
+	
 	public static String Connection_ErrConnection_AlreadyExists;
 	public static String Connection_ErrConnection_OldVersion;
 	public static String Connection_ErrConnection_VersionUnknown;
@@ -72,6 +77,7 @@ public class Messages extends NLS {
 	public static String InstallCodewindJobLabel;
 	public static String StopCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
+	public static String CodewindStatusJobLabel;
 	public static String CreateProjectTaskLabel;
 	public static String ValidateProjectTaskLabel;
 	public static String DeleteProjectJobLabel;

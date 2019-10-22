@@ -78,11 +78,19 @@
 			contentProvider="org.eclipse.codewind.ui.internal.views.CodewindNavigatorContentProvider"
 			labelProvider="org.eclipse.codewind.ui.internal.views.CodewindNavigatorLabelProvider"  
 			id="org.eclipse.codewind.ui.navigatorContent"> 
-			<enablement>
+			<triggerPoints>
+       		</triggerPoints>
+			<possibleChildren>
 				<or>
-					<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" />
+					<instanceof value="org.eclipse.codewind.core.internal.CodewindManager"/>
+					<instanceof value="org.eclipse.codewind.core.internal.connection.CodewindConnection"/>
+					<instanceof value="org.eclipse.codewind.core.internal.CodewindApplication"/>
 				</or>
-			</enablement>
+			</possibleChildren>
+			<commonSorter
+					class="org.eclipse.codewind.ui.internal.views.CodewindNavigatorSorter"
+					id="org.eclipse.codewind.ui.codewindNavigatorSorter">
+			</commonSorter>
 			<actionProvider
 				id="org.eclipse.codewind.ui.rootActionProvider"
 				class="org.eclipse.codewind.ui.internal.actions.RootActionProvider">
@@ -97,11 +105,20 @@
 				</enablement>
 			</actionProvider>
 			<actionProvider
-				id="org.eclipse.codewind.ui.connectionActionProvider"
-				class="org.eclipse.codewind.ui.internal.actions.CodewindConnectionActionProvider">
+				id="org.eclipse.codewind.ui.localConnectionActionProvider"
+				class="org.eclipse.codewind.ui.internal.actions.LocalConnectionActionProvider">
 				<enablement>
 					<or>
-						<instanceof value="org.eclipse.codewind.core.internal.connection.CodewindConnection" />
+						<instanceof value="org.eclipse.codewind.core.internal.connection.LocalConnection" />
+					</or>
+				</enablement>
+			</actionProvider>
+			<actionProvider
+				id="org.eclipse.codewind.ui.remoteConnectionActionProvider"
+				class="org.eclipse.codewind.ui.internal.actions.RemoteConnectionActionProvider">
+				<enablement>
+					<or>
+						<instanceof value="org.eclipse.codewind.core.internal.connection.RemoteConnection" />
 					</or>
 				</enablement>
 			</actionProvider>
@@ -123,6 +140,15 @@
 					</or>
 				</enablement>
 			</actionProvider>
+			<dropAssistant
+				id="org.eclipse.codewind.ui.navigatorDropAssistant"
+				class="org.eclipse.codewind.ui.internal.views.CodewindNavigatorDropAssistant">
+				<possibleDropTargets>
+					<or>
+						<instanceof value="org.eclipse.codewind.core.internal.connection.CodewindConnection"/>
+					</or>
+				</possibleDropTargets>
+			</dropAssistant>
 		</navigatorContent>
 	</extension>
 

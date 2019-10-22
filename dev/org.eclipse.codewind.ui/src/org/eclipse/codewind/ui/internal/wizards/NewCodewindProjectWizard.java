@@ -30,6 +30,7 @@ import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
@@ -87,7 +88,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 	public boolean performCancel() {
 		if (newProjectPage != null) {
 			CodewindConnection newConnection = newProjectPage.getConnection();
-			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
 				newConnection.close();
 			}
 		}
@@ -102,9 +103,10 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 		ProjectTemplateInfo info = newProjectPage.getProjectTemplateInfo();
 		String name = newProjectPage.getProjectName();
+		String location = newProjectPage.getLocation();
 		CodewindConnection newConnection = newProjectPage.getConnection();
-		if (info == null || name == null || newConnection == null) {
-			Logger.logError("The connection, project type or name was null for the new project wizard"); //$NON-NLS-1$
+		if (info == null || name == null || location == null || newConnection == null) {
+			Logger.logError("The connection, project type, name or location was null for the new project wizard"); //$NON-NLS-1$
 			return false;
 		}
 		
@@ -113,13 +115,13 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 100);
-					IPath path = newConnection.getWorkspacePath().append(name);
-					InstallUtil.createProject(name, path.toOSString(), info.getUrl(), mon.split(40));
+					IPath localPath = new Path(location);
+					InstallUtil.createProject(name, localPath.toOSString(), info.getUrl(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					newConnection.requestProjectBind(name, newConnection.getWorkspacePath() + "/" + name, info.getLanguage(), info.getProjectType());
-					if (CodewindConnectionManager.getActiveConnection(newConnection.baseUrl.toString()) == null) {
+					newConnection.requestProjectBind(name, localPath.toOSString(), info.getLanguage(), info.getProjectType());
+					if (CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}
 					if (mon.isCanceled()) {

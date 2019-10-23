@@ -21,6 +21,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
+import org.eclipse.codewind.ui.internal.UIConstants;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -60,8 +61,6 @@ import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 public class RepositoryManagementComposite extends Composite {
-	
-	private static final String DOC_URL = "https://www.eclipse.org/codewind/mdteclipseusingadifferenttemplate.html";
 	
 	private final CodewindConnection connection;
 	private final List<RepositoryInfo> repoList;
@@ -108,10 +107,10 @@ public class RepositoryManagementComposite extends Composite {
 				try {
 					IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 					IWebBrowser browser = browserSupport.getExternalBrowser();
-					URL url = new URL(DOC_URL);
+					URL url = new URL(UIConstants.TEMPLATES_INFO_URL);
 					browser.openURL(url);
 				} catch (Exception e) {
-					Logger.logError("An error occurred trying to open an external browser at: " + DOC_URL, e); //$NON-NLS-1$
+					Logger.logError("An error occurred trying to open an external browser at: " + UIConstants.TEMPLATES_INFO_URL, e); //$NON-NLS-1$
 				}
 			}
 		});

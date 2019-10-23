@@ -20,6 +20,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
+import org.eclipse.codewind.ui.internal.UIConstants;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.CodewindPrefsParentPage;
@@ -74,7 +75,6 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private static final String SETTINGS_FILE = ".cw-settings";
 	private static final String JSON_EDITOR_ID = "org.eclipse.wst.json.ui.JSONEditor";
-	private static final String CWSETTINGS_INFO_URL = "https://www.eclipse.org/codewind/mdteclipsemanagingprojects.html";
 	private static final String CWSETTINGS_INFO_ID = "org.eclipse.codewind.ui.overview.ProjectSettingsInfo";
 	
 	private Composite contents;
@@ -468,10 +468,10 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 						IWebBrowser browser = browserSupport
 								.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
 										CWSETTINGS_INFO_ID, null, null);
-						URL url = new URL(CWSETTINGS_INFO_URL);
+						URL url = new URL(UIConstants.CWSETTINGS_INFO_URL);
 						browser.openURL(url);
 					} catch (Exception e) {
-						Logger.logError("Failed to open the browser for the project settings documentation: " + CWSETTINGS_INFO_URL, e); //$NON-NLS-1$
+						Logger.logError("Failed to open the browser for the project settings documentation: " + UIConstants.CWSETTINGS_INFO_URL, e); //$NON-NLS-1$
 					}
 				}
 	        });

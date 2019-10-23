@@ -48,7 +48,7 @@ public abstract class BaseDebugTest extends BaseTest {
     
     @Test
     public void test04_modifyJavaFile() throws Exception {
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), currentText, newText);
     	refreshProject();
@@ -64,7 +64,7 @@ public abstract class BaseDebugTest extends BaseTest {
     
     @Test
     public void test05_modifyDockerfile() throws Exception {
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(dockerfile);
     	TestUtil.prependToFile(path.toOSString(), "# no comment\n");
     	refreshProject();

@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -78,6 +79,7 @@ public abstract class BaseTest extends TestCase {
 	protected static CodewindConnection connection;
 	protected static IProject project;
 	
+	protected static IPath projectFolder;
 	protected static String projectName;
 	protected static String projectType = null;
 	protected static String templateId;
@@ -92,6 +94,9 @@ public abstract class BaseTest extends TestCase {
     	
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
+    	
+    	// Create a temporary folder for the project
+    	projectFolder = TestUtil.getTempFolder("codewindTest");
     	
         // Get the local Codewind connection
         connection = CodewindManager.getManager().getLocalConnection();
@@ -118,6 +123,12 @@ public abstract class BaseTest extends TestCase {
 			CodewindUtil.cleanup(connection);
 		} catch (Exception e) {
 			TestUtil.print("Test case cleanup failed", e);
+		}
+		
+		try {
+			FileUtil.deleteDirectory(projectFolder.toOSString(), true);
+		} catch (Exception e) {
+			TestUtil.print("Failed to delete the temporary project folder: " + projectFolder.toOSString(), e);
 		}
     	
 		// Restore workspace auto build setting
@@ -272,9 +283,9 @@ public abstract class BaseTest extends TestCase {
 			}
 		}
 		assertNotNull("No template found that matches the id: " + id, templateInfo);
-		IPath path = connection.getWorkspacePath().append(name);
+		IPath path = projectFolder.append(name);
 		InstallUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), new NullProgressMonitor());
-		connection.requestProjectBind(name, connection.getWorkspacePath() + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType());
+		connection.requestProjectBind(name, projectFolder + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType());
 
 	}
 	

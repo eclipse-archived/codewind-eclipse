@@ -33,7 +33,7 @@ public class AppsodyJavaMicroprofileAutoBuildTest extends BaseBuildTest {
 	public void doSetup() throws Exception {
 		super.doSetup();
 		
-		IPath destPath = connection.getWorkspacePath().append(projectName);
+		IPath destPath = projectFolder.append(projectName);
 		destPath = destPath.append(srcPath);
 		copyFile("appsodyJavaMicroprofile/Hello.java", destPath);
 		refreshProject();

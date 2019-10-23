@@ -31,7 +31,7 @@ public class NodeValidationTest extends BaseValidationTest {
 	@Override
 	public void doSetup() throws Exception {
 		super.doSetup();
-		IPath path = connection.getWorkspacePath().append(projectName);
+		IPath path = projectFolder.append(projectName);
     	path = path.append(srcPath);
 		TestUtil.updateFile(path.toOSString(), "// Add your code here", "app.get('/hello', (req, res) => res.send('Hello World!'));");
 		build();

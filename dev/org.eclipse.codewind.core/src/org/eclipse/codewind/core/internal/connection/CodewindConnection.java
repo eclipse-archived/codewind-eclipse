@@ -49,7 +49,6 @@ import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -110,18 +109,8 @@ public class CodewindConnection {
 			return;
 		}
 
-		mon.split(5);
-		if (env.getWorkspacePath() == null) {
-			// Can't recover from this
-			// This should never happen since we have already determined it is a supported version of Codewind.
-			onInitFail(Messages.Connection_ErrConnection_WorkspaceErr);
-		}
-		if (mon.isCanceled()) {
-			return;
-		}
-		
 		socket = new CodewindSocket(this);
-		if(!socket.blockUntilFirstConnection(mon.split(30))) {
+		if(!socket.blockUntilFirstConnection(mon.split(35))) {
 			Logger.logError("Socket failed to connect: " + socket.socketUri);
 			close();
 			throw new CodewindConnectionException(socket.socketUri);
@@ -948,13 +937,6 @@ public class CodewindConnection {
 				CoreUtil.updateConnection(this);
 				return;
 			}
-			if (env.getWorkspacePath() == null) {
-				// This should not happen since the version was ok
-				Logger.logError("Failed to get the local workspace path after reconnect");
-				this.connectionErrorMsg = Messages.Connection_ErrConnection_WorkspaceErr;
-				CoreUtil.updateAll();
-				return;
-			}
 			
 			String socketNS = env.getSocketNamespace();
 			if ((socketNS != null && !socketNS.equals(oldSocketNS)) || (oldSocketNS != null && !oldSocketNS.equals(socketNS))) {
@@ -1000,10 +982,6 @@ public class CodewindConnection {
 		checkResult(result, uri, false);
 	}
 
-	public IPath getWorkspacePath() {
-		return env.getWorkspacePath();
-	}
-	
 	public URL getTektonDashboardURL() {
 		return env.getTektonDashboardURL(); 
 	}

@@ -37,7 +37,7 @@ public class NodeAutoBuildTest extends BaseAutoBuildTest {
 		String origText = "// Add your code here";
 		String newText = "app.get('/hello', (req, res) => res.send('Hello Planet!'));";
 		
-		IPath path = connection.getWorkspacePath().append(projectName);
+		IPath path = projectFolder.append(projectName);
 		path = path.append(srcPath);
 		TestUtil.updateFile(path.toOSString(), origText, newText);
 		refreshProject();

@@ -144,7 +144,7 @@ public class ProjectSelectionPage extends WizardPage {
 			});
 		} else {
 			noProjectsText = new Text(composite, SWT.READ_ONLY | SWT.WRAP);
-			noProjectsText.setText(NLS.bind(Messages.SelectProjectPageNoWorkspaceProjects, connection.getWorkspacePath().toOSString()));
+			noProjectsText.setText(Messages.SelectProjectPageNoWorkspaceProjects);
 			data = new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1);
 			data.horizontalIndent = 20;
 			data.widthHint = 150;
@@ -200,7 +200,6 @@ public class ProjectSelectionPage extends WizardPage {
 			public void widgetSelected(SelectionEvent se) {
 				DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
 				dialog.setMessage(Messages.SelectProjectPageFilesystemDialogTitle);
-				dialog.setFilterPath(connection.getWorkspacePath().toOSString());
 				String selectedDirectory = dialog.open();
 				if (selectedDirectory != null && !selectedDirectory.trim().isEmpty()) {
 					pathText.setText(selectedDirectory.trim());
@@ -278,20 +277,15 @@ public class ProjectSelectionPage extends WizardPage {
 					errorMsg = Messages.SelectProjectPageNoExistError;
 					projectPath = null;
 				} else {
-					IPath relPath = path.makeRelativeTo(connection.getWorkspacePath());
-					if (relPath == null || relPath.isEmpty() || relPath.segmentCount() > 1) {
-						// The project should be directly in the Codewind workspace folder
-						errorMsg = NLS.bind(Messages.SelectProjectPageLocationError, connection.getWorkspacePath().toOSString());
-						projectPath = null;
-					} else if (connection.getAppByName(relPath.lastSegment()) != null) {
+					if (connection.getAppByName(path.lastSegment()) != null) {
 						// It is an error if a Codewind project already exists with the same name
-						errorMsg = NLS.bind(Messages.SelectProjectPageCWProjectExistsError, relPath.lastSegment());
+						errorMsg = NLS.bind(Messages.SelectProjectPageCWProjectExistsError, path.lastSegment());
 						projectPath = null;
 					} else {
 						// It is an error if a project exists with the same name but has a different location
-						IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(relPath.lastSegment());
+						IProject existingProject = ResourcesPlugin.getWorkspace().getRoot().getProject(path.lastSegment());
 						if (existingProject.exists() && !path.toFile().equals(existingProject.getLocation().toFile())) {
-							errorMsg = NLS.bind(Messages.SelectProjectPageProjectExistsError, relPath.lastSegment());
+							errorMsg = NLS.bind(Messages.SelectProjectPageProjectExistsError, path.lastSegment());
 							projectPath = null;
 						}
 					}

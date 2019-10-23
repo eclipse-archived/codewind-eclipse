@@ -39,7 +39,7 @@ public abstract class BaseBuildTest extends BaseTest {
     
     @Test
     public void test03_modifyFile() throws Exception {
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
     	refreshProject();

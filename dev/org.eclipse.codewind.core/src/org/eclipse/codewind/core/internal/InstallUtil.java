@@ -219,7 +219,7 @@ public class InstallUtil {
 		Process process = null;
 		try {
 			process = (hint == null) ? 
-					runInstaller(PROJECT_CMD, path) : runInstaller(PROJECT_CMD, path, "-t", hint);
+					runInstaller(PROJECT_CMD, CREATE_OPTION, path) : runInstaller(PROJECT_CMD, CREATE_OPTION, path, "-t", hint);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

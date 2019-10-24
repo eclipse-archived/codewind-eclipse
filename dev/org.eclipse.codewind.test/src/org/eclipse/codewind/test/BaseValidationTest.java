@@ -48,7 +48,7 @@ public abstract class BaseValidationTest extends BaseTest {
     
     @Test
     public void test04_removeDockerfile() throws Exception {
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(dockerfile);
     	TestUtil.deleteFile(path.toOSString());
     	// Wait and check that the build is still marked as successful
@@ -75,7 +75,7 @@ public abstract class BaseValidationTest extends BaseTest {
     	// this should clear the marker
     	waitForMarkersCleared(project);
     	// Check that the dockerfile is there
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(srcPath);
     	assertTrue("The dockerfile should be regenerated", path.toFile().exists());
     }

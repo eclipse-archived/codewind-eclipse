@@ -44,7 +44,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     
     @Test
     public void test04_modifyFile() throws Exception {
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
     	refreshProject();
@@ -67,7 +67,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     
     @Test
     public void test06_modifyFile() throws Exception {
-    	IPath path = connection.getWorkspacePath().append(projectName);
+    	IPath path = projectFolder.append(projectName);
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text2, text3);
     	refreshProject();

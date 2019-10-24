@@ -17,11 +17,13 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.Job;
 
 public class TestUtil {
@@ -172,6 +174,10 @@ public class TestUtil {
     
     public static boolean isWindows() {
     	return System.getProperty("os.name").toLowerCase().contains("windows");
+    }
+    
+    public static IPath getTempFolder(String prefix) throws IOException {
+		return new Path(Files.createTempDirectory(prefix).toString());
     }
 
 }

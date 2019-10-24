@@ -38,8 +38,8 @@ public class CLIState {
 	private final String projectId;
 
 	/*
-	 * Absolute time, in unix epoch msecs, at which the last cwctl command was
-	 * initiated. Note this is different from the actual value we provide to cwctl.
+	 * Absolute time, in Unix epoch msecs, at which the last cwctl command was
+	 * initiated.
 	 */
 	private long timestamp_synch_lock = 0;
 
@@ -171,11 +171,9 @@ public class CLIState {
 
 		List<String> args = new ArrayList<>();
 
-		long adjustedTimestamp;
+		long latestTimestamp;
 		synchronized (lock) {
-			// Convert the absolute timestamp to # of msecs since start of last run.
-			adjustedTimestamp = System.currentTimeMillis() - timestamp_synch_lock;
-
+			latestTimestamp = timestamp_synch_lock;
 		}
 
 		if (this.mockInstallerPath == null || this.mockInstallerPath.trim().isEmpty()) {
@@ -186,13 +184,13 @@ public class CLIState {
 			// /Users/tobes/workspaces/git/eclipse/codewind/codewind-workspace/lib5 \
 			// -i b1a78500-eaa5-11e9-b0c1-97c28a7e77c7 -t 12345
 			args.addAll(Arrays.asList(new String[] { "project", "sync", "-p", projectPath, "-i", projectId, "-t",
-					"" + adjustedTimestamp }));
+					"" + latestTimestamp }));
 		} else {
 
 			args.add("java");
 
 			args.addAll(Arrays.asList(new String[] { "-jar", this.mockInstallerPath, "-p", this.projectPath, "-i",
-					this.projectId, "-t", "" + adjustedTimestamp }));
+					this.projectId, "-t", "" + latestTimestamp }));
 
 			currInstallerPath = mockInstallerPath;
 		}
@@ -205,6 +203,7 @@ public class CLIState {
 
 		String installerPwd = new File(currInstallerPath).getParent();
 
+		// Time at which the new process was called.
 		long spawnTime = System.currentTimeMillis();
 		ProcessBuilder pb = new ProcessBuilder(args);
 		pb.directory(new File(installerPwd));
@@ -236,7 +235,7 @@ public class CLIState {
 
 		} else {
 			log.logInfo("Successfully ran installer command: " + debugStr);
-			log.logInfo("Output:" + stdout); // TODO: Convert to DEBUG once everything matures.
+			log.logInfo("Output:" + stdout + stderr); // TODO: Convert to DEBUG once everything matures.
 
 			return new RunProjectReturn(result, stdout, spawnTime);
 

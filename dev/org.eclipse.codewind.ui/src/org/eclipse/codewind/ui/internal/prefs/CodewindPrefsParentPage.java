@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
-import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.messages.Messages;

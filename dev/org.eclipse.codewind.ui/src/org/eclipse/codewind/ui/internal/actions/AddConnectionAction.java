@@ -12,7 +12,6 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.wizards.NewCodewindConnectionWizard;

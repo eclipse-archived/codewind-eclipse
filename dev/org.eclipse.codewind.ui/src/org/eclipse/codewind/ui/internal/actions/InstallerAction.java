@@ -12,8 +12,8 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallStatus;
-import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.cli.InstallStatus;
+import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;

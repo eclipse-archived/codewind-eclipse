@@ -16,8 +16,8 @@ import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
@@ -190,17 +190,16 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 					}
 					mon.setWorkRemaining(40);
 					mon.setTaskName(NLS.bind(Messages.BindProjectWizardJobLabel, name));
-					mon.split(20);
 					String path = projectPath.toFile().getAbsolutePath();
 					if (projectInfo != null) {
-						connection.requestProjectBind(name, path, projectInfo.language.getId(), projectInfo.type.getId());
+						ProjectUtil.bindProject(name, path, projectInfo.language.getId(), projectInfo.type.getId(), null, mon.split(20));
 					} else {
 						// call validate again with type and subtype hint
 						// allows it to run extension commands if defined for that type and subtype
 						if (projectSubtype != null) {
-							InstallUtil.validateProject(name, path, type + ":" + projectSubtype.id, monitor);
+							ProjectUtil.validateProject(name, path, type + ":" + projectSubtype.id, monitor);
 						}
-						connection.requestProjectBind(name, path, language, type.getId());
+						ProjectUtil.bindProject(name, path, language, type.getId(), null, mon.split(20));
 					}
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;

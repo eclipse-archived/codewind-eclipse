@@ -16,8 +16,8 @@ import java.util.List;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
@@ -116,18 +116,17 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 100);
 					IPath localPath = new Path(location);
-					InstallUtil.createProject(name, localPath.toOSString(), info.getUrl(), mon.split(40));
+					ProjectUtil.createProject(name, localPath.toOSString(), info.getUrl(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					newConnection.requestProjectBind(name, localPath.toOSString(), info.getLanguage(), info.getProjectType());
+					ProjectUtil.bindProject(name, localPath.toOSString(), info.getLanguage(), info.getProjectType(), null, mon.split(40));
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
 					if (CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}
-					if (mon.isCanceled()) {
-						return Status.CANCEL_STATUS;
-					}
-					mon.worked(40);
 					newConnection.refreshApps(null);
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;

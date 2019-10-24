@@ -20,10 +20,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.InstallStatus;
-import org.eclipse.codewind.core.internal.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.cli.InstallStatus;
+import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;

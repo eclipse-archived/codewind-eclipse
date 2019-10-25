@@ -40,7 +40,8 @@ import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
-import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.cli.CLIUtil;
+import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
@@ -120,8 +121,8 @@ public class CodewindConnection {
 			return;
 		}
 		
-		File cwcli = new File(InstallUtil.getInstallerExecutable(InstallUtil.codewindInstall));
-		filewatcher = new CodewindFilewatcherdConnection(baseUri.toString(), cwcli, new ICodewindProjectTranslator() {
+		File cwctl = new File(CLIUtil.getCWCTLExecutable());
+		filewatcher = new CodewindFilewatcherdConnection(baseUri.toString(), cwctl, new ICodewindProjectTranslator() {
 			@Override
 			public Optional<String> getProjectId(IProject project) {
 				if (project != null) {

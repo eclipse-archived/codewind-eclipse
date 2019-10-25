@@ -24,7 +24,7 @@ import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
-import org.eclipse.codewind.core.internal.InstallUtil;
+import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
@@ -284,8 +284,8 @@ public abstract class BaseTest extends TestCase {
 		}
 		assertNotNull("No template found that matches the id: " + id, templateInfo);
 		IPath path = projectFolder.append(name);
-		InstallUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), new NullProgressMonitor());
-		connection.requestProjectBind(name, projectFolder + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType());
+		ProjectUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), new NullProgressMonitor());
+		ProjectUtil.bindProject(name, projectFolder + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType(), null, new NullProgressMonitor());
 
 	}
 	

@@ -9,18 +9,18 @@
  *	 IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.codewind.core.internal;
+package org.eclipse.codewind.core.internal.cli;
 
 import java.util.Map;
 
 import org.eclipse.codewind.core.internal.PlatformUtil.OperatingSystem;
 
-public class InstallOperation {
+public class CLIInfo {
 	private String installPath = null;
 	private Map<OperatingSystem, String> osPathMap;
 	private String name = null;
 	
-	public InstallOperation(String name, Map<OperatingSystem, String> osPathMap) {
+	public CLIInfo(String name, Map<OperatingSystem, String> osPathMap) {
 		this.osPathMap = osPathMap;
 		this.name = name;
 	}
@@ -51,8 +51,8 @@ public class InstallOperation {
 	}
 	
 	/**
-	 * Get the name of the install 
-	 * @return name of the install
+	 * Get the name of the CLI info
+	 * @return name of the CLI info
 	 */
 	public String getInstallName() {
 		return name;

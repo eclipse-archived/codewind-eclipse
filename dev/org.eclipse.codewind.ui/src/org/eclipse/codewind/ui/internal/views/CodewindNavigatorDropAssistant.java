@@ -13,7 +13,6 @@ package org.eclipse.codewind.ui.internal.views;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -94,7 +93,7 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					ProjectUtil.bindProject(sourceApp.name, sourceApp.fullLocalPath.toOSString(), sourceApp.projectLanguage.getId(), sourceApp.projectType.getId(), null, monitor);
+					targetConn.requestProjectBind(sourceApp.name, sourceApp.fullLocalPath.toOSString(), sourceApp.projectLanguage.getId(), sourceApp.projectType.getId());
 					targetConn.refreshApps(null);
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$

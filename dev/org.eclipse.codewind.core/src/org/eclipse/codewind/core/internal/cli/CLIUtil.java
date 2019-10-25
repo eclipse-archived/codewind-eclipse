@@ -35,7 +35,7 @@ import org.eclipse.core.runtime.Path;
 public class CLIUtil {
 	
 	// Common options
-	public static final String JSON_OPTION = "-j";
+	public static final String JSON_OPTION = "--json";
 		
 	private static final String INSTALLER_DIR = "installerWorkDir";
 	

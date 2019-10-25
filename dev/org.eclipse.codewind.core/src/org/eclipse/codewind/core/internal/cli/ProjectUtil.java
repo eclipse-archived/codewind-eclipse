@@ -33,7 +33,7 @@ public class ProjectUtil {
 
 	private static final String PROJECT_CMD = "project";
 	private static final String CREATE_OPTION = "create";
-	private static final String PROJECT_BIND_OPTION = "bind";
+	private static final String BIND_OPTION = "bind";
 	
 	private static final String URL_OPTION = "--url";
 	private static final String NAME_OPTION = "--name";
@@ -74,7 +74,7 @@ public class ProjectUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.BindingProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			List<String> options = Arrays.asList(new String[] {PROJECT_BIND_OPTION, NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path});
+			List<String> options = Arrays.asList(new String[] {BIND_OPTION, NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path});
 			if (depId != null) {
 				options.add(DEP_ID_OPTION);
 				options.add(depId);

@@ -119,8 +119,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			
 			if (app.isEnabled()) {
 				AppStatus appStatus = app.getAppStatus();
-				String displayString = appStatus.getDisplayString(app.getStartMode());
-				builder.append(" [" + displayString + "]");
+				if (appStatus != AppStatus.UNKNOWN) {
+					String displayString = appStatus.getDisplayString(app.getStartMode());
+					builder.append(" [" + displayString + "]");
+				}
 				
 				BuildStatus buildStatus = app.getBuildStatus();
 				String buildDetails = app.getBuildDetails();
@@ -212,8 +214,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			
 			if (app.isEnabled()) {
 				AppStatus appStatus = app.getAppStatus();
-				String displayString = appStatus.getDisplayString(app.getStartMode());
-				styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
+				if (appStatus != AppStatus.UNKNOWN) {
+					String displayString = appStatus.getDisplayString(app.getStartMode());
+					styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
+				}
 				
 				BuildStatus buildStatus = app.getBuildStatus();
 				String buildDetails = app.getBuildDetails();

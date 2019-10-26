@@ -12,6 +12,8 @@
 package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -20,8 +22,11 @@ import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.json.JSONException;
@@ -46,15 +51,24 @@ public class InstallUtil {
 	private static final String STOP_ALL_CMD = "stop-all";
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
-	
-	public static final String DEFAULT_INSTALL_VERSION = "0.5.0";
+
+	private static final String INSTALL_VERSION_PROPERTIES = "install-version.properties";
+	private static final String INSTALL_VERSION_KEY = "install-version";
+	public static final String INSTALL_VERSION;
+	static {
+		String version;
+		try (InputStream stream = FileLocator.openStream(CodewindCorePlugin.getDefault().getBundle(), new Path(INSTALL_VERSION_PROPERTIES), false)) {
+			Properties properties = new Properties();
+			properties.load(stream);
+			version = properties.getProperty(INSTALL_VERSION_KEY);
+		} catch (Exception e) {
+			Logger.logError("Reading version from \"" + INSTALL_VERSION_PROPERTIES + " file failed, defaulting to \"latest\": ", e);
+			version = CoreConstants.VERSION_LATEST;
+		}
+		INSTALL_VERSION = version;
+	}
 	
 	private static final String TAG_OPTION = "-t";
-	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
-	private static final String CW_TAG_VAR = "CW_TAG";
-	
-	private static String installVersion = null;
-	private static String requestedVersion = null;
 	
 	public static InstallStatus getInstallStatus(IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		ProcessResult result = statusCodewind(monitor);
@@ -158,26 +172,8 @@ public class InstallUtil {
 		}
 	}
 	
-	public static String getRequestedVersion() {
-		if (requestedVersion == null) {
-			String value = System.getenv(CW_TAG_VAR);
-			if (value == null || value.isEmpty()) {
-				// Try the old env var
-				value = System.getenv(INSTALL_VERSION_VAR);
-			}
-			if (value != null && !value.isEmpty()) {
-				requestedVersion = value;
-			}
-		}
-		return requestedVersion;
-	}
-	
 	public static String getVersion() {
-		if (installVersion == null) {
-			String requestedVersion = getRequestedVersion();
-			installVersion = requestedVersion != null ? requestedVersion : DEFAULT_INSTALL_VERSION;
-		}
-		return installVersion;
+		return INSTALL_VERSION;
 	}
 	
 	private static IPreferenceStore getPrefs() {

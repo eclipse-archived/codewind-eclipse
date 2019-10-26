@@ -89,10 +89,9 @@ public class InstallStatus {
 	}
 	
 	private String getSupportedVersion(JSONArray versions) throws JSONException {
-		String requestedVersion = InstallUtil.getRequestedVersion();
 		for (int i = 0; i < versions.length(); i++) {
 			String version = versions.getString(i);
-			if (CodewindConnection.isSupportedVersion(version) && (requestedVersion == null || requestedVersion.equals(version))) {
+			if (CodewindConnection.isSupportedVersion(version) && InstallUtil.INSTALL_VERSION.equals(version)) {
 				return version;
 			}
 		}

@@ -56,6 +56,14 @@ pipeline {
             }
         }
 
+        stage("Create install-version.properties") {
+            steps {
+                sh """
+                   ./set-install-version.sh ${env.BRANCH_NAME} dev/org.eclipse.codewind.core
+                """
+            }
+        }
+
         stage('Build') {
             steps {
                 script {

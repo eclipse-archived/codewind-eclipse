@@ -17,45 +17,43 @@ import java.util.Map;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.tm.terminal.view.core.TerminalServiceFactory;
 import org.eclipse.tm.terminal.view.core.interfaces.ITerminalService;
 import org.eclipse.tm.terminal.view.core.interfaces.constants.ITerminalsConnectorConstants;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action for opening a shell in the application container.
  */
-public class ContainerShellAction implements IObjectActionDelegate {
+public class ContainerShellAction extends SelectionProviderAction {
 	
 	private static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
 	
     protected CodewindApplication app;
+    
+    public ContainerShellAction(ISelectionProvider selectionProvider) {
+        super(selectionProvider, Messages.ActionOpenContainerShell);
+        selectionChanged(getStructuredSelection());
+    }
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication)obj;
-            	action.setEnabled(app.isAvailable() && app.getContainerId() != null);
+            	setEnabled(app.isAvailable() && app.getContainerId() != null);
             	return;
             }
         }
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("ContainerShellAction ran but no application was selected"); //$NON-NLS-1$
@@ -88,8 +86,7 @@ public class ContainerShellAction implements IObjectActionDelegate {
         terminal.openConsole(properties, null);
     }
 
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
+    public boolean showAction() {
+    	return app != null && app.connection.isLocal();
+    }
 }

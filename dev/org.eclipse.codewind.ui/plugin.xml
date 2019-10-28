@@ -157,12 +157,6 @@
 			id="org.eclipse.codewind.ui.appObjectActions"
 			objectClass="org.eclipse.codewind.core.internal.CodewindApplication">
 			<action
-				id="org.eclipse.codewind.ui.containerShell"
-				enablesFor="1"
-				menubarPath="group.open"
-				label="%ACTION_CONTAINER_SHELL"
-				class="org.eclipse.codewind.ui.internal.actions.ContainerShellAction"/>
-			<action
 				id="org.eclipse.codewind.ui.openAppOverview"
 				enablesFor="1"
 				menubarPath="group.open"

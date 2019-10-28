@@ -85,7 +85,7 @@ public class IDEUtil {
 		((GridData)control.getLayoutData()).exclude = !visible;
 	}
 
-    public static MultiStatus getMultiStatus(String msg, Exception e) {
+    public static MultiStatus getMultiStatus(String msg, Throwable e) {
     	List<Status> statusList = new ArrayList<Status>();
     	StackTraceElement[] elems = e.getStackTrace();
     	for (StackTraceElement elem : elems) {

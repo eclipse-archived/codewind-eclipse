@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Text;
 public class CodewindConnectionComposite extends Composite {
 	
 	private Container container;
+	private String connectionName;
 	private CodewindConnection connection;
 
 	private Text connNameText;
@@ -63,16 +64,17 @@ public class CodewindConnectionComposite extends Composite {
         layout.verticalSpacing = 20;
         this.setLayout(layout);
         
-        createLabel("Connection name:", this, 1, 0);
+        createLabel(Messages.CodewindConnectionComposite_ConnNameLabel, this, 1, 0);
         connNameText = new Text(this, SWT.BORDER);
         connNameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
         connNameText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent arg0) {
-				validateAndUpdate();
+				connectionName = connNameText.getText().trim();
 				if (connection != null) {
-					connection.setName(connNameText.getText().trim());
+					connection.setName(connectionName);
 				}
+				validateAndUpdate();
 			}
 		});
         
@@ -86,24 +88,24 @@ public class CodewindConnectionComposite extends Composite {
         connGroup.setLayout(layout);
         GridData data = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1);
         connGroup.setLayoutData(data);
-        connGroup.setText("Deployment");
+        connGroup.setText(Messages.CodewindConnectionComposite_ConnDetailsGroup);
         
         Text connGroupLabel = new Text(connGroup, SWT.READ_ONLY);
-        connGroupLabel.setText("Fill in the deployment information:");
+        connGroupLabel.setText(Messages.CodewindConnectionComposite_ConnDetailsInstructions);
         connGroupLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
         IDEUtil.normalizeBackground(connGroupLabel, this);
        
-        createLabel("URL:", connGroup, 1, 15);
+        createLabel(Messages.CodewindConnectionComposite_ConnUrlLabel, connGroup, 1, 15);
         connURLText = createConnText(connGroup, SWT.NONE, 1);
         
-        createLabel("User name:", connGroup, 1, 15);
+        createLabel(Messages.CodewindConnectionComposite_ConnUserLabel, connGroup, 1, 15);
         connUserText = createConnText(connGroup, SWT.NONE, 1);
         
-        createLabel("Password:", connGroup, 1, 15);
+        createLabel(Messages.CodewindConnectionComposite_ConnPasswordLabel, connGroup, 1, 15);
         connPassText = createConnText(connGroup, SWT.PASSWORD, 1);
         
         connTestButton = new Button(connGroup, SWT.PUSH);
-        connTestButton.setText("Test Connection");
+        connTestButton.setText(Messages.CodewindConnectionComposite_TestConnButton);
         connTestButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false, 2, 1));
         connTestButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -145,35 +147,40 @@ public class CodewindConnectionComposite extends Composite {
 	
 	private void validate() {
 		
+		String errorMsg = null;
+		
 		// Check that connection name is set
-		String name = connNameText.getText().trim();
-		if (name.isEmpty()) {
-			container.setErrorMessage("Fill in a name for the connection.");
-			return;
+		if (connectionName == null || connectionName.isEmpty()) {
+			errorMsg = Messages.CodewindConnectionComposite_NoConnNameError;
+		} else {
+			CodewindConnection existingConnection = CodewindConnectionManager.getActiveConnectionByName(connectionName);
+			if (existingConnection != null) {
+				errorMsg = NLS.bind(Messages.CodewindConnectionComposite_ConnNameInUseError, connectionName);
+			}
 		}
 		
-		// Check that the connection name is not already used
-		CodewindConnection existingConnection = CodewindConnectionManager.getActiveConnectionByName(name);
-		if (existingConnection != null) {
-			container.setErrorMessage("The name " + name + " is already used for an existing connection");
-			return;
+		String msg = validateConnectionInfo();
+		if (errorMsg == null) {
+			errorMsg = msg;
 		}
 		
+		container.setErrorMessage(errorMsg);
+	}
+	
+	private String validateConnectionInfo() {
 		// Check that the url is valid and not already used
 		String url = connURLText.getText().trim();
-		if (!url.isEmpty()) { //$NON-NLS-1$
+		if (!url.isEmpty()) {
 			try {
 				new URI(url);
 			} catch (URISyntaxException e) {
 				connTestButton.setEnabled(false);
-				container.setErrorMessage("The url is not valid: " + url);
-				return;
+				return NLS.bind(Messages.CodewindConnectionComposite_InvalidUrlError, url);
 			}
-			existingConnection = CodewindConnectionManager.getActiveConnection(url.endsWith("/") ? url : url + "/");
+			CodewindConnection existingConnection = CodewindConnectionManager.getActiveConnection(url.endsWith("/") ? url : url + "/"); //$NON-NLS-1$ //$NON-NLS-2$
 			if (existingConnection != null) {
 				connTestButton.setEnabled(false);
-				container.setErrorMessage("The " + existingConnection.getName() + " connection is already using url: " + url);
-				return;
+				return NLS.bind(Messages.CodewindConnectionComposite_UrlInUseError, new String[] {existingConnection.getName(), url});
 			}
 		}
 
@@ -182,21 +189,19 @@ public class CodewindConnectionComposite extends Composite {
 		String pass = connPassText.getText().trim();
 		if (url.isEmpty() || user.isEmpty() || pass.isEmpty()) {
 			connTestButton.setEnabled(false);
-			container.setErrorMessage("Fill in all of the deployment info fields.");
-			return;
+			return Messages.CodewindConnectionComposite_MissingConnDetailsError;
 		}
 		
 		connTestButton.setEnabled(true);
 		if (connection == null) {
-			container.setErrorMessage("Click `Test Connection` to validate the deployment info.");
-			return;
+			return Messages.CodewindConnectionComposite_TestConnMsg;
 		}
 		
-		container.setErrorMessage(null);
+		return null;
 	}
 
 	public boolean canFinish() {
-		return connection != null && connection.isConnected();
+		return connectionName != null && connection != null && connection.isConnected();
 	}
 
 	void removePreviousConnection() {
@@ -230,9 +235,9 @@ public class CodewindConnectionComposite extends Composite {
 
 		if(connection != null && connection.isConnected()) {
 			container.setErrorMessage(null);
-			container.setMessage(NLS.bind(Messages.NewConnectionPage_ConnectSucceeded, connection.getBaseURI()));
+			container.setMessage(NLS.bind(Messages.CodewindConnectionComposite_ConnectSucceeded, connection.getBaseURI()));
 		} else {
-			container.setErrorMessage(NLS.bind(Messages.NewConnectionPage_ErrCouldNotConnect, uri));
+			container.setErrorMessage(NLS.bind(Messages.CodewindConnectionComposite_ErrCouldNotConnect, uri));
 		}
 
 		container.update();
@@ -246,7 +251,7 @@ public class CodewindConnectionComposite extends Composite {
 	}
 
 	private CodewindConnection createConnection(String name, URI uri) {
-		Exception exception = null;
+		Throwable exception = null;
 		final Boolean[] isCanceled = new Boolean[] {false};
 		CodewindConnection conn = CodewindObjectFactory.createCodewindConnection(name, uri, false);
 		
@@ -255,10 +260,10 @@ public class CodewindConnectionComposite extends Composite {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 100);
-					mon.setTaskName(NLS.bind(Messages.NewConnectionPage_TestConnectionJobLabel, uri));
+					mon.setTaskName(NLS.bind(Messages.CodewindConnectionComposite_TestConnectionJobLabel, uri));
 					conn.connect(mon.split(100));
 				} catch (Exception e) {
-					throw new InvocationTargetException(e, "An error occurred trying to connect to Codewind: " + e.getMessage()); //$NON-NLS-1$
+					throw new InvocationTargetException(e, NLS.bind(Messages.CodewindConnectionComposite_ConnErrorMsg, uri));
 				}
 				isCanceled[0] = monitor.isCanceled();
 			}
@@ -267,7 +272,7 @@ public class CodewindConnectionComposite extends Composite {
 			container.run(runnable);
 		} catch (InvocationTargetException e) {
 			Logger.logError("An error occurred trying to connect to Codewind at: " + uri, e); //$NON-NLS-1$
-			exception = e;
+			exception = e.getCause();
 		} catch (InterruptedException e) {
 			Logger.logError("Codewind connect was interrupted", e); //$NON-NLS-1$
 			exception = e;
@@ -279,12 +284,12 @@ public class CodewindConnectionComposite extends Composite {
 		if (!conn.isConnected()) {
 			if (exception != null) {
 				Logger.logError("Failed to connect to Codewind at: " + uri.toString(), exception); //$NON-NLS-1$
-				IStatus errorStatus = IDEUtil.getMultiStatus("An error occurred trying to connect to Codewind at: " + uri, exception);
-				ErrorDialog.openError(getShell(), "Codewind Connect Error", "An error occurred trying to connect to Codewind at: " + uri, errorStatus);
+				IStatus errorStatus = IDEUtil.getMultiStatus(Messages.CodewindConnectionComposite_ConnErrorMsg + uri, exception);
+				ErrorDialog.openError(getShell(), Messages.CodewindConnectionComposite_ConnErrorTitle, NLS.bind(Messages.CodewindConnectionComposite_ConnErrorMsg, uri), errorStatus);
 			} else {
 				// This should not happen as there should be an exception
-				Logger.logError("Failed to connect to Codewind at: " + uri.toString());
-				MessageDialog.openError(getShell(), "Codewind Connect Error", "Connecting to Codewind was not successful. Check workspace logs for details.");
+				Logger.logError("Failed to connect to Codewind at: " + uri.toString()); //$NON-NLS-1$
+				MessageDialog.openError(getShell(), Messages.CodewindConnectionComposite_ConnErrorTitle, Messages.CodewindConnectionComposite_ConnFailed);
 			}
 		}
 		return conn;

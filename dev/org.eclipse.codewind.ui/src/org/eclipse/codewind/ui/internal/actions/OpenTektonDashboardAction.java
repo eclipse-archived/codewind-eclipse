@@ -16,10 +16,13 @@ import java.net.URL;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.connection.ConnectionEnv.TektonDashboard;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionProviderAction;
@@ -58,8 +61,22 @@ public class OpenTektonDashboardAction extends SelectionProviderAction {
         	Logger.logError("OpenTektonDashboardAction ran but no application was selected"); //$NON-NLS-1$
 			return;
 		}
+        
+        TektonDashboard tekton = app.connection.getTektonDashboard();
+        if (tekton == null) {
+        	// Should not happen since the action should not show if there is no dashboard
+        	Logger.logError("OpenTektonDashboardAction ran but there is no tekton dashboard in the environment"); //$NON-NLS-1$
+        	return;
+        }
+        
+        if (!tekton.hasTektonDashboard()) {
+        	Logger.logError("Tekton dashboard is not available: " + tekton.getTektonMessage()); //$NON-NLS-1$
+        	String errorMsg = tekton.isNotInstalled() ? Messages.ActionOpenTektonDashboardNotInstalled : Messages.ActionOpenTektonDashboardOtherError;
+        	MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.ActionOpenTektonDashboardErrorDialogTitle, errorMsg);
+        	return;
+        }
 
-        URL url = app.connection.getTektonDashboardURL();
+        URL url = tekton.getTektonUrl();
 		if (url == null) {
 			Logger.logError("OpenTektonDashboardAction ran but could not get the url"); //$NON-NLS-1$
 			return;
@@ -90,6 +107,6 @@ public class OpenTektonDashboardAction extends SelectionProviderAction {
     }
     
     public boolean showAction() {
-    	return app != null && app.connection.getTektonDashboardURL() != null;
+    	return app != null && !app.connection.isLocal() && app.connection.getTektonDashboard() != null;
     }
 }

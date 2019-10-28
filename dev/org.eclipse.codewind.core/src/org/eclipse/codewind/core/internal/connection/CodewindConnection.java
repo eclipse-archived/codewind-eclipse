@@ -40,9 +40,10 @@ import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.CLIUtil;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
-import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.connection.ConnectionEnv.TektonDashboard;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
@@ -983,8 +984,8 @@ public class CodewindConnection {
 		checkResult(result, uri, false);
 	}
 
-	public URL getTektonDashboardURL() {
-		return env.getTektonDashboardURL(); 
+	public TektonDashboard getTektonDashboard() {
+		return env.getTektonDashboard(); 
 	}
 	
 	public URI getNewProjectURI() {

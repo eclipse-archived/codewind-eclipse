@@ -21,9 +21,9 @@ public class ConnectionEnv extends JSONObjectResult {
 	public static final String KEY_VERSION = "codewind_version"; //$NON-NLS-1$
 	public static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
 	public static final String KEY_SOCKET_NAMESPACE = "socket_namespace"; //$NON-NLS-1$
-	public static final String KEY_TEKTON_DASHBOARD_URL = "tekton_dashboard_url"; //$NON-NLS-1$
-	public static final String VALUE_TEKTON_DASHBOARD_NOT_INSTALLED = "not-installed"; //$NON-NLS-1$
-	public static final String VALUE_TEKTON_DASHBOARD_ERROR = "error"; //$NON-NLS-1$
+	public static final String KEY_TEKTON_DASHBOARD = "tekton_dashboard"; //$NON-NLS-1$
+	
+	private TektonDashboard tektonDashboard;
 	
 	public ConnectionEnv(JSONObject env) {
 		super(env, "connection environment");
@@ -41,16 +41,49 @@ public class ConnectionEnv extends JSONObjectResult {
 		return getString(KEY_SOCKET_NAMESPACE);
 	}
 	
-	public URL getTektonDashboardURL() {
-		String urlStr = getString(KEY_TEKTON_DASHBOARD_URL);
-		if (urlStr == null || urlStr.isEmpty() || urlStr.equals(VALUE_TEKTON_DASHBOARD_NOT_INSTALLED) || urlStr.equals(VALUE_TEKTON_DASHBOARD_ERROR)) {
+	public TektonDashboard getTektonDashboard() {
+		if (tektonDashboard == null) {
+			JSONObject jsonObject = getObject(KEY_TEKTON_DASHBOARD);
+			tektonDashboard = new TektonDashboard(jsonObject);
+		}
+		return tektonDashboard;
+	}
+	
+	public class TektonDashboard extends JSONObjectResult {
+		
+		public static final String KEY_TEKTON_DASHBOARD_STATUS = "status"; //$NON-NLS-1$
+		public static final String KEY_TEKTON_DASHBOARD_MESSAGE = "message"; //$NON-NLS-1$
+		public static final String KEY_TEKTON_DASHBOARD_URL = "url"; //$NON-NLS-1$
+		public static final String NOT_INSTALLED_MSG = "not-installed"; //$NON-NLS-1$
+		
+		protected TektonDashboard(JSONObject tektonDashboard) {
+			super(tektonDashboard, "tekton dashboard");
+		}
+		
+		public boolean hasTektonDashboard() {
+			return getBoolean(KEY_TEKTON_DASHBOARD_STATUS);
+		}
+		
+		public boolean isNotInstalled() {
+			return NOT_INSTALLED_MSG.equals(getTektonMessage());
+		}
+		
+		public String getTektonMessage() {
+			return getString(KEY_TEKTON_DASHBOARD_MESSAGE);
+		}
+		
+		public URL getTektonUrl() {
+			String urlStr = getString(KEY_TEKTON_DASHBOARD_URL);
+			if (urlStr == null || urlStr.isEmpty()) {
+				return null;
+			}
+			try {
+				return new URL(urlStr);
+			} catch (Exception e) {
+				Logger.logError("The Tekton dashboard URL is not valid: " + urlStr, e);
+			}
 			return null;
 		}
-		try {
-			return new URL(urlStr);
-		} catch (Exception e) {
-			Logger.logError("The Tekton dashboard URL is not valid: " + urlStr, e);
-		}
-		return null;
+		
 	}
 }

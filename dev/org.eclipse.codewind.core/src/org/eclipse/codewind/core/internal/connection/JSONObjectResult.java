@@ -73,6 +73,20 @@ public abstract class JSONObjectResult {
 		}
 		return list;
 	}
+	
+	protected JSONObject getObject(String key) {
+		JSONObject value = null;
+		if (result.has(key)) {
+			try {
+				value = result.getJSONObject(key);
+			} catch (JSONException e) {
+				Logger.logError("An error occurred retrieving the value from the " + type + " object for key: " + key, e);
+			}
+		} else {
+			Logger.logError("The " + type + " object did not have the expected key: " + key);
+		}
+		return value;
+	}
 
 	@Override
 	public String toString() {

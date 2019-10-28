@@ -240,6 +240,9 @@ public class Messages extends NLS {
 	public static String ActionOpenPerformanceMonitor;
 	
 	public static String ActionOpenTektonDashboard;
+	public static String ActionOpenTektonDashboardErrorDialogTitle;
+	public static String ActionOpenTektonDashboardNotInstalled;
+	public static String ActionOpenTektonDashboardOtherError;
 
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;

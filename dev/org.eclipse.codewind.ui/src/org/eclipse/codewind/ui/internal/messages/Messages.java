@@ -243,6 +243,8 @@ public class Messages extends NLS {
 	public static String ActionOpenTektonDashboardErrorDialogTitle;
 	public static String ActionOpenTektonDashboardNotInstalled;
 	public static String ActionOpenTektonDashboardOtherError;
+	
+	public static String ActionOpenContainerShell;
 
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;

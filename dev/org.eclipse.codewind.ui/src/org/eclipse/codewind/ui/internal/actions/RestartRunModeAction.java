@@ -12,22 +12,14 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.ui.IActionDelegate2;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IViewActionDelegate;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
@@ -83,6 +75,6 @@ public class RestartRunModeAction extends SelectionProviderAction {
     
     public boolean showAction() {
     	// Don't show the action if the app does not support restart
-    	return (app != null && app.isAvailable() && app.getProjectCapabilities().canRestart());
+    	return (app != null && app.connection.isLocal() && app.isAvailable() && app.getProjectCapabilities().canRestart());
     }
 }

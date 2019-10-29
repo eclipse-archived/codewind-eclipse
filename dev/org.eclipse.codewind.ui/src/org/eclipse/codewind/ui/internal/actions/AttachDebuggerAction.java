@@ -69,7 +69,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
     
     public boolean showAction() {
     	// Don't show the action if the app does not support debug
-    	return (app != null && app.isAvailable() && app.supportsDebug());
+    	return (app != null && app.connection.isLocal() && app.isAvailable() && app.supportsDebug());
     }
 
 }

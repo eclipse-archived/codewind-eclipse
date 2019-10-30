@@ -188,19 +188,18 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 								break;
 						}
 					}
-					mon.setWorkRemaining(40);
-					mon.setTaskName(NLS.bind(Messages.BindProjectWizardJobLabel, name));
-					mon.split(20);
+					mon.setWorkRemaining(50);
 					String path = projectPath.toFile().getAbsolutePath();
 					if (projectInfo != null) {
-						connection.requestProjectBind(name, path, projectInfo.language.getId(), projectInfo.type.getId());
+						ProjectUtil.bindProject(name, path, projectInfo.language.getId(), projectInfo.type.getId(), null, mon.split(30));
 					} else {
 						// call validate again with type and subtype hint
 						// allows it to run extension commands if defined for that type and subtype
 						if (projectSubtype != null) {
-							ProjectUtil.validateProject(name, path, type + ":" + projectSubtype.id, monitor);
+							ProjectUtil.validateProject(name, path, type + ":" + projectSubtype.id, mon.split(10));
 						}
-						connection.requestProjectBind(name, path, language, type.getId());
+						mon.setWorkRemaining(40);
+						ProjectUtil.bindProject(name, path, language, type.getId(), null, mon.split(20));
 					}
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;

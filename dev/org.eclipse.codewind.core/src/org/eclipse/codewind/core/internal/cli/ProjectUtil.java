@@ -40,7 +40,7 @@ public class ProjectUtil {
 	private static final String LANGUAGE_OPTION = "--language";
 	private static final String TYPE_OPTION = "--type";
 	private static final String PATH_OPTION = "--path";
-	private static final String DEP_ID_OPTION = "--depid";
+	private static final String CON_ID_OPTION = "--conid";
 
 	public static void createProject(String name, String path, String url, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
@@ -70,14 +70,14 @@ public class ProjectUtil {
 		}
 	}
 	
-	public static void bindProject(String name, String path, String language, String projectType, String depId, IProgressMonitor monitor) throws IOException, TimeoutException {
+	public static void bindProject(String name, String path, String language, String projectType, String conid, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.BindingProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
 			List<String> options = Arrays.asList(new String[] {BIND_OPTION, NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path});
-			if (depId != null) {
-				options.add(DEP_ID_OPTION);
-				options.add(depId);
+			if (conid != null) {
+				options.add(CON_ID_OPTION);
+				options.add(conid);
 			}
 			process = CLIUtil.runCWCTL(PROJECT_CMD, options.toArray(new String[options.size()]));
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);

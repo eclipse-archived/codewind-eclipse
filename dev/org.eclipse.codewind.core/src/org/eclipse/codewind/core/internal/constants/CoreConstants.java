@@ -46,6 +46,7 @@ public class CoreConstants {
 			APIPATH_REPOSITORIES = "templates/repositories",
 			APIPATH_BATCH_REPOSITORIES = "batch/" + APIPATH_REPOSITORIES,
 			APIPATH_PROJECT_TYPES = "project-types",
+			APIPATH_REGISTRY = "registry",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -138,6 +139,14 @@ public class CoreConstants {
 			KEY_METRICS_AVAILABLE = "metricsAvailable",
 			
 			KEY_AUTO_GENERATE = "autoGenerate",
+			
+			// Registry
+			KEY_DEPLOYMENT_REGISTRY = "deploymentRegistry",
+			KEY_OPERATION = "operation",
+			VALUE_OP_TEST = "test",
+			VALUE_OP_SET = "set",
+			KEY_STATUS_CODE = "statusCode",
+			KEY_DEPLOYMENT_REGISTRY_TEST = "deploymentRegistryTest",
 			
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",

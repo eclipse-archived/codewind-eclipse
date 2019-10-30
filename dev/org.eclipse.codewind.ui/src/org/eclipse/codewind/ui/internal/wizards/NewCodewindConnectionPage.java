@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -39,7 +40,9 @@ public class NewCodewindConnectionPage extends WizardPage implements CodewindCon
 	@Override
 	public void createControl(Composite parent) {
 		composite = new CodewindConnectionComposite(parent, this);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL));
+		GridData data = new GridData(SWT.FILL, SWT.FILL);
+		data.widthHint = 250;
+		composite.setLayoutData(data);
 		setControl(composite);
 	}
 	
@@ -59,6 +62,11 @@ public class NewCodewindConnectionPage extends WizardPage implements CodewindCon
 	void performFinish() {
 		CodewindConnection connection = getConnection();
 		if (connection != null) {
+			try {
+				composite.setRegistry();
+			} catch (Exception e) {
+				Logger.logError("An error occurred trying to set the registry for connection: " + connection.getName(), e); //$NON-NLS-1$
+			}
 			CodewindConnectionManager.add(connection);
 		}
 	}

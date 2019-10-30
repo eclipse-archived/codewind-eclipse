@@ -13,6 +13,7 @@ package org.eclipse.codewind.core.internal;
 
 import java.net.URI;
 
+import org.eclipse.codewind.core.internal.cli.AuthToken;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.core.internal.connection.RemoteConnection;
@@ -29,11 +30,12 @@ import org.eclipse.core.runtime.IPath;
  */
 public class CodewindObjectFactory {
 	
-	public static CodewindConnection createCodewindConnection(String name, URI uri, boolean isLocal) {
-		if (isLocal) {
-			return new LocalConnection(name, uri);
-		}
-		return new RemoteConnection(name, uri);
+	public static CodewindConnection createLocalConnection(String name, URI uri) {
+		return new LocalConnection(name, uri);
+	}
+	
+	public static CodewindConnection createRemoteConnection(String name, URI uri, String conid, AuthToken authToken) {
+		return new RemoteConnection(name, uri, conid, authToken);
 	}
 	
 	public static CodewindApplication createCodewindApplication(CodewindConnection connection,

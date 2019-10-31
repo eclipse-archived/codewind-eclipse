@@ -11,11 +11,13 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
@@ -47,6 +49,8 @@ import org.eclipse.swt.widgets.Shell;
 public class CodewindInstall {
 	
 	public static boolean ENABLE_STOP_APPS_OPTION = false;
+	
+	private static final String CODEWIND_WORKSPACE = "codewind-workspace";
 
 	public static void codewindInstallerDialog() {
 		codewindInstallerDialog(getNewProjectPrompt());
@@ -281,7 +285,8 @@ public class CodewindInstall {
 			Job job = new Job(Messages.UpdatingCodewindJobLabel) {
 				@Override
 				protected IStatus run(IProgressMonitor progressMon) {
-					SubMonitor mon = SubMonitor.convert(progressMon, 200);
+					SubMonitor mon = SubMonitor.convert(progressMon, 250);
+					IStatus upgradeError = null;
 					try {
 						// Stop if necessary
 						InstallStatus status = CodewindManager.getManager().getInstallStatus();
@@ -299,7 +304,7 @@ public class CodewindInstall {
 								return getErrorStatus(Messages.CodewindStopTimeout, e);
 							}
 						}
-						mon.setWorkRemaining(120);
+						mon.setWorkRemaining(170);
 						
 						// Remove if requested
 						if (removeOldVersion) {
@@ -314,6 +319,45 @@ public class CodewindInstall {
 								}
 							} catch (TimeoutException e) {
 								return getErrorStatus(Messages.CodewindUninstallTimeout, e);
+							}
+						}
+						mon.setWorkRemaining(150);
+						
+						if (status.requiresWSUpgrade()) {
+							// Upgrade the Codewind workspace
+							// Don't exit if upgrade fails, continue and notify the user at the end
+							String path = null;
+							if (CoreUtil.isWindows()) {
+								path = "C:/" + CODEWIND_WORKSPACE;
+							} else {
+								path = System.getProperty("user.home");
+								if (path != null && !path.isEmpty()) {
+									if (!path.endsWith("/")) {
+										path = path + "/";
+									}
+									path = path + CODEWIND_WORKSPACE;
+								} else {
+									Logger.logError("Failed to get the user home directory for upgrading the workspace"); //$NON-NLS-1$
+								}
+							}
+							if (path != null && !path.isEmpty()) {
+								File file = new File(path);
+								if (file.exists() && file.isDirectory()) {
+									mon.setTaskName(Messages.UpgradeWorkspaceJobLabel);
+									try {
+										ProcessResult result = InstallUtil.upgradeWorkspace(path, mon.split(50));
+										if (mon.isCanceled()) {
+											return Status.CANCEL_STATUS;
+										}
+										if (result.getExitValue() != 0) {
+											upgradeError = getErrorStatus(result, Messages.WorkspaceUpgradeError);
+										}
+									} catch (TimeoutException e) {
+										upgradeError = getErrorStatus(Messages.WorkspaceUpgradeError, e);
+									}
+								} else {
+									Logger.log("The codewind workspace does not exist so nothing to upgrade: " + path); //$NON-NLS-1$
+								}
 							}
 						}
 						mon.setWorkRemaining(100);
@@ -357,6 +401,9 @@ public class CodewindInstall {
 					}
 					
 					ViewHelper.refreshCodewindExplorerView(null);
+					if (upgradeError != null) {
+						return upgradeError;
+					}
 					return Status.OK_STATUS;
 				}
 			};

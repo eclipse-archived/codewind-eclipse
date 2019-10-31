@@ -79,6 +79,7 @@ public class Messages extends NLS {
 	public static String StopCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
 	public static String CodewindStatusJobLabel;
+	public static String UpgradeWorkspaceJobLabel;
 	public static String CreateProjectTaskLabel;
 	public static String BindingProjectTaskLabel;
 	public static String ValidateProjectTaskLabel;

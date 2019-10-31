@@ -24,6 +24,8 @@ public class InstallStatus {
 	public static final String INSTALLED_VERSIONS_KEY = "installed-versions";
 	public static final String STARTED_KEY = "started";
 	
+	public static final String WS_UPGRADE_VERSION = "0.6.0";
+	
 	public static final InstallStatus UNKNOWN = new InstallStatus(Status.UNKNOWN);
 
 	private Status status;
@@ -150,6 +152,27 @@ public class InstallStatus {
 		return getVersionList(startedVersions);
 	}
 	
+	public boolean requiresWSUpgrade() {
+		// If there are started versions, use those
+		JSONArray versions = startedVersions != null && startedVersions.length() > 0 ? startedVersions : installedVersions;
+		if (versions == null || versions.length() == 0) {
+			return false;
+		}
+		String highestVersion = null;
+		for (int i = 0; i < versions.length(); i++) {
+			try {
+				String version = versions.getString(i);
+				if (highestVersion == null || CodewindConnection.compareVersions(version, highestVersion) > 0) {
+					highestVersion = version;
+				}
+			} catch (JSONException e) {
+				Logger.logError("The Codewind installer status format is not recognized", e); //$NON-NLS-1$
+			}
+		}
+		// Assume the highest version is being used. If it is lower than the upgrade version, return true.
+		return (CodewindConnection.compareVersions(highestVersion, WS_UPGRADE_VERSION) < 0);
+	}
+
 	public String getVersionList(JSONArray versions) {
 		StringBuilder builder = new StringBuilder();
 		boolean start = true;

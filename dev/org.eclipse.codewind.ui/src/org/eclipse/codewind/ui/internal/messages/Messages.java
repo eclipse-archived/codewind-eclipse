@@ -118,6 +118,7 @@ public class Messages extends NLS {
 	public static String StoppingCodewindJobLabel;
 	public static String RemovingCodewindJobLabel;
 	public static String UpdatingCodewindJobLabel;
+	public static String UpgradeWorkspaceJobLabel;
 	public static String InstallingCodewindTask;
 	public static String UninstallingCodewindTask;
 	public static String InstallCodewindDialogTitle;
@@ -141,6 +142,7 @@ public class Messages extends NLS {
 	public static String CodewindStopTimeout;
 	public static String CodewindInstallTimeout;
 	public static String CodewindUninstallTimeout;
+	public static String WorkspaceUpgradeError;
 	
 	public static String UpdateCodewindDialogTitle;
 	public static String UpdateCodewindDialogMsg;

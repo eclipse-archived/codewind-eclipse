@@ -14,6 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -21,6 +22,7 @@ import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -65,7 +67,7 @@ public class ManageReposAction extends SelectionProviderAction {
 			return;
 		}
 		try {
-			List<RepositoryInfo> repoList = connection.requestRepositories();
+			List<RepositoryInfo> repoList = TemplateUtil.listTemplateSources(null, new NullProgressMonitor());
 			RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(Display.getDefault().getActiveShell(), connection, repoList);
 			if (repoDialog.open() == Window.OK && repoDialog.hasChanges()) {
 				Job job = new Job(Messages.RepoUpdateTask) {

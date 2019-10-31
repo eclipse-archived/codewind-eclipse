@@ -14,11 +14,13 @@ package org.eclipse.codewind.ui.internal.actions;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.wizards.NewCodewindProjectWizard;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -62,7 +64,7 @@ public class NewProjectAction extends SelectionProviderAction {
 		}
 
 		try {
-			List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
+			List<ProjectTemplateInfo> templates = TemplateUtil.listTemplates(true, null, new NullProgressMonitor());
 			NewCodewindProjectWizard wizard = new NewCodewindProjectWizard(connection, templates);
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			if (dialog.open() == Window.CANCEL) {

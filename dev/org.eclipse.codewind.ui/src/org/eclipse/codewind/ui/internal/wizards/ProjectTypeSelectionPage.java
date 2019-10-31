@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
@@ -31,6 +32,7 @@ import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -149,7 +151,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			public void widgetSelected(SelectionEvent event) {
 				List<RepositoryInfo> repoList;
 				try {
-					repoList = connection.requestRepositories();
+					repoList = TemplateUtil.listTemplateSources(null, new NullProgressMonitor());
 					RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(getShell(), connection, repoList);
 					if (repoDialog.open() == Window.OK) {
 						if (repoDialog.hasChanges()) {

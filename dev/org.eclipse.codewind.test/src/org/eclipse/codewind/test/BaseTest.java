@@ -25,6 +25,7 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
@@ -274,7 +275,7 @@ public abstract class BaseTest extends TestCase {
 	
 	protected void createProject(String type, String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
-		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
+		List<ProjectTemplateInfo> templates = TemplateUtil.listTemplates(true, null, new NullProgressMonitor());
 		for (ProjectTemplateInfo template : templates) {
 			if ((type == null || type.equals(template.getProjectType())) && 
 					template.getUrl().toLowerCase().matches(".*" + id.toLowerCase() + ".*")) {

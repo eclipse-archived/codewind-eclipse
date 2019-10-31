@@ -24,6 +24,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
@@ -37,6 +38,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -115,7 +117,7 @@ public class NewCodewindProjectPage extends WizardPage {
 		
 		if (templateList == null || templateList.isEmpty()) {
 			try {
-				templateList = connection.requestProjectTemplates(true);
+				templateList = TemplateUtil.listTemplates(true, null, new NullProgressMonitor());
 			} catch (Exception e) {
 				Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
 				setErrorMessage(Messages.NewProjectPage_TemplateListError);
@@ -328,7 +330,7 @@ public class NewCodewindProjectPage extends WizardPage {
 			public void widgetSelected(SelectionEvent event) {
 				List<RepositoryInfo> repoList;
 				try {
-					repoList = connection.requestRepositories();
+					repoList = TemplateUtil.listTemplateSources(null, new NullProgressMonitor());
 					RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(getShell(), connection, repoList);
 					if (repoDialog.open() == Window.OK) {
 						if (repoDialog.hasChanges()) {
@@ -344,10 +346,8 @@ public class NewCodewindProjectPage extends WizardPage {
 										return;
 									}
 									try {
-										mon = mon.split(25);
 										mon.setTaskName(Messages.NewProjectPage_RefreshTemplatesTask);
-										templateList = connection.requestProjectTemplates(true);
-										mon.worked(25);
+										templateList = TemplateUtil.listTemplates(true, null, mon.split(25));
 									} catch (Exception e) {
 										throw new InvocationTargetException(e, Messages.NewProjectPage_RefreshTemplatesError);
 									}

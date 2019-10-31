@@ -50,7 +50,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 			LAUNCH_DEBUG_ICON = "elcl16/debug_exc.png",
 			LAUNCH_RUN_ICON = "elcl16/run_exc.png",
 			REFRESH_ICON = "elcl16/refresh.png",
-			CLOUD_ICON = "obj16/cloud.png",
+			GENERIC_ICON = "obj16/generic.png",
 			GO_ICON = "obj16/go.png",
 			JAVA_ICON = "obj16/java.png",
 			MICROPROFILE_ICON = "obj16/microprofile.png",
@@ -130,7 +130,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
         registerImage(registry, LAUNCH_DEBUG_ICON, ICON_BASE_URL + LAUNCH_DEBUG_ICON);
         registerImage(registry, LAUNCH_RUN_ICON, ICON_BASE_URL + LAUNCH_RUN_ICON);
         registerImage(registry, REFRESH_ICON, ICON_BASE_URL + REFRESH_ICON);
-        registerImage(registry, CLOUD_ICON, ICON_BASE_URL + CLOUD_ICON);
+        registerImage(registry, GENERIC_ICON, ICON_BASE_URL + GENERIC_ICON);
         registerImage(registry, GO_ICON, ICON_BASE_URL + GO_ICON);
         registerImage(registry, JAVA_ICON, ICON_BASE_URL + JAVA_ICON);
         registerImage(registry, MICROPROFILE_ICON, ICON_BASE_URL + MICROPROFILE_ICON);

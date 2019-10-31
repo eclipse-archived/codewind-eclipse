@@ -265,7 +265,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 						case LANGUAGE_PYTHON:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
 						default:
-							return CodewindUIPlugin.getImage(CodewindUIPlugin.CLOUD_ICON);
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.GENERIC_ICON);
 					}
 			}
 		}

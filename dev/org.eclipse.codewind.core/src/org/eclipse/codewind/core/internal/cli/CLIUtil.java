@@ -60,6 +60,14 @@ public class CLIUtil {
 	private static final CLIInfo[] cliInfos = {codewindInfo, appsodyInfo};
 	
 	public static Process runCWCTL(String cmd, String... options) throws IOException {		
+		return runCWCTL(new String[] {cmd}, options);
+	}
+	
+	public static Process runCWCTL(String[] cmd, String[] options) throws IOException {
+		return runCWCTL(cmd, options, null);
+	}
+	
+	public static Process runCWCTL(String[] cmd, String[] options, String[] args) throws IOException {
 		// Make sure the executables are installed
 		for (int i=0; i< cliInfos.length; i++) {
 			if (cliInfos[i] != null)
@@ -68,10 +76,17 @@ public class CLIUtil {
 		
 		List<String> cmdList = new ArrayList<String>();
 		cmdList.add(codewindInfo.getInstallPath());
-		cmdList.add(cmd);
+		for (String c : cmd) {
+			cmdList.add(c);
+		}
 		if (options != null) {
-			for (String option : options) {
-				cmdList.add(option);
+			for (String opt : options) {
+				cmdList.add(opt);
+			}
+		}
+		if (args != null) {
+			for (String arg : args) {
+				cmdList.add(arg);
 			}
 		}
 		String[] command = cmdList.toArray(new String[cmdList.size()]);

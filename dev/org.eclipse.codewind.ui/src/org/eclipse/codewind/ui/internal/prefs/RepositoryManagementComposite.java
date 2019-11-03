@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -359,14 +360,14 @@ public class RepositoryManagementComposite extends Composite {
 			if (entry == null) {
 				// Remove the repository
 				try {
-					connection.requestRepoRemove(info.getURL());
+					TemplateUtil.removeTemplateSource(info.getURL(), null, mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to remove repository: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtRemoveFailed, info.getURL()), e));
 				}
 			} else if (info.getEnabled() != entry.enabled) {
 				try {
-					connection.requestRepoEnable(info.getURL(), entry.enabled);
+					TemplateUtil.enableTemplateSource(entry.enabled, info.getURL(), null, mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to update repository: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtUpdateFailed, info.getURL()), e));
@@ -375,7 +376,6 @@ public class RepositoryManagementComposite extends Composite {
 			if (mon.isCanceled()) {
 				return Status.CANCEL_STATUS;
 			}
-			mon.worked(25);
 			mon.setWorkRemaining(100);
 		}
 		for (RepoEntry entry : repoEntries) {
@@ -383,7 +383,7 @@ public class RepositoryManagementComposite extends Composite {
 			if (info == null) {
 				// Add the repository
 				try {
-					connection.requestRepoAdd(entry.url, entry.name, entry.description);
+					TemplateUtil.addTemplateSource(entry.url, entry.name, entry.description, null, mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to add repository: " + entry.url, e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtAddFailed, entry.url), e));
@@ -392,7 +392,6 @@ public class RepositoryManagementComposite extends Composite {
 			if (mon.isCanceled()) {
 				return Status.CANCEL_STATUS;
 			}
-			mon.worked(25);
 			mon.setWorkRemaining(100);
 		}
 		if (multiStatus.getChildren().length > 0) {

@@ -12,7 +12,7 @@
 <feature
       id="org.eclipse.codewind.base"
       label="%featureName"
-      version="1.3.0.qualifier"
+      version="1.4.0.qualifier"
       provider-name="%providerName">
 
    <description>
@@ -40,21 +40,21 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-         
+
    <plugin
          id="org.eclipse.codewind.filewatchers.core"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-         
+
    <plugin
          id="org.eclipse.codewind.filewatchers.eclipse"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-         
+
    <plugin
          id="org.eclipse.codewind.filewatchers.standalonenio"
          download-size="0"

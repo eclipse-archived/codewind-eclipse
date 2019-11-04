@@ -24,6 +24,7 @@ import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,12 +47,14 @@ public class InstallUtil {
 	private static final String STOP_ALL_CMD = "stop-all";
 	private static final String STATUS_CMD = "status";
 	private static final String REMOVE_CMD = "remove";
+	private static final String UPGRADE_CMD = "upgrade";
 	
 	public static final String DEFAULT_INSTALL_VERSION = "0.5.0";
 	
 	private static final String TAG_OPTION = "-t";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
 	private static final String CW_TAG_VAR = "CW_TAG";
+	private static final String WORKSPACE_OPTION = "--workspace";
 	
 	private static String installVersion = null;
 	private static String requestedVersion = null;
@@ -143,6 +146,19 @@ public class InstallUtil {
 		}
 	}
 	
+	public static ProcessResult upgradeWorkspace(String path, IProgressMonitor monitor) throws IOException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.UpgradeWorkspaceJobLabel, path), 100);
+		Process process = null;
+		try {
+			process = CLIUtil.runCWCTL(UPGRADE_CMD, WORKSPACE_OPTION, path);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
+			return result;
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
+		}
+	}
 
 	private static ProcessResult statusCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.CodewindStatusJobLabel, 100);

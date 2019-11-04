@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.Deflater;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
@@ -65,8 +63,6 @@ import org.json.JSONObject;
 public class CodewindConnection {
 
 	public static final String CODEWIND_WORKSPACE_PROPERTY = "org.eclipse.codewind.internal.workspace"; //$NON-NLS-1$
-	private static final String BRANCH_VERSION = "\\d{4}_M\\d{1,2}_\\D";
-	private static final Pattern pattern = Pattern.compile(BRANCH_VERSION);
 
 	private String name;
 	private URI baseUri;
@@ -226,95 +222,62 @@ public class CodewindConnection {
 		}
 		return null;
 	}
-
+	
+	public static int compareVersions(String versionA, String versionB) throws NumberFormatException {
+		if (versionA.equals(versionB)) {
+			return 0;
+		}
+		if (CoreConstants.VERSION_LATEST.equals(versionA) || ConnectionEnv.UNKNOWN_VERSION.equals(versionB)) {
+			return 1;
+		}
+		if (CoreConstants.VERSION_LATEST.equals(versionB) || ConnectionEnv.UNKNOWN_VERSION.equals(versionA)) {
+			return -1;
+		}
+		
+		String[] digitsA = versionA.split("\\.");
+		String[] digitsB = versionB.split("\\.");
+		
+		for (int i = 0; i < digitsA.length; i++) {
+			int valueA = Integer.parseInt(digitsA[i]);
+			if (i >= digitsB.length) {
+				// If versionA is longer than versionB and the extra digits are
+				// non-zero then versionA is greater
+				if (valueA != 0) {
+					return 1;
+				}
+			} else {
+				// If valueA is greater than valueB return 1
+				// If valueA is less than valueB return -1.
+				// If they are the same, keep going.
+				int valueB = Integer.parseInt(digitsB[i]);
+				if (valueA > valueB) {
+					return 1;
+				} else if (valueA < valueB) {
+					return -1;
+				}
+			}
+		}
+		// If valueB is longer and the extra digits are not all zero, return -1
+		if (digitsB.length > digitsA.length) {
+			for (int i = digitsA.length; i < digitsB.length; i++) {
+				int valueB = Integer.parseInt(digitsB[i]);
+				if (valueB != 0) {
+					return -1;
+				}
+			}
+		}
+		return 0;
+	}
+	
 	public static boolean isSupportedVersion(String versionStr) {
-		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
-			return false;
-		}
-
-		if (CoreConstants.VERSION_LATEST.equals(versionStr)) {
-			// Development build - possible other values to check for?
-			return true;
-		}
-		
-		Matcher matcher = pattern.matcher(versionStr);
-		if (matcher.matches()) {
-			return true;
-		}
-
 		try {
-			String[] expectedDigits = InstallUtil.DEFAULT_INSTALL_VERSION.split("\\.");
-			String[] actualDigits = versionStr.split("\\.");
-			
-			for (int i = 0; i < expectedDigits.length; i++) {
-				int expectedVal = Integer.parseInt(expectedDigits[i]);
-				if (i >= actualDigits.length) {
-					// It is ok if the expected is longer than the actual
-					// as long as all of the extra digits are 0, if not
-					// then return false
-					if (expectedVal != 0) {
-						return false;
-					}
-				} else {
-					// If the value is less than expected, return false.
-					// If the value is greater than expected, return true.
-					// If they are the same, keep going.
-					int actualVal = Integer.parseInt(actualDigits[i]);
-					if (actualVal < expectedVal) {
-						return false;
-					} else if (actualVal > expectedVal) {
-						return true;
-					}
-				}
-			}
-			return true;
-		} catch(NumberFormatException e) {
-			Logger.logError("Couldn't parse version number from: " + versionStr); //$NON-NLS-1$
+			return compareVersions(versionStr, InstallUtil.DEFAULT_INSTALL_VERSION) >= 0;
+		} catch (NumberFormatException e) {
+			Logger.logError("Invalid version: " + versionStr, e);
 			return false;
 		}
 	}
-	
-	public boolean checkVersion(int requiredVersion, String requiredVersionBr) {
-		String versionStr = env.getVersion();
-		
-		if (ConnectionEnv.UNKNOWN_VERSION.equals(versionStr)) {
-			return false;
-		}
-		
-		if (CoreConstants.VERSION_LATEST.equals(versionStr)) {
-			// Development build - possible other values to check for?
-			return true;
-		}
-		
-		Matcher matcher = pattern.matcher(versionStr);
-		if (matcher.matches()) {
-			String actualYear = versionStr.substring(0, 4);
-			String requiredYear = requiredVersionBr.substring(0, 4);
-			try {
-				if (Integer.parseInt(actualYear) >= (Integer.parseInt(requiredYear))) {
-					int index = versionStr.lastIndexOf('_');
-					String actualIteration = versionStr.substring(6, index);
-					index = requiredVersionBr.lastIndexOf('_');
-					String requiredIteration = requiredVersionBr.substring(6, index);
-					if (Integer.parseInt(actualIteration) >= Integer.parseInt(requiredIteration)) {
-						return true;
-					}
-				}
-			} catch (NumberFormatException e) {
-				Logger.logError("Failed to parse the actual version: " + versionStr + ", or the required version: " + requiredVersionBr);
-			}
-			return false;
-		}
-		
-		try {
-			return Integer.parseInt(versionStr) >= requiredVersion;
-		} catch(NumberFormatException e) {
-			Logger.logError("Couldn't parse version number from " + versionStr); //$NON-NLS-1$
-		}
-		
-		return false;
-	}
-	
+
 	public String getConnectionErrorMsg() {
 		return this.connectionErrorMsg;
 	}
@@ -607,25 +570,13 @@ public class CodewindConnection {
 	}
 	
 	public void requestValidate(CodewindApplication app) throws JSONException, IOException {
-		boolean projectIdInPath = checkVersion(1901, "2019_M1_E");
-		
-		String endpoint;
-		if (projectIdInPath) {
-			endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
+		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
 					+ app.projectID + "/"	//$NON-NLS-1$
 					+ CoreConstants.APIPATH_VALIDATE;
-		} else {
-			endpoint = CoreConstants.APIPATH_BASE	+ "/"	//$NON-NLS-1$
-					+ CoreConstants.APIPATH_VALIDATE;
-					
-		}
 		
 		URI url = baseUri.resolve(endpoint);
 		
 		JSONObject buildPayload = new JSONObject();
-		if (!projectIdInPath) {
-			buildPayload.put(CoreConstants.KEY_PROJECT_ID, app.projectID);
-		}
 		buildPayload.put(CoreConstants.KEY_PROJECT_TYPE, app.projectType.getId());
 		
 		HttpResult result = HttpUtil.post(url, buildPayload);
@@ -637,25 +588,13 @@ public class CodewindConnection {
 	}
 	
 	public void requestValidateGenerate(CodewindApplication app) throws JSONException, IOException {
-		boolean projectIdInPath = checkVersion(1901, "2019_M1_E");
-		
-		String endpoint;
-		if (projectIdInPath) {
-			endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
-					+ app.projectID + "/"	//$NON-NLS-1$
-					+ CoreConstants.APIPATH_VALIDATE_GENERATE;
-		} else {
-			endpoint = CoreConstants.APIPATH_BASE	+ "/"	//$NON-NLS-1$
-					+ CoreConstants.APIPATH_VALIDATE_GENERATE;
-					
-		}
+		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
+				+ app.projectID + "/"	//$NON-NLS-1$
+				+ CoreConstants.APIPATH_VALIDATE_GENERATE;
 		
 		URI url = baseUri.resolve(endpoint);
 		
 		JSONObject buildPayload = new JSONObject();
-		if (!projectIdInPath) {
-			buildPayload.put(CoreConstants.KEY_PROJECT_ID, app.projectID);
-		}
 		buildPayload.put(CoreConstants.KEY_PROJECT_TYPE, app.projectType.getId());
 		buildPayload.put(CoreConstants.KEY_AUTO_GENERATE, true);
 		

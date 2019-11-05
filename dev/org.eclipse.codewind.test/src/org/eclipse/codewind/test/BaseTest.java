@@ -275,7 +275,7 @@ public abstract class BaseTest extends TestCase {
 	
 	protected void createProject(String type, String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
-		List<ProjectTemplateInfo> templates = TemplateUtil.listTemplates(true, null, new NullProgressMonitor());
+		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
 		for (ProjectTemplateInfo template : templates) {
 			if ((type == null || type.equals(template.getProjectType())) && 
 					template.getUrl().toLowerCase().matches(".*" + id.toLowerCase() + ".*")) {

@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
@@ -27,7 +28,6 @@ import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
-import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.core.runtime.IPath;
 import org.json.JSONObject;
 
@@ -254,8 +254,9 @@ public class CodewindApplication {
 	
 	public URL getMetricsUrl() {
 		try {
-			return new URL(getBaseUrl(), projectLanguage.getMetricsRoot());
-		} catch (MalformedURLException e) {
+			// Example: http://127.0.0.1:34000/performance/monitor/dashboard/java?theme=dark&projectID=34e06980-fca0-11e9-b7e4-0558a951d35a
+			return (connection.getBaseURI().resolve(CoreConstants.PERF_METRICS_DASH + "/" + projectLanguage.getId() + "?theme=dark&projectID=" + projectID)).toURL();
+		} catch (Exception e) {
 			Logger.logError("An error occurred trying to construct the application metrics URL", e);
 		}
 		return null;

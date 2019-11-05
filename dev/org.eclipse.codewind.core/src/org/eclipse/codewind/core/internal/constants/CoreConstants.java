@@ -155,6 +155,7 @@ public class CoreConstants {
 			VIEW_MONITOR = "monitor",
 			VIEW_OVERVIEW = "overview",
 			PERF_MONITOR = "performance/charts",
+			PERF_METRICS_DASH = "performance/monitor/dashboard",
 			
 			QUERY_SHOW_ENABLED_ONLY = "showEnabledOnly"
 

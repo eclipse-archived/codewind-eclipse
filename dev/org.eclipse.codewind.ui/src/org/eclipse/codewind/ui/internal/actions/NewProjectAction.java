@@ -64,7 +64,7 @@ public class NewProjectAction extends SelectionProviderAction {
 		}
 
 		try {
-			List<ProjectTemplateInfo> templates = TemplateUtil.listTemplates(true, null, new NullProgressMonitor());
+			List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
 			NewCodewindProjectWizard wizard = new NewCodewindProjectWizard(connection, templates);
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			if (dialog.open() == Window.CANCEL) {

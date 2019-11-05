@@ -69,7 +69,7 @@ public class ConnectDisconnectAction extends SelectionProviderAction {
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					try {
-						conn.close();
+						conn.disconnect();
 						ViewHelper.refreshCodewindExplorerView(conn);
 						return Status.OK_STATUS;
 					} catch (Exception e) {

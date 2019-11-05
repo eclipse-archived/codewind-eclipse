@@ -51,7 +51,7 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		localConnection = CodewindObjectFactory.createCodewindConnection(Messages.CodewindLocalConnectionName, null, true);
+		localConnection = CodewindObjectFactory.createLocalConnection(Messages.CodewindLocalConnectionName, null);
 		CodewindConnectionManager.add(localConnection);
 		refreshInstallStatus(new NullProgressMonitor());
 		if (installStatus.isStarted()) {
@@ -98,7 +98,7 @@ public class CodewindManager {
 					localConnection.connect(mon.split(40));
 				}
 			} else {
-				localConnection.close();
+				localConnection.disconnect();
 				localConnection.setBaseURI(null);
 			}
 			return;

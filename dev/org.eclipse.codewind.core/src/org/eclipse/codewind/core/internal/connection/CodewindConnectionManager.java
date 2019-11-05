@@ -197,7 +197,7 @@ public class CodewindConnectionManager {
 					String name = obj.getString(NAME_KEY);
 					String uriStr = obj.getString(URI_KEY);
 					URI uri = new URI(uriStr);
-					CodewindConnection connection = CodewindObjectFactory.createCodewindConnection(name, uri, false);
+					CodewindConnection connection = CodewindObjectFactory.createRemoteConnection(name, uri, null, null);
 					connection.connect(new NullProgressMonitor());
 					CodewindConnectionManager.add(connection);
 				} catch (CodewindConnectionException e) {

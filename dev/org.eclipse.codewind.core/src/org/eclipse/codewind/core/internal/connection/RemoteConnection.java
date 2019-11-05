@@ -13,9 +13,12 @@ package org.eclipse.codewind.core.internal.connection;
 
 import java.net.URI;
 
+import org.eclipse.codewind.core.internal.cli.AuthToken;
+
 public class RemoteConnection extends CodewindConnection {
 	
-	public RemoteConnection(String name, URI uri) {
-		super(name, uri);
+	public RemoteConnection(String name, URI uri, String conid, AuthToken authToken) {
+		super(name, uri, conid, authToken);
 	}
+
 }

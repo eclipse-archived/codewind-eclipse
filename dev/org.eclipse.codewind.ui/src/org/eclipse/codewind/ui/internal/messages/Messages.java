@@ -48,10 +48,13 @@ public class Messages extends NLS {
 	public static String CodewindConnectionComposite_ConnNameLabel;
 	public static String CodewindConnectionComposite_ConnDetailsGroup;
 	public static String CodewindConnectionComposite_ConnDetailsInstructions;
-	public static String CodewindConnectionComposite_ConnUrlLabel;
-	public static String CodewindConnectionComposite_ConnUserLabel;
-	public static String CodewindConnectionComposite_ConnPasswordLabel;
+	public static String CodewindConnectionComposite_UrlLabel;
+	public static String CodewindConnectionComposite_UserLabel;
+	public static String CodewindConnectionComposite_PasswordLabel;
 	public static String CodewindConnectionComposite_TestConnButton;
+	public static String CodewindConnectionComposite_RegDetailsGroup;
+	public static String CodewindConnectionComposite_RegDetailsInstructions;
+	public static String CodewindConnectionComposite_TestRegButton;
 	public static String CodewindConnectionComposite_NoConnNameError;
 	public static String CodewindConnectionComposite_ConnNameInUseError;
 	public static String CodewindConnectionComposite_InvalidUrlError;
@@ -64,6 +67,10 @@ public class Messages extends NLS {
 	public static String CodewindConnectionComposite_ConnErrorTitle;
 	public static String CodewindConnectionComposite_ConnErrorMsg;
 	public static String CodewindConnectionComposite_ConnFailed;
+	public static String CodewindConnectionComposite_MissingRegDetailsError;
+	public static String CodewindConnectionComposite_RegErrorTitle;
+	public static String CodewindConnectionComposite_RegErrorMsg;
+	public static String CodewindConnectionComposite_RegFailed;
 
 	public static String OpenAppAction_CantOpenNotRunningAppMsg;
 	public static String OpenAppAction_CantOpenNotRunningAppTitle;

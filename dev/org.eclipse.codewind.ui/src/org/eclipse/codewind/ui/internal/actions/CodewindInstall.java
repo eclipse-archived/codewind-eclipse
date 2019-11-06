@@ -285,8 +285,8 @@ public class CodewindInstall {
 			Job job = new Job(Messages.UpdatingCodewindJobLabel) {
 				@Override
 				protected IStatus run(IProgressMonitor progressMon) {
-					SubMonitor mon = SubMonitor.convert(progressMon, 250);
 					IStatus upgradeError = null;
+					SubMonitor mon = SubMonitor.convert(progressMon, 250);
 					try {
 						// Stop if necessary
 						InstallStatus status = CodewindManager.getManager().getInstallStatus();
@@ -323,45 +323,6 @@ public class CodewindInstall {
 						}
 						mon.setWorkRemaining(150);
 						
-						if (status.requiresWSUpgrade()) {
-							// Upgrade the Codewind workspace
-							// Don't exit if upgrade fails, continue and notify the user at the end
-							String path = null;
-							if (CoreUtil.isWindows()) {
-								path = "C:/" + CODEWIND_WORKSPACE;
-							} else {
-								path = System.getProperty("user.home");
-								if (path != null && !path.isEmpty()) {
-									if (!path.endsWith("/")) {
-										path = path + "/";
-									}
-									path = path + CODEWIND_WORKSPACE;
-								} else {
-									Logger.logError("Failed to get the user home directory for upgrading the workspace"); //$NON-NLS-1$
-								}
-							}
-							if (path != null && !path.isEmpty()) {
-								File file = new File(path);
-								if (file.exists() && file.isDirectory()) {
-									mon.setTaskName(Messages.UpgradeWorkspaceJobLabel);
-									try {
-										ProcessResult result = InstallUtil.upgradeWorkspace(path, mon.split(50));
-										if (mon.isCanceled()) {
-											return Status.CANCEL_STATUS;
-										}
-										if (result.getExitValue() != 0) {
-											upgradeError = getErrorStatus(result, Messages.WorkspaceUpgradeError);
-										}
-									} catch (TimeoutException e) {
-										upgradeError = getErrorStatus(Messages.WorkspaceUpgradeError, e);
-									}
-								} else {
-									Logger.log("The codewind workspace does not exist so nothing to upgrade: " + path); //$NON-NLS-1$
-								}
-							}
-						}
-						mon.setWorkRemaining(100);
-						
 						// Install
 						mon.setTaskName(Messages.InstallingCodewindTask);
 						try {
@@ -390,6 +351,44 @@ public class CodewindInstall {
 							}
 						} catch (TimeoutException e) {
 							return getErrorStatus(Messages.CodewindStartTimeout, e);
+						}
+						
+						// Upgrade the Codewind workspace if needed
+						// Don't exit if upgrade fails, continue and notify the user at the end
+						if (status.requiresWSUpgrade()) {
+							String path = null;
+							if (CoreUtil.isWindows()) {
+								path = "C:/" + CODEWIND_WORKSPACE;
+							} else {
+								path = System.getProperty("user.home");
+								if (path != null && !path.isEmpty()) {
+									if (!path.endsWith("/")) {
+										path = path + "/";
+									}
+									path = path + CODEWIND_WORKSPACE;
+								} else {
+									Logger.logError("Failed to get the user home directory for upgrading the workspace"); //$NON-NLS-1$
+								}
+							}
+							if (path != null && !path.isEmpty()) {
+								File file = new File(path);
+								if (file.exists() && file.isDirectory()) {
+									mon.setTaskName(Messages.UpgradeWorkspaceJobLabel);
+									try {
+										ProcessResult result = InstallUtil.upgradeWorkspace(file.getAbsolutePath(), mon.split(50));
+										if (mon.isCanceled()) {
+											return Status.CANCEL_STATUS;
+										}
+										if (result.getExitValue() != 0) {
+											upgradeError = getErrorStatus(result, Messages.WorkspaceUpgradeError);
+										}
+									} catch (TimeoutException e) {
+										upgradeError = getErrorStatus(Messages.WorkspaceUpgradeError, e);
+									}
+								} else {
+									Logger.log("The codewind workspace does not exist so nothing to upgrade: " + path); //$NON-NLS-1$
+								}
+							}
 						}
 						
 						// Display prompt

@@ -23,18 +23,18 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
 public class CodewindActionProvider extends CommonActionProvider {
 	
 	private ISelectionProvider selProvider;
-	private AddConnectionAction addConnectionAction;
+//	private AddConnectionAction addConnectionAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
         selProvider = aSite.getStructuredViewer();
-        addConnectionAction = new AddConnectionAction(selProvider);
+//        addConnectionAction = new AddConnectionAction(selProvider);
     }
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
     	selProvider.setSelection(selProvider.getSelection());
-	    menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, addConnectionAction);
+//	    menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, addConnectionAction);
     }
 }

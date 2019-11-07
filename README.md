@@ -18,10 +18,10 @@ Prerequisites
 Complete the installation:
 1. Install [Codewind from the Eclipse Marketplace](https://marketplace.eclipse.org/content/codewind).
 2. Open the **Codewind Explorer** view. Go to **Window**>**Show View**>**Other…**>**Codewind**>**Codewind Explorer**.
-3. Double-click the **Codewind** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdt-eclipse-installinfo.html).
+3. Double-click the **Local** entry in the view to finish installing Codewind. The download is approximately 1 GB. For more information, see [Installing Codewind for Eclipse](https://www.eclipse.org/codewind/mdt-eclipse-installinfo.html).
 
 ## Using Codewind for Eclipse
-Right-click the **Local Projects** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
+Right-click the **Local** entry in the view to create new projects or add existing projects to Codewind. After a project is created or added, it displays in the **Codewind Explorer** view. Right-click the project to see the available actions.
 
 [Features:](https://www.eclipse.org/codewind/mdteclipsemanagingprojects.html)</br>
 - **Open Application**: Opens the application in the default Eclipse browser. This action is only available when the application is running or debugging.
@@ -38,8 +38,8 @@ Right-click the **Local Projects** entry in the view to create new projects or a
 - **Build**: Initiate a build of your project. This action is not available if a build is already running. For more information, see [Building Codewind projects](https://www.eclipse.org/codewind/mdteclipsebuildproject.html).
 - **Disable Auto Build**: Use this to disable automatic builds if you are making a lot of changes and don't want builds to be triggered until you are done. This action is available only when auto build is enabled.
 - **Enable Auto Build**: Use this to re-enable automatic builds whenever a change is made. This action is available only when auto build is disabled.
-- **Remove**: Removes a project. This action removes the project from Codewind. You can then use Eclipse to delete the project from the Eclipse workspace and the file system.
-- **Refresh**: If the project gets out of sync, use this option to refresh it. To refresh all projects, right-click the **Projects (Local)** item in the **Codewind Explorer** view and select **Refresh**.
+- **Remove**: Removes a project. This action removes the project from Codewind and optionally deletes the project files from the file system.
+- **Refresh**: If the project gets out of sync, use this option to refresh it. To refresh all projects, right-click the **Local** item in the **Codewind Explorer** view and select **Refresh**.
 
 ## Enabling debug logs
 1. Create an `.options` file in your Eclipse install directory, the same directory with the `eclipse` executable. Include the following content in the new file:

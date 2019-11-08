@@ -97,26 +97,29 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
-			// Disconnect the local connection(s).  If there's an exception,
+			// Disconnect the local connection(s). If there's an exception,
 			// log it and continue to stop Codewind.
+			CodewindConnectionManager.activeConnections().stream()
+				.filter(CodewindConnection::isLocal)
+				.forEach(connection -> {
+					try {
+						connection.disconnect();
+					} catch (Exception e) {
+						Logger.logError("Error disconnecting " + connection.getName() + " connection", e);
+					}
+				});
+			// Yield to give the connections the chance to close
 			try {
-				CodewindConnectionManager.activeConnections().stream()
-					.filter(CodewindConnection::isLocal)
-					.forEach(CodewindConnection::disconnect);
-				// Yield to give the connections the chance to close
-				try {
-					Thread.sleep(250);
-				} catch (InterruptedException e) {
-					// ignore
-				}
-			} catch (Exception e) {
-				Logger.logError("Error closing socket", e);
+				Thread.sleep(250);
+			} catch (InterruptedException e) {
+				// ignore
 			}
-			
+
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
-		    process = CLIUtil.runCWCTL(stopAll ? STOP_ALL_CMD : STOP_CMD);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT), mon.split(95));
-		    return result;
+			process = CLIUtil.runCWCTL(stopAll ? STOP_ALL_CMD : STOP_CMD);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT),
+					mon.split(95));
+			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();

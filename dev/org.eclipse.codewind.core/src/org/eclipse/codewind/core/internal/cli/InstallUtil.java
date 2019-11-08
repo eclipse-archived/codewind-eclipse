@@ -20,6 +20,8 @@ import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -95,10 +97,29 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
+			// Disconnect the local connection(s). If there's an exception,
+			// log it and continue to stop Codewind.
+			CodewindConnectionManager.activeConnections().stream()
+				.filter(CodewindConnection::isLocal)
+				.forEach(connection -> {
+					try {
+						connection.disconnect();
+					} catch (Exception e) {
+						Logger.logError("Error disconnecting " + connection.getName() + " connection", e);
+					}
+				});
+			// Yield to give the connections the chance to close
+			try {
+				Thread.sleep(250);
+			} catch (InterruptedException e) {
+				// ignore
+			}
+
 			CodewindManager.getManager().setInstallerStatus(InstallerStatus.STOPPING);
-		    process = CLIUtil.runCWCTL(stopAll ? STOP_ALL_CMD : STOP_CMD);
-		    ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT), mon.split(95));
-		    return result;
+			process = CLIUtil.runCWCTL(stopAll ? STOP_ALL_CMD : STOP_CMD);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, getPrefs().getInt(CodewindCorePlugin.CW_STOP_TIMEOUT),
+					mon.split(95));
+			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();

@@ -97,12 +97,12 @@ public class InstallUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StopCodewindJobLabel, 100);
 		Process process = null;
 		try {
-			// Close the local connection(s).  If there's an exception,
+			// Disconnect the local connection(s).  If there's an exception,
 			// log it and continue to stop Codewind.
 			try {
 				CodewindConnectionManager.activeConnections().stream()
 					.filter(CodewindConnection::isLocal)
-					.forEach(CodewindConnection::close);
+					.forEach(CodewindConnection::disconnect);
 				// Yield to give the connections the chance to close
 				try {
 					Thread.sleep(250);

@@ -56,7 +56,7 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 		}
 
 		try {
-			CodewindConnectionManager.removeConnection(connection.getBaseURI().toString());
+			CodewindConnectionManager.remove(connection.getBaseURI().toString());
 		} catch (Exception e) {
 			Logger.logError("Error removing connection: " + connection.getBaseURI().toString(), e); //$NON-NLS-1$
 		}

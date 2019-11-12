@@ -142,7 +142,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 	
 	private CodewindConnection setupConnection() {
 		final CodewindManager manager = CodewindManager.getManager();
-		CodewindConnection connection = manager.getLocalConnection();
+		CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
 		if (connection != null && connection.isConnected()) {
 			return connection;
 		}
@@ -170,7 +170,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
-					CodewindConnection connection = CodewindManager.getManager().getLocalConnection();
+					CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
 					ViewHelper.refreshCodewindExplorerView(connection);
 				} catch (TimeoutException e) {
 					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage()); //$NON-NLS-1$
@@ -190,6 +190,6 @@ public class BindProjectAction implements IObjectActionDelegate {
 			return null;
 		}
 
-		return manager.getLocalConnection();
+		return CodewindConnectionManager.getLocalConnection();
 	}
 }

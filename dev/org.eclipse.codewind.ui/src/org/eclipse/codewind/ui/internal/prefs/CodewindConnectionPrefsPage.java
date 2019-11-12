@@ -119,7 +119,7 @@ public class CodewindConnectionPrefsPage extends PreferencePage implements IWork
 				for(int i : selected) {
 					// The URL is in the 0th column of the table
 					String url = connectionsTable.getItem(i).getText(0);
-					CodewindConnectionManager.removeConnection(url);
+					CodewindConnectionManager.remove(url);
 				}
 
 				refreshConnectionsList();

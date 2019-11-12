@@ -52,4 +52,10 @@ task buildAll(type: GradleBuild) {
     buildFile = 'buildAll.gradle'
 }
 
+task getDependencies(type: GradleBuild) {
+    buildFile = 'buildAll.gradle'
+    tasks = ['getCoreDependencies', 'getFWCoreDependencies']
+}
+
 buildAll.dependsOn downloadUpdateSiteJar
+getDependencies.dependsOn downloadUpdateSiteJar

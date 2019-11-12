@@ -16,26 +16,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
-import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 
 public class CodewindManager {
 	
 	private static CodewindManager codewindManager;
-	
-	CodewindConnection localConnection = null;
 	
 	// Keep track of the install status and if the installer is currently running.
 	// If the installer is running, this is the status that should be reported, if
@@ -51,24 +43,7 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		localConnection = CodewindObjectFactory.createLocalConnection(Messages.CodewindLocalConnectionName, null);
-		CodewindConnectionManager.add(localConnection);
 		refreshInstallStatus(new NullProgressMonitor());
-		if (installStatus.isStarted()) {
-			Job job = new Job(NLS.bind(Messages.Connection_JobLabel, localConnection.getName())) {
-				@Override
-				protected IStatus run(IProgressMonitor monitor) {
-					try {
-						localConnection.connect(monitor);
-						return Status.OK_STATUS;
-					} catch (Exception e) {
-						Logger.logError("An error occurred trying to connect to the local Codewind instance at:" + localConnection.getBaseURI(), e); //$NON-NLS-1$
-						return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.Connection_JobError, new String[] {localConnection.getName(), localConnection.getBaseURI().toString()}), e);
-					}
-				}
-			};
-			job.schedule();
-		}
 	}
 
 	public static synchronized CodewindManager getManager() {
@@ -90,16 +65,19 @@ public class CodewindManager {
 		try {
 			SubMonitor mon = SubMonitor.convert(monitor, 100);
 			installStatus = InstallUtil.getInstallStatus(mon.split(60));
-			if (installStatus.isStarted()) {
-				urlStr = installStatus.getURL();
-				if (!localConnection.isConnected()) {
-					URI uri = new URI(urlStr);
-					localConnection.setBaseURI(uri);
-					localConnection.connect(mon.split(40));
+			CodewindConnection localConnection = CodewindConnectionManager.getLocalConnection();
+			if (localConnection != null) {
+				if (installStatus.isStarted()) {
+					urlStr = installStatus.getURL();
+					if (!localConnection.isConnected()) {
+						URI uri = new URI(urlStr);
+						localConnection.setBaseURI(uri);
+						localConnection.connect(mon.split(40));
+					}
+				} else {
+					localConnection.disconnect();
+					localConnection.setBaseURI(null);
 				}
-			} else {
-				localConnection.disconnect();
-				localConnection.setBaseURI(null);
 			}
 			return;
 		} catch (IOException e) {
@@ -127,10 +105,6 @@ public class CodewindManager {
 		return CodewindConnection.isSupportedVersion(version);
 	}
 	
-	public synchronized CodewindConnection getLocalConnection() {
-		return localConnection;
-	}
-
 	public void refresh(IProgressMonitor monitor) {
 		refreshInstallStatus(monitor);
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {

@@ -19,9 +19,11 @@ import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,14 +42,24 @@ public class CodewindConnectionManager {
 	public static final String NAME_KEY = "name"; //$NON-NLS-1$
 	public static final String URI_KEY = "uri"; //$NON-NLS-1$
 	
-	
 	private List<CodewindConnection> connections = new ArrayList<>();
+	private CodewindConnection localConnection = null;
 
 	private CodewindConnectionManager() {
 		instance = this;
-
+		
+		// In order to restore any overview pages, the connection must be established
+		localConnection = CodewindObjectFactory.createLocalConnection(Messages.CodewindLocalConnectionName, null);
+		connections.add(localConnection);
+		try {
+			// This will connect if Codewind is running
+			CodewindManager.getManager().refreshInstallStatus(new NullProgressMonitor());
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to connect to the local Codewind instance", e); //$NON-NLS-1$
+		}
+		
 		loadFromPreferences();
-
+		
 		// Add a preference listener to reload the cached list of connections each time it's modified.
 //		CodewindCorePlugin.getDefault().getPreferenceStore()
 //			.addPropertyChangeListener(new IPropertyChangeListener() {
@@ -66,6 +78,10 @@ public class CodewindConnectionManager {
 			instance = new CodewindConnectionManager();
 		}
 		return instance;
+	}
+
+	public synchronized static CodewindConnection getLocalConnection() {
+		return instance().localConnection;
 	}
 
 	/**
@@ -117,7 +133,7 @@ public class CodewindConnectionManager {
 	 * 	true if the connection was removed,
 	 * 	false if not because it didn't exist.
 	 */
-	synchronized static boolean remove(String baseUrl) {
+	public synchronized static boolean remove(String baseUrl) {
 		boolean removeResult = false;
 
 		CodewindConnection connection = CodewindConnectionManager.getActiveConnection(baseUrl.toString());
@@ -176,8 +192,6 @@ public class CodewindConnectionManager {
 	}
 
 	private void loadFromPreferences() {
-		clear();
-
 		String storedConnections = CodewindCorePlugin.getDefault()
 				.getPreferenceStore()
 				.getString(CONNECTION_LIST_PREFSKEY).trim();
@@ -207,10 +221,5 @@ public class CodewindConnectionManager {
 		} catch (Exception e) {
 			Logger.logError("Error loading connection from preferences", e); //$NON-NLS-1$
 		}
-	}
-
-	public static boolean removeConnection(String connectionUrl) {
-		CodewindConnectionManager.remove(connectionUrl);
-		return true;
 	}
 }

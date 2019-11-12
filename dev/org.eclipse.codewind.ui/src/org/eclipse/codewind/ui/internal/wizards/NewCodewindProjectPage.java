@@ -26,6 +26,7 @@ import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
@@ -657,13 +658,13 @@ public class NewCodewindProjectPage extends WizardPage {
 	
 	private void setupConnection() {
 		final CodewindManager manager = CodewindManager.getManager();
-		connection = manager.getLocalConnection();
+		connection = CodewindConnectionManager.getLocalConnection();
 		if (connection != null && connection.isConnected()) {
 			return;
 		}
 		InstallStatus status = manager.getInstallStatus();
 		if (status.isStarted()) {
-			connection = manager.getLocalConnection();
+			connection = CodewindConnectionManager.getLocalConnection();
 			return;
 		}
 		if (!status.isInstalled()) {
@@ -683,7 +684,7 @@ public class NewCodewindProjectPage extends WizardPage {
 						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
-					connection = manager.getLocalConnection();
+					connection = CodewindConnectionManager.getLocalConnection();
 					ViewHelper.refreshCodewindExplorerView(connection);
 				} catch (IOException e) {
 					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$

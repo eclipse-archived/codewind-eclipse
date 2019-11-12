@@ -17,13 +17,14 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
@@ -266,8 +267,7 @@ public class CodewindInstall {
 				Shell shell = Display.getDefault().getActiveShell();
 				if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle,
 						NLS.bind(Messages.InstallCodewindAddProjectMessage, project.getName()))) {
-					final CodewindManager manager = CodewindManager.getManager();
-					CodewindConnection connection = manager.getLocalConnection();
+					CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
 					if (connection != null && connection.isConnected()) {
 						Wizard wizard = new BindProjectWizard(connection, project.getLocation());
 						WizardLauncher.launchWizardWithoutSelection(wizard);

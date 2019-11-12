@@ -25,8 +25,8 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
-import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
@@ -100,7 +100,7 @@ public abstract class BaseTest extends TestCase {
     	projectFolder = TestUtil.getTempFolder("codewindTest");
     	
         // Get the local Codewind connection
-        connection = CodewindManager.getManager().getLocalConnection();
+        connection = CodewindConnectionManager.getLocalConnection();
         assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project

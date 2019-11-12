@@ -17,6 +17,7 @@ public enum ProjectLanguage {
 	LANGUAGE_SWIFT("swift", "Swift"),
 	LANGUAGE_PYTHON("python", "Python"),
 	LANGUAGE_GO("go", "Go"),
+	LANGUAGE_BASH("bash", "Bash"),
 	LANGUAGE_UNKNOWN("unknown", "Unknown");
 	
 	private final String id;

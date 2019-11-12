@@ -120,7 +120,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					ProjectUtil.bindProject(name, localPath.toOSString(), info.getLanguage(), info.getProjectType(), null, mon.split(40));
+					ProjectUtil.bindProject(name, localPath.toOSString(), info.getLanguage(), info.getProjectType(), newConnection.getConid(), mon.split(40));
 					if (CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
 						CodewindConnectionManager.add(newConnection);
 					}

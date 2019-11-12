@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ public class CLIUtil {
 	
 	// Common options
 	public static final String JSON_OPTION = "--json";
+	public static final String CON_ID_OPTION = "--conid";
 		
 	private static final String INSTALLER_DIR = "installerWorkDir";
 	
@@ -60,14 +62,14 @@ public class CLIUtil {
 	private static final CLIInfo[] cliInfos = {codewindInfo, appsodyInfo};
 	
 	public static Process runCWCTL(String cmd, String... options) throws IOException {		
-		return runCWCTL(new String[] {cmd}, options);
+		return runCWCTL(null, new String[] {cmd}, options, null);
 	}
 	
-	public static Process runCWCTL(String[] cmd, String[] options) throws IOException {
-		return runCWCTL(cmd, options, null);
+	public static Process runCWCTL(String[] globalOptions, String[] cmd, String[] options) throws IOException {
+		return runCWCTL(globalOptions, cmd, options, null);
 	}
 	
-	public static Process runCWCTL(String[] cmd, String[] options, String[] args) throws IOException {
+	public static Process runCWCTL(String[] globalOptions, String[] cmd, String[] options, String[] args) throws IOException {
 		// Make sure the executables are installed
 		for (int i=0; i< cliInfos.length; i++) {
 			if (cliInfos[i] != null)
@@ -76,19 +78,10 @@ public class CLIUtil {
 		
 		List<String> cmdList = new ArrayList<String>();
 		cmdList.add(codewindInfo.getInstallPath());
-		for (String c : cmd) {
-			cmdList.add(c);
-		}
-		if (options != null) {
-			for (String opt : options) {
-				cmdList.add(opt);
-			}
-		}
-		if (args != null) {
-			for (String arg : args) {
-				cmdList.add(arg);
-			}
-		}
+		addOptions(cmdList, globalOptions);
+		addOptions(cmdList, cmd);
+		addOptions(cmdList, options);
+		addOptions(cmdList, args);
 		String[] command = cmdList.toArray(new String[cmdList.size()]);
 		ProcessBuilder builder = new ProcessBuilder(command);
 		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
@@ -98,6 +91,14 @@ public class CLIUtil {
 			env.put("PATH", pathVar);
 		}
 		return builder.start();
+	}
+	
+	private static void addOptions(List<String> cmdList, String[] options) {
+		if (options != null) {
+			for (String opt : options) {
+				cmdList.add(opt);
+			}
+		}
 	}
 	
 	public static String getCWCTLExecutable() throws IOException {
@@ -164,5 +165,14 @@ public class CLIUtil {
 	private static String getCLIInstallDir() {
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();
+	}
+	
+	public static String[] getOptions(String[] options, String conid) {
+		ArrayList<String> opts = new ArrayList<String>(Arrays.asList(options));
+		if (conid != null) {
+			opts.add(CON_ID_OPTION);
+			opts.add(conid);
+		}
+		return opts.toArray(new String[opts.size()]);
 	}
 }

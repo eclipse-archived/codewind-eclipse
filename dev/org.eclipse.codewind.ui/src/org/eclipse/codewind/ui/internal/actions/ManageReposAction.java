@@ -67,7 +67,7 @@ public class ManageReposAction extends SelectionProviderAction {
 			return;
 		}
 		try {
-			List<RepositoryInfo> repoList = TemplateUtil.listTemplateSources(null, new NullProgressMonitor());
+			List<RepositoryInfo> repoList = TemplateUtil.listTemplateSources(connection.getConid(), new NullProgressMonitor());
 			RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(Display.getDefault().getActiveShell(), connection, repoList);
 			if (repoDialog.open() == Window.OK && repoDialog.hasChanges()) {
 				Job job = new Job(Messages.RepoUpdateTask) {

@@ -35,7 +35,6 @@ public class AuthUtil {
 	private static final String INSECURE_OPTION = "--insecure";
 	private static final String USERNAME_OPTION = "--username";
 	private static final String PASSWORD_OPTION = "--password";
-	private static final String CON_ID_OPTION = "--conid";
 	
 	private static final String STATUS_KEY = "status";
 	private static final String STATUS_MSG_KEY = "status_message";
@@ -46,7 +45,7 @@ public class AuthUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.AuthorizingTaskLabel, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(SECKEYRING_CMD, UPDATE_OPTION, USERNAME_OPTION, username, PASSWORD_OPTION, password, CON_ID_OPTION, conid);
+			process = CLIUtil.runCWCTL(null, new String[] {SECKEYRING_CMD, UPDATE_OPTION}, new String[] {USERNAME_OPTION, username, PASSWORD_OPTION, password, CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(50));
 			if (result.getExitValue() != 0) {
 				Logger.logError("Seckeyring update failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -64,7 +63,7 @@ public class AuthUtil {
 				throw new IOException(msg);
 			}
 			
-			process = CLIUtil.runCWCTL(INSECURE_OPTION, SECTOKEN_CMD, GET_OPTION, USERNAME_OPTION, username, CON_ID_OPTION, conid);
+			process = CLIUtil.runCWCTL(new String[] {INSECURE_OPTION}, new String[] {SECTOKEN_CMD, GET_OPTION}, new String[] {USERNAME_OPTION, username, CLIUtil.CON_ID_OPTION, conid});
 			result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(50));
 			if (result.getExitValue() != 0) {
 				Logger.logError("Sectoken get failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

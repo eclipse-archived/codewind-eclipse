@@ -360,14 +360,14 @@ public class RepositoryManagementComposite extends Composite {
 			if (entry == null) {
 				// Remove the repository
 				try {
-					TemplateUtil.removeTemplateSource(info.getURL(), null, mon.split(25));
+					TemplateUtil.removeTemplateSource(info.getURL(), connection.getConid(), mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to remove repository: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtRemoveFailed, info.getURL()), e));
 				}
 			} else if (info.getEnabled() != entry.enabled) {
 				try {
-					TemplateUtil.enableTemplateSource(entry.enabled, info.getURL(), null, mon.split(25));
+					TemplateUtil.enableTemplateSource(entry.enabled, info.getURL(), connection.getConid(), mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to update repository: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtUpdateFailed, info.getURL()), e));
@@ -383,7 +383,7 @@ public class RepositoryManagementComposite extends Composite {
 			if (info == null) {
 				// Add the repository
 				try {
-					TemplateUtil.addTemplateSource(entry.url, entry.name, entry.description, null, mon.split(25));
+					TemplateUtil.addTemplateSource(entry.url, entry.name, entry.description, connection.getConid(), mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to add repository: " + entry.url, e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtAddFailed, entry.url), e));

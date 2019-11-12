@@ -331,7 +331,7 @@ public class NewCodewindProjectPage extends WizardPage {
 			public void widgetSelected(SelectionEvent event) {
 				List<RepositoryInfo> repoList;
 				try {
-					repoList = TemplateUtil.listTemplateSources(null, new NullProgressMonitor());
+					repoList = TemplateUtil.listTemplateSources(connection.getConid(), new NullProgressMonitor());
 					RepositoryManagementDialog repoDialog = new RepositoryManagementDialog(getShell(), connection, repoList);
 					if (repoDialog.open() == Window.OK) {
 						if (repoDialog.hasChanges()) {

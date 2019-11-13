@@ -80,10 +80,6 @@ public class CodewindConnection {
 
 	private Map<String, CodewindApplication> appMap = new LinkedHashMap<String, CodewindApplication>();
 
-	public CodewindConnection(String name, URI uri) {
-		this(name, uri, null, null);
-	}
-	
 	public CodewindConnection(String name, URI uri, String conid, AuthToken authToken) {
 		setName(name);
 		setBaseURI(uri);

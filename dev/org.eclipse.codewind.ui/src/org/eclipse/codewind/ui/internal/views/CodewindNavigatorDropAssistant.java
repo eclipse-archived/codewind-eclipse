@@ -94,7 +94,7 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					ProjectUtil.bindProject(sourceApp.name, sourceApp.fullLocalPath.toOSString(), sourceApp.projectLanguage.getId(), sourceApp.projectType.getId(), null, monitor);
+					ProjectUtil.bindProject(sourceApp.name, sourceApp.fullLocalPath.toOSString(), sourceApp.projectLanguage.getId(), sourceApp.projectType.getId(), targetConn.getConid(), monitor);
 					targetConn.refreshApps(null);
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$

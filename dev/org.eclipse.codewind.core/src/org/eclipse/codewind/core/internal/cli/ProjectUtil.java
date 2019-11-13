@@ -12,8 +12,6 @@
 package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.Logger;
@@ -40,13 +38,12 @@ public class ProjectUtil {
 	private static final String LANGUAGE_OPTION = "--language";
 	private static final String TYPE_OPTION = "--type";
 	private static final String PATH_OPTION = "--path";
-	private static final String CON_ID_OPTION = "--conid";
 
 	public static void createProject(String name, String path, String url, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(PROJECT_CMD, CREATE_OPTION, path, URL_OPTION, url);
+			process = CLIUtil.runCWCTL(null, new String[] {PROJECT_CMD, CREATE_OPTION, path}, new String[] {URL_OPTION, url});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -74,12 +71,8 @@ public class ProjectUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.BindingProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			List<String> options = Arrays.asList(new String[] {BIND_OPTION, NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path});
-			if (conid != null) {
-				options.add(CON_ID_OPTION);
-				options.add(conid);
-			}
-			process = CLIUtil.runCWCTL(PROJECT_CMD, options.toArray(new String[options.size()]));
+			String[] options = CLIUtil.getOptions(new String[] {NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path}, conid);
+			process = CLIUtil.runCWCTL(null, new String[] {PROJECT_CMD, BIND_OPTION}, options);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project bind failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

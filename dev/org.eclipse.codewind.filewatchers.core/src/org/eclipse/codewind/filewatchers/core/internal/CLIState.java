@@ -70,7 +70,7 @@ public class CLIState {
 		this.mockInstallerPath = System.getenv("MOCK_CWCTL_INSTALLER_PATH");
 	}
 
-	public void onFileChangeEvent() {
+	public void onFileChangeEvent(Long projectCreationTimeInAbsoluteMsecsParam /* nullable */) {
 
 		if (this.projectPath == null || this.projectPath.trim().isEmpty()) {
 			log.logSevere("Project path passed to CLIState is empty, so ignoring file change event.");
@@ -93,6 +93,30 @@ public class CLIState {
 
 		// Call CLI outside the lock
 		if (callCLI) {
+
+			Long debugOldTimestampValue = null;
+			Long debugNewTimestampValue = null;
+			boolean timestampUpdated = false;
+
+			synchronized (lock) {
+				// We only update the timestamp when 'callCLI' is true, because we don't want to
+				// step on the toes of another running CLI process (and that one will probably
+				// update the timestamp on it's own, with a more recent value, then ours)
+
+				// Update the timestamp to the project creation value, but ONLY IF it is zero.
+				if (projectCreationTimeInAbsoluteMsecsParam != null && this.timestamp_synch_lock == 0) {
+					debugOldTimestampValue = timestamp_synch_lock;
+					this.timestamp_synch_lock = projectCreationTimeInAbsoluteMsecsParam;
+					debugNewTimestampValue = this.timestamp_synch_lock;
+					timestampUpdated = true;
+				}
+			}
+
+			if (timestampUpdated) {
+				log.logInfo("Timestamp updated from " + debugOldTimestampValue + " to " + debugNewTimestampValue
+						+ " from project creation time.");
+			}
+
 			FilewatcherUtils.newThread(() -> {
 				callCLI();
 			});
@@ -113,8 +137,7 @@ public class CLIState {
 		final boolean DEBUG_FAKE_CMD_OUTPUT = false; // Enable this for debugging purposes.
 
 		// This try block works in tandem with onFileChangeEvent() to ensure that only
-		// one instance of the
-		// 'project sync' command is running at a time.
+		// one instance of the 'project sync' command is running at a time.
 		try {
 
 			RunProjectReturn result;
@@ -160,7 +183,7 @@ public class CLIState {
 		}
 
 		if (requestWaiting) {
-			onFileChangeEvent();
+			onFileChangeEvent(null);
 		}
 
 	}

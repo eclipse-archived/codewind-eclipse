@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -331,8 +332,83 @@ public class Filewatcher {
 					+ watchService.getClass().getSimpleName(), ptw.getProjectId());
 
 		} else {
+			// Otherwise update existing project to watch, if needed
 
 			ProjectToWatch oldProjectToWatch = po.getProjectToWatch();
+
+			// This method may receive ProjectToWatch objects with either null or non-null
+			// values for the `projectCreationTimeInAbsoluteMsecs` field. However, under no
+			// circumstances should we ever replace a non-null value for this field with a
+			// null field.
+			//
+			// For this reason, we carefully compare these values in this if block and
+			// update accordingly.
+			{
+				boolean pctUpdated = false;
+
+				Long pctOldProjectToWatch = oldProjectToWatch.getProjectCreationTimeInAbsoluteMsecs().orElse(null);
+				Long pctNewProjectToWatch = ptw.getProjectCreationTimeInAbsoluteMsecs().orElse(null);
+
+				Long newPct = null;
+
+				// If both the old and new values are not null, but the value has changed, then
+				// use the new value.
+				if (pctNewProjectToWatch != null && pctOldProjectToWatch != null
+						&& pctNewProjectToWatch != pctOldProjectToWatch) {
+
+					newPct = pctNewProjectToWatch;
+
+					String newTimeInDate = pctNewProjectToWatch != null ? new Date(pctNewProjectToWatch).toString()
+							: "";
+					log.logInfo("The project creation time has changed, when both values were non-null. Old: "
+							+ pctOldProjectToWatch + " New: " + pctNewProjectToWatch + "(" + newTimeInDate
+							+ "), for project " + ptw.getProjectId());
+
+					pctUpdated = true;
+				}
+
+				// If old is not-null, and new is null, then DON'T overwrite the old one with
+				// the new one.
+				if (pctOldProjectToWatch != null && pctNewProjectToWatch == null) {
+
+					newPct = pctOldProjectToWatch;
+
+					log.logInfo(
+							"Internal project creation state was preserved, despite receiving a project update w/o this value. Current: "
+									+ pctOldProjectToWatch + " Received: " + pctNewProjectToWatch + " for project "
+									+ ptw.getProjectId());
+
+					// Update the ptw, in case it is used by the following if block, but DONT call
+					// po.updatePTW(...) with it.
+					ptw = ptw.cloneWithNewProjectCreationTime(newPct);
+					pctUpdated = false; // this is false so that updatePTW(...) is not called.
+				}
+
+				// If the old is null, and the new is not null, then overwrite the old with the
+				// new.
+				if (pctOldProjectToWatch == null && pctNewProjectToWatch != null) {
+
+					newPct = pctNewProjectToWatch;
+					String newTimeInDate = newPct != null ? new Date(newPct).toString() : "";
+					log.logInfo("The project creation time has changed. Old: " + pctOldProjectToWatch + " New: "
+							+ pctNewProjectToWatch + "(" + newTimeInDate + "), for project " + ptw.getProjectId());
+
+					pctUpdated = true;
+
+				}
+
+				if (pctUpdated) {
+
+					// Update the object itself, in case the if-branch below this one is executed.
+					ptw = ptw.cloneWithNewProjectCreationTime(newPct);
+
+					// This logic may cause the PO to be updated twice (once here, and once below,
+					// but this is fine)
+					po.updateProjectToWatch(ptw);
+
+				}
+
+			} // end pct update block
 
 			// If the watch has changed, then remove the path and update the PTW
 			if (!oldProjectToWatch.getProjectWatchStateId().equals(ptw.getProjectWatchStateId())) {
@@ -669,8 +745,9 @@ public class Filewatcher {
 		}
 
 		private void informCwctlOfFileChanges() {
+			ProjectToWatch ptw = getProjectToWatch();
 			if (cliState.isPresent()) {
-				cliState.get().onFileChangeEvent();
+				cliState.get().onFileChangeEvent(ptw.getProjectCreationTimeInAbsoluteMsecs().orElse(null));
 			}
 
 		}

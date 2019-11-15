@@ -94,6 +94,9 @@ public class Messages extends NLS {
 	public static String DockerTypeDisplayName;
 	
 	public static String ProcessHelperUnknownError;
+	
+	public static String UpgradeResultMigrated;
+	public static String UpgradeResultNotMigrated;
 
 	static {
 		// initialize resource bundle

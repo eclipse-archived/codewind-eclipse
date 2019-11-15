@@ -150,6 +150,7 @@ public class Messages extends NLS {
 	public static String CodewindInstallTimeout;
 	public static String CodewindUninstallTimeout;
 	public static String WorkspaceUpgradeError;
+	public static String WorkspaceUpgradeTitle;
 	
 	public static String UpdateCodewindDialogTitle;
 	public static String UpdateCodewindDialogMsg;

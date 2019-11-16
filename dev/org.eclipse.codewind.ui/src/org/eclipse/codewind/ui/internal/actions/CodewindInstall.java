@@ -23,6 +23,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
+import org.eclipse.codewind.core.internal.cli.UpgradeResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -45,6 +46,8 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class CodewindInstall {
@@ -381,6 +384,18 @@ public class CodewindInstall {
 										}
 										if (result.getExitValue() != 0) {
 											upgradeError = getErrorStatus(result, Messages.WorkspaceUpgradeError);
+										} else {
+											try {
+												String formattedResult = new UpgradeResult(new JSONObject(result.getOutput())).getFormattedResult();
+												if (formattedResult != null && !formattedResult.isEmpty()) {
+													Display.getDefault().asyncExec(() -> {
+														MessageDialog.openInformation(Display.getDefault().getActiveShell(), NLS.bind(Messages.WorkspaceUpgradeTitle, file.getAbsolutePath()), formattedResult);
+													});
+												}
+											} catch (JSONException e) {
+												Logger.logError("The result from the upgrade workspace command is not valid: " + result.getOutput(), e);
+												upgradeError = getErrorStatus(result, Messages.WorkspaceUpgradeError);
+											}
 										}
 									} catch (TimeoutException e) {
 										upgradeError = getErrorStatus(Messages.WorkspaceUpgradeError, e);

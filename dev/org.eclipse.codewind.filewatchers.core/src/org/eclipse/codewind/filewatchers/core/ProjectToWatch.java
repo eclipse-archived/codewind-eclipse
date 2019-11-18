@@ -13,6 +13,7 @@ package org.eclipse.codewind.filewatchers.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +40,9 @@ public class ProjectToWatch {
 
 	private final String projectWatchStateId;
 
+	/** null if project time is not specified, a >0 value otherwise. */
+	private final Long projectCreationTimeInAbsoluteMsecs;
+
 	private boolean external = false;
 
 	public ProjectToWatch(JSONObject json, boolean deleteChangeType) throws JSONException {
@@ -48,6 +52,7 @@ public class ProjectToWatch {
 			this.projectId = json.getString("projectID");
 			this.pathToMonitor = null;
 			this.projectWatchStateId = null;
+			this.projectCreationTimeInAbsoluteMsecs = null;
 			return;
 		}
 
@@ -76,17 +81,41 @@ public class ProjectToWatch {
 			}
 		}
 
+		long pct = json.optLong("projectCreationTime", 0l);
+
+		this.projectCreationTimeInAbsoluteMsecs = pct != 0 ? pct : null;
+
 	}
 
-	public ProjectToWatch(String projectId, String pathToMonitorParam) {
-		this.projectId = projectId;
+	/** This should ONLY be called from the clone method below. */
+	private ProjectToWatch(ProjectToWatch old, Long projectCreationTimeInAbsoluteMsecsParam) {
 
-		this.projectWatchStateId = null;
+		this.external = old.external;
 
-		pathToMonitorParam = PathUtils.normalizeDriveLetter(pathToMonitorParam);
-		this.pathToMonitor = pathToMonitorParam;
+		this.projectId = old.projectId;
+		this.pathToMonitor = old.pathToMonitor;
+
+		this.projectWatchStateId = old.projectWatchStateId;
 
 		validatePathToMonitor();
+
+		this.ignoredPaths.addAll(old.ignoredPaths);
+
+		this.ignoredFilenames.addAll(old.ignoredFilenames);
+
+		// Replace the old value, with specified parameter.
+		this.projectCreationTimeInAbsoluteMsecs = projectCreationTimeInAbsoluteMsecsParam;
+
+	}
+
+	/**
+	 * Create a clone of this object, but use the given
+	 * projectCreationTimeInAbsoluteMsecsParam in that field, replacing the value of
+	 * the current object.
+	 */
+	public ProjectToWatch cloneWithNewProjectCreationTime(Long projectCreationTimeInAbsoluteMsecsParam) {
+
+		return new ProjectToWatch(this, projectCreationTimeInAbsoluteMsecsParam);
 
 	}
 
@@ -130,6 +159,10 @@ public class ProjectToWatch {
 
 	public boolean isExternal() {
 		return external;
+	}
+
+	public Optional<Long> getProjectCreationTimeInAbsoluteMsecs() {
+		return Optional.ofNullable(projectCreationTimeInAbsoluteMsecs);
 	}
 
 	/**

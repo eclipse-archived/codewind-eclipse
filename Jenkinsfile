@@ -23,6 +23,14 @@ pipeline {
     stages {
 
         stage("Download dependency binaries") {
+            // This when clause disables Tagged build
+            when {
+                beforeAgent true
+                not {
+                    buildingTag()
+                }
+            }
+
             steps {
                 dir("dev/org.eclipse.codewind.core/binaries") {
                     sh """#!/usr/bin/env bash
@@ -57,6 +65,14 @@ pipeline {
         }
 
         stage('Build') {
+            // This when clause disables Tagged build
+            when {
+                beforeAgent true
+                not {
+                    buildingTag()
+                }
+            }
+
             steps {
                 script {
                     println("Starting codewind-eclipse build ...")
@@ -76,6 +92,14 @@ pipeline {
         } 
         
         stage('Deploy') {
+            // This when clause disables Tagged build
+            when {
+                beforeAgent true
+                not {
+                    buildingTag()
+                }
+            }
+
             steps {
                 sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
                     println("Deploying codewind-eclipse to downoad area...")
@@ -129,7 +153,13 @@ pipeline {
         stage("Report") {
             when {
                 beforeAgent true
-                triggeredBy 'UpstreamCause'
+
+                allOf {
+                    triggeredBy 'UpstreamCause'
+                    not {
+                        buildingTag()
+                    }
+                }
             }
 
             options {

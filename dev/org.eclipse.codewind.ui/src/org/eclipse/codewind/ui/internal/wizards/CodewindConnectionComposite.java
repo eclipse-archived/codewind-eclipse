@@ -27,6 +27,7 @@ import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -281,11 +282,17 @@ public class CodewindConnectionComposite extends Composite {
 	}
 
 	public boolean canFinish() {
-		return connection != null && connection.isConnected() && regTested;
+//		return connection != null && connection.isConnected() && regTested;
+		return connection != null && connection.isConnected();
 	}
 
 	void removePreviousConnection() {
 		if (connection != null) {
+			try {
+				ConnectionUtil.removeConnection(connection.getName(), connection.getConid(), new NullProgressMonitor());
+			} catch (Exception e) {
+				Logger.logError("An error occurred while trying to remove the previous connection: " + connection.getName() + ", " + connection.getConid()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			connection.close();
 			connection = null;
 		}
@@ -344,7 +351,7 @@ public class CodewindConnectionComposite extends Composite {
 				try {
 					// Remove any previous connection first
 					removePreviousConnection();
-					conid = ConnectionUtil.addConnection(name, uri.toString(), mon.split(10));
+					conid = ConnectionUtil.addConnection(name, uri.toString(), username, mon.split(10));
 					AuthToken token = AuthUtil.getAuthToken(username, password, conid, mon.split(30));
 					conn = CodewindObjectFactory.createRemoteConnection(name, uri, conid, token);
 					conn.connect(mon.split(50));

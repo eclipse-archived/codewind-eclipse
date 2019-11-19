@@ -95,16 +95,18 @@ public class CodewindConnection {
 		
 		mon.split(25);
 		env = new ConnectionEnv(getEnvData(this.baseUri, authToken));
-		Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
-		if (!isSupportedVersion(env.getVersion())) {
-			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUri);	// $NON-NLS-1$	// $NON-NLS-2$
-			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
+		if (isLocal()) {
+			Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
+			if (!isSupportedVersion(env.getVersion())) {
+				Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUri);	// $NON-NLS-1$	// $NON-NLS-2$
+				onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
+			}
 		}
 		if (mon.isCanceled()) {
 			return;
 		}
 
-		socket = new CodewindSocket(this);
+		socket = new CodewindSocket(this, authToken);
 		if(!socket.blockUntilFirstConnection(mon.split(35))) {
 			Logger.logError("Socket failed to connect: " + socket.socketUri);
 			disconnect();
@@ -805,7 +807,7 @@ public class CodewindConnection {
 			if ((socketNS != null && !socketNS.equals(oldSocketNS)) || (oldSocketNS != null && !oldSocketNS.equals(socketNS))) {
 				// The socket namespace has changed so need to recreate the socket
 				socket.close();
-				socket = new CodewindSocket(this);
+				socket = new CodewindSocket(this, authToken);
 				if(!socket.blockUntilFirstConnection(new NullProgressMonitor())) {
 					// Still not connected
 					Logger.logError("Failed to create a new socket with updated URI: " + socket.socketUri);

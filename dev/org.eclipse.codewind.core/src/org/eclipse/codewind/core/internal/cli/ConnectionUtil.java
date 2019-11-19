@@ -34,6 +34,7 @@ public class ConnectionUtil {
 	private static final String INSECURE_OPTION = "--insecure";
 	private static final String LABEL_OPTION = "--label";
 	private static final String URL_OPTION = "--url";
+	private static final String USERNAME_OPTION = "--username";
 	
 	private static final String STATUS_KEY = "status";
 	private static final String STATUS_MSG_KEY = "status_message";
@@ -44,11 +45,11 @@ public class ConnectionUtil {
 	
 	private static final String STATUS_OK_VALUE = "OK";
 	
-	public static String addConnection(String name, String url, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+	public static String addConnection(String name, String url, String username, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.RegisterConnectionTaskLabel, name), 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(new String[] {INSECURE_OPTION}, new String[] {CONNECTIONS_CMD, ADD_OPTION}, new String[] {LABEL_OPTION, name, URL_OPTION, url});
+			process = CLIUtil.runCWCTL(new String[] {INSECURE_OPTION, CLIUtil.JSON_OPTION}, new String[] {CONNECTIONS_CMD, ADD_OPTION}, new String[] {LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Connection add failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

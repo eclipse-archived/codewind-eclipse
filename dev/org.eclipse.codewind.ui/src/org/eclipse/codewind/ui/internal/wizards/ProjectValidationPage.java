@@ -143,7 +143,7 @@ public class ProjectValidationPage extends WizardPage {
 		}
 
 		try {
-			return ProjectUtil.validateProject(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), monitor);
+			return ProjectUtil.validateProject(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), null, connection.getConid(), monitor);
 		} catch (Exception e) {
 			Logger.logError("An error occurred trying to get the project type for project: " + projectPath.lastSegment(), e); //$NON-NLS-1$
 		}

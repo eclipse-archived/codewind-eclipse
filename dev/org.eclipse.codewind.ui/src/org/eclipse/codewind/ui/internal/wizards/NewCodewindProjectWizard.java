@@ -127,7 +127,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 100);
-					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), mon.split(40));
+					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), newConnection.getConid(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}

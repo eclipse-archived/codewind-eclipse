@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +34,11 @@ import org.eclipse.core.runtime.Path;
 
 public class CLIUtil {
 	
-	// Common options
+	// Global options
 	public static final String JSON_OPTION = "--json";
+	public static final String INSECURE_OPTION = "--insecure";
+	
+	// Common options
 	public static final String CON_ID_OPTION = "--conid";
 		
 	private static final String INSTALLER_DIR = "installerWorkDir";
@@ -166,13 +168,5 @@ public class CLIUtil {
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();
 	}
-	
-	public static String[] getOptions(String[] options, String conid) {
-		ArrayList<String> opts = new ArrayList<String>(Arrays.asList(options));
-		if (conid != null) {
-			opts.add(CON_ID_OPTION);
-			opts.add(conid);
-		}
-		return opts.toArray(new String[opts.size()]);
-	}
+
 }

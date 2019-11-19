@@ -46,7 +46,13 @@ public class HttpUtil {
 	
 	public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 	
-	private static final SSLContext sslContext = getTrustAllCertsContext();;
+	public static final X509TrustManager trustManager;
+	public static final SSLContext sslContext;
+	
+	static {
+		trustManager = getTrustAllCertsManager();
+		sslContext = getTrustAllCertsContext(trustManager);
+	}
 	
 	private HttpUtil() {}
 
@@ -232,24 +238,27 @@ public class HttpUtil {
 		return new HttpResult(uri, response);
 	}
 	
-	private static SSLContext getTrustAllCertsContext() {
+	private static X509TrustManager getTrustAllCertsManager() {
+		return new X509TrustManager() {
+			@Override
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+				return new java.security.cert.X509Certificate[0];
+			}
+			@Override
+			public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws java.security.cert.CertificateException {
+				// TODO Auto-generated method stub
+			}
+			@Override
+			public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws java.security.cert.CertificateException {
+				// TODO Auto-generated method stub
+			}
+		};
+	}
+
+	private static SSLContext getTrustAllCertsContext(X509TrustManager manager) {
 		try {
 			SSLContext context = SSLContext.getInstance("TLS");
-			context.init(new KeyManager[0], new TrustManager[] { new X509TrustManager() {
-				@Override
-				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-					return new java.security.cert.X509Certificate[0];
-				}
-				@Override
-				public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws java.security.cert.CertificateException {
-					// TODO Auto-generated method stub
-				}
-				@Override
-				public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws java.security.cert.CertificateException {
-					// TODO Auto-generated method stub
-				}
-			}
-			}, new SecureRandom());
+			context.init(new KeyManager[0], new TrustManager[] { manager }, new SecureRandom());
 			return context;
 		} catch (Exception e) {
 			Logger.logError("An error occurred creating a trust all certs context", e);

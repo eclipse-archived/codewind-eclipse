@@ -11,27 +11,19 @@
 
 package org.eclipse.codewind.core.internal.connection;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.zip.Deflater;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
@@ -46,7 +38,6 @@ import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.ConnectionEnv.TektonDashboard;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
-import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
@@ -507,14 +498,6 @@ public class CodewindConnection {
 	 * @param app The app to build
 	 */
 	public void requestProjectBuild(CodewindApplication app, String action) throws JSONException, IOException {
-
-		// Synchronise the source by clearing the old version and uploading the latest.
-		long syncTime = System.currentTimeMillis();
-		String[] fileList = requestUploadsRecursively(app.projectID, app.fullLocalPath.toOSString(), app.getLastSync());
-		requestProjectClear(app, fileList);
-		Logger.log("Sync complete for " + app.name + " to "+  app.connection.baseUri + " in " +  (System.currentTimeMillis() - syncTime) +"ms");
-		app.setLastSync(syncTime);
-
 		String buildEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" //$NON-NLS-1$
 				+ app.projectID + "/" //$NON-NLS-1$
 				+ CoreConstants.APIPATH_BUILD;
@@ -722,120 +705,6 @@ public class CodewindConnection {
 		payload.put(RepositoryInfo.URL_KEY, url);
 		
 		HttpResult result = HttpUtil.delete(uri, authToken, payload);
-		checkResult(result, uri, false);
-	}
-
-	public void requestProjectBind(String name, String path, String language, String projectType)
-			throws JSONException, IOException {
-
-		String bindStartEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_START;
-		URI bindStartUri = baseUri.resolve(bindStartEndpoint);
-		long initialSyncTime = System.currentTimeMillis();
-
-		JSONObject bindStartPayload = new JSONObject();
-		bindStartPayload.put(CoreConstants.KEY_NAME, name);
-		bindStartPayload.put(CoreConstants.KEY_PATH, CoreUtil.getContainerPath(path));
-		bindStartPayload.put(CoreConstants.KEY_LANGUAGE, language);
-		if (projectType == null) {
-			projectType = ProjectType.getTypeFromLanguage(language).getId();
-		}
-		if (projectType != null) {
-			bindStartPayload.put(CoreConstants.KEY_PROJECT_TYPE, projectType);
-		}
-		bindStartPayload.put(CoreConstants.KEY_AUTO_BUILD, true);
-
-		HttpResult bindStartResult = HttpUtil.post(bindStartUri, authToken, bindStartPayload, 300);
-		checkResult(bindStartResult, bindStartUri, false);
-
-		JSONObject projectInf = new JSONObject(bindStartResult.response);
-		String projectID = projectInf.getString(CoreConstants.KEY_PROJECT_ID);
-
-		requestUploadsRecursively(projectID, path, 0);
-		String bindEndEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + CoreConstants.APIPATH_PROJECT_REMOTE_BIND_END;
-		URI bindEndUri = baseUri.resolve(bindEndEndpoint);
-
-		HttpResult bindEndResult = HttpUtil.post(bindEndUri, authToken);
-		checkResult(bindEndResult, bindEndUri, false);
-
-		CodewindApplication newApp = getAppByID(projectID);
-		if (newApp != null) {
-			newApp.setLastSync(initialSyncTime);
-		}
-		Logger.log("Initial project upload complete for " + name + " to "+  baseUri + " in " +  (System.currentTimeMillis() - initialSyncTime) +"ms");
-
-		CoreUtil.updateConnection(this);
-	}
-	
-	public String[] requestUploadsRecursively(String projectId, String path, long lastSyncMs) throws JSONException, IOException {
-
-		List<Path> fileList = new LinkedList<Path>();
-		Path basePath = Paths.get(path);
-		Files.walk(basePath).forEach((Path fullPath) -> {
-			Path relative = basePath.relativize(fullPath);
-			fileList.add(relative);
-			try {
-				if (Files.getLastModifiedTime(fullPath).toMillis() > lastSyncMs && !Files.isDirectory(fullPath)) {
-					requestUpload(projectId, fullPath, relative.toString());
-				}
-			} catch (JSONException | IOException e) {
-				Logger.logError(e);
-			}
-		});
-		String[] fileArray = fileList.stream().map(Path::toString).toArray(String[]::new);
-		return fileArray;
-	}
-
-	/**
-	 * Request a clear of the source tree (prior to upload).
-	 * @param app The app to clear
-	 */
-	public void requestProjectClear(CodewindApplication app, String[] fileList)
-			throws JSONException, IOException {
-
-		String clearEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
-				+ app.projectID + "/" 									//$NON-NLS-1$
-				+ CoreConstants.APIPATH_PROJECT_CLEAR;
-
-		JSONObject payload = new JSONObject();
-		payload.put(CoreConstants.KEY_FILE_LIST, fileList);
-
-		URI url = baseUri.resolve(clearEndpoint);
-
-		// This initiates the build
-		HttpUtil.post(url, authToken, payload);
-	}
-
-	public void requestUpload(String projectId, Path fullPath, String relativePath) throws JSONException, IOException {
-
-		// Read the file and convert the content to JSON.
-		byte[] fileContent = Files.readAllBytes(fullPath);
-		String jsonContent = JSONObject.quote(new String(fileContent, "UTF-8"));
-
-		// zlib compress the content
-		Deflater fileDeflater = new Deflater();
-		byte[] jsonBytes = jsonContent.getBytes("UTF-8");
-		fileDeflater.setInput(jsonBytes);
-		fileDeflater.finish();
-		byte[] buffer = new byte[jsonBytes.length];
-		ByteArrayOutputStream compressedStream = new ByteArrayOutputStream(jsonBytes.length);
-		while (!fileDeflater.finished()) {
-			int bytesCompressed = fileDeflater.deflate(buffer);
-			compressedStream.write(buffer, 0, bytesCompressed);
-		}
-
-		// base64 encode the compressed content
-		Encoder encoder = Base64.getEncoder();
-		String base64Compressed = encoder.encodeToString(compressedStream.toByteArray());
-
-		JSONObject body = new JSONObject();
-		body.put(CoreConstants.KEY_DIRECTORY, false);
-		body.put(CoreConstants.KEY_PATH, relativePath.replace('\\', '/'));
-		body.put(CoreConstants.KEY_MSG, base64Compressed);
-
-		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectId + "/"
-				+ CoreConstants.APIPATH_PROJECT_UPLOAD;
-		URI uri = baseUri.resolve(endpoint);
-		HttpResult result = HttpUtil.put(uri, authToken, body, 300);
 		checkResult(result, uri, false);
 	}
 

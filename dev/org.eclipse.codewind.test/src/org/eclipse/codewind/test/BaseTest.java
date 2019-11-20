@@ -25,6 +25,7 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
@@ -275,7 +276,7 @@ public abstract class BaseTest extends TestCase {
 	
 	protected void createProject(String type, String id, String name) throws IOException, JSONException, URISyntaxException, TimeoutException {
 		ProjectTemplateInfo templateInfo = null;
-		List<ProjectTemplateInfo> templates = connection.requestProjectTemplates(true);
+		List<ProjectTemplateInfo> templates = TemplateUtil.listTemplates(true, connection.getConid(), new NullProgressMonitor());
 		for (ProjectTemplateInfo template : templates) {
 			if ((type == null || type.equals(template.getProjectType())) && 
 					template.getUrl().toLowerCase().matches(".*" + id.toLowerCase() + ".*")) {
@@ -285,8 +286,8 @@ public abstract class BaseTest extends TestCase {
 		}
 		assertNotNull("No template found that matches the id: " + id, templateInfo);
 		IPath path = projectFolder.append(name);
-		ProjectUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), new NullProgressMonitor());
-		ProjectUtil.bindProject(name, projectFolder + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType(), null, new NullProgressMonitor());
+		ProjectUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), connection.getConid(), new NullProgressMonitor());
+		ProjectUtil.bindProject(name, projectFolder + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType(), connection.getConid(), new NullProgressMonitor());
 
 	}
 	

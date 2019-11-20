@@ -36,10 +36,7 @@ public class CoreConstants {
 			APIPATH_CAPABILITIES = "capabilities",
 			APIPATH_LOGS = "logs",
 			APIPATH_METRICS_STATUS = "metrics/status",
-			APIPATH_TEMPLATES = "templates",
 			APIPATH_PROJECT_UNBIND = "unbind",
-			APIPATH_REPOSITORIES = "templates/repositories",
-			APIPATH_BATCH_REPOSITORIES = "batch/" + APIPATH_REPOSITORIES,
 			APIPATH_PROJECT_TYPES = "project-types",
 			APIPATH_REGISTRY = "registry",
 
@@ -158,9 +155,7 @@ public class CoreConstants {
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
 			VIEW_OVERVIEW = "overview",
-			PERF_MONITOR = "performance/charts",
-			
-			QUERY_SHOW_ENABLED_ONLY = "showEnabledOnly"
+			PERF_MONITOR = "performance/charts"
 
 			;
 }

@@ -45,8 +45,9 @@ public class TemplateUtil {
 	public static List<ProjectTemplateInfo> listTemplates(boolean enabledOnly, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
+		String[] options = enabledOnly ? new String[] {ENABLED_ONLY_OPTION, CLIUtil.CON_ID_OPTION, conid} : new String[] {CLIUtil.CON_ID_OPTION, conid};
 		try {
-			process = CLIUtil.runCWCTL(null, new String[] {TEMPLATES_CMD, LIST_OPTION}, CLIUtil.getOptions(new String[] {ENABLED_ONLY_OPTION, Boolean.toString(enabledOnly)}, conid));
+			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {TEMPLATES_CMD, LIST_OPTION}, options);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("List templates failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -74,7 +75,7 @@ public class TemplateUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(null, new String[] {TEMPLATES_CMD, REPOS_OPTION, LIST_OPTION}, CLIUtil.getOptions(new String[0], conid));
+			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {TEMPLATES_CMD, REPOS_OPTION, LIST_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("List templates sources failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -99,23 +100,23 @@ public class TemplateUtil {
 	}
 	
 	public static void addTemplateSource(String url, String name, String description, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, ADD_OPTION}, CLIUtil.getOptions(new String[] {URL_OPTION, url, NAME_OPTION, name, DESCRIPTION_OPTION, description}, conid), null, monitor);
+		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, ADD_OPTION}, new String[] {URL_OPTION, url, NAME_OPTION, name, DESCRIPTION_OPTION, description, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
 	}
 	
 	public static void removeTemplateSource(String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, REMOVE_OPTION}, CLIUtil.getOptions(new String[] {URL_OPTION, url}, conid), null, monitor);
+		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, REMOVE_OPTION}, new String[] {URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
 	}
 	
 	public static void enableTemplateSource(boolean enable, String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		String enableOption = enable ? ENABLE_OPTION : DISABLE_OPTION;
-		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, enableOption}, CLIUtil.getOptions(new String[0], conid), new String[] {url}, monitor);
+		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, enableOption}, new String[] {CLIUtil.CON_ID_OPTION, conid}, new String[] {url}, monitor);
 	}
 	
 	private static void runTemplateSourceCmd(String[] command, String[] options, String[] args, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(command, options, args);
+			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, command, options, args);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("The " + command + " command with options " + Arrays.toString(options) + " failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$

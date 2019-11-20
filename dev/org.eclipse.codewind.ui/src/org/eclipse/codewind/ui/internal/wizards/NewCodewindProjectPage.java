@@ -106,7 +106,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		
 		if (templateList == null || templateList.isEmpty()) {
 			try {
-				templateList = connection.requestProjectTemplates(true);
+				templateList = TemplateUtil.listTemplates(true, connection.getConid(), new NullProgressMonitor());
 			} catch (Exception e) {
 				Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
 				setErrorMessage(Messages.NewProjectPage_TemplateListError);
@@ -256,10 +256,8 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 										return;
 									}
 									try {
-										mon = mon.split(25);
 										mon.setTaskName(Messages.NewProjectPage_RefreshTemplatesTask);
-										templateList = connection.requestProjectTemplates(true);
-										mon.worked(25);
+										TemplateUtil.listTemplates(true, connection.getConid(), mon.split(25));
 									} catch (Exception e) {
 										throw new InvocationTargetException(e, Messages.NewProjectPage_RefreshTemplatesError);
 									}

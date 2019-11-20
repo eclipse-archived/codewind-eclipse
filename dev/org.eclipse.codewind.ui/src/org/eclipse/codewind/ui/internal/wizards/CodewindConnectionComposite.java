@@ -352,7 +352,7 @@ public class CodewindConnectionComposite extends Composite {
 					// Remove any previous connection first
 					removePreviousConnection();
 					conid = ConnectionUtil.addConnection(name, uri.toString(), username, mon.split(10));
-					AuthToken token = AuthUtil.getAuthToken(username, password, conid, mon.split(30));
+					AuthToken token = AuthUtil.genAuthToken(username, password, conid, mon.split(30));
 					conn = CodewindObjectFactory.createRemoteConnection(name, uri, conid, token);
 					conn.connect(mon.split(50));
 					connResult[0] = conn;

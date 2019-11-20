@@ -20,6 +20,10 @@ public class Messages extends NLS {
 	
 	public static String CodewindLocalConnectionName;
 	
+	public static String ConnectionManager_RestoreJobLabel;
+	public static String ConnectionManager_RestoreGeneralError;
+	public static String ConnectionManager_RestoreConnError;
+	
 	public static String Connection_JobLabel;
 	public static String Connection_JobError;
 	public static String Connection_TaskLabel;
@@ -82,7 +86,8 @@ public class Messages extends NLS {
 	public static String UpgradeWorkspaceJobLabel;
 	public static String RegisterConnectionTaskLabel;
 	public static String DeregisterConnectionTaskLabel;
-	public static String AuthorizingTaskLabel;
+	public static String AuthGenTaskLabel;
+	public static String AuthGetTaskLabel;
 	public static String CreateProjectTaskLabel;
 	public static String BindingProjectTaskLabel;
 	public static String ValidateProjectTaskLabel;

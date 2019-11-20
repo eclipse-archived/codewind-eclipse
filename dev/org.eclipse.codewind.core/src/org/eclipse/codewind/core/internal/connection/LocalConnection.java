@@ -15,7 +15,7 @@ import java.net.URI;
 
 public class LocalConnection extends CodewindConnection {
 	
-	private static final String CONNECTION_ID = "local";
+	public static final String CONNECTION_ID = "local";
 	
 	public LocalConnection(String name, URI uri) {
 		super(name, uri, CONNECTION_ID, null);

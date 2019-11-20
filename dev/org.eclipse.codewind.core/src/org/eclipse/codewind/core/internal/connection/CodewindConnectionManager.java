@@ -23,11 +23,19 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.AuthToken;
+import org.eclipse.codewind.core.internal.cli.AuthUtil;
+import org.eclipse.codewind.core.internal.cli.ConnectionInfo;
+import org.eclipse.codewind.core.internal.cli.ConnectionUtil;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.osgi.util.NLS;
 
 /**
  * Singleton class to keep track of the list of current Codewind connections,
@@ -38,39 +46,12 @@ public class CodewindConnectionManager {
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static CodewindConnectionManager instance;
 
-	public static final String CONNECTION_LIST_PREFSKEY = "codewindConnections"; //$NON-NLS-1$
-	public static final String NAME_KEY = "name"; //$NON-NLS-1$
-	public static final String URI_KEY = "uri"; //$NON-NLS-1$
-	
 	private List<CodewindConnection> connections = new ArrayList<>();
 	private CodewindConnection localConnection = null;
 
 	private CodewindConnectionManager() {
 		instance = this;
-		
-		// In order to restore any overview pages, the connection must be established
-		localConnection = CodewindObjectFactory.createLocalConnection(Messages.CodewindLocalConnectionName, null);
-		connections.add(localConnection);
-		try {
-			// This will connect if Codewind is running
-			CodewindManager.getManager().refreshInstallStatus(new NullProgressMonitor());
-		} catch (Exception e) {
-			Logger.logError("An error occurred trying to connect to the local Codewind instance", e); //$NON-NLS-1$
-		}
-		
-		loadFromPreferences();
-		
-		// Add a preference listener to reload the cached list of connections each time it's modified.
-//		CodewindCorePlugin.getDefault().getPreferenceStore()
-//			.addPropertyChangeListener(new IPropertyChangeListener() {
-//				@Override
-//				public void propertyChange(PropertyChangeEvent event) {
-//				    if (event.getProperty() == CodewindConnectionManager.CONNECTION_LIST_PREFSKEY) {
-//				    	// MCLogger.log("Loading prefs in MCCM");
-//				        loadFromPreferences();
-//				    }
-//				}
-//			});
+		restoreConnections();
 	}
 
 	private static CodewindConnectionManager instance() {
@@ -95,7 +76,6 @@ public class CodewindConnectionManager {
 
 		instance().connections.add(connection);
 		Logger.log("Added a new connection: " + connection.getBaseURI()); //$NON-NLS-1$
-		instance().writeToPreferences();
 	}
 
 	/**
@@ -142,19 +122,25 @@ public class CodewindConnectionManager {
 			connection.close();
 			removeResult = instance().connections.remove(connection);
 			CoreUtil.removeConnection(apps);
+			if (connection.getConid() != null) {
+				try {
+					ConnectionUtil.removeConnection(connection.getName(), connection.getConid(), new NullProgressMonitor());
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to de-register the connection: " + connection.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			}
 		}
 
 		if (!removeResult) {
 			Logger.logError("Tried to remove connection " + baseUrl + ", but it didn't exist"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		instance().writeToPreferences();
 		CoreUtil.updateAll();
 		return removeResult;
 	}
 
 	/**
-	 * Deletes all of the instance's connections. Does NOT write to preferences after doing so.
+	 * Deletes all of the instance's connections. Called when the plugin is stopped.
 	 */
 	public synchronized static void clear() {
 		Logger.log("Clearing " + instance().connections.size() + " connections"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -167,59 +153,66 @@ public class CodewindConnectionManager {
 			it.remove();
 		}
 	}
-
-	// Preferences serialization
-	private void writeToPreferences() {
-		JSONArray jsonArray = new JSONArray();
-		
-		for (CodewindConnection conn : activeConnections()) {
-			if (!conn.isLocal()) {
+	
+	private void restoreConnections() {
+		Job job = new Job(Messages.ConnectionManager_RestoreJobLabel) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				SubMonitor mon = SubMonitor.convert(monitor, 100);
+				
+				// Make sure the local connection is first in the list
+				localConnection = CodewindObjectFactory.createLocalConnection(Messages.CodewindLocalConnectionName, null);
+				connections.add(localConnection);
 				try {
-					JSONObject obj = new JSONObject();
-					obj.put(NAME_KEY, conn.getName());
-					obj.put(URI_KEY, conn.getBaseURI());
-					jsonArray.put(obj);
-				} catch (JSONException e) {
-					Logger.logError("An error occurred trying to add connection to the preferences: " + conn.getBaseURI(), e);
+					// This will connect if Codewind is running
+					CodewindManager.getManager().refreshInstallStatus(mon.split(20));
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to connect to the local Codewind instance", e); //$NON-NLS-1$
+				}
+				
+				// Add the rest of the connections, skipping local
+				try {
+					List<ConnectionInfo> infos = ConnectionUtil.listConnections(mon.split(20));
+					MultiStatus multiStatus = new MultiStatus(CodewindCorePlugin.PLUGIN_ID, 0, null, null);
+					if (infos.size() > 1) {
+						mon.setWorkRemaining(100 * (infos.size() - 1));
+					}
+					for (ConnectionInfo info : infos) {
+						try {
+							if (!info.isLocal()) {
+								URI uri = new URI(info.getURL());
+								AuthToken auth = null;
+								try {
+									auth = AuthUtil.getAuthToken(info.getUsername(), info.getId(), mon.split(20));
+								} catch (Exception e) {
+									Logger.logError("An error occurred trying to get the authorization token for: " + info.getId(), e); //$NON-NLS-1$
+								}
+								if (mon.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+								CodewindConnection conn = CodewindObjectFactory.createRemoteConnection(info.getLabel(), uri, info.getId(), auth);
+								connections.add(conn);
+								if (auth != null) {
+									conn.connect(mon.split(80));
+								}
+								if (mon.isCanceled()) {
+									return Status.CANCEL_STATUS;
+								}
+							}
+						} catch (Exception e) {
+							IStatus status = new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.ConnectionManager_RestoreConnError, new String[] {info.getLabel(), info.getURL()}), e);
+							multiStatus.add(status);
+						} finally {
+							CoreUtil.updateAll();
+						}
+					}
+					return multiStatus;
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to restore the connections", e); //$NON-NLS-1$
+					return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, Messages.ConnectionManager_RestoreGeneralError, e);
 				}
 			}
-		}
-
-		Logger.log("Writing connections to preferences: " + jsonArray.toString()); //$NON-NLS-1$
-
-		CodewindCorePlugin.getDefault().getPreferenceStore()
-				.setValue(CONNECTION_LIST_PREFSKEY, jsonArray.toString());
-	}
-
-	private void loadFromPreferences() {
-		String storedConnections = CodewindCorePlugin.getDefault()
-				.getPreferenceStore()
-				.getString(CONNECTION_LIST_PREFSKEY).trim();
-		
-		if (storedConnections == null || storedConnections.isEmpty()) {
-			Logger.log("The preferences do not contain any connections");
-			return;
-		}
-
-		Logger.log("Reading connections from preferences: \"" + storedConnections + "\""); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		try {
-			JSONArray array = new JSONArray(storedConnections);
-			for (int i = 0; i < array.length(); i++) {
-				try {
-					JSONObject obj = array.getJSONObject(i);
-					String name = obj.getString(NAME_KEY);
-					String uriStr = obj.getString(URI_KEY);
-					URI uri = new URI(uriStr);
-					CodewindConnection connection = CodewindObjectFactory.createRemoteConnection(name, uri, null, null);
-					connection.connect(new NullProgressMonitor());
-					CodewindConnectionManager.add(connection);
-				} catch (CodewindConnectionException e) {
-					Logger.logError("Fatal error trying to create connection for url: " + e.connectionUrl, e);
-				}
-			}
-		} catch (Exception e) {
-			Logger.logError("Error loading connection from preferences", e); //$NON-NLS-1$
-		}
+		};
+		job.schedule();
 	}
 }

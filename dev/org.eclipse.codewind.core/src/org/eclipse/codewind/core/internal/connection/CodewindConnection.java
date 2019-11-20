@@ -177,8 +177,8 @@ public class CodewindConnection {
 	 */
 	public void close() {
 		disconnect();
-		Logger.log("Removing connection: " + this); //$NON-NLS-1$
-		if (conid != null) {
+		if (!isLocal() && conid != null) {
+			Logger.log("Removing connection: " + this); //$NON-NLS-1$
 			try {
 				ConnectionUtil.removeConnection(name, conid, new NullProgressMonitor());
 			} catch (Exception e) {

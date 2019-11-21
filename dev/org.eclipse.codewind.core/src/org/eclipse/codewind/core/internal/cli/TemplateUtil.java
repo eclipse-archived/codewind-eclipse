@@ -119,7 +119,7 @@ public class TemplateUtil {
 			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, command, options, args);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
-				Logger.logError("The " + command + " command with options " + Arrays.toString(options) + " failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+				Logger.logError("The " + Arrays.toString(command) + " command with options " + Arrays.toString(options) + " failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 				throw new IOException(result.getErrorMsg());
 			}
 		} finally {

@@ -177,14 +177,6 @@ public class CodewindConnection {
 	 */
 	public void close() {
 		disconnect();
-		Logger.log("Removing connection: " + this); //$NON-NLS-1$
-		if (conid != null) {
-			try {
-				ConnectionUtil.removeConnection(name, conid, new NullProgressMonitor());
-			} catch (Exception e) {
-				Logger.logError("An error occurred trying to de-register the connection: " + this); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		}
 	}
 	
 	public String getName() {

@@ -40,8 +40,8 @@ public class AuthUtil {
 	
 	private static final String STATUS_OK_VALUE = "OK";
 	
-	public static AuthToken getAuthToken(String username, String password, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		SubMonitor mon = SubMonitor.convert(monitor, Messages.AuthorizingTaskLabel, 100);
+	public static AuthToken genAuthToken(String username, String password, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.AuthGenTaskLabel, 100);
 		Process process = null;
 		try {
 			process = CLIUtil.runCWCTL(null, new String[] {SECKEYRING_CMD, UPDATE_OPTION}, new String[] {USERNAME_OPTION, username, PASSWORD_OPTION, password, CLIUtil.CON_ID_OPTION, conid});
@@ -62,8 +62,20 @@ public class AuthUtil {
 				throw new IOException(msg);
 			}
 			
+			return getAuthToken(username, conid, mon.split(50));
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
+		}
+	}
+	
+	public static AuthToken getAuthToken(String username, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.AuthGetTaskLabel, 100);
+		Process process = null;
+		try {
 			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {SECTOKEN_CMD, GET_OPTION}, new String[] {USERNAME_OPTION, username, CLIUtil.CON_ID_OPTION, conid});
-			result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(50));
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon.split(100));
 			if (result.getExitValue() != 0) {
 				Logger.logError("Sectoken get failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
 				throw new IOException(result.getErrorMsg());
@@ -73,8 +85,7 @@ public class AuthUtil {
 				Logger.logError("Sectoken get had 0 return code but the output is empty"); //$NON-NLS-1$
 				throw new IOException("The output from sectoken get is empty."); //$NON-NLS-1$
 			}
-			resultJson = new JSONObject(result.getOutput());
-			return new AuthToken(resultJson);
+			return new AuthToken(new JSONObject(result.getOutput()));
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();

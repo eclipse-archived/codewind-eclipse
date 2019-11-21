@@ -340,6 +340,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_NoLocationError;
 	public static String NewProjectPage_LocationNotValid;
 	public static String NewProjectPage_NoTemplateSelected;
+	public static String ProjectLocationInCodewindDataDirError;
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;

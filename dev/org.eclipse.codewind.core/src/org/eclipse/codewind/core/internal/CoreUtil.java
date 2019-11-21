@@ -234,4 +234,17 @@ public class CoreUtil {
     	return path;
     }
     
+	public static IPath getCodewindDataPath() {
+		if (isWindows()) {
+			return new Path("C:/codewind-data");
+		}
+		String userDir = System.getProperty("user.dir");
+		if (userDir != null && !userDir.isEmpty()) {
+			return new Path(userDir).append("codewind-data");
+		}
+		// This should not happen
+		Logger.logError("The user.dir system property was null or empty.");
+		return null;
+	}
+    
 }

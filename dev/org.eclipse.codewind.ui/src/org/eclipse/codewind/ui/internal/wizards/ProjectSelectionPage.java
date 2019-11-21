@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -265,6 +266,12 @@ public class ProjectSelectionPage extends WizardPage {
 			if (hasValidProjects) {
 				Object[] checked = projectList.getCheckedElements();
 				project = checked.length == 1 ? (IProject) checked[0] : null;
+				// It is an error if the project is located in the codewind-data folder
+				IPath dataPath = CoreUtil.getCodewindDataPath();
+				if (dataPath != null && dataPath.isPrefixOf(project.getFullPath())) {
+					errorMsg = NLS.bind(Messages.ProjectLocationInCodewindDataDirError, dataPath.toOSString());
+					project = null;
+				}
 				projectPath = null;
 			}
 		} else {
@@ -287,6 +294,13 @@ public class ProjectSelectionPage extends WizardPage {
 						if (existingProject.exists() && !path.toFile().equals(existingProject.getLocation().toFile())) {
 							errorMsg = NLS.bind(Messages.SelectProjectPageProjectExistsError, path.lastSegment());
 							projectPath = null;
+						} else {
+							// It is an error if the project is located in the codewind-data folder
+							IPath dataPath = CoreUtil.getCodewindDataPath();
+							if (dataPath != null && dataPath.isPrefixOf(path)) {
+								errorMsg = NLS.bind(Messages.ProjectLocationInCodewindDataDirError, dataPath.toOSString());
+								projectPath = null;
+							}
 						}
 					}
 				}

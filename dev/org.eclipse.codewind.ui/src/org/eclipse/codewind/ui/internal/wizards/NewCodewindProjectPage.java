@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
@@ -40,6 +41,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -366,6 +368,14 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 			setErrorMessage(Messages.NewProjectPage_NoLocationError);
 			return false;
 		}
+
+		// It is an error if the project is located in the codewind-data folder
+		IPath dataPath = CoreUtil.getCodewindDataPath();
+		if (dataPath != null && dataPath.isPrefixOf(location)) {
+			setErrorMessage(NLS.bind(Messages.ProjectLocationInCodewindDataDirError, dataPath.toOSString()));
+			return false;
+		}
+		
 		if (selectionTable.getSelectionCount() != 1) {
 			setErrorMessage(Messages.NewProjectPage_NoTemplateSelected);
 			return false;

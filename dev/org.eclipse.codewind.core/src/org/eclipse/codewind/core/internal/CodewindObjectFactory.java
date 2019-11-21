@@ -30,8 +30,8 @@ import org.eclipse.core.runtime.IPath;
  */
 public class CodewindObjectFactory {
 	
-	public static CodewindConnection createLocalConnection(String name, URI uri) {
-		return new LocalConnection(name, uri);
+	public static CodewindConnection createLocalConnection(URI uri) {
+		return new LocalConnection(uri);
 	}
 	
 	public static CodewindConnection createRemoteConnection(String name, URI uri, String conid, AuthToken authToken) {

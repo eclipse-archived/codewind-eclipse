@@ -33,7 +33,6 @@ import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.AuthToken;
 import org.eclipse.codewind.core.internal.cli.CLIUtil;
-import org.eclipse.codewind.core.internal.cli.ConnectionUtil;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.ConnectionEnv.TektonDashboard;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;

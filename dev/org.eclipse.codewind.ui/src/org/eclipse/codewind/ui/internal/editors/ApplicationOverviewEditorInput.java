@@ -25,18 +25,24 @@ public class ApplicationOverviewEditorInput implements IEditorInput, IPersistabl
 	
 	public static final String EDITOR_ID = "org.eclipse.codewind.ui.editors.appOverview"; //$NON-NLS-1$
 	
+	public final String connectionId;
 	public final String connectionUri;
+	public final String connectionName;
 	public final String projectID;
 	public final String projectName;
 	
 	public ApplicationOverviewEditorInput(CodewindApplication app) {
+		this.connectionId = app.connection.getConid();
 		this.connectionUri = app.connection.getBaseURI().toString();
+		this.connectionName = app.connection.getName();
 		this.projectID = app.projectID;
 		this.projectName = app.name;
 	}
 	
-	public ApplicationOverviewEditorInput(String connectionUri, String projectID, String projectName) {
+	public ApplicationOverviewEditorInput(String connectionId, String connectionUri, String connectionName, String projectID, String projectName) {
+		this.connectionId = connectionId;
 		this.connectionUri = connectionUri;
+		this.connectionName = connectionName;
 		this.projectID = projectID;
 		this.projectName = projectName;
 	}
@@ -86,8 +92,9 @@ public class ApplicationOverviewEditorInput implements IEditorInput, IPersistabl
 	}
 
 	@Override
+	// Used to decide if the editor is already open
 	public boolean equals(Object obj) {
-		// Used to decide if the editor is already open
+		
 		if (obj == this) {
 			return true;
 		}
@@ -97,7 +104,11 @@ public class ApplicationOverviewEditorInput implements IEditorInput, IPersistabl
 		}
 		
 		ApplicationOverviewEditorInput input = (ApplicationOverviewEditorInput)obj;
-		return connectionUri.equals(input.connectionUri) && projectID.equals(input.projectID);
+		if (connectionId == null) {
+			// Support old mementos
+			return connectionUri.equals(input.connectionUri) && projectID.equals(input.projectID);
+		}
+		return connectionId.equals(input.connectionId) && projectID.equals(input.projectID);
 	}
 
 }

@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.IUpdateHandler;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 
 /**
  * Update handler registered on the Codewind core plug-in in order to keep
@@ -30,12 +31,24 @@ public class UpdateHandler implements IUpdateHandler {
 	@Override
 	public void updateAll() {
 		ViewHelper.refreshCodewindExplorerView(null);
+		updateApps();
 	}
 
 	@Override
 	public void updateConnection(CodewindConnection connection) {
 		ViewHelper.refreshCodewindExplorerView(connection);
 		ViewHelper.expandConnection(connection);
+		updateApps(connection);
+	}
+	
+	private void updateApps() {
+		CodewindConnectionManager.activeConnections().stream().forEach(conn -> updateApps(conn));
+	}
+	
+	private void updateApps(CodewindConnection conn) {
+		if (conn != null) {
+			conn.getApps().stream().forEach(app -> updateApplication(app));
+		}
 	}
 
 	@Override
@@ -75,15 +88,15 @@ public class UpdateHandler implements IUpdateHandler {
 		}
 	}
 
-	public void addAppUpdateListener(CodewindConnection conn, String projectID, AppUpdateListener listener) {
+	public void addAppUpdateListener(String connectionId, String projectID, AppUpdateListener listener) {
 		synchronized(appListeners) {
-			appListeners.put(new AppKey(conn, projectID), listener);
+			appListeners.put(new AppKey(connectionId, projectID), listener);
 		}
 	}
 	
-	public void removeAppUpdateListener(CodewindConnection conn, String projectID) {
+	public void removeAppUpdateListener(String connectionId, String projectID) {
 		synchronized(appListeners) {
-			appListeners.remove(new AppKey(conn, projectID));
+			appListeners.remove(new AppKey(connectionId, projectID));
 		}
 	}
 	
@@ -93,16 +106,16 @@ public class UpdateHandler implements IUpdateHandler {
 	}
 	
 	private class AppKey {
-		public final String connectionURI;
-		public final String projectID;
+		public final String connectionId;
+		public final String projectId;
 		
 		public AppKey(CodewindApplication app) {
-			this(app.connection, app.projectID);
+			this(app.connection.getConid(), app.projectID);
 		}
 		
-		public AppKey(CodewindConnection conn, String projectID) {
-			this.connectionURI = conn.getBaseURI().toString();
-			this.projectID = projectID;
+		public AppKey(String connectionId, String projectID) {
+			this.connectionId = connectionId;
+			this.projectId = projectID;
 		}
 		
 		@Override
@@ -114,12 +127,12 @@ public class UpdateHandler implements IUpdateHandler {
 				return true;
 			}
 			AppKey key = (AppKey)obj;
-			return this.connectionURI.equals(key.connectionURI) && this.projectID.equals(key.projectID);
+			return this.connectionId.equals(key.connectionId) && this.projectId.equals(key.projectId);
 		}
 
 		@Override
 		public int hashCode() {
-			return connectionURI.hashCode() * projectID.hashCode();
+			return connectionId.hashCode() * projectId.hashCode();
 		}
 	}
 

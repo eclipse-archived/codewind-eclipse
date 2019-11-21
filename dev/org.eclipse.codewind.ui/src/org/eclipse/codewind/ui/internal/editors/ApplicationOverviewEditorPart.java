@@ -18,6 +18,7 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.UIConstants;
@@ -79,10 +80,14 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private Composite contents;
 	private String appName;
-	private String projectID;
-	private CodewindConnection connection;
+	private String connectionId;
+	private String connectionName;
+	private String projectId;
 	
 	private ScrolledForm form = null;
+	private Composite messageComp = null;
+	private Label messageLabel = null;
+	private Composite columnComp = null;
 	private GeneralSection generalSection = null;
 	private ProjectSettingsSection projectSettingsSection = null;
 	private BuildSection buildSection = null;
@@ -101,38 +106,45 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
-		CodewindApplication application = null;
+		ApplicationOverviewEditorInput appInput = null;
 		if (input instanceof ApplicationOverviewEditorInput) {
-			ApplicationOverviewEditorInput appInput = (ApplicationOverviewEditorInput)input;
-			if (appInput.connectionUri != null && appInput.projectID != null) {
-				connection = CodewindConnectionManager.getActiveConnection(appInput.connectionUri);
-				if (connection != null && connection.isConnected()) {
-					application = connection.getAppByID(appInput.projectID);
-				}
+			appInput = (ApplicationOverviewEditorInput)input;
+			if ((appInput.connectionId == null && appInput.connectionUri == null) || appInput.projectID == null) {
+				Logger.logError("Invalid editor input for application overview. Connection id/uri or project id is null." + input.getClass()); //$NON-NLS-1$
+				throw new PartInitException(NLS.bind(Messages.AppOverviewEditorCreateError, input));
 			}
-		}
-		if (application == null) {
-			Logger.logError("Could not retreive the application from the editor input: " + input.getClass()); //$NON-NLS-1$
+		} else {
+			Logger.logError("The editor input is not valid for the application overview: " + input.getClass()); //$NON-NLS-1$
         	throw new PartInitException(NLS.bind(Messages.AppOverviewEditorCreateError, input));
 		}
 		
 		setSite(site);
         setInput(input);
         
-        appName = application.name;
-        projectID = application.projectID;
+        // Support old mementos by defaulting to local connection
+        appName = appInput.projectName;
+        connectionId = appInput.connectionId;
+        if (connectionId == null) {
+        	connectionId = LocalConnection.DEFAULT_ID;
+        }
+        connectionName = appInput.connectionName;
+        if (connectionName == null) {
+        	connectionName = LocalConnection.DEFAULT_NAME;
+        }
+        projectId = appInput.projectID;
         
-        setPartName(NLS.bind(Messages.AppOverviewEditorPartName, appName));
+        setPartName(NLS.bind(Messages.AppOverviewEditorPartName, new String[] {appName, connectionName}));
         
-        CodewindUIPlugin.getUpdateHandler().addAppUpdateListener(connection, projectID, new AppUpdateListener() {
+        CodewindUIPlugin.getUpdateHandler().addAppUpdateListener(connectionId, projectId, new AppUpdateListener() {
 			@Override
 			public void update() {
-				CodewindApplication app = getApp();
+				CodewindConnection conn = getConn();
+				CodewindApplication app = getApp(conn);
 				if (app != null) {
 					Display.getDefault().asyncExec(new Runnable() {
 						@Override
 						public void run() {
-							ApplicationOverviewEditorPart.this.update(app);
+							ApplicationOverviewEditorPart.this.update(conn, app);
 						}
 					});
 				}
@@ -153,8 +165,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	@Override
 	public void dispose() {
 		// Dispose can be called if the part fails to init in which case these may be null
-		if (connection != null && projectID != null) {
-			CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(connection, projectID);
+		if (connectionId != null && projectId != null) {
+			CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(connectionId, projectId);
 		}
 		super.dispose();
 	}
@@ -179,7 +191,17 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		form.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON));
 		form.getBody().setLayout(new GridLayout());
 		
-		Composite columnComp = toolkit.createComposite(form.getBody());
+		messageComp = toolkit.createComposite(form.getBody());
+		GridLayout messageLayout = new GridLayout();
+		messageLayout.verticalSpacing = 0;
+		messageLayout.horizontalSpacing = 10;
+		messageComp.setLayout(messageLayout);
+		messageComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
+		
+		messageLabel = toolkit.createLabel(messageComp, "");
+		messageLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
+		
+		columnComp = toolkit.createComposite(form.getBody());
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.verticalSpacing = 0;
@@ -253,16 +275,13 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		refreshButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				final CodewindApplication app = getApp();
-				if (app == null) {
-					Logger.logError("Could not get the application for refreshing project: " + appName); //$NON-NLS-1$
-					return;
-				}
+				final CodewindConnection conn = getConn();
+				final CodewindApplication app = getApp(conn);
 				Job job = new Job(NLS.bind(Messages.RefreshProjectJobLabel, app.name)) {
 					@Override
 					protected IStatus run(IProgressMonitor monitor) {
 						app.connection.refreshApps(app.projectID);
-						Display.getDefault().asyncExec(() -> ApplicationOverviewEditorPart.this.update(app));
+						Display.getDefault().asyncExec(() -> ApplicationOverviewEditorPart.this.update(conn, app));
 						return Status.OK_STATUS;
 					}
 				};
@@ -270,13 +289,26 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			}
 		});
 
-		update(getApp());
+		CodewindConnection conn = getConn();
+		update(conn, getApp(conn));
 	}
 	
-	public void update(CodewindApplication app) {
-		generalSection.update(app);
-		projectSettingsSection.update(app);
-		buildSection.update(app);
+	public void update(CodewindConnection conn, CodewindApplication app) {
+		if (conn == null || app == null) {
+			messageComp.setVisible(true);
+			((GridData)messageComp.getLayoutData()).exclude = false;
+			messageLabel.setText(conn == null ? Messages.AppOverviewEditorNoConnection : Messages.AppOverviewEditorNoApplication);
+			columnComp.setVisible(false);
+			((GridData)columnComp.getLayoutData()).exclude = true;
+		} else {
+			messageComp.setVisible(false);
+			((GridData)messageComp.getLayoutData()).exclude = true;
+			columnComp.setVisible(true);
+			((GridData)columnComp.getLayoutData()).exclude = false;
+			generalSection.update(app);
+			projectSettingsSection.update(app);
+			buildSection.update(app);
+		}
 		form.layout(true, true);
 		form.reflow(true);
 	}
@@ -288,8 +320,15 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		form.reflow(true);
 	}
 	
-	private CodewindApplication getApp() {
-		return connection.getAppByID(projectID);
+	private CodewindConnection getConn() {
+		return CodewindConnectionManager.getConnectionById(connectionId);
+	}
+	
+	private CodewindApplication getApp(CodewindConnection connection) {
+		if (connection == null) {
+			return null;
+		}
+		return connection.getAppByID(projectId);
 	}
 	
 	private class GeneralSection {
@@ -329,7 +368,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        locationEntry = new StringEntry(composite, Messages.AppOverviewEditorLocationEntry);
 	        addSpacer(composite);
 	        appURLEntry = new LinkEntry(composite, toolkit, Messages.AppOverviewEditorAppUrlEntry, (url) -> {
-	        	CodewindApplication app = getApp();
+	        	CodewindApplication app = getApp(getConn());
 	        	if (app == null) {
 	        		Logger.logError("Could not get the application for opening in a browser: " + appName); //$NON-NLS-1$
 	        		return;
@@ -419,10 +458,10 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        editButton.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent event) {
-					CodewindApplication app = getApp();
+					CodewindApplication app = getApp(getConn());
 					if (app == null) {
 						// Should not happen
-						Logger.logError("Trying to open the settings file from the overview page but the app is not found with name: " + appName + ", and project id: " + projectID); //$NON-NLS-1$  //$NON-NLS-2$
+						Logger.logError("Trying to open the settings file from the overview page but the app is not found with name: " + appName + ", and project id: " + projectId); //$NON-NLS-1$  //$NON-NLS-2$
 						return;
 					}
 					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
@@ -452,7 +491,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 						}
 						return;
 					}
-					Logger.logError("Failed to open project settings file for project: " + appName + ", with id: " + projectID); //$NON-NLS-1$ //$NON-NLS-2$
+					Logger.logError("Failed to open project settings file for project: " + appName + ", with id: " + projectId); //$NON-NLS-1$ //$NON-NLS-2$
 					MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenSettingsErrorTitle, Messages.AppOverviewEditorOpenSettingsNotFound);
 				}
 	        });

@@ -13,12 +13,15 @@ package org.eclipse.codewind.core.internal.connection;
 
 import java.net.URI;
 
+import org.eclipse.codewind.core.internal.messages.Messages;
+
 public class LocalConnection extends CodewindConnection {
 	
-	public static final String CONNECTION_ID = "local";
+	public static final String DEFAULT_NAME = Messages.CodewindLocalConnectionName;
+	public static final String DEFAULT_ID = "local";
 	
-	public LocalConnection(String name, URI uri) {
-		super(name, uri, CONNECTION_ID, null);
+	public LocalConnection(URI uri) {
+		super(DEFAULT_NAME, uri, DEFAULT_ID, null);
 	}
 	
 	@Override

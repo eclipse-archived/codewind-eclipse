@@ -268,7 +268,7 @@ public class ProjectSelectionPage extends WizardPage {
 				project = checked.length == 1 ? (IProject) checked[0] : null;
 				// It is an error if the project is located in the codewind-data folder
 				IPath dataPath = CoreUtil.getCodewindDataPath();
-				if (dataPath != null && dataPath.isPrefixOf(project.getFullPath())) {
+				if (project != null && dataPath != null && dataPath.isPrefixOf(project.getFullPath())) {
 					errorMsg = NLS.bind(Messages.ProjectLocationInCodewindDataDirError, dataPath.toOSString());
 					project = null;
 				}

@@ -13,7 +13,6 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -27,7 +26,7 @@ import org.eclipse.swt.widgets.Composite;
  * This simple page allows the user to add new Codewind connections, by entering a hostname and port and
  * validating that Codewind is indeed reachable at the given address.
  */
-public class NewCodewindConnectionPage extends WizardPage implements CodewindConnectionComposite.Container {
+public class NewCodewindConnectionPage extends WizardPage implements CompositeContainer {
 
 	private CodewindConnectionComposite composite;
 
@@ -62,11 +61,6 @@ public class NewCodewindConnectionPage extends WizardPage implements CodewindCon
 	void performFinish() {
 		CodewindConnection connection = getConnection();
 		if (connection != null) {
-			try {
-				composite.setRegistry();
-			} catch (Exception e) {
-				Logger.logError("An error occurred trying to set the registry for connection: " + connection.getName(), e); //$NON-NLS-1$
-			}
 			CodewindConnectionManager.add(connection);
 		}
 	}

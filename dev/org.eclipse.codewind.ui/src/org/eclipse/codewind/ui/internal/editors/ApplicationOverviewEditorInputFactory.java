@@ -19,16 +19,20 @@ public class ApplicationOverviewEditorInputFactory implements IElementFactory {
 
 	public static final String FACTORY_ID = "org.eclipse.codewind.ui.editors.appOverviewEditorInputFactory";
 	
+	private static final String CONNECTION_ID = "connectionId";
 	private static final String CONNECTION_URI = "connectionUri";
+	private static final String CONNECTION_NAME = "connectionName";
 	private static final String PROJECT_ID = "projectID";
 	private static final String PROJECT_NAME = "projectName";
 	
 	@Override
 	public IAdaptable createElement(IMemento memento) {
+		String connectionId = memento.getString(CONNECTION_ID);
 		String connectionUri = memento.getString(CONNECTION_URI);
-		String projectID = memento.getString(PROJECT_ID);
+		String connectionName = memento.getString(CONNECTION_NAME);
+		String projectId = memento.getString(PROJECT_ID);
 		String projectName = memento.getString(PROJECT_NAME);
-		return new ApplicationOverviewEditorInput(connectionUri, projectID, projectName);
+		return new ApplicationOverviewEditorInput(connectionId, connectionUri, connectionName, projectId, projectName);
 	}
 	
 	public static void saveState(IMemento memento, ApplicationOverviewEditorInput input) {
@@ -36,7 +40,13 @@ public class ApplicationOverviewEditorInputFactory implements IElementFactory {
 			return;
 		}
 		
+		if (input.connectionId != null) {
+			memento.putString(CONNECTION_ID, input.connectionId);
+		}
 		memento.putString(CONNECTION_URI, input.connectionUri);
+		if (input.connectionName != null) {
+			memento.putString(CONNECTION_NAME, input.connectionName);
+		}
 		memento.putString(PROJECT_ID, input.projectID);
 		memento.putString(PROJECT_NAME, input.projectName);
 	}

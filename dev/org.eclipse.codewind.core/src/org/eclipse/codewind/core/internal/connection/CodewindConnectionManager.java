@@ -94,6 +94,15 @@ public class CodewindConnectionManager {
 		return null;
 	}
 	
+	public synchronized static CodewindConnection getConnectionById(String id) {
+		for(CodewindConnection conn : activeConnections()) {
+			if(conn.getBaseURI() != null && conn.getConid().equals(id)) {
+				return conn;
+			}
+		}
+		return null;
+	}
+	
 	public synchronized static CodewindConnection getActiveConnectionByName(String name) {
 		for(CodewindConnection conn : activeConnections()) {
 			if(name != null && name.equals(conn.getName())) {
@@ -122,7 +131,7 @@ public class CodewindConnectionManager {
 			connection.close();
 			removeResult = instance().connections.remove(connection);
 			CoreUtil.removeConnection(apps);
-			if (connection.getConid() != null) {
+			if (!connection.isLocal() && connection.getConid() != null) {
 				try {
 					ConnectionUtil.removeConnection(connection.getName(), connection.getConid(), new NullProgressMonitor());
 				} catch (Exception e) {
@@ -161,7 +170,7 @@ public class CodewindConnectionManager {
 				SubMonitor mon = SubMonitor.convert(monitor, 100);
 				
 				// Make sure the local connection is first in the list
-				localConnection = CodewindObjectFactory.createLocalConnection(Messages.CodewindLocalConnectionName, null);
+				localConnection = CodewindObjectFactory.createLocalConnection(null);
 				connections.add(localConnection);
 				try {
 					// This will connect if Codewind is running

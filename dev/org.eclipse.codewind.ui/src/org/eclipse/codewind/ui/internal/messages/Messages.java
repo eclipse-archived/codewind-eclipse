@@ -375,6 +375,8 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorOpenSettingsErrorTitle;
 	public static String AppOverviewEditorOpenSettingsErrorMsg;
 	public static String AppOverviewEditorOpenSettingsNotFound;
+	public static String AppOverviewEditorNoConnection;
+	public static String AppOverviewEditorNoApplication;
 	
 	public static String StopAllDialog_Title;
 	public static String StopAllDialog_Message;

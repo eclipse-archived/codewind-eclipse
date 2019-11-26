@@ -11,13 +11,14 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.codewind.ui.internal.views.ViewHelper;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 
@@ -52,28 +53,18 @@ public class NewCodewindConnectionWizard extends Wizard implements INewWizard {
 	}
 
 	@Override
-	public boolean performCancel() {
-		CodewindConnection connection = newConnectionPage.getConnection();
-		if (connection != null) {
-			connection.close();
-		}
-		return true;
-	}
-
-	@Override
 	public boolean performFinish() {
 		if(!canFinish()) {
 			return false;
 		}
 
-		CodewindConnection connection = newConnectionPage.getConnection();
-		if (connection != null) {
-			CodewindConnectionManager.add(connection);
-		}
-
-		ViewHelper.openCodewindExplorerView();
-		ViewHelper.refreshCodewindExplorerView(null);
-		ViewHelper.expandConnection(connection);
+		Job job = new Job(NLS.bind(Messages.NewConnectionWizard_CreateJobTitle, newConnectionPage.getConnectionName())) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				return newConnectionPage.createConnection(monitor);
+			}
+		};
+		job.schedule();
 
 		return true;
 	}

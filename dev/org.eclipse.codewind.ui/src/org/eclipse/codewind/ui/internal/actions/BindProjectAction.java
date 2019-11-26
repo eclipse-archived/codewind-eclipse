@@ -84,7 +84,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, projectError);
 			// If connection is new (not already registered), then close it
 			if (CodewindConnectionManager.getActiveConnection(connection.getBaseURI().toString()) == null) {
-				connection.close();
+				connection.disconnect();
 			}
 			return;
 		}
@@ -94,7 +94,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 		if (dialog.open() == Window.CANCEL) {
 			// If connection is new (not already registered), then close it
 			if (CodewindConnectionManager.getActiveConnection(connection.getBaseURI().toString()) == null) {
-				connection.close();
+				connection.disconnect();
 			}
 		} else {
 			// Add the connection if not already registered

@@ -33,6 +33,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 	private BindAction bindAction;
 	private ManageReposAction manageReposAction;
 	private ConnectDisconnectAction connectDisconnectAction;
+	private EditConnectionAction editConnectionAction;
 	private RemoveConnectionAction removeConnectionAction;
 	private RemoteDoubleClickAction remoteDoubleClickAction;
 	
@@ -44,6 +45,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		bindAction = new BindAction(selProvider);
 		manageReposAction = new ManageReposAction(selProvider);
 		connectDisconnectAction = new ConnectDisconnectAction(selProvider);
+		editConnectionAction = new EditConnectionAction(selProvider);
 		removeConnectionAction = new RemoveConnectionAction(selProvider);
 		remoteDoubleClickAction = new RemoteDoubleClickAction(selProvider);
 	}
@@ -55,6 +57,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageReposAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, connectDisconnectAction);
+		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, editConnectionAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, removeConnectionAction);
 	}
     

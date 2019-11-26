@@ -128,12 +128,12 @@ public class CodewindConnectionManager {
 		CodewindConnection connection = CodewindConnectionManager.getActiveConnection(baseUrl.toString());
 		if (connection != null) {
 			List<CodewindApplication> apps = connection.getApps();
-			connection.close();
+			connection.disconnect();
 			removeResult = instance().connections.remove(connection);
 			CoreUtil.removeConnection(apps);
 			if (!connection.isLocal() && connection.getConid() != null) {
 				try {
-					ConnectionUtil.removeConnection(connection.getName(), connection.getConid(), new NullProgressMonitor());
+					ConnectionUtil.removeConnection(connection.getConid(), new NullProgressMonitor());
 				} catch (Exception e) {
 					Logger.logError("An error occurred trying to de-register the connection: " + connection.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 				}
@@ -158,7 +158,7 @@ public class CodewindConnectionManager {
 
 		while(it.hasNext()) {
 			CodewindConnection connection = it.next();
-			connection.close();
+			connection.disconnect();
 			it.remove();
 		}
 	}
@@ -199,7 +199,7 @@ public class CodewindConnectionManager {
 								if (mon.isCanceled()) {
 									return Status.CANCEL_STATUS;
 								}
-								CodewindConnection conn = CodewindObjectFactory.createRemoteConnection(info.getLabel(), uri, info.getId(), auth);
+								CodewindConnection conn = CodewindObjectFactory.createRemoteConnection(info.getLabel(), uri, info.getId(), info.getUsername(), auth);
 								connections.add(conn);
 								if (auth != null) {
 									conn.connect(mon.split(80));

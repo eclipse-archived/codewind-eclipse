@@ -13,9 +13,9 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -54,22 +54,19 @@ public class NewCodewindConnectionPage extends WizardPage implements CompositeCo
 		return composite.canFinish();
 	}
 	
-	public CodewindConnection getConnection() {
-		return composite.getConnection();
+	public String getConnectionName() {
+		return composite.getConnectionName();
 	}
 	
-	void performFinish() {
-		CodewindConnection connection = getConnection();
-		if (connection != null) {
-			CodewindConnectionManager.add(connection);
-		}
+	public IStatus createConnection(IProgressMonitor monitor) {
+		return composite.createConnection(monitor);
 	}
-
+	
 	@Override
 	public void update() {
 		getWizard().getContainer().updateButtons();
 	}
-
+	
 	@Override
 	public void run(IRunnableWithProgress runnable) throws InvocationTargetException, InterruptedException {
 		getWizard().getContainer().run(true, true, runnable);

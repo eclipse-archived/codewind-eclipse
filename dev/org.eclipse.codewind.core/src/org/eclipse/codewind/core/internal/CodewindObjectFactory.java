@@ -34,8 +34,8 @@ public class CodewindObjectFactory {
 		return new LocalConnection(uri);
 	}
 	
-	public static CodewindConnection createRemoteConnection(String name, URI uri, String conid, AuthToken authToken) {
-		return new RemoteConnection(name, uri, conid, authToken);
+	public static CodewindConnection createRemoteConnection(String name, URI uri, String conid, String username, AuthToken authToken) {
+		return new RemoteConnection(name, uri, conid, username, authToken);
 	}
 	
 	public static CodewindApplication createCodewindApplication(CodewindConnection connection,

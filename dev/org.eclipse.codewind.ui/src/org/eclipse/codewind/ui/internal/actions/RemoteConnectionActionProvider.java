@@ -31,6 +31,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 	private ISelectionProvider selProvider;
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
+	private ManageRegistriesAction manageRegistriesAction;
 	private ManageReposAction manageReposAction;
 	private ConnectDisconnectAction connectDisconnectAction;
 	private EditConnectionAction editConnectionAction;
@@ -43,6 +44,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		selProvider = aSite.getStructuredViewer();
 		newProjectAction = new NewProjectAction(selProvider);
 		bindAction = new BindAction(selProvider);
+		manageRegistriesAction = new ManageRegistriesAction(selProvider);
 		manageReposAction = new ManageReposAction(selProvider);
 		connectDisconnectAction = new ConnectDisconnectAction(selProvider);
 		editConnectionAction = new EditConnectionAction(selProvider);
@@ -55,6 +57,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		selProvider.setSelection(selProvider.getSelection());
 		menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
+		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageRegistriesAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageReposAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, connectDisconnectAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, editConnectionAction);

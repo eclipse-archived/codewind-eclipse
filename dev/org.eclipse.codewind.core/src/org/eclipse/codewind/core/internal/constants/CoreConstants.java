@@ -39,6 +39,7 @@ public class CoreConstants {
 			APIPATH_PROJECT_UNBIND = "unbind",
 			APIPATH_PROJECT_TYPES = "project-types",
 			APIPATH_REGISTRY = "registry",
+			APIPATH_REGISTRYSECRETS = "registrysecrets",
 
 			// JSON keys
 			KEY_PROJECT_ID = "projectID",
@@ -94,6 +95,9 @@ public class CoreConstants {
 			KEY_PROJECT_NAME = "projectName",
 			KEY_PARENT_PATH = "parentPath",
 			KEY_URL = "url",
+			KEY_CREDENTIALS = "credentials",
+			KEY_USERNAME = "username",
+			KEY_PASSWORD = "password",
 			KEY_TEMPLATE_ID = "templateID",
 			KEY_OP = "op",
 			KEY_VALUE = "value",

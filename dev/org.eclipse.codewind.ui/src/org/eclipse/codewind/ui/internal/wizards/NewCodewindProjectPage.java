@@ -28,11 +28,13 @@ import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.IProject;
@@ -41,7 +43,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -235,7 +236,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
 		manageRepoLink.setText("<a>" + Messages.NewProjectPage_ManageRepoLink + "</a>");
 		manageRepoLink.setToolTipText(Messages.NewProjectPage_ManageRepoTooltip);
-		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		manageRepoLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 
 		manageRepoLink.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -279,6 +280,63 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 					}
 				} catch (Exception e) {
 					MessageDialog.openError(getShell(), Messages.RepoListErrorTitle, NLS.bind(Messages.RepoListErrorMsg, e));
+				}
+			}
+		});
+		
+		// Manage registries link
+		Composite manageRegistriesComp = new Composite(parent, SWT.NONE);
+		manageRegistriesComp.setLayout(new GridLayout(2, false));
+		manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
+		
+		Label manageRegistriesLabel = new Label(manageReposComp, SWT.NONE);
+		manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
+		manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		
+		Link manageRegistriesLink = new Link(manageReposComp, SWT.NONE);
+		manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
+		if (connection.isLocal()) {
+			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
+		} else {
+			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltip);
+		}
+		manageRegistriesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+
+		manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				List<RegistryInfo> regList;
+				try {
+					regList = connection.requestRegistryList();
+					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList);
+					if (regDialog.open() == Window.OK) {
+						if (regDialog.hasChanges()) {
+							IRunnableWithProgress runnable = new IRunnableWithProgress() {
+								@Override
+								public void run(IProgressMonitor monitor) throws InvocationTargetException {
+									SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
+									IStatus status = regDialog.updateRegistries(mon.split(75));
+									if (!status.isOK()) {
+										throw new InvocationTargetException(status.getException(), status.getMessage());
+									}
+									if (mon.isCanceled()) {
+										return;
+									}
+								}
+							};
+							try {
+								getWizard().getContainer().run(true, true, runnable);
+							} catch (InvocationTargetException e) {
+								MessageDialog.openError(getShell(), Messages.RegUpdateErrorTitle, e.getMessage());
+								return;
+							} catch (InterruptedException e) {
+								// The user cancelled the operation
+								return;
+							}
+						}
+					}
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
 				}
 			}
 		});

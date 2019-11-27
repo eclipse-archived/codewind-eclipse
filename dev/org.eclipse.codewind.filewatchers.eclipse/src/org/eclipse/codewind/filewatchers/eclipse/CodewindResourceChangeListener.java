@@ -27,8 +27,8 @@ import org.eclipse.core.runtime.CoreException;
 
 /**
  * An instance of this class is created by CodewindFilewatcherdConnection, and
- * is also where where this class is registered as a workbench listener. Only
- * one instance of this class should exist per Codewind server.
+ * is also where this class is registered as a workbench listener. Only one
+ * instance of this class should exist per Codewind server.
  *
  * This class converts a list of changes from the IDE into a List of
  * FileChangeEntryEclipse, which are then processed by 'parent' and passed to
@@ -83,6 +83,7 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 			if (resource == null) {
 				return false;
 			}
+
 			// Exclude parent folder or project
 			if (delta.getKind() == IResourceDelta.CHANGED && delta.getFlags() == 0) {
 				return true;
@@ -109,10 +110,14 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 				return true;
 			}
 
-			if ((delta.getFlags() & IResourceDelta.CONTENT) == 0 && (delta.getFlags() & IResourceDelta.REPLACED) == 0) {
+			if (ceet == ChangeEntryEventType.MODIFY && ((delta.getFlags() & IResourceDelta.CONTENT) == 0
+					&& (delta.getFlags() & IResourceDelta.REPLACED) == 0)) {
 				// Some workbench operations, such as adding/removing a debug breakpoint, will
 				// trigger a resource delta, even though the actual file contents is the same.
 				// We ignore those, and return here.
+
+				// However, these non-file-changed resources will always have the IResourceDelta.CHANGED
+				// kind, so we only filter out events of this kind.
 				return true;
 			}
 

@@ -162,7 +162,13 @@ public class CodewindConnectionComposite extends Composite {
 		}
 
 		// Check that all of the connection fields are filled in
-		if (url.isEmpty() || user.isEmpty() || pass.isEmpty()) {
+		if (url.isEmpty() || user.isEmpty()) {
+			return Messages.CodewindConnectionComposite_MissingConnDetailsError;
+		}
+		if (pass.isEmpty()) {
+			if (isUpdate) {
+				return Messages.CodewindConnectionComposite_NoPasswordForUpdateError;
+			}
 			return Messages.CodewindConnectionComposite_MissingConnDetailsError;
 		}
 		

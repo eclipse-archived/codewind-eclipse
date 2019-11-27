@@ -61,6 +61,7 @@ public class Messages extends NLS {
 	public static String CodewindConnectionComposite_InvalidUrlError;
 	public static String CodewindConnectionComposite_UrlInUseError;
 	public static String CodewindConnectionComposite_MissingConnDetailsError;
+	public static String CodewindConnectionComposite_NoPasswordForUpdateError;
 	public static String CodewindConnectionComposite_TestConnMsg;
 	public static String CodewindConnectionComposite_TestConnectionJobLabel;
 	public static String CodewindConnectionComposite_ConnectSucceeded;

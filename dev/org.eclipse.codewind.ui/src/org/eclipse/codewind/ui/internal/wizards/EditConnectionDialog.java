@@ -16,7 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementComposite;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
@@ -27,6 +26,7 @@ import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.wizard.ProgressMonitorPart;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -61,13 +61,11 @@ public class EditConnectionDialog extends TitleAreaDialog implements CompositeCo
 		setMessage(NLS.bind(Messages.EditConnectionDialogMessage, connection.getName()));
 		
 		Composite content = (Composite) super.createDialogArea(parent);
-		content.setLayout(new GridLayout());
+		content.setLayout(new GridLayout(1, false));
 		content.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
 		connectionComp = new CodewindConnectionComposite(content, this, connection);
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-		data.widthHint = 250;
-		connectionComp.setLayoutData(data);
+		connectionComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 1;
@@ -78,6 +76,12 @@ public class EditConnectionDialog extends TitleAreaDialog implements CompositeCo
 		progressMon.setVisible(false);
 		
 		return parent;
+	}
+
+	@Override
+	protected void createButtonsForButtonBar(Composite parent) {
+		super.createButtonsForButtonBar(parent);
+		getButton(IDialogConstants.OK_ID).setEnabled(false);
 	}
 
 	@Override
@@ -94,7 +98,7 @@ public class EditConnectionDialog extends TitleAreaDialog implements CompositeCo
 
 	@Override
 	public void update() {
-		getButton(IDialogConstants.OK_ID) .setEnabled(connectionComp.canFinish());
+		getButton(IDialogConstants.OK_ID).setEnabled(connectionComp.canFinish());
 	}
 
 	@Override
@@ -106,5 +110,11 @@ public class EditConnectionDialog extends TitleAreaDialog implements CompositeCo
 			progressMon.done();
 			progressMon.setVisible(false);
 		}
+	}
+	
+	@Override
+	protected Point getInitialSize() {
+		Point point = super.getInitialSize();
+		return new Point(650, point.y);
 	}
 }

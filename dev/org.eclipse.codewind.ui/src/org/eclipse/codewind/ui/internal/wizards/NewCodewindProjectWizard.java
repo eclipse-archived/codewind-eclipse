@@ -89,7 +89,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		if (newProjectPage != null) {
 			CodewindConnection newConnection = newProjectPage.getConnection();
 			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
-				newConnection.close();
+				newConnection.disconnect();
 			}
 		}
 		return super.performCancel();

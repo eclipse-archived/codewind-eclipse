@@ -12,11 +12,9 @@
 package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -25,91 +23,51 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ConnectionUtil {
-	
 
 	private static final String CONNECTIONS_CMD = "connections";
 	private static final String LIST_OPTION = "list";
 	private static final String ADD_OPTION = "add";
 	private static final String REMOVE_OPTION = "remove";
+	private static final String UPDATE_OPTION = "update";
 	
 	private static final String LABEL_OPTION = "--label";
 	private static final String URL_OPTION = "--url";
 	private static final String USERNAME_OPTION = "--username";
 	
-	private static final String STATUS_KEY = "status";
-	private static final String STATUS_MSG_KEY = "status_message";
 	private static final String ID_KEY = "id";
 	
-	private static final String ERROR_KEY = "error";
-	private static final String ERROR_DESCRIPTION_KEY = "error_description";
-	
-	private static final String STATUS_OK_VALUE = "OK";
-	
 	public static List<ConnectionInfo> listConnections(IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, LIST_OPTION}, null, null, monitor);
+		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, LIST_OPTION}, null, null, true, monitor);
 		JSONObject resultJson = new JSONObject(result.getOutput());
 		return ConnectionInfo.getInfos(resultJson);
 	}
 	
 	public static String addConnection(String name, String url, String username, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, ADD_OPTION}, new String[] {LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, monitor);
+		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, ADD_OPTION}, new String[] {LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, true, monitor);
 		JSONObject resultJson = new JSONObject(result.getOutput());
-		if (!resultJson.has(STATUS_KEY) || !STATUS_OK_VALUE.equals(resultJson.getString(STATUS_KEY))) {
-			String errorMsg = getErrorMsg(resultJson);
-			String msg = "Connection add failed for: " + name; //$NON-NLS-1$
-			if (errorMsg != null) {
-				msg = msg + " with output: " + errorMsg; //$NON-NLS-1$
-			}
-			Logger.logError(msg);
-			throw new IOException(msg);
-		}
 		return resultJson.getString(ID_KEY);
 	}
 	
-	public static void removeConnection(String name, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, REMOVE_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid}, null, monitor);
-		JSONObject resultJson = new JSONObject(result.getOutput());
-		if (!resultJson.has(STATUS_KEY) || !STATUS_OK_VALUE.equals(resultJson.getString(STATUS_KEY))) {
-			String errorMsg = getErrorMsg(resultJson);
-			String msg = "Connection remove failed for: " + name; //$NON-NLS-1$
-			if (errorMsg != null) {
-				msg = msg + " with output: " + errorMsg; //$NON-NLS-1$
-			}
-			Logger.logError(msg);
-			throw new IOException(msg);
-		}
+	public static void removeConnection(String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		runConnectionCmd(new String[] {CONNECTIONS_CMD, REMOVE_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid}, null, false, monitor);
 	}
 	
-	private static ProcessResult runConnectionCmd(String[] command, String[] options, String[] args, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+	public static void updateConnection(String conid, String name, String url, String username, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		runConnectionCmd(new String[] {CONNECTIONS_CMD, UPDATE_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid, LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, false, monitor);
+	}
+	
+	private static ProcessResult runConnectionCmd(String[] command, String[] options, String[] args, boolean checkOutput, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
 			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION, CLIUtil.JSON_OPTION}, command, options, args);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("The " + Arrays.toString(command) + " command with options " + Arrays.toString(options) + " failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("The " + Arrays.toString(command) + " command had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from " + Arrays.toString(command) + " is empty."); //$NON-NLS-1$
-			}
+			CLIUtil.checkResult(command, result, checkOutput);
 			return result;
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
 		}
-	}
-	
-	private static String getErrorMsg(JSONObject resultJson) throws JSONException {
-		String errorMsg = null;
-		if (resultJson.has(ERROR_DESCRIPTION_KEY)) {
-			errorMsg = resultJson.getString(ERROR_DESCRIPTION_KEY);
-		} else if (resultJson.has(STATUS_MSG_KEY)) {
-			errorMsg = resultJson.getString(STATUS_MSG_KEY);
-		}
-		return errorMsg;
 	}
 }

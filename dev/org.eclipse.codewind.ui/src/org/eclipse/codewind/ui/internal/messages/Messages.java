@@ -44,6 +44,7 @@ public class Messages extends NLS {
 	public static String NewConnectionPage_WizardDescription;
 	public static String NewConnectionPage_WizardTitle;
 	public static String NewConnectionWizard_ShellTitle;
+	public static String NewConnectionWizard_CreateJobTitle;
 	
 	public static String CodewindConnectionComposite_ConnNameLabel;
 	public static String CodewindConnectionComposite_ConnDetailsGroup;
@@ -71,6 +72,11 @@ public class Messages extends NLS {
 	public static String CodewindConnectionComposite_RegErrorTitle;
 	public static String CodewindConnectionComposite_RegErrorMsg;
 	public static String CodewindConnectionComposite_RegFailed;
+	
+	public static String CodewindConnectionErrorTitle;
+	public static String CodewindConnectionCreateError;
+	public static String CodewindConnectionConnectError;
+	public static String CodewindConnectionUpdateError;
 
 	public static String OpenAppAction_CantOpenNotRunningAppMsg;
 	public static String OpenAppAction_CantOpenNotRunningAppTitle;
@@ -236,6 +242,7 @@ public class Messages extends NLS {
 	public static String DisconnectJobError;
 	
 	public static String RemoveConnectionActionLabel;
+	public static String EditConnectionActionLabel;
 	
 	public static String ShowLogFilesMenu;
 	public static String ShowAllLogFilesAction;
@@ -417,6 +424,11 @@ public class Messages extends NLS {
 	public static String RepoUpdateErrorTitle;
 	public static String RepoListErrorTitle;
 	public static String RepoListErrorMsg;
+	
+	public static String EditConnectionDialogShell;
+	public static String EditConnectionDialogTitle;
+	public static String EditConnectionDialogMessage;
+	public static String UpdateConnectionJobLabel;
 	
 	static {
 		// initialize resource bundle

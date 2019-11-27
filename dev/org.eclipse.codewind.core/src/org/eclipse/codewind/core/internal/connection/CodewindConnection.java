@@ -59,6 +59,7 @@ public class CodewindConnection {
 	private String name;
 	private URI baseUri;
 	private String conid;
+	private String username;
 	private AuthToken authToken;
 	private ConnectionEnv env = null;
 	private String connectionErrorMsg = null;
@@ -70,10 +71,11 @@ public class CodewindConnection {
 
 	private Map<String, CodewindApplication> appMap = new LinkedHashMap<String, CodewindApplication>();
 
-	public CodewindConnection(String name, URI uri, String conid, AuthToken authToken) {
+	public CodewindConnection(String name, URI uri, String conid, String username, AuthToken authToken) {
 		setName(name);
 		setBaseURI(uri);
 		this.conid = conid;
+		this.username = username;
 		this.authToken = authToken;
 	}
 	
@@ -130,7 +132,7 @@ public class CodewindConnection {
 			}
 		});
 		if (mon.isCanceled()) {
-			close();
+			disconnect();
 			return;
 		}
 		
@@ -171,13 +173,6 @@ public class CodewindConnection {
 		appMap.clear();
 	}
 
-	/**
-	 * Call this when the connection is removed.
-	 */
-	public void close() {
-		disconnect();
-	}
-	
 	public String getName() {
 		if (name == null) {
 			return "";
@@ -203,6 +198,14 @@ public class CodewindConnection {
 	
 	public String getConid() {
 		return conid;
+	}
+	
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	
+	public String getUsername() {
+		return username;
 	}
 	
 	public void setAuthToken(AuthToken authToken) {

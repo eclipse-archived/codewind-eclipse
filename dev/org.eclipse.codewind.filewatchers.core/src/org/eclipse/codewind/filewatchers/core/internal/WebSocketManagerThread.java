@@ -12,27 +12,23 @@
 package org.eclipse.codewind.filewatchers.core.internal;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import javax.websocket.ClientEndpointConfig;
-import javax.websocket.DeploymentException;
-import javax.websocket.Session;
 
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils.ExponentialBackoffUtil;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch.ProjectToWatchFromWebSocket;
-import org.glassfish.tyrus.client.ClientManager;
-import org.glassfish.tyrus.client.ClientProperties;
-import org.glassfish.tyrus.client.SslContextConfigurator;
-import org.glassfish.tyrus.client.SslEngineConfigurator;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,7 +46,8 @@ import org.json.JSONObject;
  */
 public class WebSocketManagerThread extends Thread {
 
-	private final TyrusClientEndpoint endpoint;
+	@SuppressWarnings("unused")
+	private final JettyClientEndpoint endpoint;
 
 	private final String wsUrl;
 
@@ -62,10 +59,14 @@ public class WebSocketManagerThread extends Thread {
 
 	private final static int SEND_KEEPALIVE_EVERY_X_SECONDS = 25;
 
+	private final static int CONNECTION_WAIT_TIME_IN_SECONDS = 15;
+
 	/** Synchronize on 'lock' when accessing this */
 	private Session mostRecentSessionFromEndpoint_synch_lock = null;
 
 	private final Object lock = new Object();
+
+	private final WebSocketClient wsClient;
 
 	/**
 	 * Synchronize on this before accessing. This will only ever contain 0 or 1
@@ -76,9 +77,23 @@ public class WebSocketManagerThread extends Thread {
 	public WebSocketManagerThread(String wsUrl, Filewatcher watcher) {
 		setDaemon(true);
 		setName(WebSocketManagerThread.class.getName());
-		this.endpoint = new TyrusClientEndpoint(this, wsUrl);
+		this.endpoint = new JettyClientEndpoint(this, wsUrl);
 		this.wsUrl = wsUrl;
 		this.watcher = watcher;
+
+		// Trust all TLS/SSL certificates and allow large messages
+		SslContextFactory.Client ssl = new SslContextFactory.Client();
+		ssl.setTrustAll(true);
+		wsClient = new WebSocketClient(ssl);
+		wsClient.setMaxTextMessageBufferSize(1024 * 1024);
+		wsClient.setMaxIdleTimeout(24 * 60 * 60 * 1000);
+		wsClient.getPolicy().setMaxTextMessageSize(1024 * 1024);
+		try {
+			wsClient.start();
+		} catch (Exception e) {
+			throw new RuntimeException(e); // Convert to unchecked
+		}
+
 	}
 
 	@Override
@@ -128,7 +143,7 @@ public class WebSocketManagerThread extends Thread {
 								currSession = mostRecentSessionFromEndpoint_synch_lock;
 							}
 							if (currSession != null) {
-								currSession.getBasicRemote().sendText("{}");
+								currSession.getRemote().sendString("{}");
 							}
 						} catch (Throwable t) {
 							/* ignore: session is probably closed or dead, so no ping needed. */
@@ -188,19 +203,29 @@ public class WebSocketManagerThread extends Thread {
 		log.logInfo("disposed() called in " + this.getClass().getSimpleName());
 
 		FilewatcherUtils.newThread(() -> {
+
+			Session sess = null;
 			synchronized (lock) {
-				if (mostRecentSessionFromEndpoint_synch_lock != null) {
-					try {
-						mostRecentSessionFromEndpoint_synch_lock.close();
-					} catch (Exception e) {
-						/* ignore */ }
+				sess = mostRecentSessionFromEndpoint_synch_lock;
+			}
+			if (sess != null) {
+				try {
+					sess.close();
+				} catch (Exception e) {
+					/* ignore */
 				}
 			}
+
+			try {
+				wsClient.stop();
+			} catch (Exception e) {
+				/* ignore */
+			}
+
 		});
 
 	}
 
-	@SuppressWarnings("unused")
 	private void establishOrReestablishConnection() {
 		boolean success = false;
 
@@ -212,27 +237,30 @@ public class WebSocketManagerThread extends Thread {
 			try {
 				log.logInfo("Attempting to establish connection to web socket, attempt #" + attemptNumber);
 
-				final ClientEndpointConfig cec = ClientEndpointConfig.Builder.create().build();
+				JettyClientEndpoint clientEndpoint = new JettyClientEndpoint(this, wsUrl);
+				ClientUpgradeRequest request = new ClientUpgradeRequest();
+				Future<Session> session = wsClient.connect(clientEndpoint,
+						new URI(wsUrl + "/websockets/file-changes/v1"), request);
 
-				ClientManager client = ClientManager.createClient();
+				try {
+					Session sess = session.get(CONNECTION_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
+					success = sess.isOpen();
+				} catch (Exception e) {
 
-				// This doesn't actually work right now :P
-				if (false) {
-					SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(
-							new SslContextConfigurator());
-					sslEngineConfigurator.setHostVerificationEnabled(false);
-					sslEngineConfigurator.setHostnameVerifier(new HostnameVerifier() {
-						@Override
-						public boolean verify(String host, SSLSession sslSession) {
-							return true;
-						}
-					});
-					client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
+					String msg = "Unable to connect to web socket: " + e.getClass().getSimpleName() + " (attempt #"
+							+ attemptNumber + "): " + e.getMessage();
+					log.logError(msg);
+
+					if (e.getCause() != null && (e.getCause() instanceof ConnectException)
+							&& ((ConnectException) e.getCause()).getMessage().contains("Connection refused")) {
+						// Catch TimeoutException or NPE
+					} else {
+						e.printStackTrace();
+
+					}
+					success = false;
+
 				}
-
-				Session sess = client.connectToServer(endpoint, cec, new URI(wsUrl + "/websockets/file-changes/v1"));
-
-				success = sess != null && sess.isOpen();
 
 				if (success) {
 					log.logInfo("Established connection to web socket, after attempt #" + attemptNumber);
@@ -251,7 +279,7 @@ public class WebSocketManagerThread extends Thread {
 
 				success = false;
 
-				if (t instanceof DeploymentException && t.getMessage().equals("Connection failed.")) {
+				if (t instanceof ConnectException && t.getMessage().contains("Connection refused")) {
 					// Ignore, this is a standard 'can't connect' exception
 				} else {
 					// Otherwise, print the full trace.
@@ -267,6 +295,7 @@ public class WebSocketManagerThread extends Thread {
 			}
 
 		}
+
 	}
 
 	void setSessionFromEndpoint(Session s) {

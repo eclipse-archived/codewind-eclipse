@@ -8,14 +8,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.glassfish.tyrus</groupId>
-			<artifactId>tyrus-client</artifactId>
-			<version>1.15</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.tyrus</groupId>
-			<artifactId>tyrus-container-grizzly-client</artifactId>
-			<version>1.15</version>
+			<groupId>org.eclipse.jetty.websocket</groupId>
+			<artifactId>websocket-client</artifactId>
+			<version>9.4.23.v20191118</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>

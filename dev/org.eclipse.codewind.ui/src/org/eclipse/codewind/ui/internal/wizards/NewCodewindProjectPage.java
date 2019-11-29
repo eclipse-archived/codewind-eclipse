@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -41,12 +42,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ColumnWeightData;
-import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -153,12 +153,18 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		filterText = new Text(templateGroup, SWT.BORDER);
 		filterText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		filterText.setMessage(Messages.NewProjectPage_FilterMessage);
+		
+		// Create a composite for the table so can use TableColumnLayout
+		Composite tableComp = new Composite(templateGroup, SWT.NONE);
+		TableColumnLayout tableColumnLayout = new TableColumnLayout();
+		tableComp.setLayout(tableColumnLayout);
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+		data.heightHint = 200;
+		tableComp.setLayoutData(data);
 
 		// Table
-		selectionTable = new Table(templateGroup, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
-		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-		data.heightHint = 100;
-		selectionTable.setLayoutData(data);
+		selectionTable = new Table(tableComp, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
+		selectionTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		// Columns
 		final TableColumn templateColumn = new TableColumn(selectionTable, SWT.NONE);
@@ -196,7 +202,11 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		
 		createItems(selectionTable, "");
 
-		resizeColumns(selectionTable);
+		// Resize the columns
+		Arrays.stream(selectionTable.getColumns()).forEach(TableColumn::pack);
+		tableColumnLayout.setColumnData(templateColumn, new ColumnWeightData(10, Math.max(250, templateColumn.getWidth()), true));
+		tableColumnLayout.setColumnData(typeColumn, new ColumnWeightData(4, Math.max(100, typeColumn.getWidth()), true));
+		tableColumnLayout.setColumnData(languageColumn, new ColumnWeightData(3, Math.max(75, languageColumn.getWidth()), true));
 		
 		// Details
 		ScrolledComposite detailsScroll = new ScrolledComposite(templateGroup, SWT.V_SCROLL);
@@ -259,7 +269,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 									}
 									try {
 										mon.setTaskName(Messages.NewProjectPage_RefreshTemplatesTask);
-										TemplateUtil.listTemplates(true, connection.getConid(), mon.split(25));
+										templateList = TemplateUtil.listTemplates(true, connection.getConid(), mon.split(25));
 									} catch (Exception e) {
 										throw new InvocationTargetException(e, Messages.NewProjectPage_RefreshTemplatesError);
 									}
@@ -530,21 +540,6 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		if (newWidth != width) {
 			text.setSize(newWidth, text.computeSize(newWidth, SWT.DEFAULT).y);
 		}
-	}
-	
-	public void resizeColumns(Table table) {
-		TableLayout tableLayout = new TableLayout();
-
-		int numColumns = table.getColumnCount();
-		for (int i = 0; i < numColumns; i++)
-			table.getColumn(i).pack();
-
-		for (int i = 0; i < numColumns; i++) {
-			int w = Math.max(75, table.getColumn(i).getWidth());
-			tableLayout.addColumnData(new ColumnWeightData(w, w, true));
-		}
-
-		table.setLayout(tableLayout);
 	}
 	
 	private void setupConnection() {

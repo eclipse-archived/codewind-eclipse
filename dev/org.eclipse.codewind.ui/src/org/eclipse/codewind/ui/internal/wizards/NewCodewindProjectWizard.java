@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -21,11 +22,13 @@ import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -34,7 +37,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
@@ -126,7 +131,24 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					SubMonitor mon = SubMonitor.convert(monitor, 100);
+					SubMonitor mon = SubMonitor.convert(monitor, 140);
+					if (!connection.isLocal() && info.isCodewindStyle()) {
+						try {
+							if (!connection.requestHasPushRegistry()) {
+								Display.getDefault().syncExec(new Runnable() {
+									@Override
+									public void run() {
+										if (MessageDialog.openQuestion(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
+											launchRegistryManagementDialog(mon.split(40));
+										}
+									}
+								});
+							}
+						} catch (Exception e) {
+							Logger.logError("An error occurred while setting up the registry dialog", e); //$NON-NLS-1$
+						}
+					}
+					mon.setWorkRemaining(100);
 					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), newConnection.getConid(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
@@ -166,5 +188,24 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		};
 		job.schedule();
 		return true;
+	}
+	
+	private void launchRegistryManagementDialog(IProgressMonitor monitor) {
+		try {
+			List<RegistryInfo> regList = connection.requestRegistryList();
+			RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList);
+			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {
+				SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
+				IStatus status = regDialog.updateRegistries(mon.split(100));
+				if (!status.isOK()) {
+					throw new InvocationTargetException(status.getException(), status.getMessage());
+				}
+				if (mon.isCanceled()) {
+					return;
+				}
+			}
+		} catch (Exception e) {
+			MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
+		}
 	}
 }

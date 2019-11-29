@@ -21,6 +21,9 @@ public class ProjectTemplateInfo extends JSONObjectResult {
 	public static final String LANGUAGE_KEY = "language";
 	public static final String PROJECT_TYPE_KEY = "projectType";
 	public static final String SOURCE_KEY = "source";
+	public static final String PROJECT_STYLE_KEY = "projectStyle";
+	
+	public static final String CODEWIND_STYLE = "Codewind";
 	
 	public ProjectTemplateInfo(JSONObject projectInfo) {
 		super(projectInfo, "project template");
@@ -46,7 +49,19 @@ public class ProjectTemplateInfo extends JSONObjectResult {
 		return getString(PROJECT_TYPE_KEY);
 	}
 	
+	public String getProjectStyle() {
+		String style = getString(PROJECT_STYLE_KEY);
+		if (style == null || style.isEmpty()) {
+			style = CODEWIND_STYLE;
+		}
+		return style;
+	}
+	
 	public String getSource() {
 		return getString(SOURCE_KEY);
+	}
+	
+	public boolean isCodewindStyle() {
+		return CODEWIND_STYLE.equals(getProjectStyle());
 	}
 }

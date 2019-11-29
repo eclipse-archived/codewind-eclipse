@@ -349,6 +349,13 @@ public class Messages extends NLS {
 	public static String NewProjectPage_NoTemplateSelected;
 	public static String ProjectLocationInCodewindDataDirError;
 	
+	public static String ManageRegistriesLinkLabel;
+	public static String ManageRegistriesLinkText;
+	public static String ManageRegistriesLinkTooltip;
+	public static String ManageRegistriesLinkTooltipLocal;
+	public static String NoPushRegistryTitle;
+	public static String NoPushRegistryMessage;
+	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;
 	public static String AppOverviewEditorGeneralSection;
@@ -401,7 +408,6 @@ public class Messages extends NLS {
 	
 	public static String RepoMgmtDescription;
 	public static String RepoMgmtLearnMoreLink;
-	public static String RepoMgmtTableLabel;
 	public static String RepoMgmtAddButton;
 	public static String RepoMgmtRemoveButton;
 	public static String RepoMgmtDescriptionLabel;
@@ -430,6 +436,45 @@ public class Messages extends NLS {
 	public static String EditConnectionDialogTitle;
 	public static String EditConnectionDialogMessage;
 	public static String UpdateConnectionJobLabel;
+	
+	public static String RegMgmtActionLabel;
+	
+	public static String RegMgmtDialogTitle;
+	public static String RegMgmtDialogMessage;
+	public static String RegMgmtDialogLocalMessage;
+	
+	public static String RegMgmtDescription;
+	public static String RegMgmtLocalDescription;
+	public static String RegMgmtLearnMoreLink;
+	public static String RegMgmtAddButton;
+	public static String RegMgmtRemoveButton;
+	public static String RegMgmtServerColumn;
+	public static String RegMgmtUsernameColumn;
+	public static String RegMgmtNamespaceColumn;
+	public static String RegMgmtPushRegColumn;
+	
+	public static String RegMgmtAddDialogShell;
+	public static String RegMgmtAddDialogTitle;
+	public static String RegMgmtAddDialogMessage;
+	public static String RegMgmtAddDialogServerLabel;
+	public static String RegMgmtAddDialogUsernameLabel;
+	public static String RegMgmtAddDialogPasswordLabel;
+	public static String RegMgmtAddDialogPushRegLabel;
+	public static String RegMgmtAddDialogNamespaceLabel;
+	public static String RegMgmtAddDialogNoServer;
+	public static String RegMgmtAddDialogServerInUse;
+	public static String RegMgmtAddDialogNoUsername;
+	public static String RegMgmtAddDialogNoPassword;
+	public static String RegMgmtAddDialogNoNamespace;
+	public static String RegMgmtUpdateError;
+	public static String RegMgmtRemoveFailed;
+	public static String RegMgmtUpdateFailed;
+	public static String RegMgmtAddFailed;
+	
+	public static String RegUpdateTask;
+	public static String RegUpdateErrorTitle;
+	public static String RegListErrorTitle;
+	public static String RegListErrorMsg;
 	
 	static {
 		// initialize resource bundle

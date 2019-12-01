@@ -76,9 +76,11 @@ public class CodewindSocket {
 			EVENT_PROJECT_VALIDATED = "projectValidated",			//$NON-NLS-1$
 			EVENT_LOG_UPDATE = "log-update",						//$NON-NLS-1$
 			EVENT_PROJECT_LOGS_LIST_CHANGED = "projectLogsListChanged",		//$NON-NLS-1$
-			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged";	//$NON-NLS-1$
+			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged",	//$NON-NLS-1$
+			EVENT_AUTHENTICATED = "authenticated", //$NON-NLS-1$
+			EVENT_UNAUTHORIZED = "unauthorized"; //$NON-NLS-1$
 
-	public CodewindSocket(CodewindConnection connection, AuthToken authToken) throws URISyntaxException {
+	public CodewindSocket(CodewindConnection connection) throws URISyntaxException, IOException, JSONException {
 		this.connection = connection;
 		
 		URI uri = connection.getBaseURI();
@@ -87,7 +89,7 @@ public class CodewindSocket {
 		}
 		socketUri = uri;
 
-		if (authToken != null) {
+		if (connection.getAuthToken(false) != null) {
 			OkHttpClient okHttpClient = new OkHttpClient.Builder().sslSocketFactory(HttpUtil.sslContext.getSocketFactory(), HttpUtil.trustManager).build();
 			IO.setDefaultOkHttpCallFactory(okHttpClient);
 			IO.setDefaultOkHttpWebSocketFactory(okHttpClient);
@@ -102,15 +104,16 @@ public class CodewindSocket {
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
 			public void call(Object... arg0) {
-				if (authToken != null) {
-					try {
+				try {
+					AuthToken authToken = connection.getAuthToken(false);
+					if (authToken != null) {
 						JSONObject obj = new JSONObject();
 						obj.put("token", authToken.getToken());
 						socket.emit("authentication", obj);
-					} catch (Exception e) {
-						Logger.logError("An error occurred trying to pass the authentication token to the socket", e);
-						return;
 					}
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to pass the authentication token to the socket", e);
+					return;
 				}
 				Logger.log("SocketIO connect success @ " + socketUri); //$NON-NLS-1$
 				if (!hasConnected) {
@@ -120,6 +123,18 @@ public class CodewindSocket {
 					connection.clearConnectionError();
 					previousException = null;
 				}
+			}
+		})
+		.on(EVENT_AUTHENTICATED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				Logger.log("SocketIO authentication successful");
+			}
+		})
+		.on(EVENT_UNAUTHORIZED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				Logger.logError("SocketIO authentication failed: " + arg0[0]);
 			}
 		})
 		.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {

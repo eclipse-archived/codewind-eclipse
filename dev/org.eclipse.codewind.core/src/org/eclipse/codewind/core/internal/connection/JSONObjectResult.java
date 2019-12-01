@@ -57,6 +57,20 @@ public abstract class JSONObjectResult {
 		return value;
 	}
 	
+	protected Integer getInt(String key) {
+		Integer value = null;
+		if (result.has(key)) {
+			try {
+				value = result.getInt(key);
+			} catch (JSONException e) {
+				Logger.logError("An error occurred retrieving the value from the " + type + " object for key: " + key, e);
+			}
+		} else {
+			Logger.logError("The " + type + " object did not have the expected key: " + key);
+		}
+		return value;
+	}
+	
 	protected List<String> getStringArray(String key) {
 		List<String> list = new ArrayList<String>();
 		if (result.has(key)) {

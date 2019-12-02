@@ -27,6 +27,7 @@ import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -35,6 +36,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
@@ -149,7 +151,24 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					SubMonitor mon = SubMonitor.convert(monitor, 100);
+					SubMonitor mon = SubMonitor.convert(monitor, 140);
+					if (!connection.isLocal() && !type.getId().equals("appsodyExtension") && !type.getId().equals("odo")) {
+						try {
+							if (!connection.requestHasPushRegistry()) {
+								Display.getDefault().syncExec(new Runnable() {
+									@Override
+									public void run() {
+										if (MessageDialog.openQuestion(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
+											RegistryManagementDialog.open(getShell(), connection, mon.split(40));
+										}
+									}
+								});
+							}
+						} catch (Exception e) {
+							Logger.logError("An error occurred while setting up the registry dialog", e); //$NON-NLS-1$
+						}
+					}
+					mon.setWorkRemaining(100);
 					if (selectedBehaviour != null) {
 						switch (selectedBehaviour) {
 							case REMOVE:

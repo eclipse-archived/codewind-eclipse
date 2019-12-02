@@ -307,11 +307,11 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		manageRegistriesComp.setLayout(new GridLayout(2, false));
 		manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
 		
-		Label manageRegistriesLabel = new Label(manageReposComp, SWT.NONE);
+		Label manageRegistriesLabel = new Label(manageRegistriesComp, SWT.NONE);
 		manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
 		manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
 		
-		Link manageRegistriesLink = new Link(manageReposComp, SWT.NONE);
+		Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
 		manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
 		if (connection.isLocal()) {
 			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);

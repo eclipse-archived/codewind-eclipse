@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.prefs;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -19,7 +20,11 @@ import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.window.Window;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -88,5 +93,24 @@ public class RegistryManagementDialog extends TitleAreaDialog {
 	protected Point getInitialSize() {
 		Point point = super.getInitialSize();
 		return new Point(700, point.y);
+	}
+	
+	public static void open(Shell shell, CodewindConnection connection, IProgressMonitor monitor) {
+		try {
+			List<RegistryInfo> regList = connection.requestRegistryList();
+			RegistryManagementDialog regDialog = new RegistryManagementDialog(shell, connection, regList);
+			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {
+				SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
+				IStatus status = regDialog.updateRegistries(mon.split(100));
+				if (!status.isOK()) {
+					throw new InvocationTargetException(status.getException(), status.getMessage());
+				}
+				if (mon.isCanceled()) {
+					return;
+				}
+			}
+		} catch (Exception e) {
+			MessageDialog.openError(shell, Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
+		}
 	}
 }

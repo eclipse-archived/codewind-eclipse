@@ -656,14 +656,14 @@ public class CodewindConnection {
 	
 	public List<RegistryInfo> requestRegistryList() throws IOException, JSONException {
 		List<RegistryInfo> regList = new ArrayList<RegistryInfo>();
-//		URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
-//		HttpResult result = HttpUtil.get(uri, authToken);
-//		checkResult(result, uri, true);
-//		
-//		JSONArray array = new JSONArray(result.response);
-//		for (int i = 0; i < array.length(); i++) {
-//			regList.add(new RegistryInfo(array.getJSONObject(i)));
-//		}
+		URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
+		HttpResult result = HttpUtil.get(uri, authToken);
+		checkResult(result, uri, true);
+		
+		JSONArray array = new JSONArray(result.response);
+		for (int i = 0; i < array.length(); i++) {
+			regList.add(new RegistryInfo(array.getJSONObject(i)));
+		}
 		
 		return regList;
 	}

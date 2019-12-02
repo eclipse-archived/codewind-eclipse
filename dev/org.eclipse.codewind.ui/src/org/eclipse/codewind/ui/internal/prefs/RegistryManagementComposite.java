@@ -39,6 +39,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -65,6 +66,7 @@ public class RegistryManagementComposite extends Composite {
 	private boolean supportsPushReg = false;
 	private Table regTable;
 	private Button addButton, removeButton;
+	private Color gray;
 	
 	public RegistryManagementComposite(Composite parent, CodewindConnection connection, List<RegistryInfo> regList) {
 		super(parent, SWT.NONE);
@@ -72,7 +74,6 @@ public class RegistryManagementComposite extends Composite {
 		this.regList = regList;
 		this.regEntries = getRegEntries(regList);
 		this.supportsPushReg = !connection.isLocal();
-		this.supportsPushReg = true;
 		createControl();
 	}
 	
@@ -125,9 +126,9 @@ public class RegistryManagementComposite extends Composite {
 		regTable.setLayoutData(data);
 		
 		// Columns
-		TableColumn serverColumn = new TableColumn(regTable, SWT.NONE);
-		serverColumn.setText(Messages.RegMgmtServerColumn);
-		serverColumn.setResizable(true);
+		TableColumn addressColumn = new TableColumn(regTable, SWT.NONE);
+		addressColumn.setText(Messages.RegMgmtAddressColumn);
+		addressColumn.setResizable(true);
 		
 		TableColumn usernameColumn = new TableColumn(regTable, SWT.NONE);
 		usernameColumn.setText(Messages.RegMgmtUsernameColumn);
@@ -195,7 +196,7 @@ public class RegistryManagementComposite extends Composite {
 		
 		// Resize the columns
 		Arrays.stream(regTable.getColumns()).forEach(TableColumn::pack);
-		tableColumnLayout.setColumnData(serverColumn, new ColumnWeightData(10, Math.max(250, serverColumn.getWidth()), true));
+		tableColumnLayout.setColumnData(addressColumn, new ColumnWeightData(10, Math.max(250, addressColumn.getWidth()), true));
 		tableColumnLayout.setColumnData(usernameColumn, new ColumnWeightData(4, Math.max(75, usernameColumn.getWidth()), true));
 		if (supportsPushReg) {
 			tableColumnLayout.setColumnData(namespaceColumn, new ColumnWeightData(4, Math.max(75, namespaceColumn.getWidth()), true));
@@ -209,12 +210,12 @@ public class RegistryManagementComposite extends Composite {
 	private void createItems() {
 		// Create the items for the table.
 		regTable.removeAll();
-		Arrays.stream(regTable.getChildren()).filter(Button.class::isInstance).forEach(Control::dispose); 
+		Arrays.stream(regTable.getChildren()).filter(Button.class::isInstance).forEach(Control::dispose);
 		for (RegEntry regEntry : regEntries) {
 			TableItem item = new TableItem(regTable, SWT.NONE);
 			item.setData(regEntry);
 			
-			item.setText(0, regEntry.server);
+			item.setText(0, regEntry.address);
 			item.setText(1, regEntry.username);
 			
 			if (supportsPushReg) {
@@ -222,6 +223,7 @@ public class RegistryManagementComposite extends Composite {
 				
 				TableEditor editor = new TableEditor(regTable);
 				Button button = new Button(regTable, SWT.RADIO);
+				button.setData(regEntry);
 				button.pack();
 				button.setSelection(regEntry.isPushReg);
 				editor.minimumWidth = button.getSize ().x;
@@ -229,21 +231,50 @@ public class RegistryManagementComposite extends Composite {
 				editor.verticalAlignment = SWT.CENTER;
 				editor.setEditor(button, item, 3);
 				button.setSelection(regEntry.isPushReg);
+				item.setForeground(2, button.getSelection() ? item.getForeground() : getGray(item));
 				
 				button.addSelectionListener(new SelectionAdapter() {
 					public void widgetSelected(SelectionEvent e) {
+						if (button.getSelection() && (regEntry.namespace == null || regEntry.namespace.isEmpty())) {
+							NamespaceDialog dialog = new NamespaceDialog(getShell());
+							if (dialog.open() == IStatus.OK) {
+								regEntry.namespace = dialog.getNamespace();
+								item.setText(2, regEntry.namespace);
+							} else {
+								button.setSelection(false);
+								return;
+							}
+						}
 						// Need to override normal radio button processing to allow
 						// the user to unset a push registry
 						if (regEntry.isPushReg) {
 							regEntry.isPushReg = false;
 							button.setSelection(false);
+							item.setForeground(2, getGray(item));
 						} else {
 							regEntry.isPushReg = button.getSelection();
+							item.setForeground(2, button.getSelection() ? item.getForeground() : getGray(item));
 						}
-						// TODO: add check for namespace and dialog if missing
+						
 					}
 				});	 
 			}
+		}
+	}
+	
+	private Color getGray(TableItem item) {
+		if (gray == null) {
+			Color fg = item.getForeground();
+			Color bg = item.getBackground();
+			gray = new Color(fg.getDevice(), (fg.getRed() + bg.getRed()) / 2, (fg.getGreen() + bg.getGreen()) / 2, (fg.getBlue() + bg.getBlue()) / 2);
+		}
+		return gray;
+	}
+
+	@Override
+	public void dispose() {
+		if (gray != null) {
+			gray.dispose();
 		}
 	}
 
@@ -277,19 +308,11 @@ public class RegistryManagementComposite extends Composite {
 					Logger.logError("Failed to remove registry: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtRemoveFailed, info.getURL()), e));
 				}
-			} else if (info.isPushReg() != entry.isPushReg) {
-				try {
-					if (entry.isPushReg) {
-						connection.requestSetPushRegistry(entry.server + "/" + entry.namespace);
-					}
-				} catch (Exception e) {
-					Logger.logError("Failed to update registry: " + info.getURL(), e); //$NON-NLS-1$
-					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtUpdateFailed, info.getURL()), e));
-				}
 			}
 			if (mon.isCanceled()) {
 				return Status.CANCEL_STATUS;
 			}
+			mon.worked(25);
 			mon.setWorkRemaining(100);
 		}
 		for (RegEntry entry : regEntries) {
@@ -297,18 +320,32 @@ public class RegistryManagementComposite extends Composite {
 			if (info == null) {
 				// Add the registry
 				try {
-//					connection.requestAddRegistry(entry.server, entry.username, entry.password);
+					connection.requestAddRegistry(entry.address, entry.username, entry.password);
 					if (entry.isPushReg) {
-						connection.requestSetPushRegistry(entry.server + "/" + entry.namespace);
+						connection.requestSetPushRegistry(entry.address + "/" + entry.namespace);
 					}
 				} catch (Exception e) {
-					Logger.logError("Failed to add registry: " + entry.server, e); //$NON-NLS-1$
-					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtAddFailed, entry.server), e));
+					Logger.logError("Failed to add registry: " + entry.address, e); //$NON-NLS-1$
+					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtAddFailed, entry.address), e));
 				}
 			}
 			if (mon.isCanceled()) {
 				return Status.CANCEL_STATUS;
 			}
+			mon.worked(25);
+			mon.setWorkRemaining(100);
+			if (entry.isPushReg) {
+				try {
+					connection.requestSetPushRegistry(entry.address + "/" + entry.namespace);
+				} catch (Exception e) {
+					Logger.logError("Failed to set the push registry: " + info.getURL(), e); //$NON-NLS-1$
+					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtSetPushRegFailed, info.getURL()), e));
+				}
+			}
+			if (mon.isCanceled()) {
+				return Status.CANCEL_STATUS;
+			}
+			mon.worked(25);
 			mon.setWorkRemaining(100);
 		}
 		if (multiStatus.getChildren().length > 0) {
@@ -328,14 +365,16 @@ public class RegistryManagementComposite extends Composite {
 			RegistryInfo info = entry.info;
 			if (info == null) {
 				return true;
+			} else if (entry.isPushReg) {
+				return true;
 			}
 		}
 		return false;
 	}
 	
-	private RegEntry getRegEntry(String server) {
+	private RegEntry getRegEntry(String address) {
 		for (RegEntry entry : regEntries) {
-			if (server.equals(entry.server)) {
+			if (address.equals(entry.address)) {
 				return entry;
 			}
 		}
@@ -343,15 +382,15 @@ public class RegistryManagementComposite extends Composite {
 	}
 
 	private static class RegEntry {
-		public final String server;
-		public final String namespace;
+		public final String address;
+		public String namespace;
 		public final String username;
 		public final String password;
 		public boolean isPushReg = false;
 		public RegistryInfo info;
 		
-		public RegEntry(String server, String namespace, String username, String password, boolean isPush) {
-			this.server = server;
+		public RegEntry(String address, String namespace, String username, String password, boolean isPush) {
+			this.address = address;
 			this.namespace = namespace;
 			this.username = username;
 			this.password = password;
@@ -359,7 +398,7 @@ public class RegistryManagementComposite extends Composite {
 		}
 		
 		public RegEntry(RegistryInfo info) {
-			this.server = info.getURL();
+			this.address = info.getURL();
 			this.namespace = info.getNamespace();
 			this.username = info.getUsername();
 			this.password = null;
@@ -370,7 +409,7 @@ public class RegistryManagementComposite extends Composite {
 	
 	private class AddDialog extends TitleAreaDialog {
 		
-		private String server;
+		private String address;
 		private String namespace;
 		private String username;
 		private String password;
@@ -415,11 +454,11 @@ public class RegistryManagementComposite extends Composite {
 			composite.setFont(parent.getFont());
 			
 			Label label = new Label(composite, SWT.NONE);
-			label.setText(Messages.RegMgmtAddDialogServerLabel);
+			label.setText(Messages.RegMgmtAddDialogAddressLabel);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			
-			Text serverText = new Text(composite, SWT.BORDER);
-			serverText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+			Text addressText = new Text(composite, SWT.BORDER);
+			addressText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
 			label = new Label(composite, SWT.NONE);
 			label.setText(Messages.RegMgmtAddDialogUsernameLabel);
@@ -435,10 +474,10 @@ public class RegistryManagementComposite extends Composite {
 			Text passwordText = new Text(composite, SWT.BORDER | SWT.PASSWORD);
 			passwordText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
-			serverText.addModifyListener(new ModifyListener() {
+			addressText.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e) {
-					server = serverText.getText().trim();
+					address = addressText.getText().trim();
 					enableOKButton(validate());
 				}
 			});
@@ -513,11 +552,11 @@ public class RegistryManagementComposite extends Composite {
 		}
 		
 		private boolean validate() {
-			if (server == null || server.isEmpty()) {
-				setErrorMessage(Messages.RegMgmtAddDialogNoServer);
+			if (address == null || address.isEmpty()) {
+				setErrorMessage(Messages.RegMgmtAddDialogNoAddress);
 				return false;
-			} else if (getRegEntry(server) != null) {
-				setErrorMessage(Messages.RegMgmtAddDialogServerInUse);
+			} else if (getRegEntry(address) != null) {
+				setErrorMessage(Messages.RegMgmtAddDialogAddressInUse);
 				return false;
 			}
 			if (username == null || username.isEmpty()) {
@@ -538,12 +577,101 @@ public class RegistryManagementComposite extends Composite {
 		}
 		
 		public RegEntry getNewRegEntry() {
-			if (server != null && !server.isEmpty() &&
+			if (address != null && !address.isEmpty() &&
 				username != null && !username.isEmpty() &&
 				password != null && !password.isEmpty()) {
-				return new RegEntry(server, namespace, username, password, isPushReg);
+				return new RegEntry(address, namespace, username, password, isPushReg);
 			}
 			return null;
+		}
+	}
+	
+	private class NamespaceDialog extends TitleAreaDialog {
+		
+		private String namespace;
+		
+		public NamespaceDialog(Shell parentShell) {
+			super(parentShell);
+		}
+		
+		@Override
+		protected void configureShell(Shell newShell) {
+			super.configureShell(newShell);
+			newShell.setText(Messages.RegMgmtNamespaceDialogShell);
+		}
+		
+		@Override
+		protected boolean isResizable() {
+			return true;
+		}
+
+		@Override
+		protected Control createButtonBar(Composite parent) {
+			return super.createButtonBar(parent);
+		}
+
+		protected Control createDialogArea(Composite parent) {
+			setTitleImage(CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_BANNER));
+			setTitle(Messages.RegMgmtNamespaceDialogTitle);
+			setMessage(Messages.RegMgmtNamespaceDialogMessage);
+			
+			final Composite composite = new Composite(parent, SWT.NONE);
+			GridLayout layout = new GridLayout();
+			layout.marginHeight = 11;
+			layout.marginWidth = 9;
+			layout.horizontalSpacing = 5;
+			layout.verticalSpacing = 7;
+			layout.numColumns = 2;
+			composite.setLayout(layout);
+			GridData data = new GridData(GridData.FILL_BOTH);
+			data.minimumWidth = 300;
+			composite.setLayoutData(data);
+			composite.setFont(parent.getFont());
+			
+			Label namespaceLabel = new Label(composite, SWT.NONE);
+			namespaceLabel.setText(Messages.RegMgmtAddDialogNamespaceLabel);
+			data = new GridData(GridData.BEGINNING, GridData.CENTER, false, false);
+			data.horizontalIndent = 15;
+			namespaceLabel.setLayoutData(data);
+			
+			Text namespaceText = new Text(composite, SWT.BORDER);
+			namespaceText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+			
+			namespaceText.addModifyListener(new ModifyListener() {
+				@Override
+				public void modifyText(ModifyEvent e) {
+					namespace = namespaceText.getText().trim();
+					enableOKButton(validate());
+				}
+			});
+			
+			namespaceText.setFocus();
+			
+			return composite;
+		}
+		
+		@Override
+		protected void createButtonsForButtonBar(Composite parent) {
+			super.createButtonsForButtonBar(parent);
+			enableOKButton(false);
+		}
+
+		protected void enableOKButton(boolean value) {
+			getButton(IDialogConstants.OK_ID).setEnabled(value);
+		}
+		
+		private boolean validate() {
+			if (namespace == null || namespace.isEmpty()) {
+				setErrorMessage(Messages.RegMgmtAddDialogNoNamespace);
+				return false;
+			}
+			
+			setErrorMessage(null);
+			return true;
+		}
+		
+		public String getNamespace() {
+			return namespace;
 		}
 	}
 	

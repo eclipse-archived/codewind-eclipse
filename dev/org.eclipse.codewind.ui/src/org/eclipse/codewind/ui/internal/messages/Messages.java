@@ -450,7 +450,7 @@ public class Messages extends NLS {
 	public static String RegMgmtLearnMoreLink;
 	public static String RegMgmtAddButton;
 	public static String RegMgmtRemoveButton;
-	public static String RegMgmtServerColumn;
+	public static String RegMgmtAddressColumn;
 	public static String RegMgmtUsernameColumn;
 	public static String RegMgmtNamespaceColumn;
 	public static String RegMgmtPushRegColumn;
@@ -458,13 +458,13 @@ public class Messages extends NLS {
 	public static String RegMgmtAddDialogShell;
 	public static String RegMgmtAddDialogTitle;
 	public static String RegMgmtAddDialogMessage;
-	public static String RegMgmtAddDialogServerLabel;
+	public static String RegMgmtAddDialogAddressLabel;
 	public static String RegMgmtAddDialogUsernameLabel;
 	public static String RegMgmtAddDialogPasswordLabel;
 	public static String RegMgmtAddDialogPushRegLabel;
 	public static String RegMgmtAddDialogNamespaceLabel;
-	public static String RegMgmtAddDialogNoServer;
-	public static String RegMgmtAddDialogServerInUse;
+	public static String RegMgmtAddDialogNoAddress;
+	public static String RegMgmtAddDialogAddressInUse;
 	public static String RegMgmtAddDialogNoUsername;
 	public static String RegMgmtAddDialogNoPassword;
 	public static String RegMgmtAddDialogNoNamespace;
@@ -472,6 +472,11 @@ public class Messages extends NLS {
 	public static String RegMgmtRemoveFailed;
 	public static String RegMgmtUpdateFailed;
 	public static String RegMgmtAddFailed;
+	public static String RegMgmtSetPushRegFailed;
+	
+	public static String RegMgmtNamespaceDialogShell;
+	public static String RegMgmtNamespaceDialogTitle;
+	public static String RegMgmtNamespaceDialogMessage;
 	
 	public static String RegUpdateTask;
 	public static String RegUpdateErrorTitle;

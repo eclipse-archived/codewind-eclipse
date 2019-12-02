@@ -75,6 +75,14 @@ public class IDEUtil {
 		text.setStyleRange(range);
 	}
     
+    public static void setBold(StyledText text, String str) {
+		StyleRange range = new StyleRange();
+		range.start = text.getText().indexOf(str);
+		range.length = str.length();
+		range.fontStyle = SWT.BOLD;
+		text.setStyleRange(range);
+	}
+    
     public static void normalizeBackground(Control control, Control parent) {
     	control.setBackground(parent.getBackground());
     	control.setForeground(parent.getForeground());

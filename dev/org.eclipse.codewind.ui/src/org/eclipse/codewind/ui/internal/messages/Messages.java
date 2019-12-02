@@ -218,7 +218,8 @@ public class Messages extends NLS {
 	public static String ProjectValidationPageDescription;
 	public static String ProjectValidationPageMsg;
 	public static String ProjectValidationPageFailMsg;
-	public static String ProjectValidationPageProjectTypeLabel;
+	public static String ProjectValidationPageTypeLabel;
+	public static String ProjectValidationPageLanguageLabel;
 	public static String ProjectValidationTask;
 	
 	public static String RestartInDebugMode;

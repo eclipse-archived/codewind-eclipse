@@ -17,6 +17,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IPath;
@@ -41,7 +42,7 @@ public class ProjectValidationPage extends WizardPage {
 	private IPath projectPath;
 	private ProjectInfo projectInfo;
 	private Text validateMsg;
-	private StyledText typeText;
+	private StyledText typeText, languageText;
 
 	protected ProjectValidationPage(BindProjectWizard wizard, CodewindConnection connection, IPath projectPath) {
 		super(Messages.ProjectValidationPageName);
@@ -76,6 +77,13 @@ public class ProjectValidationPage extends WizardPage {
 		data.horizontalIndent = 20;
 		typeText.setLayoutData(data);
 		IDEUtil.normalizeBackground(typeText, composite);
+		
+		languageText = new StyledText(composite, SWT.READ_ONLY);
+		languageText.setText("");
+		data = new GridData(GridData.FILL, GridData.CENTER, true, false);
+		data.horizontalIndent = 20;
+		languageText.setLayoutData(data);
+		IDEUtil.normalizeBackground(languageText, composite);
 		
 		setProjectPath(projectPath, false);
 
@@ -124,13 +132,23 @@ public class ProjectValidationPage extends WizardPage {
 		wizard.setProjectInfo(projectInfo);
 		if (projectInfo != null) {
 			validateMsg.setText(NLS.bind(Messages.ProjectValidationPageMsg, projectPath.lastSegment()));
-			typeText.setText(projectInfo.type.getDisplayName());
-			IDEUtil.setBold(typeText);
+			typeText.setText(NLS.bind(Messages.ProjectValidationPageTypeLabel, projectInfo.type.getDisplayName()));
+			IDEUtil.setBold(typeText, projectInfo.type.getDisplayName());
 			IDEUtil.normalizeBackground(typeText, typeText.getParent());
 			typeText.setVisible(true);
+			
+			if (projectInfo.language != ProjectLanguage.LANGUAGE_UNKNOWN) {
+				languageText.setText(NLS.bind(Messages.ProjectValidationPageLanguageLabel, projectInfo.language.getDisplayName()));
+				IDEUtil.setBold(languageText, projectInfo.language.getDisplayName());
+				IDEUtil.normalizeBackground(languageText, languageText.getParent());
+				languageText.setVisible(true);
+			} else {
+				languageText.setVisible(false);
+			}
 		} else {
 			validateMsg.setText(Messages.ProjectValidationPageFailMsg);
 			typeText.setVisible(false);
+			languageText.setVisible(false);
 		}
 		
 		int width = validateMsg.getParent().getClientArea().width;

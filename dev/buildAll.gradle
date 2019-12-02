@@ -41,8 +41,10 @@ dependencies {
 
     // corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
 	
-	fwlibs "org.glassfish.tyrus:tyrus-client:1.15"
-	fwlibs "org.glassfish.tyrus:tyrus-container-grizzly-client:1.15"
+	// fwlibs "org.glassfish.tyrus:tyrus-client:1.15"
+	// fwlibs "org.glassfish.tyrus:tyrus-container-grizzly-client:1.15"
+
+    fwlibs "org.eclipse.jetty.websocket:websocket-client:9.4.23.v20191118"
 
 }
 

@@ -83,6 +83,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 	private Text filterText;
 	private Table selectionTable;
 	private Text descriptionLabel;
+	private Text styleLabel;
 	private Text sourceLabel;
 	
 	protected NewCodewindProjectPage(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
@@ -212,7 +213,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		
 		// Details
 		ScrolledComposite detailsScroll = new ScrolledComposite(templateGroup, SWT.V_SCROLL);
-		data = new GridData(GridData.FILL, GridData.FILL, true, false);
+		data = new GridData(GridData.FILL, GridData.FILL, true, true);
 		data.widthHint = 300;
 		data.heightHint = 70;
 		detailsScroll.setLayoutData(data);
@@ -229,10 +230,16 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		descriptionLabel.setLayoutData(descData);
 		IDEUtil.normalizeBackground(descriptionLabel, detailsComp);
 		
+		styleLabel = new Text(detailsComp, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+		styleLabel.setText("");
+		GridData styleData = new GridData(GridData.FILL, GridData.CENTER, false, false);
+		styleLabel.setLayoutData(styleData);
+		IDEUtil.normalizeBackground(styleLabel, detailsComp);
+		
 		sourceLabel = new Text(detailsComp, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 		sourceLabel.setText("");
 		GridData sourceData = new GridData(GridData.FILL, GridData.CENTER, false, false);
-		descriptionLabel.setLayoutData(sourceData);
+		sourceLabel.setLayoutData(sourceData);
 		IDEUtil.normalizeBackground(sourceLabel, detailsComp);
 		
 		// Manage repositories link
@@ -386,6 +393,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		detailsScroll.addListener(SWT.Resize, (event) -> {
 			int width = detailsScroll.getClientArea().width;
 			descData.widthHint = width - detailsLayout.marginWidth;
+			styleData.widthHint = width - detailsLayout.marginWidth;
 			sourceData.widthHint = width - detailsLayout.marginWidth;
 			Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 			detailsScroll.setMinSize(size);
@@ -565,6 +573,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		// Update the description
 		TableItem[] items = selectionTable.getSelection();
 		String description = "";
+		String style = "";
 		String source = "";
 		boolean enabled = false;
 		if (items.length == 1) {
@@ -573,6 +582,10 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 			if (description == null || description.isEmpty()) {
 				description = Messages.NewProjectPage_DetailsNone;
 			}
+			style = ((ProjectTemplateInfo)items[0].getData()).getProjectStyle();
+			if (style == null || style.isEmpty()) {
+				style = Messages.NewProjectPage_DetailsNone;
+			}
 			source = ((ProjectTemplateInfo)items[0].getData()).getSource();
 			if (source == null || source.isEmpty()) {
 				source = Messages.NewProjectPage_DetailsNone;
@@ -580,12 +593,15 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		}
 		
 		descriptionLabel.setText(NLS.bind(Messages.NewProjectPage_DescriptionLabel, description));
+		styleLabel.setText(NLS.bind(Messages.NewProjectPage_StyleLabel, style));
 		sourceLabel.setText(NLS.bind(Messages.NewProjectPage_SourceLabel, source));
 		
 		descriptionLabel.setEnabled(enabled);
+		styleLabel.setEnabled(enabled);
 		sourceLabel.setEnabled(enabled);
 		
 		resizeEntry(descriptionLabel);
+		resizeEntry(styleLabel);
 		resizeEntry(sourceLabel);
 	}
 	

@@ -672,8 +672,8 @@ public class CodewindConnection {
 		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
 		
 		JSONObject credentials = new JSONObject();
-		credentials.append(CoreConstants.KEY_USERNAME, username);
-		credentials.append(CoreConstants.KEY_PASSWORD, password);
+		credentials.put(CoreConstants.KEY_USERNAME, username);
+		credentials.put(CoreConstants.KEY_PASSWORD, password);
 		String encoding = Base64.getEncoder().encodeToString(credentials.toString().getBytes("UTF-8"));
 		JSONObject payload = new JSONObject();
 		payload.put(CoreConstants.KEY_URL, url);

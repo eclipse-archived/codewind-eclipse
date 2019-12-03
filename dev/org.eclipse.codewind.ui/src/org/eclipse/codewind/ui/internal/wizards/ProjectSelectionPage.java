@@ -11,19 +11,30 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
@@ -38,6 +49,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.SearchPattern;
 import org.eclipse.ui.model.WorkbenchContentProvider;
@@ -208,6 +220,66 @@ public class ProjectSelectionPage extends WizardPage {
 				validate();
 			}
 		});
+		
+		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 3, 1));
+		
+		// Manage registries link
+		Composite manageRegistriesComp = new Composite(composite, SWT.NONE);
+		manageRegistriesComp.setLayout(new GridLayout(2, false));
+		manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 3, 1));
+		
+		Label manageRegistriesLabel = new Label(manageRegistriesComp, SWT.NONE);
+		manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
+		manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		
+		Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
+		manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
+		if (connection.isLocal()) {
+			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
+		} else {
+			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltip);
+		}
+		manageRegistriesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+
+		manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				List<RegistryInfo> regList;
+				try {
+					regList = connection.requestRegistryList();
+					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList);
+					if (regDialog.open() == Window.OK) {
+						if (regDialog.hasChanges()) {
+							IRunnableWithProgress runnable = new IRunnableWithProgress() {
+								@Override
+								public void run(IProgressMonitor monitor) throws InvocationTargetException {
+									SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
+									IStatus status = regDialog.updateRegistries(mon.split(75));
+									if (!status.isOK()) {
+										throw new InvocationTargetException(status.getException(), status.getMessage());
+									}
+									if (mon.isCanceled()) {
+										return;
+									}
+								}
+							};
+							try {
+								getWizard().getContainer().run(true, true, runnable);
+							} catch (InvocationTargetException e) {
+								MessageDialog.openError(getShell(), Messages.RegUpdateErrorTitle, e.getMessage());
+								return;
+							} catch (InterruptedException e) {
+								// The user cancelled the operation
+								return;
+							}
+						}
+					}
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
+				}
+			}
+		});
+		
 		
 		if (hasValidProjects) {
 			workspaceProject.setSelection(true);

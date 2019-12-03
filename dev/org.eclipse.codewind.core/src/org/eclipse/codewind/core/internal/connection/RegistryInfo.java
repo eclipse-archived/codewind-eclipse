@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.core.internal.connection;
 
+import java.util.List;
+
 import org.json.JSONObject;
 
 public class RegistryInfo extends JSONObjectResult {
@@ -29,7 +31,11 @@ public class RegistryInfo extends JSONObjectResult {
 	}
 	
 	public String getUsername() {
-		return getString(USERNAME_KEY);
+		List<String> usernames = getStringArray(USERNAME_KEY);
+		if (!usernames.isEmpty()) {
+			return usernames.get(0);
+		}
+		return null;
 	}
 	
 	public String getNamespace() {

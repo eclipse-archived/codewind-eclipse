@@ -139,7 +139,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 									@Override
 									public void run() {
 										if (MessageDialog.openQuestion(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
-											launchRegistryManagementDialog(mon.split(40));
+											RegistryManagementDialog.open(getShell(), connection, mon.split(40));
 										}
 									}
 								});
@@ -188,24 +188,5 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		};
 		job.schedule();
 		return true;
-	}
-	
-	private void launchRegistryManagementDialog(IProgressMonitor monitor) {
-		try {
-			List<RegistryInfo> regList = connection.requestRegistryList();
-			RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList);
-			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {
-				SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
-				IStatus status = regDialog.updateRegistries(mon.split(100));
-				if (!status.isOK()) {
-					throw new InvocationTargetException(status.getException(), status.getMessage());
-				}
-				if (mon.isCanceled()) {
-					return;
-				}
-			}
-		} catch (Exception e) {
-			MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
-		}
 	}
 }

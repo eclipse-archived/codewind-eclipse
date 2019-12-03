@@ -24,7 +24,8 @@ Export-Package: io.socket.client,
  org.eclipse.codewind.core.internal.console,
  org.eclipse.codewind.core.internal.constants,
  org.json
-Import-Package: org.eclipse.codewind.filewatchers.eclipse
+Import-Package: org.eclipse.codewind.filewatchers.core,
+ org.eclipse.codewind.filewatchers.eclipse
 Bundle-ClassPath: .,
  lib/engine.io-client-1.0.0.jar,
  lib/org.json_1.0.0.v201011060100.jar,

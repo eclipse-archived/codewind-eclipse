@@ -16,9 +16,11 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
+import org.eclipse.codewind.filewatchers.core.FWAuthToken;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
+import org.eclipse.codewind.filewatchers.core.IAuthTokenProvider;
 import org.eclipse.codewind.filewatchers.core.IPlatformWatchService;
 
 public class Main {
@@ -53,7 +55,8 @@ public class Main {
 
 		String pathToCli = System.getenv("MOCK_CWCTL_INSTALLER_PATH");
 
-		Filewatcher fw = new Filewatcher(url, UUID.randomUUID().toString(), platformWatchService, null, pathToCli);
+		Filewatcher fw = new Filewatcher(url, UUID.randomUUID().toString(), platformWatchService, null, pathToCli,
+				null);
 
 		while (true) {
 			FilewatcherUtils.sleepIgnoreInterrupt(1000);

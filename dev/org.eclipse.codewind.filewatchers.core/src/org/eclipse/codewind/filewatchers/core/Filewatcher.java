@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils.ExponentialBackoffUtil;
 import org.eclipse.codewind.filewatchers.core.IPlatformWatchService.IPlatformWatchListener;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch.ProjectToWatchFromWebSocket;
+import org.eclipse.codewind.filewatchers.core.internal.AuthTokenWrapper;
 import org.eclipse.codewind.filewatchers.core.internal.CLIState;
 import org.eclipse.codewind.filewatchers.core.internal.DebugTimer;
 import org.eclipse.codewind.filewatchers.core.internal.FileChangeEventBatchUtil;
@@ -74,10 +75,15 @@ public class Filewatcher {
 
 	private final Optional<String> pathToInstaller;
 
+	private final AuthTokenWrapper authTokenWrapper;
+
 	public Filewatcher(String urlParam, String clientUuid, IPlatformWatchService internalWatchService,
-			IPlatformWatchService externalWatchService, String pathToInstallerParam) {
+			IPlatformWatchService externalWatchService /* nullable */, String pathToInstallerParam /* nullable */,
+			IAuthTokenProvider provider /* nullable */) {
 
 		this.url = FilewatcherUtils.stripTrailingSlash(urlParam);
+
+		this.authTokenWrapper = new AuthTokenWrapper(provider);
 
 		this.clientUuid = clientUuid;
 		this.pathToInstaller = pathToInstallerParam != null && !pathToInstallerParam.trim().isEmpty()
@@ -91,7 +97,7 @@ public class Filewatcher {
 		}
 
 		this.wsUrl = calculatedWsUrl;
-		this.outputQueue = new HttpPostOutputQueue(this.url);
+		this.outputQueue = new HttpPostOutputQueue(this.url, this.authTokenWrapper);
 
 		FilewatcherWatchListener fwl = new FilewatcherWatchListener(this);
 
@@ -114,7 +120,7 @@ public class Filewatcher {
 			this.externalWatchService = null;
 		}
 
-		this.getStatusThread = new HttpGetStatusThread(this.url, this);
+		this.getStatusThread = new HttpGetStatusThread(this.url, this, this.authTokenWrapper);
 		getStatusThread.start();
 		getStatusThread.queueStatusUpdate();
 
@@ -451,6 +457,10 @@ public class Filewatcher {
 
 	}
 
+	public AuthTokenWrapper internal_getAuthTokenWrapper() {
+		return authTokenWrapper;
+	}
+
 	public Optional<String> generateDebugString() {
 
 		synchronized (disposed_synch) {
@@ -671,7 +681,7 @@ public class Filewatcher {
 					HttpResult response = HttpUtil.put(new URI(url), obj, (e) -> {
 						e.setConnectTimeout(10 * 1000);
 						e.setReadTimeout(10 * 1000);
-					});
+					}, authTokenWrapper);
 
 					if (response.responseCode == 200) {
 						success = true;

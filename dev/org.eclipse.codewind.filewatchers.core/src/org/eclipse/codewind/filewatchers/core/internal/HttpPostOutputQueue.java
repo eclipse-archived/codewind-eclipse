@@ -60,11 +60,14 @@ public class HttpPostOutputQueue {
 
 	private final String serverBaseUrl;
 
+	private final AuthTokenWrapper authTokenWrapper;
+
 	/** Wait up to 24 hours for a chunk group to complete, before we drop it. */
 	private static final long CHUNK_GROUP_EXPIRE_TIME_IN_NANOS = TimeUnit.NANOSECONDS.convert(24, TimeUnit.HOURS);
 
-	public HttpPostOutputQueue(String url) {
+	public HttpPostOutputQueue(String url, AuthTokenWrapper authTokenWrapper) {
 		this.serverBaseUrl = url;
+		this.authTokenWrapper = authTokenWrapper;
 
 		for (int x = 0; x < 3; x++) {
 			OutputQueueWorkerThread wt = new OutputQueueWorkerThread();
@@ -286,7 +289,7 @@ public class HttpPostOutputQueue {
 						HttpUtil.allowAllCerts(e);
 						e.setConnectTimeout(10 * 1000);
 						e.setReadTimeout(10 * 1000);
-					});
+					}, authTokenWrapper);
 
 					if (response == null || response.responseCode != 200) {
 						sendFailed = true;

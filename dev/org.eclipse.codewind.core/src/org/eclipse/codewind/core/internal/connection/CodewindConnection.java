@@ -131,7 +131,8 @@ public class CodewindConnection {
 				}
 				return Optional.empty();
 			}
-		});
+		}, null);
+		
 		if (mon.isCanceled()) {
 			disconnect();
 			return;

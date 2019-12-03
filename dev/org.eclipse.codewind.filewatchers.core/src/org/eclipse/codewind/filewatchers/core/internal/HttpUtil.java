@@ -30,6 +30,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.eclipse.codewind.filewatchers.core.FWAuthToken;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.json.JSONObject;
 
@@ -53,7 +54,6 @@ public class HttpUtil {
 
 	private static void logError(String str) {
 		FWLogger.getInstance().logError(str);
-//		System.err.println(str);
 	}
 
 	private static void log(String str) {
@@ -115,7 +115,8 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult get(URI uri, IHttpConnectionConfig conf) throws IOException {
+	public static HttpResult get(URI uri, IHttpConnectionConfig conf, AuthTokenWrapper authTokenWrapper)
+			throws IOException {
 		HttpURLConnection connection = null;
 
 		try {
@@ -127,7 +128,16 @@ public class HttpUtil {
 				conf.setupConnection(connection);
 			}
 
-			return new HttpResult(connection);
+			FWAuthToken token = addAuthIfApplicable(connection, authTokenWrapper);
+
+			HttpResult result = new HttpResult(connection);
+
+			// TODO: I am assuming that 403 means we need a new auth token; is this correct?
+			if (result.responseCode == 403 && token != null) {
+				authTokenWrapper.informBadToken(token);
+			}
+
+			return result;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
@@ -135,7 +145,8 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult put(URI uri, JSONObject payload, IHttpConnectionConfig conf) throws IOException {
+	public static HttpResult put(URI uri, JSONObject payload, IHttpConnectionConfig conf,
+			AuthTokenWrapper authTokenWrapper) throws IOException {
 		HttpURLConnection connection = null;
 
 		log("PUT " + payload.toString() + " TO " + uri);
@@ -148,6 +159,8 @@ public class HttpUtil {
 				conf.setupConnection(connection);
 			}
 
+			FWAuthToken token = addAuthIfApplicable(connection, authTokenWrapper);
+
 			if (payload != null) {
 				connection.setRequestProperty("Content-Type", "application/json");
 				connection.setDoOutput(true);
@@ -156,7 +169,14 @@ public class HttpUtil {
 				payloadStream.write(payload.toString().getBytes());
 			}
 
-			return new HttpResult(connection);
+			HttpResult result = new HttpResult(connection);
+
+			// TODO: I am assuming that 403 means we need a new auth token; is this correct?
+			if (result.responseCode == 403 && token != null) {
+				authTokenWrapper.informBadToken(token);
+			}
+
+			return result;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
@@ -164,7 +184,9 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult post(URI uri, JSONObject payload, IHttpConnectionConfig conf) throws IOException {
+	public static HttpResult post(URI uri, JSONObject payload, IHttpConnectionConfig conf,
+			AuthTokenWrapper authTokenWrapper) throws IOException {
+
 		HttpURLConnection connection = null;
 
 		log("POST " + payload.toString() + " TO " + uri);
@@ -172,6 +194,8 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("POST");
+
+			FWAuthToken token = addAuthIfApplicable(connection, authTokenWrapper);
 
 			if (conf != null) {
 				conf.setupConnection(connection);
@@ -185,17 +209,19 @@ public class HttpUtil {
 				payloadStream.write(payload.toString().getBytes());
 			}
 
-			return new HttpResult(connection);
+			HttpResult result = new HttpResult(connection);
+
+			// TODO: I am assuming that 403 means we need a new auth token; is this correct?
+			if (result.responseCode == 403 && token != null) {
+				authTokenWrapper.informBadToken(token);
+			}
+
+			return result;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
 			}
 		}
-	}
-
-	/** Allow calling methods to configure the connection before it used. */
-	public static interface IHttpConnectionConfig {
-		public void setupConnection(URLConnection conn);
 	}
 
 	public static void allowAllCerts(URLConnection connection) {
@@ -233,4 +259,28 @@ public class HttpUtil {
 		}
 
 	}
+
+	private static FWAuthToken addAuthIfApplicable(HttpURLConnection connection, AuthTokenWrapper authTokenWrapper) {
+
+		if (authTokenWrapper == null) {
+			return null;
+		}
+
+		FWAuthToken token = authTokenWrapper.getLatestToken().orElse(null);
+		if (token == null) {
+			FWLogger.getInstance().logInfo("Requested a secure token from the IDE but got a null");
+			return null;
+		}
+
+		connection.setRequestProperty("Authorization", token.getTokenType() + " " + token.getAccessToken());
+
+		return token;
+
+	}
+
+	/** Allow calling methods to configure the connection before it is used. */
+	public static interface IHttpConnectionConfig {
+		public void setupConnection(URLConnection conn);
+	}
+
 }

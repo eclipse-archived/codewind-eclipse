@@ -80,7 +80,8 @@ public class HttpUtil {
 			responseCode = connection.getResponseCode();
 			isGoodResponse = responseCode > 199 && responseCode < 300;
 
-			headerFields = isGoodResponse ? connection.getHeaderFields() : null;
+			headerFields = connection != null && connection.getHeaderFields() != null ? connection.getHeaderFields()
+					: null;
 
 			// Read error first because sometimes if there is an error,
 			// connection.getInputStream() throws an exception
@@ -134,10 +135,7 @@ public class HttpUtil {
 
 			HttpResult result = new HttpResult(connection);
 
-			// TODO: I am assuming that 403 means we need a new auth token; is this correct?
-			if (result.responseCode == 403 && token != null) {
-				authTokenWrapper.informBadToken(token);
-			}
+			informBadTokenIfApplicable(result, token, authTokenWrapper);
 
 			return result;
 		} finally {
@@ -173,10 +171,7 @@ public class HttpUtil {
 
 			HttpResult result = new HttpResult(connection);
 
-			// TODO: I am assuming that 403 means we need a new auth token; is this correct?
-			if (result.responseCode == 403 && token != null) {
-				authTokenWrapper.informBadToken(token);
-			}
+			informBadTokenIfApplicable(result, token, authTokenWrapper);
 
 			return result;
 		} finally {
@@ -213,10 +208,7 @@ public class HttpUtil {
 
 			HttpResult result = new HttpResult(connection);
 
-			// TODO: I am assuming that 403 means we need a new auth token; is this correct?
-			if (result.responseCode == 403 && token != null) {
-				authTokenWrapper.informBadToken(token);
-			}
+			informBadTokenIfApplicable(result, token, authTokenWrapper);
 
 			return result;
 		} finally {
@@ -245,6 +237,7 @@ public class HttpUtil {
 				}
 			};
 
+			// Don't bother to verify that hostname resolves correctly
 			HostnameVerifier hostnameVerifier = new HostnameVerifier() {
 				@Override
 				public boolean verify(String hostname, SSLSession session) {
@@ -271,6 +264,26 @@ public class HttpUtil {
 
 	}
 
+	private static void informBadTokenIfApplicable(HttpResult result, FWAuthToken token,
+			AuthTokenWrapper authTokenWrapper) {
+
+		if (token == null || result == null) {
+			return;
+		}
+		
+		// Inform bad token if we are redirected to an OIDC endpoint
+		if (result.responseCode == 302 && result.headerFields != null) {
+
+			if (result.headerFields.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase("location"))
+					.flatMap(e -> e.getValue().stream()).anyMatch(e -> e.contains("openid-connect/auth"))) {
+
+				authTokenWrapper.informBadToken(token);
+
+			}
+
+		}
+	}
+
 	private static FWAuthToken addAuthIfApplicable(HttpURLConnection connection, AuthTokenWrapper authTokenWrapper) {
 
 		if (authTokenWrapper == null) {
@@ -282,6 +295,8 @@ public class HttpUtil {
 			FWLogger.getInstance().logInfo("Requested a secure token from the IDE but got a null");
 			return null;
 		}
+
+		connection.setInstanceFollowRedirects(false);
 
 		connection.setRequestProperty("Authorization", token.getTokenType() + " " + token.getAccessToken());
 

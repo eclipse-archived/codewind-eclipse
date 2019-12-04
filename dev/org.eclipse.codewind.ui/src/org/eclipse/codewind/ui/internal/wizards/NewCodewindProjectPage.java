@@ -303,62 +303,65 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 			}
 		});
 		
-		// Manage registries link
-		Composite manageRegistriesComp = new Composite(parent, SWT.NONE);
-		manageRegistriesComp.setLayout(new GridLayout(2, false));
-		manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
-		
-		Label manageRegistriesLabel = new Label(manageRegistriesComp, SWT.NONE);
-		manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
-		manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
-		
-		Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
-		manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
-		if (connection.isLocal()) {
-			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
-		} else {
-			manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltip);
-		}
-		manageRegistriesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 
-		manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				try {
-					List<RegistryInfo> regList = connection.requestRegistryList();
-					ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
-					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
-					if (regDialog.open() == Window.OK) {
-						if (regDialog.hasChanges()) {
-							IRunnableWithProgress runnable = new IRunnableWithProgress() {
-								@Override
-								public void run(IProgressMonitor monitor) throws InvocationTargetException {
-									SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
-									IStatus status = regDialog.updateRegistries(mon.split(75));
-									if (!status.isOK()) {
-										throw new InvocationTargetException(status.getException(), status.getMessage());
+		if (!connection.isLocal()) {
+			// Manage registries link
+			Composite manageRegistriesComp = new Composite(parent, SWT.NONE);
+			manageRegistriesComp.setLayout(new GridLayout(2, false));
+			manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
+			
+			Label manageRegistriesLabel = new Label(manageRegistriesComp, SWT.NONE);
+			manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
+			manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+			
+			Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
+			manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
+			if (connection.isLocal()) {
+				manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
+			} else {
+				manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltip);
+			}
+			manageRegistriesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+	
+			manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					try {
+						List<RegistryInfo> regList = connection.requestRegistryList();
+						ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
+						RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
+						if (regDialog.open() == Window.OK) {
+							if (regDialog.hasChanges()) {
+								IRunnableWithProgress runnable = new IRunnableWithProgress() {
+									@Override
+									public void run(IProgressMonitor monitor) throws InvocationTargetException {
+										SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
+										IStatus status = regDialog.updateRegistries(mon.split(75));
+										if (!status.isOK()) {
+											throw new InvocationTargetException(status.getException(), status.getMessage());
+										}
+										if (mon.isCanceled()) {
+											return;
+										}
 									}
-									if (mon.isCanceled()) {
-										return;
-									}
+								};
+								try {
+									getWizard().getContainer().run(true, true, runnable);
+								} catch (InvocationTargetException e) {
+									MessageDialog.openError(getShell(), Messages.RegUpdateErrorTitle, e.getMessage());
+									return;
+								} catch (InterruptedException e) {
+									// The user cancelled the operation
+									return;
 								}
-							};
-							try {
-								getWizard().getContainer().run(true, true, runnable);
-							} catch (InvocationTargetException e) {
-								MessageDialog.openError(getShell(), Messages.RegUpdateErrorTitle, e.getMessage());
-								return;
-							} catch (InterruptedException e) {
-								// The user cancelled the operation
-								return;
 							}
 						}
+					} catch (Exception e) {
+						MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
 					}
-				} catch (Exception e) {
-					MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
 				}
-			}
-		});
+			});
+		}
 
 		// Listeners
 		filterText.addModifyListener(new ModifyListener() {

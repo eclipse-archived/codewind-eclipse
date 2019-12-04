@@ -21,7 +21,6 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -162,7 +161,10 @@ public class CodewindApplicationFactory {
 				String appStatus = appJso.getString(CoreConstants.KEY_APP_STATUS);
 				String detail = null;
 				if (appJso.has(CoreConstants.KEY_DETAILED_APP_STATUS)) {
-					detail = appJso.getString(CoreConstants.KEY_DETAILED_APP_STATUS);
+					JSONObject detailObj = appJso.getJSONObject(CoreConstants.KEY_DETAILED_APP_STATUS);
+					if (detailObj != null && detailObj.has(CoreConstants.KEY_MESSAGE)) {
+						detail = detailObj.getString(CoreConstants.KEY_MESSAGE);
+					}
 				}
 				app.setAppStatus(appStatus, detail);
 			}

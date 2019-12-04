@@ -20,6 +20,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
@@ -48,10 +49,12 @@ public class HttpUtil {
 	
 	public static final X509TrustManager trustManager;
 	public static final SSLContext sslContext;
+	public static final HostnameVerifier hostnameVerifier;
 	
 	static {
 		trustManager = getTrustAllCertsManager();
 		sslContext = getTrustAllCertsContext(trustManager);
+		hostnameVerifier = getHostnameVerifier();
 	}
 	
 	private HttpUtil() {}
@@ -225,6 +228,7 @@ public class HttpUtil {
 		}
 		connection.setRequestProperty("Authorization", auth.getTokenType() + " " + auth.getToken());
 		((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
+		((HttpsURLConnection)connection).setHostnameVerifier(hostnameVerifier);
 	}
 
 	public static HttpResult patch(URI uri, JSONArray payload) throws IOException {
@@ -264,6 +268,15 @@ public class HttpUtil {
 			Logger.logError("An error occurred creating a trust all certs context", e);
 		}
 		return null;
+	}
+	
+	private static HostnameVerifier getHostnameVerifier() {
+		return new HostnameVerifier() {
+			@Override
+			public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
+				return true;
+			}
+		};
 	}
 
 }

@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -244,10 +245,10 @@ public class ProjectSelectionPage extends WizardPage {
 		manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				List<RegistryInfo> regList;
 				try {
-					regList = connection.requestRegistryList();
-					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList);
+					List<RegistryInfo> regList = connection.requestRegistryList();
+					ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
+					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
 					if (regDialog.open() == Window.OK) {
 						if (regDialog.hasChanges()) {
 							IRunnableWithProgress runnable = new IRunnableWithProgress() {

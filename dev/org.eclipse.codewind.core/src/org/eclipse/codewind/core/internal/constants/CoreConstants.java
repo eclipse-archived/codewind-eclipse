@@ -38,7 +38,7 @@ public class CoreConstants {
 			APIPATH_METRICS_STATUS = "metrics/status",
 			APIPATH_PROJECT_UNBIND = "unbind",
 			APIPATH_PROJECT_TYPES = "project-types",
-			APIPATH_REGISTRY = "registry",
+			APIPATH_IMAGEPUSHREGISTRY = "imagepushregistry",
 			APIPATH_REGISTRYSECRETS = "registrysecrets",
 
 			// JSON keys
@@ -95,10 +95,6 @@ public class CoreConstants {
 			KEY_EXTENSION = "extension",
 			KEY_PROJECT_NAME = "projectName",
 			KEY_PARENT_PATH = "parentPath",
-			KEY_URL = "url",
-			KEY_CREDENTIALS = "credentials",
-			KEY_USERNAME = "username",
-			KEY_PASSWORD = "password",
 			KEY_TEMPLATE_ID = "templateID",
 			KEY_OP = "op",
 			KEY_VALUE = "value",
@@ -138,12 +134,16 @@ public class CoreConstants {
 			KEY_AUTO_GENERATE = "autoGenerate",
 			
 			// Registry
-			KEY_DEPLOYMENT_REGISTRY = "deploymentRegistry",
+			KEY_IMAGE_PUSH_REGISTRY = "imagePushRegistry",
+			KEY_ADDRESS = "address",
+			KEY_USERNAME = "username",
+			KEY_PASSWORD = "password",
+			KEY_CREDENTIALS = "credentials",
+			KEY_NAMESPACE = "namespace",
 			KEY_OPERATION = "operation",
 			VALUE_OP_TEST = "test",
 			VALUE_OP_SET = "set",
 			KEY_STATUS_CODE = "statusCode",
-			KEY_DEPLOYMENT_REGISTRY_TEST = "deploymentRegistryTest",
 			
 			// JSON attribute values
 			REQUEST_STATUS_SUCCESS = "success",

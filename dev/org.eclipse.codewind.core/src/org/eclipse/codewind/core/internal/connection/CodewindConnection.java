@@ -723,7 +723,7 @@ public class CodewindConnection {
 		return regList;
 	}
 	
-	public void requestAddRegistry(String url, String username, String password) throws IOException, JSONException {
+	public void requestAddRegistry(String address, String username, String password) throws IOException, JSONException {
 		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
 		
 		JSONObject credentials = new JSONObject();
@@ -731,7 +731,7 @@ public class CodewindConnection {
 		credentials.put(CoreConstants.KEY_PASSWORD, password);
 		String encoding = Base64.getEncoder().encodeToString(credentials.toString().getBytes("UTF-8"));
 		JSONObject payload = new JSONObject();
-		payload.put(CoreConstants.KEY_URL, url);
+		payload.put(CoreConstants.KEY_ADDRESS, address);
 		payload.put(CoreConstants.KEY_CREDENTIALS, encoding);
 		
 		HttpResult result = HttpUtil.post(uri, getAuthToken(false), payload);
@@ -741,11 +741,11 @@ public class CodewindConnection {
 		checkResult(result, uri, true);
 	}
 	
-	public void requestRemoveRegistry(String url, String username) throws IOException, JSONException {
+	public void requestRemoveRegistry(String address, String username) throws IOException, JSONException {
 		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
 		
 		JSONObject payload = new JSONObject();
-		payload.put(CoreConstants.KEY_URL, url);
+		payload.put(CoreConstants.KEY_ADDRESS, address);
 //		payload.put(CoreConstants.KEY_USERNAME, username);
 		
 		HttpResult result = HttpUtil.delete(uri, getAuthToken(false), payload);
@@ -755,10 +755,11 @@ public class CodewindConnection {
 		checkResult(result, uri, true);
 	}
 
-	public void requestSetPushRegistry(String registry) throws IOException, JSONException {
-		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRY);
+	public void requestSetPushRegistry(String address, String namespace) throws IOException, JSONException {
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_IMAGEPUSHREGISTRY);
 		JSONObject payload = new JSONObject();
-		payload.put(CoreConstants.KEY_DEPLOYMENT_REGISTRY, registry);
+		payload.put(CoreConstants.KEY_ADDRESS, address);
+		payload.put(CoreConstants.KEY_NAMESPACE, namespace);
 		payload.put(CoreConstants.KEY_OPERATION, CoreConstants.VALUE_OP_SET);
 		
 		HttpResult result = HttpUtil.post(uri, getAuthToken(false), payload);
@@ -768,8 +769,8 @@ public class CodewindConnection {
 		checkResult(result, uri, false);
 	}
 	
-	public boolean requestHasPushRegistry() throws IOException, JSONException {
-		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRY);
+	public ImagePushRegistryInfo requestGetPushRegistry() throws IOException, JSONException {
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_IMAGEPUSHREGISTRY);
 		HttpResult result = HttpUtil.get(uri, getAuthToken(false));
 		if (hasAuthFailure(result)) {
 			result = HttpUtil.get(uri, getAuthToken(true));
@@ -777,7 +778,14 @@ public class CodewindConnection {
 		checkResult(result, uri, true);
 		
 		JSONObject obj = new JSONObject(result.response);
-		return obj.has(CoreConstants.KEY_DEPLOYMENT_REGISTRY) && obj.getBoolean(CoreConstants.KEY_DEPLOYMENT_REGISTRY);
+		if (obj.has(CoreConstants.KEY_IMAGE_PUSH_REGISTRY) && obj.getBoolean(CoreConstants.KEY_IMAGE_PUSH_REGISTRY)) {
+			return new ImagePushRegistryInfo(obj);
+		}
+		return null;
+	}
+	
+	public boolean requestHasPushRegistry() throws IOException, JSONException {
+		return requestGetPushRegistry() != null;
 	}
 	
 	private boolean hasAuthFailure(HttpResult result) {

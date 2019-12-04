@@ -15,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -36,12 +37,14 @@ public class RegistryManagementDialog extends TitleAreaDialog {
 	
 	private final CodewindConnection connection;
 	private final List<RegistryInfo> regList;
+	private final ImagePushRegistryInfo pushReg;
 	private RegistryManagementComposite regComposite;
 	
-	public RegistryManagementDialog(Shell parentShell, CodewindConnection connection, List<RegistryInfo> regList) {
+	public RegistryManagementDialog(Shell parentShell, CodewindConnection connection, List<RegistryInfo> regList, ImagePushRegistryInfo pushReg) {
 		super(parentShell);
 		this.connection = connection;
 		this.regList = regList;
+		this.pushReg = pushReg;
 	}
 	
 	@Override
@@ -73,7 +76,7 @@ public class RegistryManagementDialog extends TitleAreaDialog {
 		content.setLayout(new GridLayout());
 		content.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
-		regComposite = new RegistryManagementComposite(content, connection, regList);
+		regComposite = new RegistryManagementComposite(content, connection, regList, pushReg);
 		GridData data = new GridData(GridData.FILL, GridData.FILL, true, true);
 		data.widthHint = 250;
 		regComposite.setLayoutData(data);
@@ -98,7 +101,8 @@ public class RegistryManagementDialog extends TitleAreaDialog {
 	public static void open(Shell shell, CodewindConnection connection, IProgressMonitor monitor) {
 		try {
 			List<RegistryInfo> regList = connection.requestRegistryList();
-			RegistryManagementDialog regDialog = new RegistryManagementDialog(shell, connection, regList);
+			ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
+			RegistryManagementDialog regDialog = new RegistryManagementDialog(shell, connection, regList, pushReg);
 			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {
 				SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
 				IStatus status = regDialog.updateRegistries(mon.split(100));

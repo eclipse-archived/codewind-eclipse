@@ -31,11 +31,7 @@ public class RegistryInfo extends JSONObjectResult {
 	}
 	
 	public String getUsername() {
-		List<String> usernames = getStringArray(USERNAME_KEY);
-		if (!usernames.isEmpty()) {
-			return usernames.get(0);
-		}
-		return null;
+		return getString(USERNAME_KEY);
 	}
 	
 	public String getNamespace() {

@@ -21,7 +21,7 @@ public class LocalConnection extends CodewindConnection {
 	public static final String DEFAULT_ID = "local";
 	
 	public LocalConnection(URI uri) {
-		super(DEFAULT_NAME, uri, DEFAULT_ID, null, null);
+		super(DEFAULT_NAME, uri, DEFAULT_ID);
 	}
 	
 	@Override

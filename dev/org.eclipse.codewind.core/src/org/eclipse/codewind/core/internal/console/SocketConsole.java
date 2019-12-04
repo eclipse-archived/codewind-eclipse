@@ -45,7 +45,7 @@ public class SocketConsole extends IOConsole {
 		try {
 			this.outputStream.write(Messages.LogFileInitialMsg);
 			app.connection.requestEnableLogStream(app, logInfo);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Logger.logError("Error opening console output stream for: " + this.getName(), e);
 		}
 	}
@@ -72,7 +72,7 @@ public class SocketConsole extends IOConsole {
 		try {
 			app.connection.requestDisableLogStream(app, logInfo);
 			outputStream.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Logger.logError("Error closing console output stream for: " + this.getName(), e); //$NON-NLS-1$
 		}
 

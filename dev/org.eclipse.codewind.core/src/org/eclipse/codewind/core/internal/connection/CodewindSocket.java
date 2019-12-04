@@ -90,7 +90,7 @@ public class CodewindSocket {
 		socketUri = uri;
 
 		if (connection.getAuthToken(false) != null) {
-			OkHttpClient okHttpClient = new OkHttpClient.Builder().sslSocketFactory(HttpUtil.sslContext.getSocketFactory(), HttpUtil.trustManager).build();
+			OkHttpClient okHttpClient = new OkHttpClient.Builder().hostnameVerifier(HttpUtil.hostnameVerifier).sslSocketFactory(HttpUtil.sslContext.getSocketFactory(), HttpUtil.trustManager).build();
 			IO.setDefaultOkHttpCallFactory(okHttpClient);
 			IO.setDefaultOkHttpWebSocketFactory(okHttpClient);
 			IO.Options opts = new IO.Options();

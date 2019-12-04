@@ -77,6 +77,7 @@ public class CoreConstants {
 			KEY_ERROR = "error",
 			KEY_APP_STATUS = "appStatus",
 			KEY_DETAILED_APP_STATUS = "detailedAppStatus",
+			KEY_MESSAGE = "message",
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
 			KEY_LAST_BUILD = "lastbuild",

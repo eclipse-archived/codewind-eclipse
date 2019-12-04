@@ -106,7 +106,7 @@ public class CodewindSocket {
 					try {
 						JSONObject obj = new JSONObject();
 						obj.put("token", authToken.getToken());
-						socket.emit("authentication", obj.toString());
+						socket.emit("authentication", obj);
 					} catch (Exception e) {
 						Logger.logError("An error occurred trying to pass the authentication token to the socket", e);
 						return;

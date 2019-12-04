@@ -105,6 +105,8 @@ public class AuthTokenWrapper {
 
 		}
 
+		authTokenProvider.informReceivedInvalidAuthToken(token);
+
 		log.logInfo("Filewatcher informed us of a new invalid token, so we've already reported it to the IDE: "
 				+ digest(token));
 

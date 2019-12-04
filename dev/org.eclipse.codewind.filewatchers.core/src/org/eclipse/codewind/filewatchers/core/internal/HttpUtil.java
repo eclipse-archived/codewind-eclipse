@@ -25,8 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
@@ -242,6 +244,15 @@ public class HttpUtil {
 					return null;
 				}
 			};
+
+			HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+				@Override
+				public boolean verify(String hostname, SSLSession session) {
+					return true;
+				}
+			};
+
+			huc.setHostnameVerifier(hostnameVerifier);
 
 			// SSL setup
 			SSLContext ctx;

@@ -241,10 +241,12 @@ public class WebSocketManagerThread extends Thread {
 			try {
 				log.logInfo("Attempting to establish connection to web socket, attempt #" + attemptNumber);
 
-				JettyClientEndpoint clientEndpoint = new JettyClientEndpoint(this, wsUrl);
+				String url = wsUrl + "/websockets/file-changes/v1";
+
+				JettyClientEndpoint clientEndpoint = new JettyClientEndpoint(this, url);
 				ClientUpgradeRequest request = new ClientUpgradeRequest();
-				Future<Session> session = wsClient.connect(clientEndpoint,
-						new URI(wsUrl + "/websockets/file-changes/v1"), request);
+
+				Future<Session> session = wsClient.connect(clientEndpoint, new URI(url), request);
 
 				try {
 					Session sess = session.get(CONNECTION_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);

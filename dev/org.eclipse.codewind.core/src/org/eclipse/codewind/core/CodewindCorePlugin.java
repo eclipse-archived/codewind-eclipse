@@ -34,7 +34,9 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.eclipse.codewind.core"; //$NON-NLS-1$
-
+	
+	public static final String FEATURE_VERSION = "0.7.0"; //$NON-NLS-1$
+	
 	public static final String DEFAULT_ICON_PATH = "icons/codewind.png"; //$NON-NLS-1$
 	
 	public static final String CW_INSTALL_TIMEOUT = "cwInstallTimeout";
@@ -125,5 +127,4 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	public static IDebugLauncher getDebugLauncher(ProjectLanguage language) {
 		return debugLaunchers.get(language);
 	}
-
 }

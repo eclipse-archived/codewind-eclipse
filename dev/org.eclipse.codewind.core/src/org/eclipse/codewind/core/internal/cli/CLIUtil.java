@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
@@ -37,6 +38,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class CLIUtil {
+	
+	public static final String CODEWIND_STORE_DIR = ".codewind";
 	
 	// Global options
 	public static final String JSON_OPTION = "--json";
@@ -178,6 +181,10 @@ public class CLIUtil {
 	}
 	
 	private static String getCLIInstallDir() {
+		IPath userHome = CoreUtil.getUserHome();
+		if (userHome != null) {
+			return userHome.append(CODEWIND_STORE_DIR).append(CodewindCorePlugin.FEATURE_VERSION).toOSString();
+		}
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();
 	}

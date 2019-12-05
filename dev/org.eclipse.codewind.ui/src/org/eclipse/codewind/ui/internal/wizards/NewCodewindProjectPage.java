@@ -28,6 +28,7 @@ import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
@@ -323,10 +324,10 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				List<RegistryInfo> regList;
 				try {
-					regList = connection.requestRegistryList();
-					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList);
+					List<RegistryInfo> regList = connection.requestRegistryList();
+					ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
+					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
 					if (regDialog.open() == Window.OK) {
 						if (regDialog.hasChanges()) {
 							IRunnableWithProgress runnable = new IRunnableWithProgress() {

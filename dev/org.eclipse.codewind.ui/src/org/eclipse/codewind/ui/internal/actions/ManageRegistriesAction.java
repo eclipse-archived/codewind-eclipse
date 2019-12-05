@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
@@ -66,7 +67,8 @@ public class ManageRegistriesAction extends SelectionProviderAction {
 		}
 		try {
 			List<RegistryInfo> regList = connection.requestRegistryList();
-			RegistryManagementDialog regDialog = new RegistryManagementDialog(Display.getDefault().getActiveShell(), connection, regList);
+			ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
+			RegistryManagementDialog regDialog = new RegistryManagementDialog(Display.getDefault().getActiveShell(), connection, regList, pushReg);
 			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {
 				Job job = new Job(Messages.RegUpdateTask) {
 					@Override

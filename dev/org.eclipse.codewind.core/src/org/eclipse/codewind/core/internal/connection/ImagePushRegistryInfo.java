@@ -13,20 +13,20 @@ package org.eclipse.codewind.core.internal.connection;
 
 import org.json.JSONObject;
 
-public class RegistryInfo extends JSONObjectResult {
+public class ImagePushRegistryInfo extends JSONObjectResult {
 	
 	public static final String ADDRESS_KEY = "address";
-	public static final String USERNAME_KEY = "username";
+	public static final String NAMESPACE_KEY = "namespace";
 	
-	public RegistryInfo(JSONObject obj) {
-		super(obj, "registry");
+	public ImagePushRegistryInfo(JSONObject obj) {
+		super(obj, "image push registry");
 	}
 
 	public String getAddress() {
 		return getString(ADDRESS_KEY);
 	}
 	
-	public String getUsername() {
-		return getString(USERNAME_KEY);
+	public String getNamespace() {
+		return getString(NAMESPACE_KEY);
 	}
 }

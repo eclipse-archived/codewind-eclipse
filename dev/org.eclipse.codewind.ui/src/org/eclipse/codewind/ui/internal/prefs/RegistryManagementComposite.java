@@ -19,6 +19,7 @@ import java.util.List;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.UIConstants;
@@ -62,17 +63,19 @@ public class RegistryManagementComposite extends Composite {
 	
 	private final CodewindConnection connection;
 	private final List<RegistryInfo> regList;
+	private final ImagePushRegistryInfo pushReg;
 	private List<RegEntry> regEntries;
 	private boolean supportsPushReg = false;
 	private Table regTable;
 	private Button addButton, removeButton;
 	private Color gray;
 	
-	public RegistryManagementComposite(Composite parent, CodewindConnection connection, List<RegistryInfo> regList) {
+	public RegistryManagementComposite(Composite parent, CodewindConnection connection, List<RegistryInfo> regList, ImagePushRegistryInfo pushReg) {
 		super(parent, SWT.NONE);
 		this.connection = connection;
 		this.regList = regList;
-		this.regEntries = getRegEntries(regList);
+		this.pushReg = pushReg;
+		this.regEntries = getRegEntries(regList, pushReg);
 		this.supportsPushReg = !connection.isLocal();
 		createControl();
 	}
@@ -282,10 +285,15 @@ public class RegistryManagementComposite extends Composite {
 		removeButton.setEnabled(regTable.getSelection().length > 0);
 	}
 	
-	private List<RegEntry> getRegEntries(List<RegistryInfo> infos) {
+	private List<RegEntry> getRegEntries(List<RegistryInfo> infos, ImagePushRegistryInfo pushReg) {
 		List<RegEntry> entries = new ArrayList<RegEntry>(infos.size());
 		for (RegistryInfo info : infos) {
-			entries.add(new RegEntry(info));
+			RegEntry entry = new RegEntry(info);
+			if (pushReg != null && pushReg.getAddress().equals(info.getAddress())) {
+				entry.isPushReg = true;
+				entry.namespace = pushReg.getNamespace();
+			}
+			entries.add(entry);
 		}
 		return entries;
 	}
@@ -299,14 +307,14 @@ public class RegistryManagementComposite extends Composite {
 		
 		// Check for the differences between the original repo set and the new set
 		for (RegistryInfo info : regList) {
-			RegEntry entry = getRegEntry(info.getURL());
+			RegEntry entry = getRegEntry(info.getAddress());
 			if (entry == null) {
 				// Remove the registry
 				try {
-					connection.requestRemoveRegistry(info.getURL(), info.getUsername());
+					connection.requestRemoveRegistry(info.getAddress(), info.getUsername());
 				} catch (Exception e) {
-					Logger.logError("Failed to remove registry: " + info.getURL(), e); //$NON-NLS-1$
-					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtRemoveFailed, info.getURL()), e));
+					Logger.logError("Failed to remove registry: " + info.getAddress(), e); //$NON-NLS-1$
+					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtRemoveFailed, info.getAddress()), e));
 				}
 			}
 			if (mon.isCanceled()) {
@@ -321,9 +329,6 @@ public class RegistryManagementComposite extends Composite {
 				// Add the registry
 				try {
 					connection.requestAddRegistry(entry.address, entry.username, entry.password);
-					if (entry.isPushReg) {
-						connection.requestSetPushRegistry(entry.address + "/" + entry.namespace);
-					}
 				} catch (Exception e) {
 					Logger.logError("Failed to add registry: " + entry.address, e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtAddFailed, entry.address), e));
@@ -336,10 +341,10 @@ public class RegistryManagementComposite extends Composite {
 			mon.setWorkRemaining(100);
 			if (entry.isPushReg) {
 				try {
-					connection.requestSetPushRegistry(entry.address + "/" + entry.namespace);
+					connection.requestSetPushRegistry(entry.address, entry.namespace);
 				} catch (Exception e) {
-					Logger.logError("Failed to set the push registry: " + info.getURL(), e); //$NON-NLS-1$
-					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtSetPushRegFailed, info.getURL()), e));
+					Logger.logError("Failed to set the push registry: " + info.getAddress(), e); //$NON-NLS-1$
+					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtSetPushRegFailed, info.getAddress()), e));
 				}
 			}
 			if (mon.isCanceled()) {
@@ -356,7 +361,7 @@ public class RegistryManagementComposite extends Composite {
 	
 	public boolean hasChanges() {
 		for (RegistryInfo info : regList) {
-			RegEntry entry = getRegEntry(info.getURL());
+			RegEntry entry = getRegEntry(info.getAddress());
 			if (entry == null) {
 				return true;
 			}
@@ -365,7 +370,7 @@ public class RegistryManagementComposite extends Composite {
 			RegistryInfo info = entry.info;
 			if (info == null) {
 				return true;
-			} else if (entry.isPushReg) {
+			} else if (entry.isPushReg && (pushReg == null || !pushReg.getAddress().equals(entry.address))) {
 				return true;
 			}
 		}
@@ -398,11 +403,9 @@ public class RegistryManagementComposite extends Composite {
 		}
 		
 		public RegEntry(RegistryInfo info) {
-			this.address = info.getURL();
-			this.namespace = info.getNamespace();
+			this.address = info.getAddress();
 			this.username = info.getUsername();
 			this.password = null;
-			this.isPushReg = info.isPushReg();
 			this.info = info;
 		}
 	}

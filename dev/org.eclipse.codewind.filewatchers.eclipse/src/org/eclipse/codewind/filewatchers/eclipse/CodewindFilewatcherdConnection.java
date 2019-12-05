@@ -21,6 +21,7 @@ import java.util.UUID;
 import org.eclipse.codewind.filewatchers.JavaNioWatchService;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
+import org.eclipse.codewind.filewatchers.core.IAuthTokenProvider;
 import org.eclipse.codewind.filewatchers.core.WatchEventEntry;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
@@ -50,15 +51,16 @@ public class CodewindFilewatcherdConnection {
 
 	private final String clientUuid;
 
-	public CodewindFilewatcherdConnection(String baseHttpUrl, File pathToCwctl, ICodewindProjectTranslator translator) {
+	public CodewindFilewatcherdConnection(String baseHttpUrl, File pathToCwctl, ICodewindProjectTranslator translator,
+			IAuthTokenProvider authTokenProvider /* nullable */) {
 
-		if(pathToCwctl == null) {
-			throw new RuntimeException("A valid path to the Codewind CLI is required: "+pathToCwctl);
+		if (pathToCwctl == null) {
+			throw new RuntimeException("A valid path to the Codewind CLI is required: " + pathToCwctl);
 		}
-		
+
 		if (!pathToCwctl.exists() || !pathToCwctl.canExecute()) {
-			throw new RuntimeException(
-					this.getClass().getSimpleName() + " was passed an invalid installer path: " + pathToCwctl.getPath());
+			throw new RuntimeException(this.getClass().getSimpleName() + " was passed an invalid installer path: "
+					+ pathToCwctl.getPath());
 		}
 
 		this.clientUuid = UUID.randomUUID().toString();
@@ -87,7 +89,7 @@ public class CodewindFilewatcherdConnection {
 		// outside the workspace (eg the standalone Codewind settings directory).
 		this.platformWatchService = new EclipseResourceWatchService();
 		this.fileWatcher = new Filewatcher(url, clientUuid, platformWatchService, new JavaNioWatchService(),
-				pathToCwctl.getPath());
+				pathToCwctl.getPath(), authTokenProvider);
 
 		this.baseHttpUrl = url;
 

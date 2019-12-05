@@ -63,9 +63,12 @@ public class HttpGetStatusThread extends Thread {
 
 	private final Object lock = new Object();
 
-	public HttpGetStatusThread(String url, Filewatcher parent) {
+	private final AuthTokenWrapper authTokenWrapper;
+
+	public HttpGetStatusThread(String url, Filewatcher parent, AuthTokenWrapper authTokenWrapper) {
 		this.parent = parent;
 		this.baseUrl = url;
+		this.authTokenWrapper = authTokenWrapper;
 		setDaemon(true);
 		setName(HttpGetStatusThread.class.getSimpleName());
 	}
@@ -210,7 +213,7 @@ public class HttpGetStatusThread extends Thread {
 				e.setConnectTimeout(15 * 1000);
 				e.setReadTimeout(15 * 1000);
 				HttpUtil.allowAllCerts(e);
-			});
+			}, authTokenWrapper);
 
 			if (httpResult == null || httpResult.responseCode != 200) {
 				log.logError("Get response failed for " + toGet + ", "

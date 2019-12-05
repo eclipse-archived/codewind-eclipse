@@ -39,6 +39,7 @@ import org.eclipse.codewind.core.internal.connection.ConnectionEnv.TektonDashboa
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.codewind.filewatchers.core.IAuthTokenProvider;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
 import org.eclipse.core.resources.IProject;
@@ -127,7 +128,8 @@ public class CodewindConnection {
 				}
 				return Optional.empty();
 			}
-		});
+		}, null); // TODO: IDE team to provide an 'IAuthTokenProvider' here 
+		
 		if (mon.isCanceled()) {
 			disconnect();
 			return;

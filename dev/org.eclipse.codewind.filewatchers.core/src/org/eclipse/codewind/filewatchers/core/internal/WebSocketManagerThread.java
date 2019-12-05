@@ -68,6 +68,8 @@ public class WebSocketManagerThread extends Thread {
 
 	private final WebSocketClient wsClient;
 
+	private final AuthTokenWrapper authTokenWrapper;
+
 	/**
 	 * Synchronize on this before accessing. This will only ever contain 0 or 1
 	 * items.
@@ -80,6 +82,8 @@ public class WebSocketManagerThread extends Thread {
 		this.endpoint = new JettyClientEndpoint(this, wsUrl);
 		this.wsUrl = wsUrl;
 		this.watcher = watcher;
+
+		this.authTokenWrapper = watcher.internal_getAuthTokenWrapper();
 
 		// Trust all TLS/SSL certificates and allow large messages
 		SslContextFactory.Client ssl = new SslContextFactory.Client();
@@ -237,14 +241,30 @@ public class WebSocketManagerThread extends Thread {
 			try {
 				log.logInfo("Attempting to establish connection to web socket, attempt #" + attemptNumber);
 
-				JettyClientEndpoint clientEndpoint = new JettyClientEndpoint(this, wsUrl);
+				String url = wsUrl + "/websockets/file-changes/v1";
+
+				JettyClientEndpoint clientEndpoint = new JettyClientEndpoint(this, url);
 				ClientUpgradeRequest request = new ClientUpgradeRequest();
-				Future<Session> session = wsClient.connect(clientEndpoint,
-						new URI(wsUrl + "/websockets/file-changes/v1"), request);
+
+				Future<Session> session = wsClient.connect(clientEndpoint, new URI(url), request);
 
 				try {
 					Session sess = session.get(CONNECTION_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
 					success = sess.isOpen();
+
+					// TODO: We need to send a message in both the auth and non-auth case, to make
+					// the server implementation easier. See issue for details.
+
+					// TODO: Re-enable this once FW WebSocket has authentication
+					// (https://github.com/eclipse/codewind/issues/1342)
+//					FWAuthToken token = authTokenWrapper.getLatestToken().orElse(null);
+//					if (token != null) {
+//
+//						JSONObject obj = new JSONObject();
+//						obj.put("token", token.getAccessToken());
+//						sess.getRemote().sendString(obj.toString());
+//					}
+
 				} catch (Exception e) {
 
 					String msg = "Unable to connect to web socket: " + e.getClass().getSimpleName() + " (attempt #"

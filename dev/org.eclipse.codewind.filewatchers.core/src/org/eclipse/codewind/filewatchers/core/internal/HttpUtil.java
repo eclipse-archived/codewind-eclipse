@@ -25,11 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.eclipse.codewind.filewatchers.core.FWAuthToken;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.json.JSONObject;
 
@@ -53,7 +56,6 @@ public class HttpUtil {
 
 	private static void logError(String str) {
 		FWLogger.getInstance().logError(str);
-//		System.err.println(str);
 	}
 
 	private static void log(String str) {
@@ -78,7 +80,8 @@ public class HttpUtil {
 			responseCode = connection.getResponseCode();
 			isGoodResponse = responseCode > 199 && responseCode < 300;
 
-			headerFields = isGoodResponse ? connection.getHeaderFields() : null;
+			headerFields = connection != null && connection.getHeaderFields() != null ? connection.getHeaderFields()
+					: null;
 
 			// Read error first because sometimes if there is an error,
 			// connection.getInputStream() throws an exception
@@ -115,7 +118,8 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult get(URI uri, IHttpConnectionConfig conf) throws IOException {
+	public static HttpResult get(URI uri, IHttpConnectionConfig conf, AuthTokenWrapper authTokenWrapper)
+			throws IOException {
 		HttpURLConnection connection = null;
 
 		try {
@@ -127,7 +131,13 @@ public class HttpUtil {
 				conf.setupConnection(connection);
 			}
 
-			return new HttpResult(connection);
+			FWAuthToken token = addAuthIfApplicable(connection, authTokenWrapper);
+
+			HttpResult result = new HttpResult(connection);
+
+			informBadTokenIfApplicable(result, token, authTokenWrapper);
+
+			return result;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
@@ -135,7 +145,8 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult put(URI uri, JSONObject payload, IHttpConnectionConfig conf) throws IOException {
+	public static HttpResult put(URI uri, JSONObject payload, IHttpConnectionConfig conf,
+			AuthTokenWrapper authTokenWrapper) throws IOException {
 		HttpURLConnection connection = null;
 
 		log("PUT " + payload.toString() + " TO " + uri);
@@ -148,6 +159,8 @@ public class HttpUtil {
 				conf.setupConnection(connection);
 			}
 
+			FWAuthToken token = addAuthIfApplicable(connection, authTokenWrapper);
+
 			if (payload != null) {
 				connection.setRequestProperty("Content-Type", "application/json");
 				connection.setDoOutput(true);
@@ -156,7 +169,11 @@ public class HttpUtil {
 				payloadStream.write(payload.toString().getBytes());
 			}
 
-			return new HttpResult(connection);
+			HttpResult result = new HttpResult(connection);
+
+			informBadTokenIfApplicable(result, token, authTokenWrapper);
+
+			return result;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
@@ -164,7 +181,9 @@ public class HttpUtil {
 		}
 	}
 
-	public static HttpResult post(URI uri, JSONObject payload, IHttpConnectionConfig conf) throws IOException {
+	public static HttpResult post(URI uri, JSONObject payload, IHttpConnectionConfig conf,
+			AuthTokenWrapper authTokenWrapper) throws IOException {
+
 		HttpURLConnection connection = null;
 
 		log("POST " + payload.toString() + " TO " + uri);
@@ -172,6 +191,8 @@ public class HttpUtil {
 			connection = (HttpURLConnection) uri.toURL().openConnection();
 
 			connection.setRequestMethod("POST");
+
+			FWAuthToken token = addAuthIfApplicable(connection, authTokenWrapper);
 
 			if (conf != null) {
 				conf.setupConnection(connection);
@@ -185,17 +206,16 @@ public class HttpUtil {
 				payloadStream.write(payload.toString().getBytes());
 			}
 
-			return new HttpResult(connection);
+			HttpResult result = new HttpResult(connection);
+
+			informBadTokenIfApplicable(result, token, authTokenWrapper);
+
+			return result;
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
 			}
 		}
-	}
-
-	/** Allow calling methods to configure the connection before it used. */
-	public static interface IHttpConnectionConfig {
-		public void setupConnection(URLConnection conn);
 	}
 
 	public static void allowAllCerts(URLConnection connection) {
@@ -217,6 +237,16 @@ public class HttpUtil {
 				}
 			};
 
+			// Don't bother to verify that hostname resolves correctly
+			HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+				@Override
+				public boolean verify(String hostname, SSLSession session) {
+					return true;
+				}
+			};
+
+			huc.setHostnameVerifier(hostnameVerifier);
+
 			// SSL setup
 			SSLContext ctx;
 			try {
@@ -233,4 +263,50 @@ public class HttpUtil {
 		}
 
 	}
+
+	private static void informBadTokenIfApplicable(HttpResult result, FWAuthToken token,
+			AuthTokenWrapper authTokenWrapper) {
+
+		if (token == null || result == null) {
+			return;
+		}
+		
+		// Inform bad token if we are redirected to an OIDC endpoint
+		if (result.responseCode == 302 && result.headerFields != null) {
+
+			if (result.headerFields.entrySet().stream().filter(e -> e.getKey().equalsIgnoreCase("location"))
+					.flatMap(e -> e.getValue().stream()).anyMatch(e -> e.contains("openid-connect/auth"))) {
+
+				authTokenWrapper.informBadToken(token);
+
+			}
+
+		}
+	}
+
+	private static FWAuthToken addAuthIfApplicable(HttpURLConnection connection, AuthTokenWrapper authTokenWrapper) {
+
+		if (authTokenWrapper == null) {
+			return null;
+		}
+
+		FWAuthToken token = authTokenWrapper.getLatestToken().orElse(null);
+		if (token == null) {
+			FWLogger.getInstance().logInfo("Requested a secure token from the IDE but got a null");
+			return null;
+		}
+
+		connection.setInstanceFollowRedirects(false);
+
+		connection.setRequestProperty("Authorization", token.getTokenType() + " " + token.getAccessToken());
+
+		return token;
+
+	}
+
+	/** Allow calling methods to configure the connection before it is used. */
+	public static interface IHttpConnectionConfig {
+		public void setupConnection(URLConnection conn);
+	}
+
 }

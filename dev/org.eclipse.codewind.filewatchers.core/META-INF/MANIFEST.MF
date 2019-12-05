@@ -14,5 +14,4 @@ Bundle-ClassPath: .,
  lib/websocket-api-9.4.23.v20191118.jar,
  lib/websocket-client-9.4.23.v20191118.jar,
  lib/websocket-common-9.4.23.v20191118.jar
-Export-Package: org.eclipse.codewind.filewatchers.core,
- org.eclipse.codewind.filewatchers.core.internal
+Export-Package: org.eclipse.codewind.filewatchers.core

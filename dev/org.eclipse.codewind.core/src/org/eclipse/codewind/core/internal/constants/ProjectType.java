@@ -88,6 +88,10 @@ public class ProjectType {
 		return extension != null;
 	}
 	
+	public static boolean isCodewindStyle(String typeId) {
+		return !"appsodyExtension".equals(typeId) && !"odo".equals(typeId);
+	}
+	
 	public static String getDisplayName(String typeId) {
 		if (typeId == null) {
 			return Messages.GenericUnknown;
@@ -113,5 +117,5 @@ public class ProjectType {
 			default:
 				return null;
 		}
-	}
+	} 
 }

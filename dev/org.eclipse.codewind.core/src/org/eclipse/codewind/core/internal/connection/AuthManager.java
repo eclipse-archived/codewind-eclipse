@@ -17,11 +17,13 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.AuthToken;
 import org.eclipse.codewind.core.internal.cli.AuthUtil;
+import org.eclipse.codewind.filewatchers.core.FWAuthToken;
+import org.eclipse.codewind.filewatchers.core.IAuthTokenProvider;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.json.JSONException;
 
-public class AuthManager {
+public class AuthManager implements IAuthTokenProvider {
 	
 	private final CodewindConnection connection;
 	private AuthToken token;
@@ -69,6 +71,20 @@ public class AuthManager {
 		Thread thread = new Thread(runnable);
 		thread.setDaemon(true);
 		thread.run();
+	}
+
+	@Override
+	public FWAuthToken getLatestAuthToken() {
+		AuthToken token = getTokenNonBlocking();
+		if (token != null && token.getToken() != null && token.getTokenType() != null) {
+			return new FWAuthToken(token.getToken(), token.getTokenType());
+		}
+		return null;
+	}
+
+	@Override
+	public void informReceivedInvalidAuthToken(FWAuthToken badToken) {
+		updateTokenNonBlocking();
 	}
 
 }

@@ -48,6 +48,11 @@ public class RemoteConnection extends CodewindConnection {
 	public String getUsername() {
 		return username;
 	}
+
+	@Override
+	AuthManager getAuthManager() {
+		return authManager;
+	}
 	
 
 }

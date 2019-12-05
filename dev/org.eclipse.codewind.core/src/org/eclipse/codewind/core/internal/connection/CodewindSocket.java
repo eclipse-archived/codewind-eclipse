@@ -106,7 +106,7 @@ public class CodewindSocket {
 			public void call(Object... arg0) {
 				try {
 					AuthToken authToken = connection.getAuthToken(false);
-					if (authToken != null) {
+					if (authToken != null && authToken.getToken() != null) {
 						JSONObject obj = new JSONObject();
 						obj.put("token", authToken.getToken());
 						socket.emit("authentication", obj);

@@ -23,6 +23,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo;
 import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubtypeInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
+import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
@@ -147,12 +148,12 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		final ProjectSubtypeInfo projectSubtype = projectTypePage.getSubtype();
 		final String language = projectTypePage.getLanguage();		
 		
-		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, name)) {
+		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, new String[] {connection.getName(), name})) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 140);
-					if (!connection.isLocal() && !type.getId().equals("appsodyExtension") && !type.getId().equals("odo")) {
+					if (!connection.isLocal() && ProjectType.isCodewindStyle(type.getId())) {
 						try {
 							if (!connection.requestHasPushRegistry()) {
 								Display.getDefault().syncExec(new Runnable() {
@@ -167,6 +168,9 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						} catch (Exception e) {
 							Logger.logError("An error occurred while setting up the registry dialog", e); //$NON-NLS-1$
 						}
+					}
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
 					}
 					mon.setWorkRemaining(100);
 					if (selectedBehaviour != null) {

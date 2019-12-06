@@ -261,7 +261,7 @@ public class HttpUtil {
 
 	private static SSLContext getTrustAllCertsContext(X509TrustManager manager) {
 		try {
-			SSLContext context = SSLContext.getInstance("TLS");
+			SSLContext context = SSLContext.getInstance("TLSv1.2");
 			context.init(new KeyManager[0], new TrustManager[] { manager }, new SecureRandom());
 			return context;
 		} catch (Exception e) {

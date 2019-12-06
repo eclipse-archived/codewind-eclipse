@@ -250,7 +250,7 @@ public class HttpUtil {
 			// SSL setup
 			SSLContext ctx;
 			try {
-				ctx = SSLContext.getInstance("TLS");
+				ctx = SSLContext.getInstance("TLSv1.2");
 				ctx.init(null, new TrustManager[] { tm }, new java.security.SecureRandom());
 				huc.setSSLSocketFactory(ctx.getSocketFactory());
 
@@ -270,7 +270,7 @@ public class HttpUtil {
 		if (token == null || result == null) {
 			return;
 		}
-		
+
 		// Inform bad token if we are redirected to an OIDC endpoint
 		if (result.responseCode == 302 && result.headerFields != null) {
 

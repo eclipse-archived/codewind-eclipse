@@ -36,6 +36,7 @@ public class CoreConstants {
 			APIPATH_CAPABILITIES = "capabilities",
 			APIPATH_LOGS = "logs",
 			APIPATH_METRICS_STATUS = "metrics/status",
+			APIPATH_INJECT_METRICS = "metrics/inject",
 			APIPATH_PROJECT_UNBIND = "unbind",
 			APIPATH_PROJECT_TYPES = "project-types",
 			APIPATH_REGISTRY = "registry",
@@ -88,6 +89,7 @@ public class CoreConstants {
 			KEY_INTERNAL_DEBUG_PORT = "internalDebugPort",
 			KEY_AUTO_BUILD = "autoBuild",
 			KEY_APP_BASE_URL = "appBaseURL",
+			KEY_INJECT_METRICS = "enable",
 
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",

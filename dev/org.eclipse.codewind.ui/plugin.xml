@@ -184,6 +184,12 @@
 				label="%ACTION_ENABLE_DISABLE_AUTO_BUILD"
 				class="org.eclipse.codewind.ui.internal.actions.EnableDisableAutoBuildAction"/>
 			<action
+				id="org.eclipse.codewind.ui.enableDisableInjectMetrics"
+				enablesFor="1"
+				menubarPath="group.build"
+				label="%ACTION_ENABLE_DISABLE_INJECT_METRICS"
+				class="org.eclipse.codewind.ui.internal.actions.EnableDisableInjectMetricsAction"/>
+			<action
 				id="org.eclipse.codewind.ui.buildApplication"
 				enablesFor="1"
 				menubarPath="group.build"

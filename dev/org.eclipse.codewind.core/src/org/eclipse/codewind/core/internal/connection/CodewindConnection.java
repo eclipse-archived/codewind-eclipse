@@ -780,6 +780,26 @@ public class CodewindConnection {
 		return obj.has(CoreConstants.KEY_DEPLOYMENT_REGISTRY) && obj.getBoolean(CoreConstants.KEY_DEPLOYMENT_REGISTRY);
 	}
 	
+	public void requestInjectMetrics(String projectID, boolean enable) throws IOException, JSONException {
+		System.out.println("Request Inject Metrics called " + projectID);
+		
+		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
+				+ projectID + "/"	//$NON-NLS-1$
+				+ CoreConstants.APIPATH_INJECT_METRICS;
+		
+		URI uri = baseUri.resolve(endpoint);
+		System.out.println("URI: " + uri);
+		JSONObject buildPayload = new JSONObject();
+		buildPayload.put(CoreConstants.KEY_INJECT_METRICS, enable);
+		System.out.println("payload: " + buildPayload);
+		HttpResult result = HttpUtil.post(uri, getAuthToken(false), buildPayload);
+		if (hasAuthFailure(result)) {
+			result = HttpUtil.post(uri, getAuthToken(true), buildPayload);
+		}
+		checkResult(result, uri, false);
+		CoreUtil.updateConnection(this);
+	}
+	
 	private boolean hasAuthFailure(HttpResult result) {
 		return result.responseCode == 302;
 	}

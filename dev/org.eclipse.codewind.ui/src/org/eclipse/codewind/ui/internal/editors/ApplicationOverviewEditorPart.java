@@ -553,6 +553,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private class BuildSection {
 		private final StringEntry autoBuildEntry;
+		private final StringEntry injectMetricsEntry;
 		private final StringEntry lastBuildEntry;
 		private final StringEntry lastImageBuildEntry;
 		
@@ -576,6 +577,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        
 	        autoBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorAutoBuildEntry);
 	        addSpacer(composite);
+	        injectMetricsEntry = new StringEntry(composite, Messages.AppOverviewEditorInjectMetricsEntry);
+	        addSpacer(composite);
 	        lastBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastBuildEntry);
 	        addSpacer(composite);
 	        lastImageBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastImageBuildEntry);
@@ -583,6 +586,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		
 		public void update(CodewindApplication app) {
 			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, app.isAvailable());
+			injectMetricsEntry.setValue(metricsInjectionState(app.canInjectMetrics(), app.isInjectMetrics()), app.isAvailable());
 			long lastBuild = app.getLastBuild();
 			String lastBuildStr = Messages.AppOverviewEditorProjectNeverBuilt;
 			if (lastBuild > 0) {
@@ -734,6 +738,13 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		if (contents != null) {
 			contents.setFocus();
 		}
+	}
+	
+	public String metricsInjectionState(boolean injectMetricsAvailable, boolean injectMetricsEnabled) {
+		if (injectMetricsAvailable) {
+			return (injectMetricsEnabled) ? Messages.AppOverviewEditorInjectMetricsOn : Messages.AppOverviewEditorInjectMetricsOff;
+		}
+		return Messages.AppOverviewEditorInjectMetricsUnavailable;
 	}
 
 }

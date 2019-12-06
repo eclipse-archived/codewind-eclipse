@@ -78,55 +78,47 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 			return Status.CANCEL_STATUS;
 		}
 		
-		// Remove the application from the current connection
-		Job job = new Job(NLS.bind(Messages.UnbindActionJobTitle, sourceApp.name)) {
+		String jobName = NLS.bind(Messages.MoveProjectJobLabel, new String[] {targetConn.getName(), sourceApp.name});
+		Job job = new Job(jobName) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					sourceApp.connection.requestProjectUnbind(sourceApp.projectID);
-				} catch (Exception e) {
-					Logger.logError("Error requesting application remove: " + sourceApp.name, e); //$NON-NLS-1$
-					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.UnbindActionError, sourceApp.name), e);
-				}
-				if (monitor.isCanceled()) {
-					return Status.CANCEL_STATUS;
-				}
-				return Status.OK_STATUS;
-			}
-		};
-		job.schedule();
-		
-		// Add the application to the target connection
-		String jobName = NLS.bind(Messages.BindProjectWizardJobLabel, new String[] {targetConn.getName(), sourceApp.name});
-		job = new Job(jobName) {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				try {
-					SubMonitor mon = SubMonitor.convert(monitor, jobName, 100);
-					if (!targetConn.isLocal() && ProjectType.isCodewindStyle(sourceApp.projectType.getId())) {
-						try {
-							if (!targetConn.requestHasPushRegistry()) {
-								Display.getDefault().syncExec(new Runnable() {
-									@Override
-									public void run() {
-										if (MessageDialog.openQuestion(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
-											RegistryManagementDialog.open(getShell(), targetConn, mon.split(40));
-										}
-									}
-								});
+					SubMonitor mon = SubMonitor.convert(monitor, jobName, 120);
+					
+					// Check for a push registry if Codewind style project
+					if (!targetConn.isLocal() && ProjectType.isCodewindStyle(sourceApp.projectType.getId()) && !targetConn.requestHasPushRegistry()) {
+						Display.getDefault().syncExec(new Runnable() {
+							@Override
+							public void run() {
+								if (MessageDialog.openConfirm(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
+									RegistryManagementDialog.open(getShell(), targetConn, mon.split(40));
+								} else {
+									mon.setCanceled(true);
+								}
 							}
-						} catch (Exception e) {
-							Logger.logError("An error occurred while setting up the registry dialog", e); //$NON-NLS-1$
+						});
+						if (mon.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						if (!targetConn.requestHasPushRegistry()) {
+							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, Messages.NoPushRegistryError, null);
 						}
 					}
-					if (mon.isCanceled()) {
+					mon.setWorkRemaining(80);
+					
+					// Remove the application from the current connection
+					mon.split(10);
+					sourceApp.connection.requestProjectUnbind(sourceApp.projectID);
+					if (monitor.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					mon.setWorkRemaining(60);
+					
+					// Add the application to the target connection
 					ProjectUtil.bindProject(sourceApp.name, sourceApp.fullLocalPath.toOSString(), sourceApp.projectLanguage.getId(), sourceApp.projectType.getId(), targetConn.getConid(), mon.split(60));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
+					mon.split(10);
 					targetConn.refreshApps(null);
 					CodewindApplication newApp = targetConn.getAppByName(sourceApp.name);
 					if (newApp != null) {
@@ -136,11 +128,13 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 					} else {
 						Logger.logError("The " + sourceApp.name + " application could not be found on connection: " + targetConn.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 					}
+					mon.worked(10);
+					mon.done();
 					ViewHelper.refreshCodewindExplorerView(targetConn);
 					ViewHelper.expandConnection(targetConn);
 				} catch (Exception e) {
-					Logger.logError("An error occured trying to add the project to Codewind: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$
-					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.BindProjectWizardError, sourceApp.fullLocalPath.toOSString()), e);
+					Logger.logError("An error occured trying to move project: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$
+					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.MoveProjectError, new String[] {sourceApp.name, sourceApp.connection.getName(), targetConn.getName()}), e);
 				}
 				if (monitor.isCanceled()) {
 					return Status.CANCEL_STATUS;

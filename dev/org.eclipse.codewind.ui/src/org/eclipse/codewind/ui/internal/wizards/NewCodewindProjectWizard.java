@@ -137,23 +137,29 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 140);
-					if (!connection.isLocal() && info.isCodewindStyle()) {
-						try {
-							if (!connection.requestHasPushRegistry()) {
-								Display.getDefault().syncExec(new Runnable() {
-									@Override
-									public void run() {
-										if (MessageDialog.openQuestion(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
-											RegistryManagementDialog.open(getShell(), connection, mon.split(40));
-										}
-									}
-								});
+					
+					// Check for a push registry if Codewind style project
+					if (!connection.isLocal() && info.isCodewindStyle() && !connection.requestHasPushRegistry()) {
+						Display.getDefault().syncExec(new Runnable() {
+							@Override
+							public void run() {
+								if (MessageDialog.openConfirm(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
+									RegistryManagementDialog.open(getShell(), connection, mon.split(40));
+								} else {
+									mon.setCanceled(true);
+								}
 							}
-						} catch (Exception e) {
-							Logger.logError("An error occurred while setting up the registry dialog", e); //$NON-NLS-1$
+						});
+						if (mon.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						if (!connection.requestHasPushRegistry()) {
+							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, Messages.NoPushRegistryError, null);
 						}
 					}
 					mon.setWorkRemaining(100);
+					
+					// Create and bind the project
 					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), newConnection.getConid(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
@@ -165,11 +171,12 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
+					mon.split(10);
 					newConnection.refreshApps(null);
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					mon.worked(10);
+					mon.split(10);
 					CodewindApplication app = newConnection.getAppByName(projectName);
 					if (app != null) {
 						ImportProjectAction.importProject(app);

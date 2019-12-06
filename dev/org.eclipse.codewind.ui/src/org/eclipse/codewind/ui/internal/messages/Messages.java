@@ -172,6 +172,9 @@ public class Messages extends NLS {
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
 	
+	public static String MoveProjectJobLabel;
+	public static String MoveProjectError;
+	
 	public static String ProjectDeployedDialogShell;
 	public static String ProjectDeployedDialogTitle;
 	public static String ProjectDeployedDialogMessage;
@@ -357,6 +360,7 @@ public class Messages extends NLS {
 	public static String ManageRegistriesLinkTooltipLocal;
 	public static String NoPushRegistryTitle;
 	public static String NoPushRegistryMessage;
+	public static String NoPushRegistryError;
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;

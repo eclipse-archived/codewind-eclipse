@@ -37,7 +37,6 @@ public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
 
     @Override
     public void selectionChanged(IAction action, ISelection selection) {
-		Logger.logError("Selection Changed");
         if (!(selection instanceof IStructuredSelection)) {
             action.setEnabled(false);
             return;
@@ -65,8 +64,6 @@ public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
 
     @Override
     public void run(IAction action) {
-		Logger.logError("Run debug, logger");
-		System.out.println("Run debug, syso");
         if (app == null) {
         	// should not be possible
         	Logger.logError("EnableDisableAutoBuildAction ran but no application was selected"); //$NON-NLS-1$
@@ -82,7 +79,6 @@ public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					String actionKey = enable ? CoreConstants.VALUE_ACTION_ENABLEAUTOBUILD : CoreConstants.VALUE_ACTION_DISABLEAUTOBUILD;
-					Logger.logError("sdfsdfsdfsdfsdf");
 					app.connection.requestProjectBuild(app, actionKey);
 					app.setAutoBuild(enable);
 					return Status.OK_STATUS;

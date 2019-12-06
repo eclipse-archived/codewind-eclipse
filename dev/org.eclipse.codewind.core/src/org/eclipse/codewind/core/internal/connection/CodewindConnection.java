@@ -781,17 +781,14 @@ public class CodewindConnection {
 	}
 	
 	public void requestInjectMetrics(String projectID, boolean enable) throws IOException, JSONException {
-		System.out.println("Request Inject Metrics called " + projectID);
-		
 		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
 				+ projectID + "/"	//$NON-NLS-1$
 				+ CoreConstants.APIPATH_INJECT_METRICS;
 		
 		URI uri = baseUri.resolve(endpoint);
-		System.out.println("URI: " + uri);
 		JSONObject buildPayload = new JSONObject();
 		buildPayload.put(CoreConstants.KEY_INJECT_METRICS, enable);
-		System.out.println("payload: " + buildPayload);
+		
 		HttpResult result = HttpUtil.post(uri, getAuthToken(false), buildPayload);
 		if (hasAuthFailure(result)) {
 			result = HttpUtil.post(uri, getAuthToken(true), buildPayload);

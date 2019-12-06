@@ -153,26 +153,29 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					SubMonitor mon = SubMonitor.convert(monitor, 140);
-					if (!connection.isLocal() && ProjectType.isCodewindStyle(type.getId())) {
-						try {
-							if (!connection.requestHasPushRegistry()) {
-								Display.getDefault().syncExec(new Runnable() {
-									@Override
-									public void run() {
-										if (MessageDialog.openQuestion(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
-											RegistryManagementDialog.open(getShell(), connection, mon.split(40));
-										}
-									}
-								});
+					
+					// Check for a push registry if Codewind style project
+					if (!connection.isLocal() && ProjectType.isCodewindStyle(type.getId()) && !connection.requestHasPushRegistry()) {
+						Display.getDefault().syncExec(new Runnable() {
+							@Override
+							public void run() {
+								if (MessageDialog.openConfirm(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
+									RegistryManagementDialog.open(getShell(), connection, mon.split(40));
+								} else {
+									mon.setCanceled(true);
+								}
 							}
-						} catch (Exception e) {
-							Logger.logError("An error occurred while setting up the registry dialog", e); //$NON-NLS-1$
+						});
+						if (mon.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						if (!connection.requestHasPushRegistry()) {
+							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, Messages.NoPushRegistryError, null);
 						}
 					}
-					if (mon.isCanceled()) {
-						return Status.CANCEL_STATUS;
-					}
 					mon.setWorkRemaining(100);
+					
+					// Perform selected action if project already bound to another connection
 					if (selectedBehaviour != null) {
 						switch (selectedBehaviour) {
 							case REMOVE:
@@ -212,6 +215,8 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						}
 					}
 					mon.setWorkRemaining(50);
+					
+					// Bind the project to the connection
 					String path = projectPath.toFile().getAbsolutePath();
 					if (projectInfo != null) {
 						ProjectUtil.bindProject(name, path, projectInfo.language.getId(), projectInfo.type.getId(), connection.getConid(), mon.split(30));

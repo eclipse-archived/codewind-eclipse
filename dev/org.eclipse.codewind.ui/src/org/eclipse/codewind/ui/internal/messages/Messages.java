@@ -238,6 +238,11 @@ public class Messages extends NLS {
 	public static String DisableAutoBuildLabel;
 	public static String EnableDisableAutoBuildJob;
 	public static String ErrorOnEnableDisableAutoBuild;
+
+	public static String EnableInjectMetricsLabel;
+	public static String DisableInjectMetricsLabel;
+	public static String EnableDisableInjectMetricsJob;
+	public static String ErrorOnEnableDisableInjectMetrics;
 	
 	public static String ConnectActionLabel;
 	public static String DisconnectActionLabel;
@@ -386,6 +391,10 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorAutoBuildEntry;
 	public static String AppOverviewEditorAutoBuildOn;
 	public static String AppOverviewEditorAutoBuildOff;
+	public static String AppOverviewEditorInjectMetricsEntry;
+	public static String AppOverviewEditorInjectMetricsOn;
+	public static String AppOverviewEditorInjectMetricsOff;
+	public static String AppOverviewEditorInjectMetricsUnavailable;
 	public static String AppOverviewEditorLastBuildEntry;
 	public static String AppOverviewEditorLastImageBuildEntry;
 	public static String AppOverviewEditorProjectNeverBuilt;

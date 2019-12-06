@@ -16,6 +16,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -50,6 +51,7 @@ public class CodewindApplication {
 	private BuildStatus buildStatus;
 	private String buildDetails;
 	private boolean autoBuild = true;
+	private boolean injectMetrics = false;
 	private boolean enabled = true;
 	private String containerId;
 	private ProjectCapabilities projectCapabilities;
@@ -176,6 +178,11 @@ public class CodewindApplication {
 	
 	public synchronized void setAutoBuild(boolean enabled) {
 		this.autoBuild = enabled;
+		CoreUtil.updateApplication(this);
+	}
+
+	public synchronized void setInjectMetrics(boolean enabled) {
+		this.injectMetrics = enabled;
 		CoreUtil.updateApplication(this);
 	}
 	
@@ -322,6 +329,10 @@ public class CodewindApplication {
 	
 	public synchronized boolean isAutoBuild() {
 		return autoBuild;
+	}
+
+	public synchronized boolean isInjectMetrics() {
+		return injectMetrics;
 	}
 	
 	public synchronized boolean isEnabled() {
@@ -500,6 +511,15 @@ public class CodewindApplication {
 	
 	public void buildComplete() {
 		// Override to perform actions when a build has completed
+	}
+	
+	public boolean canInjectMetrics() {
+		List<ProjectType> projectTypesWithMetricInjection = Arrays.asList(
+				ProjectType.TYPE_LIBERTY,
+				ProjectType.TYPE_SPRING,
+				ProjectType.TYPE_NODEJS
+		);
+		return projectTypesWithMetricInjection.contains(projectType);
 	}
 
 	@Override

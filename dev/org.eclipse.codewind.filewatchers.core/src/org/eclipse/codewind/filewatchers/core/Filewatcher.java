@@ -679,6 +679,7 @@ public class Filewatcher {
 					log.logInfo("Issuing PUT request to '" + url + "' with body " + obj);
 
 					HttpResult response = HttpUtil.put(new URI(url), obj, (e) -> {
+						HttpUtil.allowAllCerts(e);
 						e.setConnectTimeout(10 * 1000);
 						e.setReadTimeout(10 * 1000);
 					}, authTokenWrapper);

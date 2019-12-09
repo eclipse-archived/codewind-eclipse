@@ -206,8 +206,8 @@ public class CLIState {
 			// cwctl project sync -p
 			// /Users/tobes/workspaces/git/eclipse/codewind/codewind-workspace/lib5 \
 			// -i b1a78500-eaa5-11e9-b0c1-97c28a7e77c7 -t 12345
-			args.addAll(Arrays.asList(new String[] { "project", "sync", "-p", projectPath, "-i", projectId, "-t",
-					"" + latestTimestamp }));
+			args.addAll(Arrays.asList(new String[] { "--insecure", "project", "sync", "-p", projectPath, "-i",
+					projectId, "-t", "" + latestTimestamp }));
 		} else {
 
 			args.add("java");

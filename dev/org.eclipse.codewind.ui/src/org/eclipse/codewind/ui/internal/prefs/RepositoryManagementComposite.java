@@ -500,7 +500,7 @@ public class RepositoryManagementComposite extends Composite {
 		@Override
 		protected void configureShell(Shell newShell) {
 			super.configureShell(newShell);
-			newShell.setText("Add Repositories");
+			newShell.setText(Messages.AddRepoDialogShell);
 		}
 		
 		@Override

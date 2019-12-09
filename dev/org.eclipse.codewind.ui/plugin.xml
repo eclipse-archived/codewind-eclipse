@@ -214,14 +214,6 @@
 				icon="%REFRESH_ICON_PATH"
 				label="%ACTION_REFRESH"
 				class="org.eclipse.codewind.ui.internal.actions.RefreshAction"/>
-			<!--
-			<action
-				id="org.eclipse.codewind.ui.removeConnection"
-				enablesFor="1"
-				menubarPath="group.additions"
-				label="%ACTION_CONNECTION_REMOVE_CONNECTION"
-				class="org.eclipse.codewind.ui.internal.actions.RemoveConnectionAction"/>
-			-->
 		</objectContribution>
 		<objectContribution
 			id="org.eclipse.codewind.ui.codewindActions"
@@ -247,6 +239,14 @@
 				toolbarPath="group.open"
 				icon="%OPEN_APP_ICON_PATH"
 				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction">
+			</action>
+			<action
+				id="org.eclipse.codewind.ui.newCloudConnectionToolbarAction"
+				label="%ACTION_NEW_CLOUD_CONNECTION"
+				menubarPath="group.open"
+				toolbarPath="group.open"
+				icon="%NEW_CLOUD_ICON_PATH"
+				class="org.eclipse.codewind.ui.internal.actions.AddConnectionToolbarAction">
 			</action>
 		</viewContribution>
 	</extension>

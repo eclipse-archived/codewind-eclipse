@@ -135,6 +135,10 @@ public class CodewindSocket {
 			@Override
 			public void call(Object... arg0) {
 				Logger.logError("SocketIO authentication failed: " + arg0[0]);
+				// Completely disconnect in this case
+				connection.disconnect();
+				CoreUtil.updateConnection(connection);
+				CoreUtil.openDialog(true, Messages.Connection_ErrConnection_AuthFailedTitle, NLS.bind(Messages.Connection_ErrConnection_AuthFailed, connection.getName()));
 			}
 		})
 		.on(Socket.EVENT_CONNECT_ERROR, new Emitter.Listener() {

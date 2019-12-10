@@ -433,6 +433,7 @@ public class Messages extends NLS {
 	public static String RepoMgmtUpdateFailed;
 	public static String RepoMgmtAddFailed;
 	
+	public static String AddRepoDialogShell;
 	public static String AddRepoDialogTitle;
 	public static String AddRepoDialogMessage;
 	public static String AddRepoDialogNameLabel;

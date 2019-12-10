@@ -11,48 +11,39 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.wizards.NewCodewindConnectionWizard;
-import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.actions.SelectionProviderAction;
+import org.eclipse.ui.IViewActionDelegate;
+import org.eclipse.ui.IViewPart;
 
 /**
- * Action to create a new project.
+ * Toolbar action to create a new project.
  */
-public class AddConnectionAction extends SelectionProviderAction {
-
-	public AddConnectionAction(ISelectionProvider selectionProvider) {
-		super(selectionProvider, "New Connection");
-		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
-		selectionChanged(getStructuredSelection());
-	}
-
-
+public class AddConnectionToolbarAction implements IViewActionDelegate {
+	
 	@Override
-	public void selectionChanged(IStructuredSelection sel) {
-		if (sel.size() == 1) {
-			Object obj = sel.getFirstElement();
-			if (obj instanceof CodewindManager) {
-				setEnabled(true);
-				return;
-			}
-		}
-		setEnabled(false);
-	}
-
-	@Override
-	public void run() {
+	public void run(IAction action) {
 		try {
 			NewCodewindConnectionWizard wizard = new NewCodewindConnectionWizard();
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			dialog.open();
 		} catch (Exception e) {
-			Logger.logError("An error occurred running the new connection action", e); //$NON-NLS-1$
+			Logger.logError("An error occurred running the new connection toolbar action", e); //$NON-NLS-1$
 		}
+	}
+
+	@Override
+	public void selectionChanged(IAction action, ISelection sel) {
+		// This action is always enabled
+		action.setEnabled(true);
+	}
+
+	@Override
+	public void init(IViewPart part) {
+		// empty
 	}
 }

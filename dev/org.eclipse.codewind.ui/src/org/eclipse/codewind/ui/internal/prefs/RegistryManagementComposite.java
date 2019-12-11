@@ -40,6 +40,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -206,6 +207,7 @@ public class RegistryManagementComposite extends Composite {
 				}
 				regEntries.stream().forEach(entry -> { entry.isPushReg = entry.address.equals(pushReg.address); });
 				createItems();
+				updateButtons();
 			}
 		});
 
@@ -270,7 +272,7 @@ public class RegistryManagementComposite extends Composite {
 
 	private void updateButtons() {
 		removeButton.setEnabled(regTable.getSelection().length > 0);
-		pushRegButton.setEnabled(regTable.getSelection().length == 1);
+		pushRegButton.setEnabled(regTable.getSelectionCount() == 1 && !((RegEntry)regTable.getSelection()[0].getData()).isPushReg);
 	}
 	
 	private List<RegEntry> getRegEntries(List<RegistryInfo> infos, ImagePushRegistryInfo pushReg) {
@@ -329,7 +331,7 @@ public class RegistryManagementComposite extends Composite {
 			mon.setWorkRemaining(100);
 			if (entry.isPushReg) {
 				try {
-					connection.requestSetPushRegistry(entry.address, entry.namespace);
+					connection.requestSetPushRegistry(entry.address, entry.namespace == null ? "" : entry.namespace);
 				} catch (Exception e) {
 					Logger.logError("Failed to set the push registry: " + info.getAddress(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RegMgmtSetPushRegFailed, info.getAddress()), e));
@@ -565,10 +567,6 @@ public class RegistryManagementComposite extends Composite {
 				setErrorMessage(Messages.RegMgmtAddDialogNoPassword);
 				return false;
 			}
-			if (isPushReg && (namespace == null || namespace.isEmpty())) {
-				setErrorMessage(Messages.RegMgmtAddDialogNoNamespace);
-				return false;
-			}
 			
 			setErrorMessage(null);
 			return true;
@@ -651,7 +649,7 @@ public class RegistryManagementComposite extends Composite {
 		@Override
 		protected void createButtonsForButtonBar(Composite parent) {
 			super.createButtonsForButtonBar(parent);
-			enableOKButton(false);
+			enableOKButton(true);
 		}
 
 		protected void enableOKButton(boolean value) {
@@ -659,17 +657,18 @@ public class RegistryManagementComposite extends Composite {
 		}
 		
 		private boolean validate() {
-			if (namespace == null || namespace.isEmpty()) {
-				setErrorMessage(Messages.RegMgmtAddDialogNoNamespace);
-				return false;
-			}
-			
 			setErrorMessage(null);
 			return true;
 		}
 		
 		public String getNamespace() {
 			return namespace;
+		}
+		
+		@Override
+		protected Point getInitialSize() {
+			Point point = super.getInitialSize();
+			return new Point(650, point.y);
 		}
 	}
 	

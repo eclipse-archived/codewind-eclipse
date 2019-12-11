@@ -162,7 +162,8 @@ public class CoreConstants {
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
 			VIEW_OVERVIEW = "overview",
-			PERF_MONITOR = "performance/charts"
+			PERF_MONITOR = "performance/charts",
+			PERF_METRICS_DASH = "performance/monitor/dashboard"
 
 			;
 }

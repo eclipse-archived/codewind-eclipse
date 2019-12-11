@@ -93,12 +93,10 @@ public class CodewindConnection {
 		
 		mon.split(25);
 		env = new ConnectionEnv(getEnvData(this.baseUri));
-		if (isLocal()) {
-			Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
-			if (!isSupportedVersion(env.getVersion())) {
-				Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUri);	// $NON-NLS-1$	// $NON-NLS-2$
-				onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
-			}
+		Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
+		if (!isSupportedVersion(env.getVersion())) {
+			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUri);	// $NON-NLS-1$	// $NON-NLS-2$
+			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
 		}
 		if (mon.isCanceled()) {
 			return;
@@ -253,10 +251,10 @@ public class CodewindConnection {
 		if (versionA.equals(versionB)) {
 			return 0;
 		}
-		if (CoreConstants.VERSION_LATEST.equals(versionA) || ConnectionEnv.UNKNOWN_VERSION.equals(versionB)) {
+		if (CoreConstants.VERSION_LATEST.equals(versionA) || "x.x.dev".equals(versionA) || ConnectionEnv.UNKNOWN_VERSION.equals(versionB)) {
 			return 1;
 		}
-		if (CoreConstants.VERSION_LATEST.equals(versionB) || ConnectionEnv.UNKNOWN_VERSION.equals(versionA)) {
+		if (CoreConstants.VERSION_LATEST.equals(versionB) || "x.x.dev".equals(versionB) || ConnectionEnv.UNKNOWN_VERSION.equals(versionA)) {
 			return -1;
 		}
 		

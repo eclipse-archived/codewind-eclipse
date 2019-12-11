@@ -463,11 +463,14 @@ public class Messages extends NLS {
 	public static String RegMgmtLocalDescription;
 	public static String RegMgmtLearnMoreLink;
 	public static String RegMgmtAddButton;
+	public static String RegMgmtSetPushButton;
 	public static String RegMgmtRemoveButton;
 	public static String RegMgmtAddressColumn;
 	public static String RegMgmtUsernameColumn;
 	public static String RegMgmtNamespaceColumn;
 	public static String RegMgmtPushRegColumn;
+	public static String RegMgmtPushRegTrue;
+	public static String RegMgmtPushRegFalse;
 	
 	public static String RegMgmtAddDialogShell;
 	public static String RegMgmtAddDialogTitle;

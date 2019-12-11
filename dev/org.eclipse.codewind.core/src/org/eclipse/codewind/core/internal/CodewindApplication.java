@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
@@ -28,7 +29,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
-import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+
 import org.eclipse.core.runtime.IPath;
 import org.json.JSONObject;
 
@@ -260,7 +261,11 @@ public class CodewindApplication {
 	
 	public URL getMetricsUrl() {
 		try {
-			return new URL(getBaseUrl(), projectLanguage.getMetricsRoot());
+			if ((!this.injectMetrics) && this.metricsAvailable) {
+				return new URL(getBaseUrl(), projectLanguage.getMetricsRoot());
+			} else {
+				return (connection.getBaseURI().resolve(CoreConstants.PERF_METRICS_DASH + "/" + projectLanguage.getId() + "?theme=dark&projectID=" + projectID)).toURL();
+			}
 		} catch (MalformedURLException e) {
 			Logger.logError("An error occurred trying to construct the application metrics URL", e);
 		}

@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 
 /**
  * An instance of this class is created by CodewindFilewatcherdConnection, and
@@ -116,14 +117,28 @@ public class CodewindResourceChangeListener implements IResourceChangeListener {
 				// trigger a resource delta, even though the actual file contents is the same.
 				// We ignore those, and return here.
 
-				// However, these non-file-changed resources will always have the IResourceDelta.CHANGED
-				// kind, so we only filter out events of this kind.
+				// However, these non-file-changed resources will always have the
+				// IResourceDelta.CHANGED kind, so we only filter out events of this kind.
 				return true;
 			}
 
-			File resourceFile = resource.getLocation().toFile();
+			// We have already checked that the resource is not null above, but some of the
+			// underlying file system resources may still not (or no longer) have a backing
+			// object, for example on project deletion events, so we check them here.
+			IPath path = resource.getLocation();
+			if (path == null) {
+				return true;
+			}
+
+			File resourceFile = path.toFile();
+			if (resourceFile == null) {
+				return true;
+			}
 
 			IProject project = resource.getProject();
+			if (project == null) {
+				return true;
+			}
 
 			FileChangeEntryEclipse fcee = new FileChangeEntryEclipse(resourceFile, ceet,
 					resource.getType() == IResource.FOLDER, project);

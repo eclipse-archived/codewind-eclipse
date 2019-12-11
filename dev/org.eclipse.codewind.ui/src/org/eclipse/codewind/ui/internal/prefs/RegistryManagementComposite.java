@@ -35,7 +35,6 @@ import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -67,7 +66,7 @@ public class RegistryManagementComposite extends Composite {
 	private List<RegEntry> regEntries;
 	private boolean supportsPushReg = false;
 	private Table regTable;
-	private Button addButton, removeButton;
+	private Button addButton, removeButton, pushRegButton;
 	private Color gray;
 	
 	public RegistryManagementComposite(Composite parent, CodewindConnection connection, List<RegistryInfo> regList, ImagePushRegistryInfo pushReg) {
@@ -105,7 +104,7 @@ public class RegistryManagementComposite extends Composite {
 				try {
 					IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 					IWebBrowser browser = browserSupport.getExternalBrowser();
-					URL url = new URL(UIConstants.TEMPLATES_INFO_URL);
+					URL url = new URL(UIConstants.REGISTRY_INFO_URL);
 					browser.openURL(url);
 				} catch (Exception e) {
 					Logger.logError("An error occurred trying to open an external browser at: " + UIConstants.TEMPLATES_INFO_URL, e); //$NON-NLS-1$
@@ -120,7 +119,7 @@ public class RegistryManagementComposite extends Composite {
 		Composite tableComp = new Composite(this, SWT.NONE);
 		TableColumnLayout tableColumnLayout = new TableColumnLayout();
 		tableComp.setLayout(tableColumnLayout);
-		tableComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2));
+		tableComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 3));
 		
 		// Table
 		regTable = new Table(tableComp, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.MULTI | SWT.FULL_SELECTION);
@@ -162,6 +161,10 @@ public class RegistryManagementComposite extends Composite {
 		addButton = new Button(this, SWT.PUSH);
 		addButton.setText(Messages.RegMgmtAddButton);
 		addButton.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false));
+
+		pushRegButton = new Button(this, SWT.PUSH);
+		pushRegButton.setText(Messages.RegMgmtSetPushButton);
+		pushRegButton.setLayoutData(new GridData(GridData.FILL, GridData.BEGINNING, false, false));
 		
 		removeButton = new Button(this, SWT.PUSH);
 		removeButton.setText(Messages.RegMgmtRemoveButton);
@@ -172,19 +175,40 @@ public class RegistryManagementComposite extends Composite {
 			public void widgetSelected(SelectionEvent event) {
 				AddDialog dialog = new AddDialog(getShell());
 				if (dialog.open() == IStatus.OK) {
-					RegEntry repoEntry = dialog.getNewRegEntry();
-					if (repoEntry != null) {
+					RegEntry regEntry = dialog.getNewRegEntry();
+					if (regEntry != null) {
 						// If the new entry is a push registry then disable push registry for the other entries
-						if (repoEntry.isPushReg) {
-							regEntries.stream().forEach(regEntry -> { regEntry.isPushReg = false; });
+						if (regEntry.isPushReg) {
+							regEntries.stream().forEach(entry -> { entry.isPushReg = false; });
 						}
-						regEntries.add(repoEntry);
+						regEntries.add(regEntry);
 						createItems();
 					}
 				}
 			}
 		});
 		
+		pushRegButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				TableItem[] items = regTable.getSelection();
+				if (items.length != 1) {
+					return;
+				}
+				RegEntry pushReg = (RegEntry) items[0].getData();
+				if (pushReg.namespace == null || pushReg.namespace.isEmpty()) {
+					NamespaceDialog dialog = new NamespaceDialog(getShell());
+					if (dialog.open() == IStatus.OK) {
+						pushReg.namespace = dialog.getNamespace();
+					} else {
+						return;
+					}
+				}
+				regEntries.stream().forEach(entry -> { entry.isPushReg = entry.address.equals(pushReg.address); });
+				createItems();
+			}
+		});
+
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
@@ -192,7 +216,7 @@ public class RegistryManagementComposite extends Composite {
 				createItems();
 			}
 		});
-
+		
 		// Set the description text
 		String descText = supportsPushReg ? Messages.RegMgmtDescription : Messages.RegMgmtLocalDescription;
 		description.setText(descText);
@@ -213,7 +237,6 @@ public class RegistryManagementComposite extends Composite {
 	private void createItems() {
 		// Create the items for the table.
 		regTable.removeAll();
-		Arrays.stream(regTable.getChildren()).filter(Button.class::isInstance).forEach(Control::dispose);
 		for (RegEntry regEntry : regEntries) {
 			TableItem item = new TableItem(regTable, SWT.NONE);
 			item.setData(regEntry);
@@ -223,44 +246,8 @@ public class RegistryManagementComposite extends Composite {
 			
 			if (supportsPushReg) {
 				item.setText(2, regEntry.namespace == null ? "" : regEntry.namespace); //$NON-NLS-1$
-				
-				TableEditor editor = new TableEditor(regTable);
-				Button button = new Button(regTable, SWT.RADIO);
-				button.setData(regEntry);
-				button.pack();
-				button.setSelection(regEntry.isPushReg);
-				editor.minimumWidth = button.getSize ().x;
-				editor.horizontalAlignment = SWT.CENTER;
-				editor.verticalAlignment = SWT.CENTER;
-				editor.setEditor(button, item, 3);
-				button.setSelection(regEntry.isPushReg);
-				item.setForeground(2, button.getSelection() ? item.getForeground() : getGray(item));
-				
-				button.addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent e) {
-						if (button.getSelection() && (regEntry.namespace == null || regEntry.namespace.isEmpty())) {
-							NamespaceDialog dialog = new NamespaceDialog(getShell());
-							if (dialog.open() == IStatus.OK) {
-								regEntry.namespace = dialog.getNamespace();
-								item.setText(2, regEntry.namespace);
-							} else {
-								button.setSelection(false);
-								return;
-							}
-						}
-						// Need to override normal radio button processing to allow
-						// the user to unset a push registry
-						if (regEntry.isPushReg) {
-							regEntry.isPushReg = false;
-							button.setSelection(false);
-							item.setForeground(2, getGray(item));
-						} else {
-							regEntry.isPushReg = button.getSelection();
-							item.setForeground(2, button.getSelection() ? item.getForeground() : getGray(item));
-						}
-						
-					}
-				});	 
+				item.setForeground(2, regEntry.isPushReg ? item.getForeground() : getGray(item));
+				item.setText(3, regEntry.isPushReg ? Messages.RegMgmtPushRegTrue : Messages.RegMgmtPushRegFalse);
 			}
 		}
 	}
@@ -283,6 +270,7 @@ public class RegistryManagementComposite extends Composite {
 
 	private void updateButtons() {
 		removeButton.setEnabled(regTable.getSelection().length > 0);
+		pushRegButton.setEnabled(regTable.getSelection().length == 1);
 	}
 	
 	private List<RegEntry> getRegEntries(List<RegistryInfo> infos, ImagePushRegistryInfo pushReg) {
@@ -305,7 +293,7 @@ public class RegistryManagementComposite extends Composite {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
 		MultiStatus multiStatus = new MultiStatus(CodewindCorePlugin.PLUGIN_ID, IStatus.ERROR, Messages.RegMgmtUpdateError, null);
 		
-		// Check for the differences between the original repo set and the new set
+		// Check for the differences between the original registry set and the new set
 		for (RegistryInfo info : regList) {
 			RegEntry entry = getRegEntry(info.getAddress());
 			if (entry == null) {
@@ -324,7 +312,7 @@ public class RegistryManagementComposite extends Composite {
 			mon.setWorkRemaining(100);
 		}
 		for (RegEntry entry : regEntries) {
-			RegistryInfo info = entry.info;
+			RegistryInfo info = getRegInfo(entry.address);
 			if (info == null) {
 				// Add the registry
 				try {
@@ -367,7 +355,7 @@ public class RegistryManagementComposite extends Composite {
 			}
 		}
 		for (RegEntry entry : regEntries) {
-			RegistryInfo info = entry.info;
+			RegistryInfo info = getRegInfo(entry.address);
 			if (info == null) {
 				return true;
 			} else if (entry.isPushReg && (pushReg == null || !pushReg.getAddress().equals(entry.address))) {
@@ -385,6 +373,15 @@ public class RegistryManagementComposite extends Composite {
 		}
 		return null;
 	}
+	
+	private RegistryInfo getRegInfo(String address) {
+		for (RegistryInfo info : regList) {
+			if (address.equals(info.getAddress())) {
+				return info;
+			}
+		}
+		return null;
+	}
 
 	private static class RegEntry {
 		public final String address;
@@ -392,7 +389,6 @@ public class RegistryManagementComposite extends Composite {
 		public final String username;
 		public final String password;
 		public boolean isPushReg = false;
-		public RegistryInfo info;
 		
 		public RegEntry(String address, String namespace, String username, String password, boolean isPush) {
 			this.address = address;
@@ -406,7 +402,6 @@ public class RegistryManagementComposite extends Composite {
 			this.address = info.getAddress();
 			this.username = info.getUsername();
 			this.password = null;
-			this.info = info;
 		}
 	}
 	

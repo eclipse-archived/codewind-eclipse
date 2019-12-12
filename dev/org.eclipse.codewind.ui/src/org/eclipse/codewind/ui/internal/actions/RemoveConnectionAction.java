@@ -14,7 +14,6 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
-import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -29,7 +28,6 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 
 	public RemoveConnectionAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, Messages.RemoveConnectionActionLabel);
-		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
 		selectionChanged(getStructuredSelection());
 	}
 

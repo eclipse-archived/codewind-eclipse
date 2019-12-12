@@ -14,11 +14,21 @@ package org.eclipse.codewind.filewatchers.core.internal;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
@@ -86,8 +96,56 @@ public class WebSocketManagerThread extends Thread {
 		this.authTokenWrapper = watcher.internal_getAuthTokenWrapper();
 
 		// Trust all TLS/SSL certificates and allow large messages
+
 		SslContextFactory.Client ssl = new SslContextFactory.Client();
 		ssl.setTrustAll(true);
+
+		// Jetty does not like the IBM Java cipher suite names
+		// (https://github.com/eclipse/jetty.project/issues/2921), so we clear the
+		// client's exclude list and rely on the server to use a sane cipher set suite
+		// list.
+		ssl.setExcludeCipherSuites();
+
+		// Ignore invalid certificates until we have project infrastructure to better
+		// support this scenario
+		X509TrustManager tm = new X509TrustManager() {
+			public void checkClientTrusted(X509Certificate[] xcs, String str) throws CertificateException {
+				// Do nothing
+			}
+
+			public void checkServerTrusted(X509Certificate[] xcs, String str) throws CertificateException {
+				// Do nothing
+			}
+
+			public X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+		};
+
+		// Don't bother to verify that hostname resolves correctly, until we have
+		// project infrastructure to better support this scenario.
+		HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		};
+
+		// TLS/SSL setup
+		SSLContext ctx;
+		try {
+			ctx = SSLContext.getInstance("TLSv1.2");
+			ctx.init(null, new TrustManager[] { tm }, new java.security.SecureRandom());
+
+			ssl.setHostnameVerifier(hostnameVerifier);
+			ssl.setSslContext(ctx);
+
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		} catch (KeyManagementException e) {
+			throw new RuntimeException(e);
+		}
+
 		wsClient = new WebSocketClient(ssl);
 		wsClient.setMaxTextMessageBufferSize(1024 * 1024);
 		wsClient.setMaxIdleTimeout(24 * 60 * 60 * 1000);

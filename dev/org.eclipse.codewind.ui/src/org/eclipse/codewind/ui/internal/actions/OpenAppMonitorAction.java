@@ -75,11 +75,6 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
 			return;
 		}
 		
-        app.confirmMetricsAvailable();
-        if (!app.getMetricsAvailable()) {
-        	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.AppMonitorNotSupported);
-        	return;
-        }
 
 		try {
 			IWebBrowser browser = null;
@@ -106,6 +101,6 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
     }
     
     public boolean showAction() {
-    	return app != null && app.getMetricsAvailable() && app.projectLanguage.getMetricsRoot() != null;
+    	return app != null && app.projectLanguage.getMetricsRoot() != null;
     }
 }

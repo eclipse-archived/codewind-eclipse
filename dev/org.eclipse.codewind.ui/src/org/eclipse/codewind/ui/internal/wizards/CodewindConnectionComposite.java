@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.Logger;
@@ -22,6 +23,7 @@ import org.eclipse.codewind.core.internal.cli.ConnectionUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.UIConstants;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -33,11 +35,17 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 public class CodewindConnectionComposite extends Composite {
 	
@@ -84,6 +92,24 @@ public class CodewindConnectionComposite extends Composite {
         
         createLabel(Messages.CodewindConnectionComposite_PasswordLabel, this, 1);
         connPassText = createConnText(this, SWT.PASSWORD, 1);
+		
+		Link learnMoreLink = new Link(this, SWT.NONE);
+		learnMoreLink.setText("<a>" + Messages.RegMgmtLearnMoreLink + "</a>"); //$NON-NLS-1$ //$NON-NLS-2$
+		learnMoreLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.END, false, false, 1, 1));
+		
+		learnMoreLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
+					IWebBrowser browser = browserSupport.getExternalBrowser();
+					URL url = new URL(UIConstants.REMOTE_SETUP_URL);
+					browser.openURL(url);
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to open an external browser at: " + UIConstants.TEMPLATES_INFO_URL, e); //$NON-NLS-1$
+				}
+			}
+		});
 
         initialize();
         connNameText.setFocus();

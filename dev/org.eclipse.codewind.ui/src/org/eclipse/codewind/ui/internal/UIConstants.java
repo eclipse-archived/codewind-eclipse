@@ -20,5 +20,6 @@ public class UIConstants {
 		DOC_BASE_URL = "https://www.eclipse.org/codewind",
 		CWSETTINGS_INFO_URL = DOC_BASE_URL + "/mdteclipsemanagingprojects.html",
 		TEMPLATES_INFO_URL = DOC_BASE_URL + "/mdteclipseworkingwithtemplates.html",
-		REGISTRY_INFO_URL = DOC_BASE_URL + "/dockerregistry.html";
+		REGISTRY_INFO_URL = DOC_BASE_URL + "/image-registry-credentials.html",
+		REMOTE_SETUP_URL =  DOC_BASE_URL +"/remoteconfiguring.html";
 }

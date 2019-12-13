@@ -17,6 +17,7 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
@@ -89,17 +90,21 @@ public class CodewindSocket {
 		}
 		socketUri = uri;
 
+		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		if (connection.getAuthToken(false) != null) {
-			OkHttpClient okHttpClient = new OkHttpClient.Builder().hostnameVerifier(HttpUtil.hostnameVerifier).sslSocketFactory(HttpUtil.sslContext.getSocketFactory(), HttpUtil.trustManager).build();
-			IO.setDefaultOkHttpCallFactory(okHttpClient);
-			IO.setDefaultOkHttpWebSocketFactory(okHttpClient);
-			IO.Options opts = new IO.Options();
-			opts.callFactory = okHttpClient;
-			opts.webSocketFactory = okHttpClient;
-			socket = IO.socket(socketUri, opts);
-		} else {
-			socket = IO.socket(socketUri);
+			builder
+				.hostnameVerifier(HttpUtil.hostnameVerifier)
+				.sslSocketFactory(HttpUtil.sslContext.getSocketFactory(), HttpUtil.trustManager);
 		}
+		OkHttpClient okHttpClient = builder
+				.readTimeout(0L, TimeUnit.MILLISECONDS)
+				.build();
+		IO.setDefaultOkHttpCallFactory(okHttpClient);
+		IO.setDefaultOkHttpWebSocketFactory(okHttpClient);
+		IO.Options opts = new IO.Options();
+		opts.callFactory = okHttpClient;
+		opts.webSocketFactory = okHttpClient;
+		socket = IO.socket(socketUri, opts);
 		
 		socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
 			@Override
@@ -159,8 +164,8 @@ public class CodewindSocket {
 			@Override
 			public void call(Object... arg0) {
 				if (arg0[0] instanceof Exception) {
-//					Exception e = (Exception) arg0[0];
-//					Logger.logError("SocketIO Error @ " + socketUri, e); //$NON-NLS-1$
+					Exception e = (Exception) arg0[0];
+					Logger.logError("SocketIO Error @ " + socketUri, e); //$NON-NLS-1$
 				}
 			}
 		})

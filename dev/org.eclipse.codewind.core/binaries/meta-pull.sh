@@ -19,7 +19,7 @@ for file in "pull.sh" "appsody-pull.sh" "cli-pull.sh"; do
     curl -fsSL "https://raw.githubusercontent.com/eclipse/codewind-vscode/$branch/dev/bin/$file" -o "$file"
     chmod ugo+x $file
 done
-curl -fsSL "https://raw.githubusercontent.com/eclipse/codewind-vscode/$branch/dev/bin/README.txt" -o "README-pull.txt"
+curl -fsSL "https://raw.githubusercontent.com/eclipse/codewind-vscode/$branch/dev/bin/README.md" -o "README-pull.md"
 
 echo "Scripts downloaded.  Run ./pull.sh to download the binary dependencies"
 echo

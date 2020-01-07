@@ -16,11 +16,13 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -104,10 +106,11 @@ public class UnbindProjectAction extends SelectionProviderAction {
 			Job job = new Job(jobTitle) {
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
+					SubMonitor mon = SubMonitor.convert(monitor, 40 * apps.size());
 					for (CodewindEclipseApplication app : apps) {
 						try {
 							app.setDeleteContents(deleteContent);
-							app.connection.requestProjectUnbind(app.projectID);
+							ProjectUtil.removeProject(app.name, app.projectID, mon.split(40));
 						} catch (Exception e) {
 							Logger.logError("Error requesting application remove: " + app.name, e); //$NON-NLS-1$
 							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.UnbindActionError, app.name), e);

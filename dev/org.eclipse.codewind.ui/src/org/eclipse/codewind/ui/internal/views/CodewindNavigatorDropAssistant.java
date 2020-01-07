@@ -107,8 +107,7 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 					mon.setWorkRemaining(80);
 					
 					// Remove the application from the current connection
-					mon.split(10);
-					sourceApp.connection.requestProjectUnbind(sourceApp.projectID);
+					ProjectUtil.removeProject(sourceApp.name, sourceApp.projectID, mon.split(10));
 					if (monitor.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}

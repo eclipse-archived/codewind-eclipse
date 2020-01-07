@@ -25,10 +25,10 @@ import org.json.JSONObject;
 public class ConnectionUtil {
 
 	private static final String CONNECTIONS_CMD = "connections";
-	private static final String LIST_OPTION = "list";
-	private static final String ADD_OPTION = "add";
-	private static final String REMOVE_OPTION = "remove";
-	private static final String UPDATE_OPTION = "update";
+	private static final String[] LIST_CMD = new String[] {CONNECTIONS_CMD, "list"};
+	private static final String[] ADD_CMD = new String[] {CONNECTIONS_CMD, "add"};
+	private static final String[] REMOVE_CMD = new String[] {CONNECTIONS_CMD, "remove"};
+	private static final String[] UPDATE_CMD = new String[] {CONNECTIONS_CMD, "update"};
 	
 	private static final String LABEL_OPTION = "--label";
 	private static final String URL_OPTION = "--url";
@@ -37,30 +37,30 @@ public class ConnectionUtil {
 	private static final String ID_KEY = "id";
 	
 	public static List<ConnectionInfo> listConnections(IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, LIST_OPTION}, null, null, true, monitor);
+		ProcessResult result = runConnectionCmd(LIST_CMD, null, null, true, monitor);
 		JSONObject resultJson = new JSONObject(result.getOutput());
 		return ConnectionInfo.getInfos(resultJson);
 	}
 	
 	public static String addConnection(String name, String url, String username, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		ProcessResult result = runConnectionCmd(new String[] {CONNECTIONS_CMD, ADD_OPTION}, new String[] {LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, true, monitor);
+		ProcessResult result = runConnectionCmd(ADD_CMD, new String[] {LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, true, monitor);
 		JSONObject resultJson = new JSONObject(result.getOutput());
 		return resultJson.getString(ID_KEY);
 	}
 	
 	public static void removeConnection(String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runConnectionCmd(new String[] {CONNECTIONS_CMD, REMOVE_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid}, null, false, monitor);
+		runConnectionCmd(REMOVE_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid}, null, false, monitor);
 	}
 	
 	public static void updateConnection(String conid, String name, String url, String username, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runConnectionCmd(new String[] {CONNECTIONS_CMD, UPDATE_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid, LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, false, monitor);
+		runConnectionCmd(UPDATE_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid, LABEL_OPTION, name, URL_OPTION, url, USERNAME_OPTION, username}, null, false, monitor);
 	}
 	
 	private static ProcessResult runConnectionCmd(String[] command, String[] options, String[] args, boolean checkOutput, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION, CLIUtil.JSON_OPTION}, command, options, args);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, command, options, args);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			CLIUtil.checkResult(command, result, checkOutput);
 			return result;

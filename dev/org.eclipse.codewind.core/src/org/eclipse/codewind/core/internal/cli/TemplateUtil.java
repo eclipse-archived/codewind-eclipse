@@ -32,10 +32,12 @@ public class TemplateUtil {
 	private static final String TEMPLATES_CMD = "templates";
 	private static final String LIST_OPTION = "list";
 	private static final String REPOS_OPTION = "repos";
-	private static final String ADD_OPTION = "add";
-	private static final String REMOVE_OPTION = "remove";
-	private static final String ENABLE_OPTION = "enable";
-	private static final String DISABLE_OPTION = "disable";
+	private static final String[] LIST_CMD = new String[] {TEMPLATES_CMD, LIST_OPTION};
+	private static final String[] REPO_LIST_CMD = new String[] {TEMPLATES_CMD, REPOS_OPTION, LIST_OPTION};
+	private static final String[] REPO_ADD_CMD = new String[] {TEMPLATES_CMD, REPOS_OPTION, "add"};
+	private static final String[] REPO_REMOVE_CMD = new String[] {TEMPLATES_CMD, REPOS_OPTION, "remove"};
+	private static final String[] REPO_ENABLE_CMD = new String[] {TEMPLATES_CMD, REPOS_OPTION, "enable"};
+	private static final String[] REPO_DISABLE_CMD = new String[] {TEMPLATES_CMD, REPOS_OPTION, "disable"};
 	
 	private static final String ENABLED_ONLY_OPTION = "--showEnabledOnly";
 	private static final String URL_OPTION = "--url";
@@ -47,7 +49,7 @@ public class TemplateUtil {
 		Process process = null;
 		String[] options = enabledOnly ? new String[] {ENABLED_ONLY_OPTION, CLIUtil.CON_ID_OPTION, conid} : new String[] {CLIUtil.CON_ID_OPTION, conid};
 		try {
-			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {TEMPLATES_CMD, LIST_OPTION}, options);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, LIST_CMD, options);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("List templates failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -75,7 +77,7 @@ public class TemplateUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {TEMPLATES_CMD, REPOS_OPTION, LIST_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid});
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, REPO_LIST_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("List templates sources failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -100,23 +102,23 @@ public class TemplateUtil {
 	}
 	
 	public static void addTemplateSource(String url, String name, String description, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, ADD_OPTION}, new String[] {URL_OPTION, url, NAME_OPTION, name, DESCRIPTION_OPTION, description, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
+		runTemplateSourceCmd(REPO_ADD_CMD, new String[] {URL_OPTION, url, NAME_OPTION, name, DESCRIPTION_OPTION, description, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
 	}
 	
 	public static void removeTemplateSource(String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, REMOVE_OPTION}, new String[] {URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
+		runTemplateSourceCmd(REPO_REMOVE_CMD, new String[] {URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
 	}
 	
 	public static void enableTemplateSource(boolean enable, String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		String enableOption = enable ? ENABLE_OPTION : DISABLE_OPTION;
-		runTemplateSourceCmd(new String[] {TEMPLATES_CMD, REPOS_OPTION, enableOption}, new String[] {CLIUtil.CON_ID_OPTION, conid}, new String[] {url}, monitor);
+		String[] cmd = enable ? REPO_ENABLE_CMD : REPO_DISABLE_CMD;
+		runTemplateSourceCmd(cmd, new String[] {CLIUtil.CON_ID_OPTION, conid}, new String[] {url}, monitor);
 	}
 	
 	private static void runTemplateSourceCmd(String[] command, String[] options, String[] args, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, command, options, args);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, command, options, args);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("The " + Arrays.toString(command) + " command with options " + Arrays.toString(options) + " failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$

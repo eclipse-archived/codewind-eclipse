@@ -21,7 +21,9 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -164,6 +166,19 @@ public class CodewindApplicationFactory {
 					JSONObject detailObj = appJso.getJSONObject(CoreConstants.KEY_DETAILED_APP_STATUS);
 					if (detailObj != null && detailObj.has(CoreConstants.KEY_MESSAGE)) {
 						detail = detailObj.getString(CoreConstants.KEY_MESSAGE);
+						if (detailObj.has(CoreConstants.KEY_NOTIFY) && detailObj.getBoolean(CoreConstants.KEY_NOTIFY)) {
+							// Need to notify the user of the problem
+							CoreUtil.DialogType type = CoreUtil.DialogType.ERROR;
+							if (detailObj.has(CoreConstants.KEY_SEVERITY)) {
+								String severity = detailObj.getString(CoreConstants.KEY_SEVERITY);
+								if (CoreConstants.VALUE_WARN.equals(severity)) {
+									type = CoreUtil.DialogType.WARN;
+								} else if (CoreConstants.VALUE_INFO.equals(severity)) {
+									type = CoreUtil.DialogType.INFO;
+								}
+							}
+							CoreUtil.openDialog(type, NLS.bind(Messages.ProjectErrorTitle, app.name), detail);
+						}
 					}
 				}
 				app.setAppStatus(appStatus, detail);

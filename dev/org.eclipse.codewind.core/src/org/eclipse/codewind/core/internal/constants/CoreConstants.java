@@ -79,6 +79,7 @@ public class CoreConstants {
 			KEY_APP_STATUS = "appStatus",
 			KEY_DETAILED_APP_STATUS = "detailedAppStatus",
 			KEY_MESSAGE = "message",
+			KEY_NOTIFY = "notify",
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
 			KEY_LAST_BUILD = "lastbuild",
@@ -91,6 +92,10 @@ public class CoreConstants {
 			KEY_AUTO_BUILD = "autoBuild",
 			KEY_APP_BASE_URL = "appBaseURL",
 			KEY_INJECT_METRICS = "enable",
+			
+			VALUE_INFO = "INFO",
+			VALUE_WARN = "WARN",
+			VALUE_ERROR = "ERROR",
 
 			KEY_LANGUAGE = "language",
 			KEY_FRAMEWORK = "framework",

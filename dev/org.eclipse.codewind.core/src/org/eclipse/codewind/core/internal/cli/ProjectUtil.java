@@ -30,8 +30,8 @@ public class ProjectUtil {
 	
 
 	private static final String PROJECT_CMD = "project";
-	private static final String CREATE_OPTION = "create";
-	private static final String BIND_OPTION = "bind";
+	private static final String[] CREATE_CMD = new String[] {PROJECT_CMD, "create"};
+	private static final String[] BIND_CMD = new String[] {PROJECT_CMD, "bind"};
 	
 	private static final String URL_OPTION = "--url";
 	private static final String NAME_OPTION = "--name";
@@ -43,7 +43,7 @@ public class ProjectUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {PROJECT_CMD, CREATE_OPTION}, new String[] {URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid}, new String[] {path});
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, CREATE_CMD, new String[] {URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid}, new String[] {path});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -72,7 +72,7 @@ public class ProjectUtil {
 		Process process = null;
 		try {
 			String[] options = new String[] {NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid};
-			process = CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {PROJECT_CMD, BIND_OPTION}, options);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, BIND_CMD, options);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project bind failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -90,8 +90,8 @@ public class ProjectUtil {
 		Process process = null;
 		try {
 			process = (hint == null) ? 
-					CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {PROJECT_CMD, CREATE_OPTION}, new String[] {CLIUtil.CON_ID_OPTION, conid}, new String[] {path}) :
-					CLIUtil.runCWCTL(new String[] {CLIUtil.INSECURE_OPTION}, new String[] {PROJECT_CMD, CREATE_OPTION}, new String[] {TYPE_OPTION, hint, CLIUtil.CON_ID_OPTION, conid}, new String[] {path});
+					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, CREATE_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid}, new String[] {path}) :
+					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, CREATE_CMD, new String[] {TYPE_OPTION, hint, CLIUtil.CON_ID_OPTION, conid}, new String[] {path});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

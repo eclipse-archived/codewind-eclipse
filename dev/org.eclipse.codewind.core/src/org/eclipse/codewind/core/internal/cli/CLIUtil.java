@@ -44,6 +44,9 @@ public class CLIUtil {
 	// Global options
 	public static final String JSON_OPTION = "--json";
 	public static final String INSECURE_OPTION = "--insecure";
+	public static final String[] GLOBAL_JSON = new String[] {JSON_OPTION};
+	public static final String[] GLOBAL_INSECURE = new String[] {INSECURE_OPTION};
+	public static final String[] GLOBAL_JSON_INSECURE = new String[] {JSON_OPTION, INSECURE_OPTION};
 	
 	// Common options
 	public static final String CON_ID_OPTION = "--conid";
@@ -78,10 +81,6 @@ public class CLIUtil {
 	private static final CLIInfo appsodyInfo = new CLIInfo("Appsody", appsodyMap);
 	
 	private static final CLIInfo[] cliInfos = {codewindInfo, appsodyInfo};
-	
-	public static Process runCWCTL(String cmd, String... options) throws IOException {		
-		return runCWCTL(null, new String[] {cmd}, options, null);
-	}
 	
 	public static Process runCWCTL(String[] globalOptions, String[] cmd, String[] options) throws IOException {
 		return runCWCTL(globalOptions, cmd, options, null);

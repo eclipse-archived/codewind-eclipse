@@ -31,12 +31,32 @@ public class CoreUtil {
 	
 	// Provide a way for users to override the path used for running commands
 	private static final String ENV_PATH_PROPERTY = "org.eclipse.codewind.envPath";
+	
+	public enum DialogType {
+		ERROR(MessageDialog.ERROR),
+		WARN(MessageDialog.WARNING),
+		INFO(MessageDialog.INFORMATION);
+		
+		private int value;
+
+		private DialogType(int value) {
+			this.value = value;
+		}
+		
+		public int getValue() {
+			return value;
+		}
+	};
 
 	/**
 	 * Open a dialog on top of the current active window. Can be called off the UI thread.
 	 */
 	public static void openDialog(boolean isError, String title, String msg) {
-		final int kind = isError ? MessageDialog.ERROR : MessageDialog.INFORMATION;
+		openDialog(isError ? DialogType.ERROR : DialogType.INFO, title, msg);
+	}
+	
+	public static void openDialog(DialogType type, String title, String msg) {
+		final int kind = type.getValue();
 
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override

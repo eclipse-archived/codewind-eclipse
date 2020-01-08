@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Codewind Filewatcher Core Plug-in
 Bundle-SymbolicName: org.eclipse.codewind.filewatchers.core;singleton:=true
-Bundle-Version: 1.2.0.qualifier
+Bundle-Version: 1.2.1.qualifier
 Bundle-Vendor: Eclipse.org
 Bundle-ClassPath: .,
  lib/jetty-client-9.4.23.v20191118.jar,

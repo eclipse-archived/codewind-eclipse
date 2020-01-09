@@ -182,7 +182,7 @@ public class CLIUtil {
 	private static String getCLIInstallDir() {
 		IPath userHome = CoreUtil.getUserHome();
 		if (userHome != null) {
-			return userHome.append(CODEWIND_STORE_DIR).append(CodewindCorePlugin.FEATURE_VERSION).toOSString();
+			return userHome.append(CODEWIND_STORE_DIR).append(InstallUtil.DEFAULT_INSTALL_VERSION).toOSString();
 		}
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();

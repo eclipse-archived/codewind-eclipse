@@ -69,7 +69,7 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
         }
         
         app.confirmMetricsAvailable();
-        if (!app.getMetricsAvailable()) {
+        if (!app.hasPerfDashboard()) {
         	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.PerfDashboardNotSupported);
         	return;
         }
@@ -105,6 +105,6 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
     }
     
     public boolean showAction() {
-    	return app != null && app.getMetricsAvailable() && app.projectLanguage.getMetricsRoot() != null;
+    	return app != null && app.hasPerfDashboard() && app.projectLanguage.getMetricsRoot() != null;
     }
 }

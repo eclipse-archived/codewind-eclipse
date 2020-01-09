@@ -799,7 +799,7 @@ public class CodewindConnection {
 		
 		URI uri = baseUri.resolve(endpoint);
 		JSONObject buildPayload = new JSONObject();
-		buildPayload.put(CoreConstants.KEY_INJECT_METRICS, enable);
+		buildPayload.put(CoreConstants.KEY_INJECT_METRICS_ENABLE, enable);
 		
 		HttpResult result = HttpUtil.post(uri, getAuthToken(false), buildPayload);
 		if (hasAuthFailure(result)) {

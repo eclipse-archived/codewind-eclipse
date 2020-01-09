@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.core.internal.constants;
 
+import java.util.EnumSet;
+
 public enum ProjectLanguage {
 	LANGUAGE_JAVA("java", "Java"),
 	LANGUAGE_NODEJS("nodejs", "Node.js"),
@@ -19,6 +21,8 @@ public enum ProjectLanguage {
 	LANGUAGE_GO("go", "Go"),
 	LANGUAGE_BASH("bash", "Bash"),
 	LANGUAGE_UNKNOWN("unknown", "Unknown");
+	
+	public static final EnumSet<ProjectLanguage> ALWAYS_HAS_APP_MONITOR = EnumSet.of(LANGUAGE_JAVA, LANGUAGE_NODEJS);
 	
 	private final String id;
 	private final String displayName;
@@ -56,6 +60,13 @@ public enum ProjectLanguage {
 			default:
 				return null;
 		}
+	}
+	
+	public static boolean alwaysHasAppMonitor(ProjectLanguage lang) {
+		if (lang == null) {
+			return false;
+		}
+		return ALWAYS_HAS_APP_MONITOR.contains(lang);
 	}
 	
 	public static String getDisplayName(String languageId) {

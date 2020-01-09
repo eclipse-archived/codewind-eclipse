@@ -12,6 +12,7 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -20,48 +21,45 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action for enabling/disabling inject metrics on a Codewind project.
  */
-public class EnableDisableInjectMetricsAction implements IObjectActionDelegate {
+public class EnableDisableInjectMetricsAction extends SelectionProviderAction {
 
     protected CodewindEclipseApplication app;
+    
+    public EnableDisableInjectMetricsAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.EnableInjectMetricsLabel);
+		selectionChanged(getStructuredSelection());
+	}
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable() && app.canInjectMetrics()) {
 	            	if (app.isInjectMetrics()) {
-	                	action.setText(Messages.DisableInjectMetricsLabel);
+	                	setText(Messages.DisableInjectMetricsLabel);
 	                } else {
-	                	action.setText(Messages.EnableInjectMetricsLabel);
+	                	setText(Messages.EnableInjectMetricsLabel);
 	                }
-		            action.setEnabled(true);
+		            setEnabled(true);
 	            	return;
             	}
             }
         }
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError(Messages.ErrorOnEnableDisableInjectMetrics + " ran but no application was selected"); //$NON-NLS-1$
@@ -78,6 +76,7 @@ public class EnableDisableInjectMetricsAction implements IObjectActionDelegate {
 				try {
 					app.connection.requestInjectMetrics(app.projectID, enable);
 					app.setInjectMetrics(enable);
+					CodewindApplicationFactory.updateMetricsAvailable(app);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occurred changing inject metric setting for: " + app.name + ", with id: " + app.projectID, e); //$NON-NLS-1$ //$NON-NLS-2$
@@ -87,9 +86,10 @@ public class EnableDisableInjectMetricsAction implements IObjectActionDelegate {
 		};
 		job.schedule();
 	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
+	
+	public boolean showAction() {
+		// Don't show the action if the app does support inject metrics
+    	return (app != null && app.canInjectMetrics());
 	}
+
 }

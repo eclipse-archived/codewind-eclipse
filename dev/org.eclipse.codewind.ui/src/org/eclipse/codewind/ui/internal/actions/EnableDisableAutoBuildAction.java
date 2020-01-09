@@ -21,49 +21,46 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action for enabling/disabling auto build on a Codewind project.
  */
-public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
+public class EnableDisableAutoBuildAction extends SelectionProviderAction {
 
     protected CodewindEclipseApplication app;
+    
+	public EnableDisableAutoBuildAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.DisableAutoBuildLabel);
+		selectionChanged(getStructuredSelection());
+	}
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable()) {
 	            	if (app.isAutoBuild()) {
-	                	action.setText(Messages.DisableAutoBuildLabel);
+	                	setText(Messages.DisableAutoBuildLabel);
 	                } else {
-	                	action.setText(Messages.EnableAutoBuildLabel);
+	                	setText(Messages.EnableAutoBuildLabel);
 	                }
-		            action.setEnabled(true);
+		            setEnabled(true);
 	            	return;
             	}
             }
         }
         
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("EnableDisableAutoBuildAction ran but no application was selected"); //$NON-NLS-1$
@@ -89,10 +86,5 @@ public class EnableDisableAutoBuildAction implements IObjectActionDelegate {
 			}
 		};
 		job.schedule();
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
 	}
 }

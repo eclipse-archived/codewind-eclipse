@@ -493,8 +493,6 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 			if (pattern.matches(template) || (type != null && pattern.matches(type)) || (language != null && pattern.matches(language)) ||
 					(description != null && pattern.matches(description)) || (source != null && pattern.matches(source))) {
 				TableItem item = new TableItem(table, SWT.NONE);
-				item.setForeground(table.getForeground());
-				item.setBackground(table.getBackground());
 				item.setText(0, template);
 				if (type != null) {
 					item.setText(1, type);
@@ -545,14 +543,9 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		for (int i = 0; i < rows; i++) {
 			int n = map[i];
 			TableItem item = new TableItem(table, SWT.NONE);
-			for (int j = 0; j < table.getColumnCount(); j++)
+			for (int j = 0; j < table.getColumnCount(); j++) {
 				item.setText(j, items[n].getText(j));
-
-			item.setImage(items[n].getImage());
-			item.setForeground(items[n].getForeground());
-			item.setBackground(items[n].getBackground());
-			item.setGrayed(items[n].getGrayed());
-			item.setChecked(items[n].getChecked());
+			}
 			item.setData(items[n].getData());
 			items[n].dispose();
 		}

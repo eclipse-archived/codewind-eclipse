@@ -279,13 +279,16 @@ public class CodewindApplicationFactory {
 			app.setContextRoot(contextRoot);
 			
 			// Set the start mode
-			StartMode startMode = StartMode.get(appJso);
-			app.setStartMode(startMode);
+			app.setStartMode(StartMode.get(appJso));
 			
 			// Set auto build
 			if (appJso.has(CoreConstants.KEY_AUTO_BUILD)) {
-				boolean autoBuild = appJso.getBoolean(CoreConstants.KEY_AUTO_BUILD);
-				app.setAutoBuild(autoBuild);
+				app.setAutoBuild(appJso.getBoolean(CoreConstants.KEY_AUTO_BUILD));
+			}
+			
+			// Set inject metrics
+			if (appJso.has(CoreConstants.KEY_INJECT_METRICS)) {
+				app.setInjectMetrics(appJso.getBoolean(CoreConstants.KEY_INJECT_METRICS));
 			}
 		} catch(JSONException e) {
 			Logger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
@@ -300,6 +303,10 @@ public class CodewindApplicationFactory {
 		}
 		
 		// Check for metrics support
+		updateMetricsAvailable(app);
+	}
+	
+	public static void updateMetricsAvailable(CodewindApplication app) {
 		boolean metricsAvailable = true;
 		try {
 			JSONObject obj = app.connection.requestProjectMetricsStatus(app);
@@ -310,6 +317,5 @@ public class CodewindApplicationFactory {
 			Logger.logError("An error occurred checking if metrics are available: " + app.name, e);
 		}
 		app.setMetricsAvailable(metricsAvailable);
-		
 	}
 }

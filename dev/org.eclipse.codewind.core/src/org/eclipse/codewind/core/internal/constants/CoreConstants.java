@@ -53,10 +53,7 @@ public class CoreConstants {
 			KEY_CONTEXT_ROOT = "contextRoot",
 			KEY_CONTAINER_ID = "containerId",
 			KEY_IS_HTTPS = "isHttps",
-			KEY_WORKSPACE = "workspace",
-			KEY_DIRECTORY = "directory",
-			KEY_MSG = "msg",
-			KEY_FILE_LIST = "fileList",
+			KEY_INJECT_METRICS = "injectMetrics",
 
 			KEY_BUILD_LOG = "build-log",
 			KEY_BUILD_LOG_LAST_MODIFIED = "build-log-last-modified",
@@ -91,7 +88,7 @@ public class CoreConstants {
 			KEY_INTERNAL_DEBUG_PORT = "internalDebugPort",
 			KEY_AUTO_BUILD = "autoBuild",
 			KEY_APP_BASE_URL = "appBaseURL",
-			KEY_INJECT_METRICS = "enable",
+			KEY_INJECT_METRICS_ENABLE = "enable",
 			
 			VALUE_INFO = "INFO",
 			VALUE_WARN = "WARN",

@@ -35,6 +35,8 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private OpenPerfMonitorAction openPerfMonitorAction;
 	private OpenTektonDashboardAction openTektonDashboardAction;
 	private ContainerShellAction containerShellAction;
+	private EnableDisableAutoBuildAction enableDisableAutoBuildAction;
+	private EnableDisableInjectMetricsAction enableDisableInjectMetricsAction;
 	private EnableDisableProjectAction enableDisableProjectAction;
 	private UnbindProjectAction unbindProjectAction;
 	private OpenAppDoubleClickAction openAppDoubleClickAction;
@@ -51,6 +53,8 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
         openTektonDashboardAction = new OpenTektonDashboardAction(selProvider);
         containerShellAction = new ContainerShellAction(selProvider);
+        enableDisableAutoBuildAction = new EnableDisableAutoBuildAction(selProvider);
+        enableDisableInjectMetricsAction = new EnableDisableInjectMetricsAction(selProvider);
         enableDisableProjectAction = new EnableDisableProjectAction(selProvider);
         unbindProjectAction = new UnbindProjectAction(selProvider);
         openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
@@ -82,6 +86,10 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	}
     	if (containerShellAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, containerShellAction);
+    	}
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, enableDisableAutoBuildAction);
+    	if (enableDisableInjectMetricsAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, enableDisableInjectMetricsAction);
     	}
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, enableDisableProjectAction);
     	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, unbindProjectAction);

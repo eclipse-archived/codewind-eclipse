@@ -64,7 +64,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
@@ -147,11 +146,6 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		layout.verticalSpacing = 7;
 		templateGroup.setLayout(layout);
 		templateGroup.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
-		
-		Text templateText = new Text(templateGroup, SWT.READ_ONLY);
-		templateText.setText(Messages.NewProjectPage_TemplateGroupDesc);
-		templateText.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-		IDEUtil.normalizeBackground(templateText, templateGroup);
 		
 		// Filter text
 		filterText = new Text(templateGroup, SWT.BORDER);
@@ -245,17 +239,13 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		
 		// Manage repositories link
 		Composite manageReposComp = new Composite(parent, SWT.NONE);
-		manageReposComp.setLayout(new GridLayout(2, false));
+		manageReposComp.setLayout(new GridLayout(1, false));
 		manageReposComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
 		
-		Label manageRepoLabel = new Label(manageReposComp, SWT.NONE);
-		manageRepoLabel.setText(Messages.NewProjectPage_ManageRepoLabel);
-		manageRepoLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
-		
 		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
-		manageRepoLink.setText("<a>" + Messages.NewProjectPage_ManageRepoLink + "</a>");
+		manageRepoLink.setText(Messages.NewProjectPage_ManageRepoLabel + " <a>" + Messages.NewProjectPage_ManageRepoLink + "</a>");
 		manageRepoLink.setToolTipText(Messages.NewProjectPage_ManageRepoTooltip);
-		manageRepoLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
 
 		manageRepoLink.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -307,15 +297,11 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		if (!connection.isLocal()) {
 			// Manage registries link
 			Composite manageRegistriesComp = new Composite(parent, SWT.NONE);
-			manageRegistriesComp.setLayout(new GridLayout(2, false));
+			manageRegistriesComp.setLayout(new GridLayout(1, false));
 			manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
-			
-			Label manageRegistriesLabel = new Label(manageRegistriesComp, SWT.NONE);
-			manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
-			manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
-			
+		
 			Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
-			manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
+			manageRegistriesLink.setText(Messages.ManageRegistriesLinkLabel + " <a>" + Messages.ManageRegistriesLinkText + "</a>");
 			if (connection.isLocal()) {
 				manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
 			} else {

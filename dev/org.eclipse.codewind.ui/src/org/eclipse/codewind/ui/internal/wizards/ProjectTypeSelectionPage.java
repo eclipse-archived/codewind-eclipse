@@ -52,7 +52,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 
@@ -134,15 +133,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		
 		// Manage repositories link
 		Composite manageReposComp = new Composite(composite, SWT.NONE);
-		manageReposComp.setLayout(new GridLayout(2, false));
+		manageReposComp.setLayout(new GridLayout(1, false));
 		manageReposComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 1, 1));
 		
-		Label manageRepoLabel = new Label(manageReposComp, SWT.NONE);
-		manageRepoLabel.setText(Messages.SelectProjectTypeManageRepoLabel);
-		manageRepoLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
-		
 		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
-		manageRepoLink.setText("<a>" + Messages.SelectProjectTypeManageRepoLink + "</a>");
+		manageRepoLink.setText(Messages.SelectProjectTypeManageRepoLabel + " <a>" + Messages.SelectProjectTypeManageRepoLink + "</a>");
 		manageRepoLink.setToolTipText(Messages.SelectProjectTypeManageRepoTooltip);
 		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
 

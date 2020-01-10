@@ -39,11 +39,11 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -68,11 +68,12 @@ public class RepositoryManagementComposite extends Composite {
 	private List<RepoEntry> repoEntries;
 	private CheckboxTableViewer repoViewer;
 	private Button removeButton;
-	private StyledText descLabel;
-	private StyledText descText;
-	private StyledText styleLabel;
-	private StyledText styleText;
-	private StyledText linkLabel;
+	private Font boldFont;
+	private Label descLabel;
+	private Text descText;
+	private Label styleLabel;
+	private Text styleText;
+	private Label linkLabel;
 	private Link urlLink;
 	
 	public RepositoryManagementComposite(Composite parent, CodewindConnection connection, List<RepositoryInfo> repoList) {
@@ -179,30 +180,29 @@ public class RepositoryManagementComposite extends Composite {
 		detailsComp.setLayout(detailsLayout);
 		detailsComp.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
-		descLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
+		boldFont = IDEUtil.getBoldFont(getShell(), getFont());
+		
+		descLabel = new Label(detailsComp, SWT.NONE);
+		descLabel.setFont(boldFont);
 		descLabel.setText(Messages.RepoMgmtDescriptionLabel);
-		IDEUtil.setBold(descLabel);
-		IDEUtil.normalizeBackground(descLabel, detailsComp);
-		descText = new StyledText(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+		descText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		descText.setText("");
 		GridData descData = new GridData(GridData.FILL, GridData.FILL, false, false);
 		descText.setLayoutData(descData);
 		IDEUtil.normalizeBackground(descText, detailsComp);
 
-		styleLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
+		styleLabel = new Label(detailsComp, SWT.NONE);
+		styleLabel.setFont(boldFont);
 		styleLabel.setText(Messages.RepoMgmtStylesLabel);
-		IDEUtil.setBold(styleLabel);
-		IDEUtil.normalizeBackground(styleLabel, detailsComp);
-		styleText = new StyledText(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+		styleText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		styleText.setText("");
 		GridData styleData = new GridData(GridData.FILL, GridData.FILL, false, false);
 		styleText.setLayoutData(styleData);
 		IDEUtil.normalizeBackground(styleText, detailsComp);
 		
-		linkLabel = new StyledText(detailsComp, SWT.READ_ONLY | SWT.SINGLE);
+		linkLabel = new Label(detailsComp, SWT.NONE);
+		linkLabel.setFont(boldFont);
 		linkLabel.setText(Messages.RepoMgmtUrlLabel);
-		IDEUtil.setBold(linkLabel);
-		IDEUtil.normalizeBackground(linkLabel, detailsComp);
 		urlLink = new Link(detailsComp, SWT.WRAP);
 		urlLink.setText("");
 		GridData linkData = new GridData(GridData.FILL, GridData.FILL, false, false);
@@ -261,6 +261,14 @@ public class RepositoryManagementComposite extends Composite {
 		}
 		updateDetails();
 		updateButtons();
+	}
+	
+	@Override
+	public void dispose() {
+		if (boldFont != null) {
+			boldFont.dispose();
+		}
+		super.dispose();
 	}
 
 	private void updateDetails() {

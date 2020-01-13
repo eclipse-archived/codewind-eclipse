@@ -11,19 +11,14 @@
 
 package org.eclipse.codewind.core.internal;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
-import org.json.JSONException;
 
 public class CodewindManager {
 	
@@ -34,6 +29,7 @@ public class CodewindManager {
 	// not the install status should be reported (installerStatus will be null).
 	InstallStatus installStatus = InstallStatus.UNKNOWN;
 	InstallerStatus installerStatus = null;
+	String installerErrorMsg = null;
 	
 	public enum InstallerStatus {
 		INSTALLING,
@@ -43,7 +39,6 @@ public class CodewindManager {
 	};
 	
 	private CodewindManager() {
-		refreshInstallStatus(new NullProgressMonitor());
 	}
 
 	public static synchronized CodewindManager getManager() {
@@ -60,8 +55,13 @@ public class CodewindManager {
 		return installStatus;
 	}
 	
+	public String getInstallerErrorMsg() {
+		return installerErrorMsg;
+	}
+
 	public synchronized void refreshInstallStatus(IProgressMonitor monitor) {
 		String urlStr = null;
+		installerErrorMsg = null;
 		try {
 			SubMonitor mon = SubMonitor.convert(monitor, 100);
 			installStatus = InstallUtil.getInstallStatus(mon.split(60));
@@ -80,14 +80,9 @@ public class CodewindManager {
 				}
 			}
 			return;
-		} catch (IOException e) {
-			Logger.logError("An error occurred trying to get the installer status", e); //$NON-NLS-1$
-		} catch (TimeoutException e) {
-			Logger.logError("Timed out trying to get the installer status", e); //$NON-NLS-1$
-		} catch (JSONException e) {
-			Logger.logError("The Codewind installer status format is not recognized", e); //$NON-NLS-1$
-		} catch (URISyntaxException e) {
-			Logger.logError("The Codewind installer status command returned an invalid url: " + urlStr, e);
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to get the Codewind install status.", e); //$NON-NLS-1$
+			installerErrorMsg = e.getLocalizedMessage();
 		}
 		installStatus = InstallStatus.UNKNOWN;
 	}

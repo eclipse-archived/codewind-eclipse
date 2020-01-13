@@ -62,18 +62,19 @@ public class InstallUtil {
 	private static String requestedVersion = null;
 	
 	public static InstallStatus getInstallStatus(IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		ProcessResult result = statusCodewind(monitor);
-		if (result.getExitValue() != 0) {
-			String error = result.getError();
-			if (error == null || error.isEmpty()) {
-				error = result.getOutput();
+		SubMonitor mon = SubMonitor.convert(monitor, Messages.CodewindStatusJobLabel, 100);
+		Process process = null;
+		try {
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON, STATUS_CMD, null);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 120, mon);
+			CLIUtil.checkResult(STATUS_CMD, result, true);
+			JSONObject status = new JSONObject(result.getOutput());
+			return new InstallStatus(status);
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
 			}
-			String msg = "Installer status command failed with rc: " + result.getExitValue() + " and error: " + error;  //$NON-NLS-1$ //$NON-NLS-2$
-			Logger.logError(msg);
-			throw new IOException(msg);
 		}
-		JSONObject status = new JSONObject(result.getOutput());
-		return new InstallStatus(status);
 	}
 	
 	public static ProcessResult startCodewind(String version, IProgressMonitor monitor) throws IOException, TimeoutException {
@@ -173,20 +174,6 @@ public class InstallUtil {
 		try {
 			process = CLIUtil.runCWCTL(null, UPGRADE_CMD, new String[] {WORKSPACE_OPTION, path});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
-			return result;
-		} finally {
-			if (process != null && process.isAlive()) {
-				process.destroy();
-			}
-		}
-	}
-
-	private static ProcessResult statusCodewind(IProgressMonitor monitor) throws IOException, TimeoutException {
-		SubMonitor mon = SubMonitor.convert(monitor, Messages.CodewindStatusJobLabel, 100);
-		Process process = null;
-		try {
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON, STATUS_CMD, null);
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 120, mon);
 			return result;
 		} finally {
 			if (process != null && process.isAlive()) {

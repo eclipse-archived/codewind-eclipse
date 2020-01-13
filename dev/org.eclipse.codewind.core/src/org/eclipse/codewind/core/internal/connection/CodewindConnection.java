@@ -682,17 +682,6 @@ public class CodewindConnection {
 		JSONObject capabilities = new JSONObject(result.response);
 		return capabilities;
 	}
-
-	public void requestProjectUnbind(String projectID) throws IOException, JSONException {
-		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectID + "/" + CoreConstants.APIPATH_PROJECT_UNBIND;
-		URI uri = baseUri.resolve(endpoint);
-		HttpResult result = HttpUtil.post(uri, getAuthToken(false));
-		if (hasAuthFailure(result)) {
-			result = HttpUtil.post(uri, getAuthToken(true));
-		}
-		checkResult(result, uri, false);
-		CoreUtil.updateConnection(this);
-	}
 	
 	public List<ProjectTypeInfo> requestProjectTypes() throws IOException, JSONException {
 		List<ProjectTypeInfo> projectTypes = new ArrayList<ProjectTypeInfo>();
@@ -889,20 +878,6 @@ public class CodewindConnection {
 	public String toString() {
 		return String.format("%s @ name=%s baseUrl=%s conid=%s", //$NON-NLS-1$
 				CodewindConnection.class.getSimpleName(), name, baseUri == null ? "unknown" : baseUri, conid == null ? "<none>" : conid);
-	}
-
-	public void requestProjectDelete(String projectId)
-			throws JSONException, IOException {
-
-		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" + projectId;
-
-		URI uri = baseUri.resolve(endpoint);
-
-		HttpResult result = HttpUtil.delete(uri, getAuthToken(false));
-		if (hasAuthFailure(result)) {
-			result = HttpUtil.delete(uri, getAuthToken(true));
-		}
-		checkResult(result, uri, false);
 	}
 
 	public TektonDashboard getTektonDashboard() {

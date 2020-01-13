@@ -14,6 +14,7 @@ package org.eclipse.codewind.test.util;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
@@ -21,6 +22,7 @@ import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.NullProgressMonitor;
 
 public class CodewindUtil {
 	
@@ -51,7 +53,7 @@ public class CodewindUtil {
 		// Remove projects
 		List<CodewindApplication> apps = connection.getApps();
 		for (CodewindApplication app: apps) {
-			connection.requestProjectUnbind(app.projectID);
+			ProjectUtil.removeProject(app.name, app.projectID, new NullProgressMonitor());
 			try {
 				Thread.sleep(2000);
 			} catch (Exception e) {

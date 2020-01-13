@@ -92,6 +92,7 @@ public class Messages extends NLS {
 	public static String AuthGetTaskLabel;
 	public static String CreateProjectTaskLabel;
 	public static String BindingProjectTaskLabel;
+	public static String RemoveProjectTaskLabel;
 	public static String ValidateProjectTaskLabel;
 	public static String DeleteProjectJobLabel;
 	public static String DeleteProjectError;

@@ -32,12 +32,14 @@ public class ProjectUtil {
 	private static final String PROJECT_CMD = "project";
 	private static final String[] CREATE_CMD = new String[] {PROJECT_CMD, "create"};
 	private static final String[] BIND_CMD = new String[] {PROJECT_CMD, "bind"};
+	private static final String[] REMOVE_CMD = new String[] {PROJECT_CMD, "remove"};
 	
 	private static final String URL_OPTION = "--url";
 	private static final String NAME_OPTION = "--name";
 	private static final String LANGUAGE_OPTION = "--language";
 	private static final String TYPE_OPTION = "--type";
 	private static final String PATH_OPTION = "--path";
+	private static final String PROJECT_ID_OPTION = "--id";
 
 	public static void createProject(String name, String path, String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
@@ -115,6 +117,20 @@ public class ProjectUtil {
 			String msg = "Validation failed for project: " + name + " with output: " + result.getOutput(); //$NON-NLS-1$ //$NON-NLS-2$
 			Logger.logError(msg);
 			throw new IOException(msg);
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
+		}
+	}
+	
+	public static void removeProject(String name, String projectId, IProgressMonitor monitor) throws IOException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.RemoveProjectTaskLabel, name), 100);
+		Process process = null;
+		try {
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, REMOVE_CMD, new String[] {PROJECT_ID_OPTION, projectId});
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
+			CLIUtil.checkResult(REMOVE_CMD, result, false);
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();

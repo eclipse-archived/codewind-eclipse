@@ -180,17 +180,15 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						switch (selectedBehaviour) {
 							case REMOVE:
 								mon.setTaskName(Messages.BindProjectWizardRemoveTask);
-								mon.split(10 * existingDeployments.size());
 								for (CodewindApplication app : existingDeployments) {
 									try {
-										app.connection.requestProjectUnbind(app.projectID);
+										ProjectUtil.removeProject(app.name, app.projectID, mon.split(10));
 									} catch (Exception e) {
 										Logger.logError("An error occurred trying to unbind the " + app.name + " project from connection: " + app.connection.getBaseURI()); //$NON-NLS-1$ //$NON-NLS-2$
 									}
 									if (mon.isCanceled()) {
 										return Status.CANCEL_STATUS;
 									}
-									mon.worked(10);
 								}
 								break;
 							case DISABLE:

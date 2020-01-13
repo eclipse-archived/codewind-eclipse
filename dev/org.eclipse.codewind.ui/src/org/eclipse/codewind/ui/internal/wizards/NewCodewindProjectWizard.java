@@ -68,7 +68,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		if (connection.isLocal()) {
+		if (connection == null || connection.isLocal()) {
 			if (CodewindManager.getManager().getInstallerStatus() != null) {
 				// The installer is currently running
 				CodewindInstall.installerActiveDialog(CodewindManager.getManager().getInstallerStatus());
@@ -139,7 +139,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					SubMonitor mon = SubMonitor.convert(monitor, 140);
 					
 					// Check for a push registry if Codewind style project
-					if (!connection.isLocal() && info.isCodewindStyle() && !connection.requestHasPushRegistry()) {
+					if (!newConnection.isLocal() && info.isCodewindStyle() && !newConnection.requestHasPushRegistry()) {
 						Display.getDefault().syncExec(new Runnable() {
 							@Override
 							public void run() {

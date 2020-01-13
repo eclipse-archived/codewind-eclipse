@@ -32,7 +32,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.internal.browser.BrowserManager;
 import org.eclipse.ui.internal.browser.IBrowserDescriptor;
@@ -68,10 +67,8 @@ public class WebBrowserSelectionDialog extends MessageDialog {
         GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
         composite.setLayoutData(data);
         
-        Text label = new Text(composite, SWT.READ_ONLY | SWT.SINGLE );
+        Label label = new Label(composite, SWT.NONE);
         label.setText(Messages.BrowserSelectionListLabel);
-        label.setBackground(composite.getBackground());
-        label.setForeground(composite.getForeground());
         
         updateWebBrowserCombo(composite);
         

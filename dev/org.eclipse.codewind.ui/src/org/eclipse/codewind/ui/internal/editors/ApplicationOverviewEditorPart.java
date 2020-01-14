@@ -701,6 +701,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
 			text.setText(Messages.AppOverviewEditorNotAvailable);
 			text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			IDEUtil.normalizeBackground(text, composite);
 	        
 			link = toolkit.createHyperlink(composite, "", SWT.WRAP);
 			link.setVisible(false);

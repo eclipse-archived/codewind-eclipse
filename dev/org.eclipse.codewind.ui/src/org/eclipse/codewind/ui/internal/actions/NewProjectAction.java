@@ -37,7 +37,7 @@ public class NewProjectAction extends SelectionProviderAction {
 	
 	public NewProjectAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, Messages.NewProjectAction_Label);
-		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.ADD_PROJECT_ICON));
 		selectionChanged(getStructuredSelection());
 	}
 

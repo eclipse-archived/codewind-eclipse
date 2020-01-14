@@ -34,6 +34,7 @@ public class ConnectDisconnectAction extends SelectionProviderAction {
 	
 	public ConnectDisconnectAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, Messages.DisconnectActionLabel);
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.REMOTE_CONNECT_ICON));
 		selectionChanged(getStructuredSelection());
 	}
 

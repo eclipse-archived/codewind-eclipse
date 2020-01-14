@@ -17,7 +17,6 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
-import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -41,7 +40,6 @@ public class ManageReposAction extends SelectionProviderAction {
 	
 	public ManageReposAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, Messages.RepoMgmtActionLabel);
-		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
 		selectionChanged(getStructuredSelection());
 	}
 

@@ -44,14 +44,20 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 			CODEWIND_ICON = "codewind.png",
 			CODEWIND_BANNER = "codewindBanner.png",
 			ERROR_ICON_PATH = "error.png",
+			ADD_PROJECT_ICON = "elcl16/add_project.png",
+			BIND_PROJECT_ICON = "elcl16/bind_project.png",
 			OPEN_APP_ICON = "elcl16/open_app.png",
 			BUILD_ICON = "elcl16/build_exec.png",
 			IMPORT_ICON = "elcl16/import_wiz.png",
 			LAUNCH_DEBUG_ICON = "elcl16/debug_exc.png",
 			LAUNCH_RUN_ICON = "elcl16/run_exc.png",
 			REFRESH_ICON = "elcl16/refresh.png",
-			NEW_CLOUD_ICON = "elcl16/new_cloud.png",
-			GENERIC_ICON = "obj16/generic.png",
+			NEW_REMOTE_ICON = "elcl16/new_remote.png",
+			REMOTE_CONNECT_ICON = "elcl16/remote_connect.png",
+			LOCAL_ACTIVE_ICON = "obj16/local_active.png",
+			LOCAL_INACTIVE_ICON = "obj16/local_inactive.png",
+			REMOTE_CONNECTED_ICON = "obj16/remote_connected.png",
+			REMOTE_DISCONNECTED_ICON = "obj16/remote_disconnected.png",
 			GO_ICON = "obj16/go.png",
 			JAVA_ICON = "obj16/java.png",
 			MICROPROFILE_ICON = "obj16/microprofile.png",
@@ -59,7 +65,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 			PYTHON_ICON = "obj16/python.png",
 			SPRING_ICON = "obj16/spring.png",
 			SWIFT_ICON = "obj16/swift.png",
-			PROJECTS_ICON = "obj16/projects.png";
+			GENERIC_PROJECT_ICON = "obj16/generic_project.png";
 
 	// The shared instance
 	private static CodewindUIPlugin plugin;
@@ -125,14 +131,20 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 
         registerImage(registry, CODEWIND_ICON, ICON_BASE_URL + CODEWIND_ICON);
         registerImage(registry, CODEWIND_BANNER, ICON_BASE_URL + CODEWIND_BANNER);
+        registerImage(registry, ADD_PROJECT_ICON, ICON_BASE_URL + ADD_PROJECT_ICON);
+        registerImage(registry, BIND_PROJECT_ICON, ICON_BASE_URL + BIND_PROJECT_ICON);
         registerImage(registry, OPEN_APP_ICON, ICON_BASE_URL + OPEN_APP_ICON);
         registerImage(registry, BUILD_ICON, ICON_BASE_URL + BUILD_ICON);
         registerImage(registry, IMPORT_ICON, ICON_BASE_URL + IMPORT_ICON);
         registerImage(registry, LAUNCH_DEBUG_ICON, ICON_BASE_URL + LAUNCH_DEBUG_ICON);
         registerImage(registry, LAUNCH_RUN_ICON, ICON_BASE_URL + LAUNCH_RUN_ICON);
         registerImage(registry, REFRESH_ICON, ICON_BASE_URL + REFRESH_ICON);
-        registerImage(registry, NEW_CLOUD_ICON, ICON_BASE_URL + NEW_CLOUD_ICON);
-        registerImage(registry, GENERIC_ICON, ICON_BASE_URL + GENERIC_ICON);
+        registerImage(registry, NEW_REMOTE_ICON, ICON_BASE_URL + NEW_REMOTE_ICON);
+        registerImage(registry, REMOTE_CONNECT_ICON, ICON_BASE_URL + REMOTE_CONNECT_ICON);
+        registerImage(registry, LOCAL_ACTIVE_ICON, ICON_BASE_URL + LOCAL_ACTIVE_ICON);
+        registerImage(registry, LOCAL_INACTIVE_ICON, ICON_BASE_URL + LOCAL_INACTIVE_ICON);
+        registerImage(registry, REMOTE_CONNECTED_ICON, ICON_BASE_URL + REMOTE_CONNECTED_ICON);
+        registerImage(registry, REMOTE_DISCONNECTED_ICON, ICON_BASE_URL + REMOTE_DISCONNECTED_ICON);
         registerImage(registry, GO_ICON, ICON_BASE_URL + GO_ICON);
         registerImage(registry, JAVA_ICON, ICON_BASE_URL + JAVA_ICON);
         registerImage(registry, MICROPROFILE_ICON, ICON_BASE_URL + MICROPROFILE_ICON);
@@ -140,7 +152,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
         registerImage(registry, PYTHON_ICON, ICON_BASE_URL + PYTHON_ICON);
         registerImage(registry, SPRING_ICON, ICON_BASE_URL + SPRING_ICON);
         registerImage(registry, SWIFT_ICON, ICON_BASE_URL + SWIFT_ICON);
-        registerImage(registry, PROJECTS_ICON, ICON_BASE_URL + PROJECTS_ICON);
+        registerImage(registry, GENERIC_PROJECT_ICON, ICON_BASE_URL + GENERIC_PROJECT_ICON);
 
         return registry;
     }

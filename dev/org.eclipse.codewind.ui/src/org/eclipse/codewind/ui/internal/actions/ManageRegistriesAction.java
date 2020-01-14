@@ -17,7 +17,6 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
-import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -40,7 +39,6 @@ public class ManageRegistriesAction extends SelectionProviderAction {
 	
 	public ManageRegistriesAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, Messages.RegMgmtActionLabel);
-		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
 		selectionChanged(getStructuredSelection());
 	}
 

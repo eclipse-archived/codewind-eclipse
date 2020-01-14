@@ -28,7 +28,7 @@ public class AddConnectionAction extends SelectionProviderAction {
 
 	public AddConnectionAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, "New Connection");
-		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.NEW_CLOUD_ICON));
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.NEW_REMOTE_ICON));
 		selectionChanged(getStructuredSelection());
 	}
 

@@ -233,7 +233,7 @@
 				label="%ACTION_NEW_CLOUD_CONNECTION"
 				menubarPath="group.open"
 				toolbarPath="group.open"
-				icon="%NEW_CLOUD_ICON_PATH"
+				icon="%NEW_REMOTE_ICON_PATH"
 				class="org.eclipse.codewind.ui.internal.actions.AddConnectionToolbarAction">
 			</action>
 		</viewContribution>
@@ -299,7 +299,7 @@
 				label="%BIND_PROJECT_ACTION"
 				class="org.eclipse.codewind.ui.internal.actions.BindProjectAction"
 				menubarPath="org.eclipse.codewind.ui.internal.projectContextMenu/popupActions"
-				icon="%DEFAULT_ICON_PATH"
+				icon="%BIND_PROJECT_ICON_PATH"
 				id="org.eclipse.codewind.ui.internal.wizards.bindProject">
 			</action>
 		</objectContribution>

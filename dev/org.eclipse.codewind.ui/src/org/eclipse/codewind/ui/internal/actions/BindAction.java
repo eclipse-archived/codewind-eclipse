@@ -33,7 +33,7 @@ public class BindAction extends SelectionProviderAction {
 	
 	public BindAction(ISelectionProvider selectionProvider) {
 		super(selectionProvider, Messages.BindActionLabel);
-		setImageDescriptor(CodewindUIPlugin.getDefaultIcon());
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.BIND_PROJECT_ICON));
 		selectionChanged(getStructuredSelection());
 	}
 

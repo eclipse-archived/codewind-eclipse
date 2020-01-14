@@ -15,7 +15,6 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
-import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
@@ -241,8 +240,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	public Image getImage(Object element) {
 		if (element instanceof CodewindManager) {
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
-		} else if (element instanceof CodewindConnection) {
-			return CodewindUIPlugin.getImage(CodewindUIPlugin.PROJECTS_ICON);
+		} else if (element instanceof LocalConnection) {
+			return CodewindUIPlugin.getImage(((LocalConnection)element).isConnected() ? CodewindUIPlugin.LOCAL_ACTIVE_ICON : CodewindUIPlugin.LOCAL_INACTIVE_ICON);
+		} else if (element instanceof RemoteConnection) {
+			return CodewindUIPlugin.getImage(((RemoteConnection)element).isConnected() ? CodewindUIPlugin.REMOTE_CONNECTED_ICON : CodewindUIPlugin.REMOTE_DISCONNECTED_ICON);
 		} else if (element instanceof CodewindApplication) {
 			ProjectType type = ((CodewindApplication)element).projectType;
 			if (type == ProjectType.TYPE_LIBERTY) {
@@ -265,7 +266,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 						case LANGUAGE_PYTHON:
 							return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
 						default:
-							return CodewindUIPlugin.getImage(CodewindUIPlugin.GENERIC_ICON);
+							return CodewindUIPlugin.getImage(CodewindUIPlugin.GENERIC_PROJECT_ICON);
 					}
 			}
 		}

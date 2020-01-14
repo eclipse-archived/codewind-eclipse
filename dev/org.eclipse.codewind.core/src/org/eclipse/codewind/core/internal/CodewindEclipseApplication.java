@@ -227,16 +227,24 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	}
 	
 	@Override
-	public void dispose() {
-		// Clean up the launch
-		clearDebugger();
-		
-		// Clean up the consoles
-		List<IConsole> consoleList = new ArrayList<IConsole>(activeConsoles);
-		if (!consoleList.isEmpty()) {
-			IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
-			consoleManager.removeConsoles(consoleList.toArray(new IConsole[consoleList.size()]));
+	public synchronized void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		if (!enabled) {
+			// Clean up the launch
+			clearDebugger();
+			
+			// Clean up the consoles
+			if (!activeConsoles.isEmpty()) {
+				IConsoleManager consoleManager = ConsolePlugin.getDefault().getConsoleManager();
+				consoleManager.removeConsoles(activeConsoles.toArray(new IConsole[activeConsoles.size()]));
+				activeConsoles.clear();
+			}
 		}
+	}
+
+	@Override
+	public void dispose() {
+		setEnabled(false);
 		
 		// Start project delete if requested
 		if (getDeleteContents()) {

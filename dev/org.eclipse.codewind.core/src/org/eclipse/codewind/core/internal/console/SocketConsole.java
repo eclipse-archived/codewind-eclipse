@@ -69,8 +69,15 @@ public class SocketConsole extends IOConsole {
 
 		socket.deregisterSocketConsole(this);
 
+		if (app.isAvailable()) {
+			try {
+				app.connection.requestDisableLogStream(app, logInfo);
+			} catch (Exception e) {
+				Logger.logError("Error disabling the log stream for: " + app.name, e); //$NON-NLS-1$
+			}
+		}
+		
 		try {
-			app.connection.requestDisableLogStream(app, logInfo);
 			outputStream.close();
 		} catch (Exception e) {
 			Logger.logError("Error closing console output stream for: " + this.getName(), e); //$NON-NLS-1$

@@ -472,7 +472,6 @@ public class CodewindSocket {
 			Logger.logError("No application found for project being closed: " + projectID); //$NON-NLS-1$
 			return;
 		}
-		app.dispose();
 		app.connection.refreshApps(app.projectID);
 		CoreUtil.updateApplication(app);
 	}

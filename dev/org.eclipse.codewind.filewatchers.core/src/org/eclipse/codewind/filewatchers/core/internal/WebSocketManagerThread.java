@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation
+ * Copyright (c) 2019, 2020 IBM Corporation
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -12,17 +12,16 @@
 package org.eclipse.codewind.filewatchers.core.internal;
 
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -35,29 +34,29 @@ import org.eclipse.codewind.filewatchers.core.Filewatcher;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils.ExponentialBackoffUtil;
 import org.eclipse.codewind.filewatchers.core.ProjectToWatch.ProjectToWatchFromWebSocket;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import okhttp3.ConnectionSpec;
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
+import okhttp3.Request;
+import okhttp3.WebSocket;
 
 /**
  * The purpose of this class is to initiate and maintain the WebSocket
  * connection between the filewatcher and the server.
  * 
- * After queueEstablishConnection(...) is called, we will keep trying to connect
- * to the server until it succeeds. If that connection ever goes down for any
- * reason, queueEstablishConnection() still start the reconnection process over
- * again.
+ * Since the OKHttp WebSocket API is non-blocking, we use the WSClientEndpoint
+ * to inform us if a connection succeeded or failed, and act on that information
+ * to re-establish a connection if applicable.
  * 
  * This class also sends a simple "keep alive" packet every X seconds (eg 25).
  */
 public class WebSocketManagerThread extends Thread {
 
-	@SuppressWarnings("unused")
-	private final JettyClientEndpoint endpoint;
+	private final WSClientEndpoint endpoint;
 
 	private final String wsUrl;
 
@@ -69,42 +68,25 @@ public class WebSocketManagerThread extends Thread {
 
 	private final static int SEND_KEEPALIVE_EVERY_X_SECONDS = 25;
 
-	private final static int CONNECTION_WAIT_TIME_IN_SECONDS = 15;
+	private final OkHttpClient okClient;
 
-	/** Synchronize on 'lock' when accessing this */
-	private Session mostRecentSessionFromEndpoint_synch_lock = null;
-
-	private final Object lock = new Object();
-
-	private final WebSocketClient wsClient;
-
+	@SuppressWarnings("unused")
 	private final AuthTokenWrapper authTokenWrapper;
 
-	/**
-	 * Synchronize on this before accessing. This will only ever contain 0 or 1
-	 * items.
-	 */
-	private final List<Long /* nano time of connection request */> establishConnectionRequests_synch = new ArrayList<>();
+	private final ExponentialBackoffUtil exponentialBackoffUtil_synch = new ExponentialBackoffUtil(50, 4000, 2f);
+
+	private final AtomicInteger numberOfConsecutiveFailures = new AtomicInteger(0);
+
+	private final List<WebSocket> activeWebSockets_synch = new ArrayList<>();
 
 	public WebSocketManagerThread(String wsUrl, Filewatcher watcher) {
 		setDaemon(true);
 		setName(WebSocketManagerThread.class.getName());
-		this.endpoint = new JettyClientEndpoint(this, wsUrl);
+		this.endpoint = new WSClientEndpoint(this, wsUrl);
 		this.wsUrl = wsUrl;
 		this.watcher = watcher;
 
 		this.authTokenWrapper = watcher.internal_getAuthTokenWrapper();
-
-		// Trust all TLS/SSL certificates and allow large messages
-
-		SslContextFactory.Client ssl = new SslContextFactory.Client();
-		ssl.setTrustAll(true);
-
-		// Jetty does not like the IBM Java cipher suite names
-		// (https://github.com/eclipse/jetty.project/issues/2921), so we clear the
-		// client's exclude list and rely on the server to use a sane cipher set suite
-		// list.
-		ssl.setExcludeCipherSuites();
 
 		// Ignore invalid certificates until we have project infrastructure to better
 		// support this scenario
@@ -118,7 +100,7 @@ public class WebSocketManagerThread extends Thread {
 			}
 
 			public X509Certificate[] getAcceptedIssuers() {
-				return null;
+				return new X509Certificate[] {};
 			}
 		};
 
@@ -136,26 +118,20 @@ public class WebSocketManagerThread extends Thread {
 		try {
 			ctx = SSLContext.getInstance("TLSv1.2");
 			ctx.init(null, new TrustManager[] { tm }, new java.security.SecureRandom());
-
-			ssl.setHostnameVerifier(hostnameVerifier);
-			ssl.setSslContext(ctx);
-
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		} catch (KeyManagementException e) {
 			throw new RuntimeException(e);
 		}
 
-		wsClient = new WebSocketClient(ssl);
-		wsClient.setMaxTextMessageBufferSize(1024 * 1024);
-		wsClient.setMaxIdleTimeout(24 * 60 * 60 * 1000);
-		wsClient.getPolicy().setMaxTextMessageSize(1024 * 1024);
-		try {
-			wsClient.start();
-		} catch (Exception e) {
-			throw new RuntimeException(e); // Convert to unchecked
-		}
+		Builder b = new OkHttpClient.Builder()
+				.connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS,
+						ConnectionSpec.CLEARTEXT))
+				.sslSocketFactory(ctx.getSocketFactory(), tm).hostnameVerifier(hostnameVerifier);
 
+		OkHttpClient client = b.build();
+
+		okClient = client;
 	}
 
 	@Override
@@ -170,43 +146,26 @@ public class WebSocketManagerThread extends Thread {
 
 				try {
 
+					// Ensure that we are always attempting to establish a connection
+					synchronized (activeWebSockets_synch) {
+						if (activeWebSockets_synch.size() == 0) {
+							establishOrReestablishConnection();
+						}
+					}
+
 					// Send a ping packet to keep the connection alive, every X seconds (eg 25).
 					if (nextPingInNanos == null) {
 						nextPingInNanos = System.nanoTime()
 								+ TimeUnit.NANOSECONDS.convert(SEND_KEEPALIVE_EVERY_X_SECONDS, TimeUnit.SECONDS);
 					}
 
-					// Check if another thread is requesting that we (re)establish the WebSocket
-					boolean establishConnection = false;
-					synchronized (establishConnectionRequests_synch) {
-						if (establishConnectionRequests_synch.size() > 0) {
-							establishConnection = true;
-						} else {
-							establishConnectionRequests_synch.wait(100);
-						}
-					}
-
-					if (establishConnection) {
-						// Attempt to establish WS connection
-						establishOrReestablishConnection();
-						// At this point we will necessarily always have succeeded (or the thread is
-						// dead)
-
-						// Clear the connection requests after a success.
-						synchronized (establishConnectionRequests_synch) {
-							establishConnectionRequests_synch.clear();
-						}
-						nextPingInNanos = null;
-
-					} else if (nextPingInNanos != null && System.nanoTime() > nextPingInNanos) {
+					if (nextPingInNanos != null && System.nanoTime() > nextPingInNanos) {
 						try {
-							Session currSession;
-							synchronized (lock) {
-								currSession = mostRecentSessionFromEndpoint_synch_lock;
+
+							for (WebSocket ws : activeWebSockets_synch) {
+								ws.send("{}");
 							}
-							if (currSession != null) {
-								currSession.getRemote().sendString("{}");
-							}
+
 						} catch (Throwable t) {
 							/* ignore: session is probably closed or dead, so no ping needed. */
 						}
@@ -217,8 +176,8 @@ public class WebSocketManagerThread extends Thread {
 				} catch (Throwable t) {
 					// Prevent this thread from dying unnaturally
 					log.logSevere("Unexpected exception occurred.", t, null);
-					FilewatcherUtils.sleepIgnoreInterrupt(1000);
 				}
+				FilewatcherUtils.sleepIgnoreInterrupt(1000);
 
 			} // end while
 		} finally {
@@ -226,33 +185,53 @@ public class WebSocketManagerThread extends Thread {
 		}
 	}
 
-	/**
-	 * If the websocket connection fails, we should issue a new GET request to
-	 * ensure we have the latest state.
-	 */
-	public void informConnectionFail() {
+	public void informConnectionSuccess(WebSocket webSocket) {
 		if (disposed.get()) {
 			return;
 		}
+
+		log.logInfo("WebSocket successfully connected to:" + wsUrl);
+		numberOfConsecutiveFailures.getAndSet(0);
+
+		synchronized (exponentialBackoffUtil_synch) {
+			exponentialBackoffUtil_synch.successReset();
+		}
+
 		watcher.refreshWatchStatus();
 	}
 
-	public void queueEstablishConnection() {
+	/**
+	 * If the WebSocket connection closes or fails, we should issue a new GET
+	 * request to ensure we have the latest state.
+	 */
+	public void informConnectionClosedOrFailed(WebSocket ws) {
+
+		ws.close(1000, "Ensure WebSocket resource is disposed.");
+
+		synchronized (activeWebSockets_synch) {
+			boolean wsFound = activeWebSockets_synch.remove(ws);
+			if (!wsFound && !disposed.get()) {
+				log.logError("Unable to locate WebSocket in active websockets.");
+			}
+		}
+
 		if (disposed.get()) {
 			return;
 		}
 
-		// Only queue if it's empty
-		synchronized (establishConnectionRequests_synch) {
-			if (establishConnectionRequests_synch.size() == 0) {
-				establishConnectionRequests_synch.add(System.nanoTime());
-				establishConnectionRequests_synch.notify();
-
-				log.logInfo("Establish connection queued for '" + wsUrl + "', and accepted.");
-			} else {
-				log.logInfo("Establish connection queued for '" + wsUrl + "', but ignored.");
-			}
+		numberOfConsecutiveFailures.incrementAndGet();
+		synchronized (exponentialBackoffUtil_synch) {
+			exponentialBackoffUtil_synch.failIncrease();
 		}
+
+		// Each time we fail to connect, ask the filewatcher to issue a new GET request
+		// to refresh the watch state (in lieu of any WebSocket events we may be
+		// missing.)
+		watcher.refreshWatchStatus();
+
+		log.logInfo("WebSocket failed to connect to '" + wsUrl + "', establishOrReestablishConnection to retry.");
+
+		establishOrReestablishConnection();
 	}
 
 	public void dispose() {
@@ -266,122 +245,54 @@ public class WebSocketManagerThread extends Thread {
 
 		FilewatcherUtils.newThread(() -> {
 
-			Session sess = null;
-			synchronized (lock) {
-				sess = mostRecentSessionFromEndpoint_synch_lock;
-			}
-			if (sess != null) {
-				try {
-					sess.close();
-				} catch (Exception e) {
-					/* ignore */
+			synchronized (activeWebSockets_synch) {
+				for (WebSocket curr : activeWebSockets_synch) {
+					try {
+						curr.close(1000, "Disposing of WebSocket.");
+					} catch (Exception e) {
+						/* ignore */
+					}
 				}
+
 			}
 
-			try {
-				wsClient.stop();
-			} catch (Exception e) {
-				/* ignore */
-			}
+			okClient.dispatcher().executorService().shutdown();
 
 		});
 
 	}
 
 	private void establishOrReestablishConnection() {
-		boolean success = false;
 
-		ExponentialBackoffUtil delay = FilewatcherUtils.getDefaultBackoffUtil(4000);
+		if (disposed.get()) {
+			return;
+		}
 
-		int attemptNumber = 1;
-
-		while (!disposed.get() && !success) {
-			try {
-				log.logInfo("Attempting to establish connection to web socket, attempt #" + attemptNumber);
-
-				String url = wsUrl + "/websockets/file-changes/v1";
-
-				JettyClientEndpoint clientEndpoint = new JettyClientEndpoint(this, url);
-				ClientUpgradeRequest request = new ClientUpgradeRequest();
-
-				Future<Session> session = wsClient.connect(clientEndpoint, new URI(url), request);
-
-				try {
-					Session sess = session.get(CONNECTION_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
-					success = sess.isOpen();
-
-					// TODO: We need to send a message in both the auth and non-auth case, to make
-					// the server implementation easier. See issue for details.
-
-					// TODO: Re-enable this once FW WebSocket has authentication
-					// (https://github.com/eclipse/codewind/issues/1342)
-//					FWAuthToken token = authTokenWrapper.getLatestToken().orElse(null);
-//					if (token != null) {
-//
-//						JSONObject obj = new JSONObject();
-//						obj.put("token", token.getAccessToken());
-//						sess.getRemote().sendString(obj.toString());
-//					}
-
-				} catch (Exception e) {
-
-					String msg = "Unable to connect to web socket: " + e.getClass().getSimpleName() + " (attempt #"
-							+ attemptNumber + "): " + e.getMessage();
-					log.logError(msg);
-
-					if (e.getCause() != null && (e.getCause() instanceof ConnectException)
-							&& ((ConnectException) e.getCause()).getMessage().contains("Connection refused")) {
-						// Catch TimeoutException or NPE
-					} else {
-						e.printStackTrace();
-
-					}
-					success = false;
-
-				}
-
-				if (success) {
-					log.logInfo("Established connection to web socket, after attempt #" + attemptNumber);
-					delay.successReset();
-
-					watcher.refreshWatchStatus();
-
-				} else {
-					log.logError("Unable to establish connection to web socket on attempt #" + attemptNumber);
-				}
-
-			} catch (Throwable t) {
-				String msg = "Unable to connect to web socket: " + t.getClass().getSimpleName() + " (attempt #"
-						+ attemptNumber + "): " + t.getMessage();
-				log.logError(msg);
-
-				success = false;
-
-				if (t instanceof ConnectException && t.getMessage().contains("Connection refused")) {
-					// Ignore, this is a standard 'can't connect' exception
-				} else {
-					// Otherwise, print the full trace.
-					t.printStackTrace();
-				}
-
+		synchronized (activeWebSockets_synch) {
+			if (activeWebSockets_synch.size() > 0) {
+				return;
 			}
 
-			if (!success && !disposed.get()) {
-				delay.sleepIgnoreInterrupt();
-				delay.failIncrease();
-				attemptNumber++;
+			if (numberOfConsecutiveFailures.get() > 0) {
+				exponentialBackoffUtil_synch.sleepIgnoreInterrupt();
 			}
 
+			log.logInfo("Attempting to establish connection to WebSocket, attempt #"
+					+ (numberOfConsecutiveFailures.get() + 1));
+
+			String url = wsUrl + "/websockets/file-changes/v1";
+
+			// This request is queued to the OKHttp thread pool, as the OKHttp API is
+			// non-blocking.
+			Request request = new Request.Builder().url(url).build();
+			WebSocket ws = okClient.newWebSocket(request, endpoint);
+
+			activeWebSockets_synch.add(ws);
 		}
 
 	}
 
-	void setSessionFromEndpoint(Session s) {
-		synchronized (lock) {
-			mostRecentSessionFromEndpoint_synch_lock = s;
-		}
-	}
-
+	/** Called by WSClientEndpoint when a message is received from the socket. */
 	void receiveMessage(String s) {
 
 		if (disposed.get()) {

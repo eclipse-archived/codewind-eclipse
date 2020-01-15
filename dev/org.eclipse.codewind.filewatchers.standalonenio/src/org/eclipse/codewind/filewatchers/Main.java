@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation
+ * Copyright (c) 2019, 2020 IBM Corporation
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,11 +16,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-import org.eclipse.codewind.filewatchers.core.FWAuthToken;
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.Filewatcher;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
-import org.eclipse.codewind.filewatchers.core.IAuthTokenProvider;
 import org.eclipse.codewind.filewatchers.core.IPlatformWatchService;
 
 public class Main {
@@ -30,7 +28,7 @@ public class Main {
 		String url;
 
 		if (args.length == 0) {
-			url = "http://localhost:9090";
+			url = "https://localhost:9090";
 
 		} else if (args.length == 1) {
 			url = args[1];

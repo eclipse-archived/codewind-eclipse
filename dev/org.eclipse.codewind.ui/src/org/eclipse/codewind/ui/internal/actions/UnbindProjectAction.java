@@ -31,16 +31,18 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.actions.SelectionProviderAction;
@@ -175,14 +177,29 @@ public class UnbindProjectAction extends SelectionProviderAction {
 			if (apps.size() > 1) {
 				style |= SWT.BORDER;
 			}
-			StyledText locationList = new StyledText(composite, style);
-			locationList.setAlwaysShowScrollBars(false);
-			labelData.horizontalIndent = locationList.getLeftMargin();
+			Text locationList = new Text(composite, style);
 			GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 			data.heightHint= convertHeightInCharsToPixels(Math.min(apps.size(), 5));
 			locationList.setLayoutData(data);
 			locationList.setForeground(composite.getForeground());
 			locationList.setBackground(composite.getBackground());
+			
+			Listener scrollBarListener = new Listener (){
+				@Override
+				public void handleEvent(Event event) {
+					Text text = (Text)event.widget;
+					Rectangle r1 = text.getClientArea();
+					Rectangle r2 = text.computeTrim(r1.x, r1.y, r1.width, r1.height); 
+					Point p = text.computeSize(r1.x,  SWT.DEFAULT,  true); 
+					text.getVerticalBar().setVisible(r2.height <= p.y);
+					if (event.type == SWT.Modify) {
+						text.getParent().layout(true);
+						text.showSelection();
+					}
+				}
+			};
+			locationList.addListener(SWT.Resize, scrollBarListener);
+			locationList.addListener(SWT.Modify, scrollBarListener);
 			
 			StringBuilder buffer = new StringBuilder();
 			for (int i= 0; i < apps.size(); i++) {

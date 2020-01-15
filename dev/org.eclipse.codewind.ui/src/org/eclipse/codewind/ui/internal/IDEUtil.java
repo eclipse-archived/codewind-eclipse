@@ -23,6 +23,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -67,18 +69,18 @@ public class IDEUtil {
 		return result[0];
 	}
     
+	public static Font getBoldFont(Shell shell, Font font) {
+		Display display = shell.getDisplay();
+		FontData[] fontData = font.getFontData();
+		fontData[0].setStyle(SWT.BOLD);
+		fontData[0].setHeight(fontData[0].getHeight());
+		return new Font(display, fontData);
+	}
+    
     public static void setBold(StyledText text) {
 		StyleRange range = new StyleRange();
 		range.start = 0;
 		range.length = text.getText().length();
-		range.fontStyle = SWT.BOLD;
-		text.setStyleRange(range);
-	}
-    
-    public static void setBold(StyledText text, String str) {
-		StyleRange range = new StyleRange();
-		range.start = text.getText().indexOf(str);
-		range.length = str.length();
 		range.fontStyle = SWT.BOLD;
 		text.setStyleRange(range);
 	}

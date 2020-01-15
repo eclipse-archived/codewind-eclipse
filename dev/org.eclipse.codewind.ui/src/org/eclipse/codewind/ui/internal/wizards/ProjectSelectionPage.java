@@ -228,15 +228,11 @@ public class ProjectSelectionPage extends WizardPage {
 		if (!connection.isLocal()) {
 			// Manage registries link
 			Composite manageRegistriesComp = new Composite(composite, SWT.NONE);
-			manageRegistriesComp.setLayout(new GridLayout(2, false));
+			manageRegistriesComp.setLayout(new GridLayout(1, false));
 			manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 3, 1));
 			
-			Label manageRegistriesLabel = new Label(manageRegistriesComp, SWT.NONE);
-			manageRegistriesLabel.setText(Messages.ManageRegistriesLinkLabel);
-			manageRegistriesLabel.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
-			
 			Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
-			manageRegistriesLink.setText("<a>" + Messages.ManageRegistriesLinkText + "</a>");
+			manageRegistriesLink.setText(Messages.ManageRegistriesLinkLabel + " <a>" + Messages.ManageRegistriesLinkText + "</a>");
 			if (connection.isLocal()) {
 				manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
 			} else {

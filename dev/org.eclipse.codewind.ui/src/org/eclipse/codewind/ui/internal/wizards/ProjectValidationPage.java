@@ -27,7 +27,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -42,7 +42,8 @@ public class ProjectValidationPage extends WizardPage {
 	private IPath projectPath;
 	private ProjectInfo projectInfo;
 	private Text validateMsg;
-	private StyledText typeText, languageText;
+	private Text typeText, languageText;
+	private Font boldFont;
 
 	protected ProjectValidationPage(BindProjectWizard wizard, CodewindConnection connection, IPath projectPath) {
 		super(Messages.ProjectValidationPageName);
@@ -59,36 +60,57 @@ public class ProjectValidationPage extends WizardPage {
 		GridLayout layout = new GridLayout();
 		layout.horizontalSpacing = 5;
 		layout.verticalSpacing = 7;
+		layout.numColumns = 2;
 		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		validateMsg = new Text(composite, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		validateMsg.setText("");
-		GridData data = new GridData(GridData.FILL, GridData.CENTER, true, false);
+		GridData data = new GridData(GridData.FILL, GridData.CENTER, true, false, 2, 1);
 		data.widthHint = 200;
 		validateMsg.setLayoutData(data);
 		IDEUtil.normalizeBackground(validateMsg, composite);
 		
-		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 2, 1));
 		
-		typeText = new StyledText(composite, SWT.READ_ONLY);
-		typeText.setText("");
-		data = new GridData(GridData.FILL, GridData.CENTER, true, false);
+		boldFont = IDEUtil.getBoldFont(getShell(), getFont());
+        
+		Label typeLabel = new Label(composite, SWT.NONE);
+		typeLabel.setText("Type:");
+		data = new GridData(GridData.END, GridData.CENTER, false, false);
 		data.horizontalIndent = 20;
-		typeText.setLayoutData(data);
+		typeLabel.setLayoutData(data);
+		
+		typeText = new Text(composite, SWT.READ_ONLY);
+		typeText.setFont(boldFont);
+		typeText.setText("");
+		typeText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		IDEUtil.normalizeBackground(typeText, composite);
 		
-		languageText = new StyledText(composite, SWT.READ_ONLY);
-		languageText.setText("");
-		data = new GridData(GridData.FILL, GridData.CENTER, true, false);
+		Label languageLabel = new Label(composite, SWT.NONE);
+		languageLabel.setText("Language:");
+		data = new GridData(GridData.END, GridData.CENTER, false, false);
 		data.horizontalIndent = 20;
-		languageText.setLayoutData(data);
+		languageLabel.setLayoutData(data);
+		
+		languageText = new Text(composite, SWT.READ_ONLY);
+		languageText.setFont(boldFont);
+		languageText.setText("");
+		languageText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		IDEUtil.normalizeBackground(languageText, composite);
 		
 		setProjectPath(projectPath, false);
 
 		validateMsg.setFocus();
 		setControl(composite);
+	}
+
+	@Override
+	public void dispose() {
+		if (boldFont != null) {
+			boldFont.dispose();
+		}
+		super.dispose();
 	}
 
 	public boolean canFinish() {
@@ -132,14 +154,12 @@ public class ProjectValidationPage extends WizardPage {
 		wizard.setProjectInfo(projectInfo);
 		if (projectInfo != null) {
 			validateMsg.setText(NLS.bind(Messages.ProjectValidationPageMsg, projectPath.lastSegment()));
-			typeText.setText(NLS.bind(Messages.ProjectValidationPageTypeLabel, projectInfo.type.getDisplayName()));
-			IDEUtil.setBold(typeText, projectInfo.type.getDisplayName());
+			typeText.setText(projectInfo.type.getDisplayName());
 			IDEUtil.normalizeBackground(typeText, typeText.getParent());
 			typeText.setVisible(true);
 			
 			if (projectInfo.language != ProjectLanguage.LANGUAGE_UNKNOWN) {
-				languageText.setText(NLS.bind(Messages.ProjectValidationPageLanguageLabel, projectInfo.language.getDisplayName()));
-				IDEUtil.setBold(languageText, projectInfo.language.getDisplayName());
+				languageText.setText(projectInfo.language.getDisplayName());
 				IDEUtil.normalizeBackground(languageText, languageText.getParent());
 				languageText.setVisible(true);
 			} else {

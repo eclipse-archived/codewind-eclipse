@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -326,7 +326,7 @@ public class ProjectSelectionPage extends WizardPage {
 		if (!pattern.matches(project.getName())) {
 			return false;
 		}
-		if (connection.getAppByName(project.getName()) != null) {
+		if (connection.getAppByLocation(project.getLocation()) != null) {
 			return false;
 		}
 		return true;
@@ -356,9 +356,9 @@ public class ProjectSelectionPage extends WizardPage {
 					errorMsg = Messages.SelectProjectPageNoExistError;
 					projectPath = null;
 				} else {
-					if (connection.getAppByName(path.lastSegment()) != null) {
-						// It is an error if a Codewind project already exists with the same name
-						errorMsg = NLS.bind(Messages.SelectProjectPageCWProjectExistsError, path.lastSegment());
+					if (connection.getAppByLocation(path) != null) {
+						// It is an error if a Codewind project already exists with the same location
+						errorMsg = NLS.bind(Messages.SelectProjectPageCWProjectExistsError, path);
 						projectPath = null;
 					} else {
 						// It is an error if a project exists with the same name but has a different location
@@ -390,12 +390,16 @@ public class ProjectSelectionPage extends WizardPage {
 	@Override
 	public IWizardPage getNextPage() {
 		// Set the project so the next page has it.
-		wizard.setProjectPath(getProjectPath());
+		wizard.setProject(project, getProjectPath());
 		return super.getNextPage();
 	}
 
 	public boolean canFinish() {
 		return project != null || projectPath != null;
+	}
+	
+	public IProject getProject() {
+		return project;
 	}
 	
 	public IPath getProjectPath() {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -35,12 +36,12 @@ public class ProjectDeployedDialog extends TitleAreaDialog {
 		MAINTAIN
 	};
 	
-	private final String appName;
+	private final IPath projectPath;
 	private Behaviour selectedBehaviour = Behaviour.REMOVE;
 	
-	public ProjectDeployedDialog(Shell parentShell, String appName) {
+	public ProjectDeployedDialog(Shell parentShell, IPath projectPath) {
 		super(parentShell);
-		this.appName = appName;
+		this.projectPath = projectPath;
 	}
 	
 	@Override
@@ -57,7 +58,7 @@ public class ProjectDeployedDialog extends TitleAreaDialog {
 	protected Control createDialogArea(Composite parent) {
 		setTitleImage(CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_BANNER));
 		setTitle(Messages.ProjectDeployedDialogTitle);
-		setMessage(NLS.bind(Messages.ProjectDeployedDialogMessage, appName));
+		setMessage(NLS.bind(Messages.ProjectDeployedDialogMessage, projectPath.toOSString()));
 		
 		final Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -52,6 +52,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	private ProjectTypeSelectionPage projectTypePage;
 	
 	private final CodewindConnection connection;
+	private IProject project = null;
 	private IPath projectPath = null;
 	
 	// If a connection is passed in and no project then the project selection page will be shown
@@ -60,10 +61,13 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	}
 	
 	// If the project is passed in then the project selection page will not be shown
-	public BindProjectWizard(CodewindConnection connection, IPath projectPath) {
+	public BindProjectWizard(CodewindConnection connection, IProject project) {
 		super();
 		this.connection = connection;
-		this.projectPath = projectPath;
+		this.project = project;
+		if (project != null) {
+			this.projectPath = project.getLocation();
+		}
 		setNeedsProgressMonitor(true);
 		setDefaultPageImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_BANNER));
 		setHelpAvailable(false);
@@ -81,7 +85,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectPage = new ProjectSelectionPage(this, connection);
 			addPage(projectPage);
 		}
-		projectValidationPage = new ProjectValidationPage(this, connection, projectPath);
+		projectValidationPage = new ProjectValidationPage(this, connection, project);
 		projectTypePage = new ProjectTypeSelectionPage(connection);
 		addPage(projectValidationPage);
 		addPage(projectTypePage);
@@ -114,15 +118,16 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		}
 		
 		if (projectPage != null) {
+			project = projectPage.getProject();
 			projectPath = projectPage.getProjectPath();
 		}
 
-		final String name = projectPath.lastSegment();
+		final String name = project != null ? project.getName() : projectPath.lastSegment();
 		
 		final List<CodewindApplication> existingDeployments = new ArrayList<CodewindApplication>();
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
 			if (conn.isConnected()) {
-				CodewindApplication app = conn.getAppByName(name);
+				CodewindApplication app = conn.getAppByLocation(projectPath);
 				if (app != null && app.isEnabled()) {
 					existingDeployments.add(app);
 				}
@@ -131,7 +136,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		
 		final ProjectDeployedDialog.Behaviour selectedBehaviour;
 		if (!existingDeployments.isEmpty()) {
-			ProjectDeployedDialog dialog = new ProjectDeployedDialog(getShell(), name);
+			ProjectDeployedDialog dialog = new ProjectDeployedDialog(getShell(), projectPath);
 			if (dialog.open() == IStatus.OK) {
 				selectedBehaviour = dialog.getSelectedBehaviour();
 			} else {
@@ -264,10 +269,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			projectTypePage.setProjectInfo(projectInfo);
 		}
 	}
-	
-	public void setProjectPath(IPath projectPath) {
+
+	public void setProject(IProject project, IPath projectPath) {
 		if (projectValidationPage != null) {
-			projectValidationPage.setProjectPath(projectPath, true);
+			projectValidationPage.setProject(project, projectPath, true);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -29,6 +29,7 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.Logger;
@@ -42,6 +43,7 @@ import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.codewind.filewatchers.eclipse.CodewindFilewatcherdConnection;
 import org.eclipse.codewind.filewatchers.eclipse.ICodewindProjectTranslator;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -118,7 +120,7 @@ public class CodewindConnection {
 			@Override
 			public Optional<String> getProjectId(IProject project) {
 				if (project != null) {
-					CodewindApplication app = getAppByName(project.getName());
+					CodewindApplication app = getAppByLocation(project.getLocation());
 					if (app != null) {
 						return Optional.of(app.projectID);
 					}
@@ -368,6 +370,11 @@ public class CodewindConnection {
 		}
 	}
 
+	/*
+	 * Only use this when searching for the application using the
+	 * Codewind application name (not the Eclipse project name).
+	 * Otherwise use getAppByLocation.
+	 */
 	public CodewindApplication getAppByName(String name) {
 		synchronized(appMap) {
 			for (CodewindApplication app : getApps()) {
@@ -377,6 +384,22 @@ public class CodewindConnection {
 			}
 		}
 		Logger.log("No application found for name " + name); //$NON-NLS-1$
+		return null;
+	}
+	
+	public CodewindApplication getAppByLocation(IPath location) {
+		if (location == null) {
+			return null;
+		}
+		String canonicalLocation = FileUtil.getCanonicalPath(location.toOSString());
+		synchronized(appMap) {
+			for (CodewindApplication app : getApps()) {
+				if (FileUtil.getCanonicalPath(app.fullLocalPath.toOSString()).equals(canonicalLocation)) {
+					return app;
+				}
+			}
+		}
+		Logger.log("No application found for location: " + location); //$NON-NLS-1$
 		return null;
 	}
 	

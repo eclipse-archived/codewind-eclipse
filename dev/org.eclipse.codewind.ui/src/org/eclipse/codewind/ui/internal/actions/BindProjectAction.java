@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -89,7 +89,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 			return;
 		}
 		
-		BindProjectWizard wizard = new BindProjectWizard(connection, project.getLocation());
+		BindProjectWizard wizard = new BindProjectWizard(connection, project);
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 		if (dialog.open() == Window.CANCEL) {
 			// If connection is new (not already registered), then close it
@@ -108,7 +108,7 @@ public class BindProjectAction implements IObjectActionDelegate {
 	}
 	
 	private String getProjectError(CodewindConnection connection, IProject project) {
-		if (connection.getAppByName(project.getName()) != null) {
+		if (connection.getAppByLocation(project.getLocation()) != null) {
 			return NLS.bind(Messages.BindProjectAlreadyExistsError,  project.getName());
 		}
 		return null;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.views;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
@@ -23,6 +24,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
@@ -116,6 +118,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		} else if (element instanceof CodewindApplication) {
 			CodewindApplication app = (CodewindApplication)element;
 			StringBuilder builder = new StringBuilder(app.name);
+			IProject project = CoreUtil.getEclipseProject(app);
+			if (project != null && !project.getName().equals(app.name)) {
+				builder.append("(" + project.getName() + ")");
+			}
 			
 			if (app.isEnabled()) {
 				AppStatus appStatus = app.getAppStatus();
@@ -212,6 +218,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		} else if (element instanceof CodewindApplication) {
 			CodewindApplication app = (CodewindApplication)element;
 			styledString = new StyledString(app.name);
+			IProject project = CoreUtil.getEclipseProject(app);
+			if (project != null && !project.getName().equals(app.name)) {
+				styledString.append("(" + project.getName() + ")");
+			}
 			
 			if (app.isEnabled()) {
 				AppStatus appStatus = app.getAppStatus();

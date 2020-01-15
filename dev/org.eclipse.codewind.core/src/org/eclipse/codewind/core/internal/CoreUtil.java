@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.core.internal;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +20,9 @@ import java.util.Scanner;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -272,6 +276,16 @@ public class CoreUtil {
 		}
 		// This should not happen
 		Logger.logError("The user.home system property was null or empty.");
+		return null;
+	}
+	
+	public static IProject getEclipseProject(CodewindApplication app) {
+		IContainer[] containers = ResourcesPlugin.getWorkspace().getRoot().findContainersForLocationURI(new File(app.fullLocalPath.toOSString()).toURI());
+		for (IContainer container : containers) {
+			if (container instanceof IProject && ((IProject)container).isAccessible()) {
+				return (IProject)container;
+			}
+		}
 		return null;
 	}
     

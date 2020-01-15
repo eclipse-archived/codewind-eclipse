@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -346,8 +346,8 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
-					if (project != null && project.exists() && project.getLocation().equals(fullLocalPath)) {
+					IProject project = CoreUtil.getEclipseProject(CodewindEclipseApplication.this);
+					if (project != null) {
 						project.delete(true, true, monitor);
 					} else if (fullLocalPath.toFile().exists()) {
 						FileUtil.deleteDirectory(fullLocalPath.toOSString(), true);

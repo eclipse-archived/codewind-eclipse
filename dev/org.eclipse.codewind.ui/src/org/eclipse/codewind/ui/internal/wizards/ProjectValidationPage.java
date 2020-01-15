@@ -20,6 +20,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -39,19 +40,23 @@ public class ProjectValidationPage extends WizardPage {
 
 	private BindProjectWizard wizard;
 	private CodewindConnection connection;
+	private IProject project;
 	private IPath projectPath;
 	private ProjectInfo projectInfo;
 	private Text validateMsg;
 	private Text typeText, languageText;
 	private Font boldFont;
 
-	protected ProjectValidationPage(BindProjectWizard wizard, CodewindConnection connection, IPath projectPath) {
+	protected ProjectValidationPage(BindProjectWizard wizard, CodewindConnection connection, IProject project) {
 		super(Messages.ProjectValidationPageName);
 		setTitle(Messages.ProjectValidationPageTitle);
 		setDescription(Messages.ProjectValidationPageDescription);
 		this.wizard = wizard;
 		this.connection = connection;
-		this.projectPath = projectPath;
+		this.project = project;
+		if (project != null) {
+			this.projectPath = project.getLocation();
+		}
 	}
 
 	@Override
@@ -99,7 +104,7 @@ public class ProjectValidationPage extends WizardPage {
 		languageText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		IDEUtil.normalizeBackground(languageText, composite);
 		
-		setProjectPath(projectPath, false);
+		setProject(project, projectPath, false);
 
 		validateMsg.setFocus();
 		setControl(composite);
@@ -125,7 +130,8 @@ public class ProjectValidationPage extends WizardPage {
 		return projectInfo;
 	}
 
-	public void setProjectPath(IPath projectPath, boolean fromPrevPage) {
+	public void setProject(IProject project, IPath projectPath, boolean fromPrevPage) {
+		this.project = project;
 		this.projectPath = projectPath;
 		this.projectInfo = null;
 		if (projectPath == null) {
@@ -135,7 +141,7 @@ public class ProjectValidationPage extends WizardPage {
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
-				SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.ProjectValidationTask, projectPath.lastSegment()), 100);
+				SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.ProjectValidationTask, getProjectName()), 100);
 				projectInfo = getProjectInfo(mon.split(100));
 			}
 		};
@@ -147,13 +153,13 @@ public class ProjectValidationPage extends WizardPage {
 				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
 			}
 		} catch (InvocationTargetException e) {
-			Logger.logError("An error occurred getting the project info for: " + projectPath.lastSegment(), e);
+			Logger.logError("An error occurred getting the project info for the project at: " + projectPath.toOSString(), e);
 		} catch (InterruptedException e) {
 			// The user cancelled the operation
 		}
 		wizard.setProjectInfo(projectInfo);
 		if (projectInfo != null) {
-			validateMsg.setText(NLS.bind(Messages.ProjectValidationPageMsg, projectPath.lastSegment()));
+			validateMsg.setText(NLS.bind(Messages.ProjectValidationPageMsg, getProjectName()));
 			typeText.setText(projectInfo.type.getDisplayName());
 			IDEUtil.normalizeBackground(typeText, typeText.getParent());
 			typeText.setVisible(true);
@@ -181,11 +187,15 @@ public class ProjectValidationPage extends WizardPage {
 		}
 
 		try {
-			return ProjectUtil.validateProject(projectPath.lastSegment(), projectPath.toFile().getAbsolutePath(), null, connection.getConid(), monitor);
+			return ProjectUtil.validateProject(getProjectName(), projectPath.toFile().getAbsolutePath(), null, connection.getConid(), monitor);
 		} catch (Exception e) {
-			Logger.logError("An error occurred trying to get the project type for project: " + projectPath.lastSegment(), e); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to get the project type for the project at: " + projectPath.toOSString(), e); //$NON-NLS-1$
 		}
 
 		return null;
+	}
+	
+	private String getProjectName() {
+		return project != null ? project.getName() : projectPath.lastSegment();
 	}
 }

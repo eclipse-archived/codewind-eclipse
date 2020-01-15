@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -105,6 +105,15 @@ public class FileUtil {
             throw new IOException("Directory cannot be removed.");
         }
     }
-
+    
+    public static String getCanonicalPath(String path) {
+        String canonicalPath = path;
+        try {
+            canonicalPath = (new File(path)).getCanonicalPath();
+        } catch (Exception e) {
+            Logger.log("Failed to get the canonical path for: " + path + ". " + e.getMessage());
+        }
+        return canonicalPath;
+    }
 
 }

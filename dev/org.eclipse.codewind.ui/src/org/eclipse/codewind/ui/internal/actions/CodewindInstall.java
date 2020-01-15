@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -272,7 +272,7 @@ public class CodewindInstall {
 						NLS.bind(Messages.InstallCodewindAddProjectMessage, project.getName()))) {
 					CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
 					if (connection != null && connection.isConnected()) {
-						Wizard wizard = new BindProjectWizard(connection, project.getLocation());
+						Wizard wizard = new BindProjectWizard(connection, project);
 						WizardLauncher.launchWizardWithoutSelection(wizard);
 					} else {
 						Logger.logError("Codewind not installed or has unknown status when trying to bind project: " + project.getName()); //$NON-NLS-1$

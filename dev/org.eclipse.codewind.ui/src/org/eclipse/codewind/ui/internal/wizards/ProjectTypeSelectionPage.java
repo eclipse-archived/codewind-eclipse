@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -64,6 +64,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private Text typeLabel = null;
 	private CheckboxTableViewer typeViewer = null;
 	private ProjectInfo projectInfo = null;
+	private ProjectTypeInfo projectTypeInfo = null;
+	private ProjectSubtypeInfo projectSubtypeInfo = null;
 
 	protected ProjectTypeSelectionPage(CodewindConnection connection) {
 		super(Messages.SelectProjectTypePageName);
@@ -111,13 +113,12 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
-					Object element = event.getElement();
-					typeViewer.setCheckedElements(new Object[] { element });
-					updateSubtypes(false, (ProjectTypeInfo) element);
+					projectTypeInfo = (ProjectTypeInfo) event.getElement();
+					typeViewer.setCheckedElements(new Object[] { projectTypeInfo });
+				} else {
+					projectTypeInfo = null;
 				}
-				else {
-					updateSubtypes(false, null);
-				}
+				updateSubtypes(false, projectTypeInfo);
 			}
 		});
 
@@ -125,7 +126,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			@Override
 			public void checkStateChanged(CheckStateChangedEvent event) {
 				if (event.getChecked()) {
-					subtypeViewer.setCheckedElements(new Object[] { event.getElement() });
+					projectSubtypeInfo = (ProjectSubtypeInfo) event.getElement();
+					subtypeViewer.setCheckedElements(new Object[] { projectSubtypeInfo });
+				} else {
+					projectSubtypeInfo = null;
 				}
 				getWizard().getContainer().updateButtons();
 			}
@@ -252,6 +256,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	
 	public void setProjectInfo(ProjectInfo projectInfo) {
 		this.projectInfo = projectInfo;
+		projectTypeInfo = typeMap.get(projectInfo.type.getId());
+		projectSubtypeInfo = projectTypeInfo.new ProjectSubtypeInfo(projectInfo.language.getId());
 		updateTables(true);
 	}
 
@@ -280,9 +286,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	}
 	
 	public ProjectTypeInfo getType() {
-		// return what's selected in the types viewer
-		Object[] checked = typeViewer.getCheckedElements();		
-		return (checked.length == 0) ? null : (ProjectTypeInfo) checked[0];
+		return projectTypeInfo;
 	}
 	
 	public ProjectSubtypeInfo getSubtype() {
@@ -292,16 +296,16 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		// no subtype if:
 		// 1. no type is selected
 		// 2. selected type has no subtypes label; it is a Codewind built-in type which has language, not subtype
-		// 3. selected type is same as detected type; user does not need to choose subtype
+		// 3. selected type is same as detected type (the subtype is only needed if a different type was selected
+		//    in order to run validate again with the new type and subtype; if the detected type is used then
+		//    validate does not need to be run again)
 		if (projectType == null ||  
 			projectType.getSubtypesLabel().length() == 0 || 
-			projectType.eq(projectInfo.type)) {
+			(projectInfo != null && projectType.eq(projectInfo.type))) {
 			return null;
 		}
 		
-		// return what's selected in the subtypes viewer
-		Object[] checked = subtypeViewer.getCheckedElements();
-		return (checked.length == 0) ? null : (ProjectSubtypeInfo) checked[0];
+		return projectSubtypeInfo;
 	}
 	
 	public String getLanguage() {
@@ -315,12 +319,11 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		// selected type has no subtypes label; it is a Codewind built-in type
 		// what's selected in the subtypes viewer is the language
 		if (projectType.getSubtypesLabel().length() == 0) {
-			Object[] checked = subtypeViewer.getCheckedElements();
-			return (checked.length == 0) ? ProjectLanguage.LANGUAGE_UNKNOWN.getId() : ((ProjectSubtypeInfo) checked[0]).id;
+			return projectSubtypeInfo == null ? ProjectLanguage.LANGUAGE_UNKNOWN.getId() : projectSubtypeInfo.id;
 		}
 		
 		// for non-Codewind types, fallback to detected language
-		return projectInfo.language.getId();
+		return projectInfo == null ? ProjectLanguage.LANGUAGE_UNKNOWN.getId() : projectInfo.language.getId();
 	}
 
 	private void updateTables(boolean init) {
@@ -340,12 +343,13 @@ public class ProjectTypeSelectionPage extends WizardPage {
 
 		// when first entering the wizard, attempt to select type that matches the detected type
 		if (init && projectInfo != null) { 
-			ProjectTypeInfo projectType = typeMap.get(projectInfo.type.getId());
-			if (projectType != null)
-				typeViewer.setCheckedElements(new Object[] { projectType });
-			else
+			projectTypeInfo = typeMap.get(projectInfo.type.getId());
+			if (projectTypeInfo != null) {
+				typeViewer.setCheckedElements(new Object[] { projectTypeInfo });
+			} else {
 				typeViewer.setAllChecked(false);
-			updateSubtypes(init, projectType);
+			}
+			updateSubtypes(init, projectTypeInfo);
 		}
 		// otherwise, see if anything got unchecked
 		// e.g. removing a repo that contained previously selected type
@@ -363,16 +367,18 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 		
 		boolean shouldShow = false;
+		projectSubtypeInfo = null;
 		
-		if (projectType == null)
+		if (projectType == null) {
 			subtypeViewer.setInput(new Object[0]);
-		else {
+		} else {
 			List<ProjectSubtypeInfo> projectSubtypes = projectType.getSubtypes();
 			subtypeViewer.setInput(projectSubtypes);
 			
 			// only 1 possible choice, select it
 			if (projectSubtypes.size() == 1) {
-				subtypeViewer.setCheckedElements(new Object[] { projectSubtypes.get(0) });
+				projectSubtypeInfo = projectSubtypes.get(0);
+				subtypeViewer.setCheckedElements(new Object[] { projectSubtypeInfo });
 			}
 			// otherwise if more than 1 choice, allow subtype/language selection if:
 			// 1. selected type is docker (can select language)
@@ -383,12 +389,12 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				
 				boolean isDocker = projectType.eq(TYPE_DOCKER);
 			
-				if (isDocker || !projectType.eq(projectInfo.type)) {
+				if (isDocker || projectInfo == null || !projectType.eq(projectInfo.type)) {
 					
 					// if possible, select language that was detected
-					if (init && isDocker) {
-						subtypeViewer.setCheckedElements(
-								new Object[] { projectType.new ProjectSubtypeInfo(projectInfo.language.getId()) });
+					if (init && isDocker && projectInfo != null) {
+						projectSubtypeInfo = projectType.new ProjectSubtypeInfo(projectInfo.language.getId());
+						subtypeViewer.setCheckedElements(new Object[] { projectSubtypeInfo });
 					}
 					
 					shouldShow = true;

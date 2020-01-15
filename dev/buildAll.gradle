@@ -40,8 +40,9 @@ dependencies {
     corelibs "io.socket:socket.io-client:1.0.0"
 
     // corelibs "com.nimbusds:oauth2-oidc-sdk:6.5"
-	
-    fwlibs "org.eclipse.jetty.websocket:websocket-client:9.4.23.v20191118"
+
+    fwlibs "com.squareup.okhttp3:okhttp:3.8.1"
+    fwlibs "com.squareup.okio:okio:1.13.0"
 
 }
 

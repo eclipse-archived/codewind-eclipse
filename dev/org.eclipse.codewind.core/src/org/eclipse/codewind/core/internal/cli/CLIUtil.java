@@ -217,12 +217,12 @@ public class CLIUtil {
 				if (obj.has(ERROR_KEY)) {
 					String msg = String.format("The %s command failed with error: %s", Arrays.toString(command), obj.getString(ERROR_DESCRIPTION_KEY)); //$NON-NLS-1$
 					Logger.logError(msg);
-					throw new IOException(msg);
+					throw new IOException(obj.getString(ERROR_DESCRIPTION_KEY));
 				}
 				if (obj.has(STATUS_KEY) && !STATUS_OK_VALUE.equals(obj.getString(STATUS_KEY))) {
 					String msg = String.format("The %s command failed with error: %s", Arrays.toString(command), obj.getString(STATUS_MSG_KEY)); //$NON-NLS-1$
 					Logger.logError(msg);
-					throw new IOException(msg);
+					throw new IOException(obj.getString(STATUS_MSG_KEY));
 				}
 			}
 		} catch (JSONException e) {

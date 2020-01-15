@@ -94,7 +94,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "] (" +
 							NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
 				} else if (status.isUnknown()) {
-					return name + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
+					String errorMsg = manager.getInstallerErrorMsg() != null ? Messages.CodewindErrorMsgWithDetails : Messages.CodewindErrorMsg;
+					return name + " [" + Messages.CodewindErrorQualifier + "] (" + errorMsg + ")";
 				} else {
 					return name + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
 				}
@@ -184,7 +185,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
 				} else if (status.isUnknown()) {
 					styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
-					styledString.append(" (" + Messages.CodewindErrorMsg + ")", ERROR_STYLER);
+					String errorMsg = manager.getInstallerErrorMsg() != null ? Messages.CodewindErrorMsgWithDetails : Messages.CodewindErrorMsg;
+					styledString.append(" (" + errorMsg + ")", ERROR_STYLER);
 				} else {
 					styledString.append(" [" + Messages.CodewindNotInstalledQualifier + "]", StyledString.DECORATIONS_STYLER);
 					styledString.append(" (" + Messages.CodewindNotInstalledMsg + ")", StyledString.QUALIFIER_STYLER);
@@ -275,7 +277,12 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 	
     @Override
     public String getDescription(Object element) {
-    	if (element instanceof RemoteConnection) {
+    	if (element instanceof LocalConnection) {
+    		if (CodewindManager.getManager().getInstallStatus() == InstallStatus.UNKNOWN &&
+    				CodewindManager.getManager().getInstallerErrorMsg() != null) {
+    			return CodewindManager.getManager().getInstallerErrorMsg();
+    		}
+    	} else if (element instanceof RemoteConnection) { 
     		RemoteConnection connection = (RemoteConnection) element;
     		if (connection.getBaseURI() != null) {
     			return connection.getBaseURI().toString();

@@ -28,12 +28,7 @@ public class Messages extends NLS {
 	public static String Connection_JobError;
 	public static String Connection_TaskLabel;
 	
-	public static String Connection_ErrConnection_AlreadyExists;
 	public static String Connection_ErrConnection_OldVersion;
-	public static String Connection_ErrConnection_VersionUnknown;
-	public static String Connection_ErrConnection_WorkspaceErr;
-	public static String Connection_ErrContactingServerDialogMsg;
-	public static String Connection_ErrContactingServerDialogTitle;
 	public static String Connection_ErrGettingProjectListTitle;
 	public static String Connection_ErrConnection_UpdateCacheException;
 	public static String Connection_ErrConnection_CodewindNotReady;

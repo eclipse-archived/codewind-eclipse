@@ -24,6 +24,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
@@ -88,7 +89,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus(mon.split(10));
+			CodewindManager.getManager().refreshInstallStatus(mon.isCanceled() ? new NullProgressMonitor() : mon.split(10));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -124,7 +125,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus(mon.split(5));
+			CodewindManager.getManager().refreshInstallStatus(mon.isCanceled() ? new NullProgressMonitor() : mon.split(5));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -141,7 +142,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus(mon.split(5));
+			CodewindManager.getManager().refreshInstallStatus(mon.isCanceled() ? new NullProgressMonitor() : mon.split(5));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}
@@ -162,7 +163,7 @@ public class InstallUtil {
 			if (process != null && process.isAlive()) {
 				process.destroy();
 			}
-			CodewindManager.getManager().refreshInstallStatus(mon.split(10));
+			CodewindManager.getManager().refreshInstallStatus(mon.isCanceled() ? new NullProgressMonitor() : mon.split(10));
 			CodewindManager.getManager().setInstallerStatus(null);
 		}
 	}

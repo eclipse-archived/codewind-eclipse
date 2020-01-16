@@ -286,6 +286,11 @@ public class CodewindApplicationFactory {
 				app.setAutoBuild(appJso.getBoolean(CoreConstants.KEY_AUTO_BUILD));
 			}
 			
+			// Set capabilities ready
+			if (appJso.has(CoreConstants.KEY_CAPABILITIES_READY)) {
+				app.setCapabilitiesReady(appJso.getBoolean(CoreConstants.KEY_CAPABILITIES_READY));
+			}
+			
 			// Set inject metrics
 			if (appJso.has(CoreConstants.KEY_INJECT_METRICS)) {
 				app.setInjectMetrics(appJso.getBoolean(CoreConstants.KEY_INJECT_METRICS));
@@ -295,9 +300,11 @@ public class CodewindApplicationFactory {
 		}
 		
 		try {
-			// Set the log information
-			List<ProjectLogInfo> logInfos = app.connection.requestProjectLogs(app);
-			app.setLogInfos(logInfos);
+			if (appJso.has(CoreConstants.KEY_LOGS) && appJso.getJSONObject(CoreConstants.KEY_LOGS).length() > 0) {
+				// Set the log information
+				List<ProjectLogInfo> logInfos = app.connection.requestProjectLogs(app);
+				app.setLogInfos(logInfos);
+			}
 		} catch (Exception e) {
 			Logger.logError("An error occurred while updating the log information for project: " + app.name, e);
 		}

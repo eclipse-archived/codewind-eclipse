@@ -146,12 +146,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			selectedBehaviour = null;
 		}
 		
-		// Use the detected type if the validation page is active
+		// Use the detected type if the validation page is active otherwise use the type from the project type page
 		final ProjectInfo projectInfo = projectValidationPage.isActivePage() ? projectValidationPage.getProjectInfo() : null;
-		
-		final ProjectTypeInfo type = projectTypePage.getType();
-		final ProjectSubtypeInfo projectSubtype = projectTypePage.getSubtype();
-		final String language = projectTypePage.getLanguage();		
+		final ProjectTypeInfo typeInfo = projectTypePage.getType();
+		final String typeId = projectInfo != null ? projectInfo.type.getId() : typeInfo.getId();
 		
 		Job job = new Job(NLS.bind(Messages.BindProjectWizardJobLabel, new String[] {connection.getName(), name})) {
 			@Override
@@ -160,7 +158,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 					SubMonitor mon = SubMonitor.convert(monitor, 140);
 					
 					// Check for a push registry if Codewind style project
-					if (!connection.isLocal() && ProjectType.isCodewindStyle(type.getId()) && !connection.requestHasPushRegistry()) {
+					if (!connection.isLocal() && ProjectType.isCodewindStyle(typeId) && !connection.requestHasPushRegistry()) {
 						Display.getDefault().syncExec(new Runnable() {
 							@Override
 							public void run() {
@@ -224,13 +222,16 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 					if (projectInfo != null) {
 						ProjectUtil.bindProject(name, path, projectInfo.language.getId(), projectInfo.type.getId(), connection.getConid(), mon.split(30));
 					} else {
+						final ProjectSubtypeInfo subtypeInfo = projectTypePage.getSubtype();
+						final String language = projectTypePage.getLanguage();
+						
 						// call validate again with type and subtype hint
 						// allows it to run extension commands if defined for that type and subtype
-						if (projectSubtype != null) {
-							ProjectUtil.validateProject(name, path, type + ":" + projectSubtype.id, connection.getConid(), mon.split(10));
+						if (subtypeInfo != null) {
+							ProjectUtil.validateProject(name, path, typeInfo + ":" + subtypeInfo.id, connection.getConid(), mon.split(10));
 						}
 						mon.setWorkRemaining(40);
-						ProjectUtil.bindProject(name, path, language, type.getId(), connection.getConid(), mon.split(20));
+						ProjectUtil.bindProject(name, path, language, typeInfo.getId(), connection.getConid(), mon.split(20));
 					}
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;

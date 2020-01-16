@@ -29,6 +29,10 @@ public abstract class JSONObjectResult {
 		this.type = type;
 	}
 	
+	protected boolean hasKey(String key) {
+		return result.has(key);
+	}
+	
 	protected String getString(String key) {
 		String value = null;
 		if (result.has(key)) {

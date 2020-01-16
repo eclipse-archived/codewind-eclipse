@@ -50,7 +50,11 @@ public class ProjectTemplateInfo extends JSONObjectResult {
 	}
 	
 	public String getProjectStyle() {
-		String style = getString(PROJECT_STYLE_KEY);
+		// Get the style if it is there otherwise default to Codewind style
+		String style = null;
+		if (hasKey(PROJECT_STYLE_KEY)) {
+			style = getString(PROJECT_STYLE_KEY);
+		}
 		if (style == null || style.isEmpty()) {
 			style = CODEWIND_STYLE;
 		}

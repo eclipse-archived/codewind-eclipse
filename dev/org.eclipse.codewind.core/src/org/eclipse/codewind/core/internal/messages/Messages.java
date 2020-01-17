@@ -104,8 +104,6 @@ public class Messages extends NLS {
 	
 	public static String UpgradeResultMigrated;
 	public static String UpgradeResultNotMigrated;
-	
-	public static String ProjectErrorTitle;
 
 	static {
 		// initialize resource bundle

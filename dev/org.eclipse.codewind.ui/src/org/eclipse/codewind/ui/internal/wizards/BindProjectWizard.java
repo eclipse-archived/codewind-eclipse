@@ -228,7 +228,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						// call validate again with type and subtype hint
 						// allows it to run extension commands if defined for that type and subtype
 						if (subtypeInfo != null) {
-							ProjectUtil.validateProject(name, path, typeInfo + ":" + subtypeInfo.id, connection.getConid(), mon.split(10));
+							ProjectUtil.validateProject(name, path, typeInfo.getId() + ":" + subtypeInfo.id, connection.getConid(), mon.split(10));
 						}
 						mon.setWorkRemaining(40);
 						ProjectUtil.bindProject(name, path, language, typeInfo.getId(), connection.getConid(), mon.split(20));

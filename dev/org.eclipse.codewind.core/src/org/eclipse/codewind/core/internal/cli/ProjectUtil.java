@@ -93,8 +93,8 @@ public class ProjectUtil {
 		Process process = null;
 		try {
 			process = (hint == null) ?
-					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, VALIDATE_CMD, new String[] {PATH_OPTION, path}) :
-					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, VALIDATE_CMD, new String[] {TYPE_OPTION, hint, PATH_OPTION, path});
+					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, VALIDATE_CMD, new String[] {PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid}) :
+					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, VALIDATE_CMD, new String[] {TYPE_OPTION, hint, PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

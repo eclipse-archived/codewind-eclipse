@@ -44,6 +44,7 @@ public class ProjectValidationPage extends WizardPage {
 	private IPath projectPath;
 	private ProjectInfo projectInfo;
 	private Text validateMsg;
+	private Label typeLabel, languageLabel;
 	private Text typeText, languageText;
 	private Font boldFont;
 
@@ -80,7 +81,7 @@ public class ProjectValidationPage extends WizardPage {
 		
 		boldFont = IDEUtil.getBoldFont(getShell(), getFont());
         
-		Label typeLabel = new Label(composite, SWT.NONE);
+		typeLabel = new Label(composite, SWT.NONE);
 		typeLabel.setText("Type:");
 		data = new GridData(GridData.END, GridData.CENTER, false, false);
 		data.horizontalIndent = 20;
@@ -92,7 +93,7 @@ public class ProjectValidationPage extends WizardPage {
 		typeText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		IDEUtil.normalizeBackground(typeText, composite);
 		
-		Label languageLabel = new Label(composite, SWT.NONE);
+		languageLabel = new Label(composite, SWT.NONE);
 		languageLabel.setText("Language:");
 		data = new GridData(GridData.END, GridData.CENTER, false, false);
 		data.horizontalIndent = 20;
@@ -162,18 +163,23 @@ public class ProjectValidationPage extends WizardPage {
 			validateMsg.setText(NLS.bind(Messages.ProjectValidationPageMsg, getProjectName()));
 			typeText.setText(projectInfo.type.getDisplayName());
 			IDEUtil.normalizeBackground(typeText, typeText.getParent());
+			typeLabel.setVisible(true);
 			typeText.setVisible(true);
 			
 			if (projectInfo.language != ProjectLanguage.LANGUAGE_UNKNOWN) {
 				languageText.setText(projectInfo.language.getDisplayName());
 				IDEUtil.normalizeBackground(languageText, languageText.getParent());
+				languageLabel.setVisible(true);
 				languageText.setVisible(true);
 			} else {
+				languageLabel.setVisible(false);
 				languageText.setVisible(false);
 			}
 		} else {
 			validateMsg.setText(Messages.ProjectValidationPageFailMsg);
+			typeLabel.setVisible(false);
 			typeText.setVisible(false);
+			languageLabel.setVisible(false);
 			languageText.setVisible(false);
 		}
 		

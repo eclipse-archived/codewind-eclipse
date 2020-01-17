@@ -177,7 +177,7 @@ public class CodewindApplicationFactory {
 									type = CoreUtil.DialogType.INFO;
 								}
 							}
-							CoreUtil.openDialog(type, NLS.bind(Messages.ProjectErrorTitle, app.name), detail);
+							CoreUtil.openDialog(type, app.name, detail);
 						}
 					}
 				}

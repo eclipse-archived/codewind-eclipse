@@ -38,6 +38,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 	private RemoveConnectionAction removeConnectionAction;
 	private RemoteDoubleClickAction remoteDoubleClickAction;
 	private OpenTektonDashboardAction openTektonDashboardAction;
+	private LogLevelAction logLevelAction;
 	
 	@Override
 	public void init(ICommonActionExtensionSite aSite) {
@@ -52,6 +53,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		removeConnectionAction = new RemoveConnectionAction(selProvider);
 		remoteDoubleClickAction = new RemoteDoubleClickAction(selProvider);
 		openTektonDashboardAction = new OpenTektonDashboardAction(selProvider);
+		logLevelAction = new LogLevelAction(selProvider);
 	}
 	
 	@Override
@@ -67,6 +69,9 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		if (openTektonDashboardAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, openTektonDashboardAction);
     	}
+		if (logLevelAction.showAction()) {
+			menu.appendToGroup(ICommonMenuConstants.GROUP_PROPERTIES, logLevelAction);
+		}
 	}
     
 	@Override

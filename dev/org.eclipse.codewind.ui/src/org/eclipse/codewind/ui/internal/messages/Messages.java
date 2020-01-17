@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,7 @@ public class Messages extends NLS {
 
 	public static String PrefsParentPage_GeneralGroup;
 	public static String PrefsParentPage_AutoOpenOverviewButton;
+	public static String PrefsParentPage_EnableSupportFeatures;
 	public static String PrefsParentPage_StartupShutdownGroup;
 	public static String PrefsParentPage_InstallTimeout;
 	public static String PrefsParentPage_UninstallTimeout;
@@ -499,6 +500,18 @@ public class Messages extends NLS {
 	public static String RegUpdateErrorTitle;
 	public static String RegListErrorTitle;
 	public static String RegListErrorMsg;
+	
+	public static String LogLevelAction;
+	public static String LogLevelsFetchTaskLabel;
+	public static String LogLevelsFetchErrorTitle;
+	public static String LogLevelsFetchError;
+	public static String LogLevelSetJobLabel;
+	public static String LogLevelSetError;
+	public static String LogLevelDialogShell;
+	public static String LogLevelDialogTitle;
+	public static String LogLevelDialogMessage;
+	public static String LogLevelDialogLogLabel;
+	public static String LogLevelDialogLogDefault;
 	
 	static {
 		// initialize resource bundle

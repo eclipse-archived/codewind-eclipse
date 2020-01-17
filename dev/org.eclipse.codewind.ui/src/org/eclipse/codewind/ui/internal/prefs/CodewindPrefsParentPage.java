@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -138,6 +138,18 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				prefs.setValue(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE, autoOpenOverviewButton.getSelection());
+			}
+		});
+	    
+	    Button supportFeaturesButton = new Button(generalGroup, SWT.CHECK);
+	    supportFeaturesButton.setText(Messages.PrefsParentPage_EnableSupportFeatures);
+	    supportFeaturesButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
+	    supportFeaturesButton.setSelection(prefs.getBoolean(CodewindCorePlugin.ENABLE_SUPPORT_FEATURES));
+	    
+	    supportFeaturesButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				prefs.setValue(CodewindCorePlugin.ENABLE_SUPPORT_FEATURES, supportFeaturesButton.getSelection());
 			}
 		});
 	    

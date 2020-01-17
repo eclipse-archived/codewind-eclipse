@@ -15,6 +15,7 @@ import java.util.EnumSet;
 
 public enum ProjectLanguage {
 	LANGUAGE_JAVA("java", "Java"),
+	LANGUAGE_JAVASCRIPT("javascript", "JavaScript"),
 	LANGUAGE_NODEJS("nodejs", "Node.js"),
 	LANGUAGE_SWIFT("swift", "Swift"),
 	LANGUAGE_PYTHON("python", "Python"),

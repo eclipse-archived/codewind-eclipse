@@ -41,7 +41,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication) obj;
-            	if (app.projectLanguage == ProjectLanguage.LANGUAGE_NODEJS) {
+            	if (app.projectLanguage.isJavaScript()) {
             		this.setText(Messages.LaunchDebugSessionLabel);
             	} else {
             		this.setText(Messages.AttachDebuggerLabel);

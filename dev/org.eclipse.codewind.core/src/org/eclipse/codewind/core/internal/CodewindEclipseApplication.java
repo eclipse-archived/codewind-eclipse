@@ -12,9 +12,7 @@
 package org.eclipse.codewind.core.internal;
 
 import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -140,7 +138,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					if (app.projectLanguage == ProjectLanguage.LANGUAGE_JAVA) {
+					if (app.projectLanguage.isJava()) {
 						ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID);
 				        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
@@ -150,7 +148,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			            app.setLaunch(launch);
 			            return Status.OK_STATUS;
 					} else {
-						IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(app.projectLanguage);
+						IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(app.projectLanguage.getId());
 						if (launcher != null) {
 							return launcher.launchDebugger(app);
 						}
@@ -188,11 +186,11 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	}
 	
 	public boolean canAttachDebugger() {
-		if (projectLanguage == ProjectLanguage.LANGUAGE_JAVA) {
+		if (projectLanguage.isJava()) {
 			IDebugTarget debugTarget = getDebugTarget();
 			return (debugTarget == null || debugTarget.isDisconnected());
 		} else {
-			IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(projectLanguage);
+			IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(projectLanguage.getId());
 			if (launcher != null) {
 				return launcher.canAttachDebugger(this);
 			}
@@ -311,7 +309,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	@Override
 	public boolean supportsDebug() {
 		// Only supported for certain languages
-		if (projectLanguage == ProjectLanguage.LANGUAGE_JAVA || projectLanguage == ProjectLanguage.LANGUAGE_NODEJS) {
+		if (projectLanguage.isJava() || projectLanguage.isJavaScript()) {
 			// And only if the project supports it
 			ProjectCapabilities capabilities = getProjectCapabilities();
 			return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();

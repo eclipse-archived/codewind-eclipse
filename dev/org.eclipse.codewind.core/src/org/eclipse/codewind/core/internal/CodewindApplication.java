@@ -384,7 +384,7 @@ public class CodewindApplication {
 	public synchronized boolean hasAppMonitor() {
 		// Metrics available is really: metrics are in the package.json/pom.xml/package.swift
 		// thus it can be false even when injectMetrics is true so need to check both
-		return ProjectLanguage.alwaysHasAppMonitor(projectLanguage) || getMetricsAvailable() || injectMetrics;
+		return projectLanguage.alwaysHasAppMonitor() || getMetricsAvailable() || injectMetrics;
 	}
 	
 	public synchronized boolean hasPerfDashboard() {

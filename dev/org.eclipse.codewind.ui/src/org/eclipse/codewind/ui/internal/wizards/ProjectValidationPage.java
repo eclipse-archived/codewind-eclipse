@@ -166,7 +166,7 @@ public class ProjectValidationPage extends WizardPage {
 			typeLabel.setVisible(true);
 			typeText.setVisible(true);
 			
-			if (projectInfo.language != ProjectLanguage.LANGUAGE_UNKNOWN) {
+			if (!projectInfo.language.isUnknown()) {
 				languageText.setText(projectInfo.language.getDisplayName());
 				IDEUtil.normalizeBackground(languageText, languageText.getParent());
 				languageLabel.setVisible(true);

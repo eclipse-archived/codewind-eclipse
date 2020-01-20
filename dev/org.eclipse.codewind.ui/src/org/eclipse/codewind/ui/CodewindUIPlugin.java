@@ -86,7 +86,8 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 		plugin = this;
 		updateHandler = new UpdateHandler();
 		CodewindCorePlugin.setUpdateHandler(updateHandler);
-		CodewindCorePlugin.addDebugLauncher(ProjectLanguage.LANGUAGE_NODEJS, new NodeJSDebugLauncher());
+		CodewindCorePlugin.addDebugLauncher(ProjectLanguage.LANGUAGE_NODEJS.getId(), new NodeJSDebugLauncher());
+		CodewindCorePlugin.addDebugLauncher(ProjectLanguage.LANGUAGE_JAVASCRIPT.getId(), new NodeJSDebugLauncher());
 	}
 
 	/*

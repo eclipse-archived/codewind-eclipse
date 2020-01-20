@@ -21,7 +21,6 @@ import org.eclipse.codewind.core.internal.IUpdateHandler;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
-import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -55,7 +54,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	
 	private static IUpdateHandler updateHandler;
 	
-	private static Map<ProjectLanguage, IDebugLauncher> debugLaunchers = new HashMap<ProjectLanguage, IDebugLauncher>();
+	private static Map<String, IDebugLauncher> debugLaunchers = new HashMap<String, IDebugLauncher>();
 
 	/**
 	 * The constructor
@@ -118,11 +117,11 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 		return updateHandler;
 	}
 	
-	public static void addDebugLauncher(ProjectLanguage language, IDebugLauncher launcher) {
-		debugLaunchers.put(language, launcher);
+	public static void addDebugLauncher(String languageId, IDebugLauncher launcher) {
+		debugLaunchers.put(languageId, launcher);
 	}
 	
-	public static IDebugLauncher getDebugLauncher(ProjectLanguage language) {
-		return debugLaunchers.get(language);
+	public static IDebugLauncher getDebugLauncher(String languageId) {
+		return debugLaunchers.get(languageId);
 	}
 }

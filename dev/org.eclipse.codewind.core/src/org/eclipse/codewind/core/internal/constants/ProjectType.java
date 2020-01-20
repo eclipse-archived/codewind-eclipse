@@ -102,20 +102,4 @@ public class ProjectType {
 		}
 		return getExtDisplayName(typeId);
 	}
-	
- 	public static ProjectType getTypeFromLanguage(String language) {
-		ProjectLanguage lang = ProjectLanguage.getLanguage(language);
-		switch(lang) {
-			case LANGUAGE_NODEJS:
-				return TYPE_NODEJS;
-			case LANGUAGE_SWIFT:
-				return TYPE_SWIFT;
-			case LANGUAGE_PYTHON:
-				return TYPE_DOCKER;
-			case LANGUAGE_GO:
-				return TYPE_DOCKER;
-			default:
-				return null;
-		}
-	} 
 }

@@ -21,5 +21,5 @@ public class UIConstants {
 		CWSETTINGS_INFO_URL = DOC_BASE_URL + "/mdteclipsemanagingprojects.html",
 		TEMPLATES_INFO_URL = DOC_BASE_URL + "/mdteclipseworkingwithtemplates.html",
 		REGISTRY_INFO_URL = DOC_BASE_URL + "/image-registry-credentials.html",
-		REMOTE_SETUP_URL =  DOC_BASE_URL +"/remoteconfiguring.html";
+		REMOTE_SETUP_URL =  DOC_BASE_URL +"/remoteconnectionui.html";
 }

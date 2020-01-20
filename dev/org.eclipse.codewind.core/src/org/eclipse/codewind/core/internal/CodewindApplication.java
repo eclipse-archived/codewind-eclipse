@@ -54,6 +54,7 @@ public class CodewindApplication {
 	private boolean injectMetrics = false;
 	private boolean enabled = true;
 	private String containerId;
+	private boolean capabilitiesReady = false;
 	private ProjectCapabilities projectCapabilities;
 	private String action;
 	private List<ProjectLogInfo> logInfos = new ArrayList<ProjectLogInfo>();
@@ -471,6 +472,14 @@ public class CodewindApplication {
 	public synchronized boolean getDeleteContents() {
 		return deleteContents;
 	}
+	
+	public synchronized void setCapabilitiesReady(boolean capabilitiesReady) {
+		this.capabilitiesReady = capabilitiesReady;
+	}
+	
+	public synchronized boolean getCapabilitiesReady() {
+		return capabilitiesReady;
+	}
 
 	/**
 	 * Get the capabilities of a project.  Cache them because they should not change
@@ -478,7 +487,7 @@ public class CodewindApplication {
 	 * needs to be fast.
 	 */
 	public ProjectCapabilities getProjectCapabilities() {
-		if (projectCapabilities == null) {
+		if (projectCapabilities == null && capabilitiesReady) {
 			try {
 				JSONObject obj = connection.requestProjectCapabilities(this);
 				projectCapabilities = new ProjectCapabilities(obj);

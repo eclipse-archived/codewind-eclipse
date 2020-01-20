@@ -397,7 +397,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			if (app.supportsDebug()) {
 				hostDebugPort = app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null;
 			} else {
-				hostDebugPort = Messages.AppOverviewEditorDebugNotSupported;
+				hostDebugPort = app.getCapabilitiesReady() ? Messages.AppOverviewEditorDebugNotSupported : null;
 			}
 			hostDebugPortEntry.setValue(hostDebugPort, true);
 			projectIdEntry.setValue(app.projectID, true);
@@ -523,7 +523,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 			if (app.supportsDebug()) {
 				debugPort = app.getContainerDebugPort();
 			} else {
-				debugPort = Messages.AppOverviewEditorDebugNotSupported;
+				debugPort = app.getCapabilitiesReady() ? Messages.AppOverviewEditorDebugNotSupported : null;
 			}
 			debugPortEntry.setValue(debugPort, true);
 			boolean hasSettingsFile = hasSettingsFile(app);

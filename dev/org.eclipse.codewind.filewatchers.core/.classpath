@@ -3,14 +3,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="lib" path="lib/jetty-client-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-http-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-io-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-util-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-xml-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/websocket-api-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/websocket-client-9.4.23.v20191118.jar"/>
-	<classpathentry kind="lib" path="lib/websocket-common-9.4.23.v20191118.jar"/>
 	<classpathentry kind="lib" path="lib/org.json_1.0.0.v201011060100.jar"/>
+	<classpathentry kind="lib" path="lib/okhttp-3.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/okio-1.13.0.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

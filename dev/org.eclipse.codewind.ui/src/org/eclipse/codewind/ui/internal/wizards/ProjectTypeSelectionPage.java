@@ -259,7 +259,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		if (projectInfo == null) {
 			projectTypeInfo = null;
 			projectSubtypeInfo = null;
-		} else {
+		} else if (typeMap != null) {
 			projectTypeInfo = typeMap.get(projectInfo.type.getId());
 			projectSubtypeInfo = projectTypeInfo.new ProjectSubtypeInfo(projectInfo.language.getId());
 		}

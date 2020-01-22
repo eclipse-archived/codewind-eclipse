@@ -262,7 +262,13 @@ public class CodewindApplication {
 	public URL getMetricsUrl() {
 		try {
 			if ((!this.injectMetrics) && this.metricsAvailable) {
-				return new URL(getRootUrl(), projectLanguage.getMetricsRoot());
+				URL appUrl = null;
+				if (appBaseUrl != null && !appBaseUrl.isEmpty()) {
+					appUrl = new URL(appBaseUrl);
+				}
+				URL metricsBaseUrl = appUrl != null ? appUrl : baseUrl;
+				URL metricsUrl = new URL(metricsBaseUrl, projectLanguage.getMetricsRoot());
+				return metricsUrl;
 			} else {
 				return (connection.getBaseURI().resolve(CoreConstants.PERF_METRICS_DASH + "/" + projectLanguage.getId() + "?theme=dark&projectID=" + projectID)).toURL();
 			}
@@ -554,4 +560,3 @@ public class CodewindApplication {
 				projectID, name, projectType, fullLocalPath.toOSString());
 	}
 }
-

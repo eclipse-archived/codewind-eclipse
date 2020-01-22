@@ -262,7 +262,7 @@ public class CodewindApplication {
 	public URL getMetricsUrl() {
 		try {
 			if ((!this.injectMetrics) && this.metricsAvailable) {
-				return new URL(getBaseUrl(), projectLanguage.getMetricsRoot());
+				return new URL(getRootUrl(), projectLanguage.getMetricsRoot());
 			} else {
 				return (connection.getBaseURI().resolve(CoreConstants.PERF_METRICS_DASH + "/" + projectLanguage.getId() + "?theme=dark&projectID=" + projectID)).toURL();
 			}

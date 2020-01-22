@@ -130,7 +130,7 @@ public class ProcessHelper {
     	int n = stream.available();
         while (n > 0) {
             int len = stream.read(buffer, 0, Math.min(n, buffer.length));
-            builder.append(new String(buffer, 0, len)); 
+            builder.append(new String(buffer, 0, len, "UTF-8"));
             n = stream.available();
         }
         return builder.toString();

@@ -276,6 +276,8 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.NODE_ICON);
 				} else if (lang.isPython()) {
 					return CodewindUIPlugin.getImage(CodewindUIPlugin.PYTHON_ICON);
+				} else if (lang.isSwift()) {
+					return CodewindUIPlugin.getImage(CodewindUIPlugin.SWIFT_ICON);
 				}
 				return CodewindUIPlugin.getImage(CodewindUIPlugin.GENERIC_PROJECT_ICON);
 			}

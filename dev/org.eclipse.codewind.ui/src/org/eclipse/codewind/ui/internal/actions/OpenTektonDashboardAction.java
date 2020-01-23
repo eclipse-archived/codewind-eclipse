@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,10 +13,10 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import java.net.URL;
 
-import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.ConnectionEnv.TektonDashboard;
+import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -34,7 +34,7 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
  */
 public class OpenTektonDashboardAction extends SelectionProviderAction {
 
-    protected CodewindApplication app;
+    protected RemoteConnection conn;
     
 	public OpenTektonDashboardAction(ISelectionProvider selectionProvider) {
         super(selectionProvider, Messages.ActionOpenTektonDashboard);
@@ -45,9 +45,9 @@ public class OpenTektonDashboardAction extends SelectionProviderAction {
     public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
-            if (obj instanceof CodewindApplication) {
-            	app = (CodewindApplication)obj;
-            	setEnabled(app.isAvailable());
+            if (obj instanceof RemoteConnection) {
+            	conn = (RemoteConnection)obj;
+            	setEnabled(conn.isConnected());
             	return;
             }
         }
@@ -56,13 +56,13 @@ public class OpenTektonDashboardAction extends SelectionProviderAction {
 
     @Override
     public void run() {
-        if (app == null) {
+        if (conn == null) {
         	// should not be possible
-        	Logger.logError("OpenTektonDashboardAction ran but no application was selected"); //$NON-NLS-1$
+        	Logger.logError("OpenTektonDashboardAction ran but no remote connection was selected"); //$NON-NLS-1$
 			return;
 		}
         
-        TektonDashboard tekton = app.connection.getTektonDashboard();
+        TektonDashboard tekton = conn.getTektonDashboard();
         if (tekton == null) {
         	// Should not happen since the action should not show if there is no dashboard
         	Logger.logError("OpenTektonDashboardAction ran but there is no tekton dashboard in the environment"); //$NON-NLS-1$
@@ -97,7 +97,7 @@ public class OpenTektonDashboardAction extends SelectionProviderAction {
 				// the browser will be re-used
 				browser = browserSupport
 						.createBrowser(IWorkbenchBrowserSupport.NAVIGATION_BAR | IWorkbenchBrowserSupport.LOCATION_BAR,
-								app.projectID + "_tektonDashboard", app.name, NLS.bind(Messages.BrowserTooltipTektonDashboard, app.name));
+								conn.getConid() + "_tektonDashboard", conn.getName(), NLS.bind(Messages.BrowserTooltipTektonDashboard, conn.getName()));
 			}
 
 			browser.openURL(url);
@@ -107,6 +107,6 @@ public class OpenTektonDashboardAction extends SelectionProviderAction {
     }
     
     public boolean showAction() {
-    	return app != null && !app.connection.isLocal() && app.connection.getTektonDashboard() != null;
+    	return conn != null && conn.isConnected() && conn.getTektonDashboard() != null;
     }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -33,7 +33,6 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private AttachDebuggerAction attachDebuggerAction;
 	private OpenAppMonitorAction openAppMonitorAction;
 	private OpenPerfMonitorAction openPerfMonitorAction;
-	private OpenTektonDashboardAction openTektonDashboardAction;
 	private ContainerShellAction containerShellAction;
 	private EnableDisableAutoBuildAction enableDisableAutoBuildAction;
 	private EnableDisableInjectMetricsAction enableDisableInjectMetricsAction;
@@ -51,7 +50,6 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         attachDebuggerAction = new AttachDebuggerAction(selProvider);
         openAppMonitorAction = new OpenAppMonitorAction(selProvider);
         openPerfMonitorAction = new OpenPerfMonitorAction(selProvider);
-        openTektonDashboardAction = new OpenTektonDashboardAction(selProvider);
         containerShellAction = new ContainerShellAction(selProvider);
         enableDisableAutoBuildAction = new EnableDisableAutoBuildAction(selProvider);
         enableDisableInjectMetricsAction = new EnableDisableInjectMetricsAction(selProvider);
@@ -80,9 +78,6 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
     	}
     	if (openPerfMonitorAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openPerfMonitorAction);
-    	}
-    	if (openTektonDashboardAction.showAction()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openTektonDashboardAction);
     	}
     	if (containerShellAction.showAction()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, containerShellAction);

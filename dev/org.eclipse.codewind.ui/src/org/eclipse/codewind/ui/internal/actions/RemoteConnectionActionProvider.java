@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -37,6 +37,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 	private EditConnectionAction editConnectionAction;
 	private RemoveConnectionAction removeConnectionAction;
 	private RemoteDoubleClickAction remoteDoubleClickAction;
+	private OpenTektonDashboardAction openTektonDashboardAction;
 	
 	@Override
 	public void init(ICommonActionExtensionSite aSite) {
@@ -50,6 +51,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		editConnectionAction = new EditConnectionAction(selProvider);
 		removeConnectionAction = new RemoveConnectionAction(selProvider);
 		remoteDoubleClickAction = new RemoteDoubleClickAction(selProvider);
+		openTektonDashboardAction = new OpenTektonDashboardAction(selProvider);
 	}
 	
 	@Override
@@ -62,6 +64,9 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, connectDisconnectAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, editConnectionAction);
 		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, removeConnectionAction);
+		if (openTektonDashboardAction.showAction()) {
+    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, openTektonDashboardAction);
+    	}
 	}
     
 	@Override

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -92,6 +92,8 @@ public class CodewindConnectionComposite extends Composite {
         
         createLabel(Messages.CodewindConnectionComposite_PasswordLabel, this, 1);
         connPassText = createConnText(this, SWT.PASSWORD, 1);
+        
+        new Label(this, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 2, 1));
 		
 		Link learnMoreLink = new Link(this, SWT.NONE);
 		learnMoreLink.setText("<a>" + Messages.RegMgmtLearnMoreLink + "</a>"); //$NON-NLS-1$ //$NON-NLS-2$

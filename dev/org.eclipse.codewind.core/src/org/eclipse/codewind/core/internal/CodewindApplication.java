@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -111,14 +111,8 @@ public class CodewindApplication {
 		String httpStr = getIsHttps() ? "https" : "http";
 		baseUrl = new URL(httpStr, host, httpPort, ""); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		// If the app url was set in the project info, use it
-		URL appUrl = null;
-		if (appBaseUrl != null && !appBaseUrl.isEmpty()) {
-			appUrl = new URL(appBaseUrl);
-		}
-		rootUrl = appUrl != null ? appUrl : baseUrl;
-		
-		// Add the context root if there is one
+		// The root URL is the app base URL plus the context root if there is one
+		rootUrl = getAppBaseUrl();
 		if (contextRoot != null && !contextRoot.isEmpty()) {
 			rootUrl = new URL(rootUrl, contextRoot);
 		}
@@ -252,6 +246,14 @@ public class CodewindApplication {
 		return baseUrl;
 	}
 	
+	public URL getAppBaseUrl() throws MalformedURLException {
+		// If the app url was set in the project info, use it
+		if (appBaseUrl != null && !appBaseUrl.isEmpty()) {
+			return new URL(appBaseUrl);
+		}
+		return baseUrl;
+	}
+	
 	/**
 	 * Can return null if this project hasn't started yet (ie httpPort == -1)
 	 */
@@ -262,13 +264,7 @@ public class CodewindApplication {
 	public URL getMetricsUrl() {
 		try {
 			if ((!this.injectMetrics) && this.metricsAvailable) {
-				URL appUrl = null;
-				if (appBaseUrl != null && !appBaseUrl.isEmpty()) {
-					appUrl = new URL(appBaseUrl);
-				}
-				URL metricsBaseUrl = appUrl != null ? appUrl : baseUrl;
-				URL metricsUrl = new URL(metricsBaseUrl, projectLanguage.getMetricsRoot());
-				return metricsUrl;
+				return new URL(getAppBaseUrl(), projectLanguage.getMetricsRoot());
 			} else {
 				return (connection.getBaseURI().resolve(CoreConstants.PERF_METRICS_DASH + "/" + projectLanguage.getId() + "?theme=dark&projectID=" + projectID)).toURL();
 			}

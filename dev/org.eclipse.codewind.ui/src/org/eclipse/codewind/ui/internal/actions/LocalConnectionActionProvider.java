@@ -41,6 +41,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 	private BindAction bindAction;
 	private ManageReposAction manageReposAction;
 	private CodewindDoubleClickAction doubleClickAction;
+	private LogLevelAction logLevelAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
@@ -52,6 +53,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
         installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
         doubleClickAction = new CodewindDoubleClickAction(selProvider);
+        logLevelAction = new LogLevelAction(selProvider);
     }
     
     @Override
@@ -69,6 +71,9 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
     	if (status.isInstalled()) {
     		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, startStopAction);
     	}
+    	if (logLevelAction.showAction()) {
+			menu.appendToGroup(ICommonMenuConstants.GROUP_PROPERTIES, logLevelAction);
+		}
 	}
 
 	@Override

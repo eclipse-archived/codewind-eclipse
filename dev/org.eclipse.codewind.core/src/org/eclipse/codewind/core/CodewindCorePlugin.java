@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -42,6 +42,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	public static final String CW_UNINSTALL_TIMEOUT = "cwUninstallTimeout";
 	
 	public static final String AUTO_OPEN_OVERVIEW_PAGE = "autoOpenOverviewPage";
+	public static final String ENABLE_SUPPORT_FEATURES = "enableSupportFeatures";
 
 	public static final String
 			// Int option for debug timeout in seconds
@@ -82,6 +83,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 		getPreferenceStore().setDefault(CW_START_TIMEOUT, InstallUtil.START_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(CW_STOP_TIMEOUT, InstallUtil.STOP_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(AUTO_OPEN_OVERVIEW_PAGE, true);
+		getPreferenceStore().setDefault(ENABLE_SUPPORT_FEATURES, false);
 	}
 
 	/*

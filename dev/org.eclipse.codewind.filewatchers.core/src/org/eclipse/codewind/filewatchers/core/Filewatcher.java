@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import org.eclipse.codewind.filewatchers.core.internal.HttpGetStatusThread;
 import org.eclipse.codewind.filewatchers.core.internal.HttpPostOutputQueue;
 import org.eclipse.codewind.filewatchers.core.internal.HttpUtil;
 import org.eclipse.codewind.filewatchers.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.filewatchers.core.internal.IndividualFileWatchService;
 import org.eclipse.codewind.filewatchers.core.internal.WebSocketManagerThread;
 import org.json.JSONObject;
 
@@ -77,6 +79,8 @@ public class Filewatcher {
 
 	private final AuthTokenWrapper authTokenWrapper;
 
+	private final IndividualFileWatchService individualFileWatchService;
+
 	public Filewatcher(String urlParam, String clientUuid, IPlatformWatchService internalWatchService,
 			IPlatformWatchService externalWatchService /* nullable */, String pathToInstallerParam /* nullable */,
 			IAuthTokenProvider provider /* nullable */) {
@@ -104,6 +108,8 @@ public class Filewatcher {
 		if (internalWatchService == null) {
 			throw new IllegalArgumentException("internalWatchService param must be provided.");
 		}
+
+		this.individualFileWatchService = new IndividualFileWatchService(this);
 
 		this.internalWatchService = internalWatchService;
 		this.internalWatchService.addListener(fwl);
@@ -187,6 +193,8 @@ public class Filewatcher {
 				e.getEventBatchUtil().dispose();
 			});
 		}
+
+		individualFileWatchService.dispose();
 
 	}
 
@@ -285,6 +293,8 @@ public class Filewatcher {
 		log.logDebug("Calling watch service removePath with file: " + fileToMonitor.getPath());
 		po.getWatchService().removePath(fileToMonitor, ptw);
 
+		individualFileWatchService.setFilesToWatch(removedProject.getProjectId(), Collections.emptyList());
+
 	}
 
 	private void createOrUpdateProjectToWatch(ProjectToWatch ptw) throws IOException {
@@ -336,8 +346,12 @@ public class Filewatcher {
 					+ "' to watch list, with watch directory: '" + fileToMonitor.getPath() + "' with watch service "
 					+ watchService.getClass().getSimpleName(), ptw.getProjectId());
 
+			individualFileWatchService.setFilesToWatch(ptw.getProjectId(), ptw.getFilesToWatch());
+
 		} else {
 			// Otherwise update existing project to watch, if needed
+
+			boolean wasProjectObjectUpdatedInThisBlock = false;
 
 			ProjectToWatch oldProjectToWatch = po.getProjectToWatch();
 
@@ -410,6 +424,7 @@ public class Filewatcher {
 					// This logic may cause the PO to be updated twice (once here, and once below,
 					// but this is fine)
 					po.updateProjectToWatch(ptw);
+					wasProjectObjectUpdatedInThisBlock = true;
 
 				}
 
@@ -423,6 +438,7 @@ public class Filewatcher {
 
 				// Update existing project to watch
 				po.updateProjectToWatch(ptw);
+				wasProjectObjectUpdatedInThisBlock = true;
 
 				// Remove the old path
 				po.getWatchService().removePath(fileToMonitor, oldProjectToWatch);
@@ -443,7 +459,31 @@ public class Filewatcher {
 						+ " based on the project watch state id.");
 			}
 
-		}
+			// Compare new filesToWatch value with old, and update if different.
+			{
+
+				String newPtwFtw = ptw.getFilesToWatch().stream().sorted().reduce((a, b) -> a + "/" + b).orElse("");
+				String oldPtwFtw = oldProjectToWatch.getFilesToWatch().stream().sorted().reduce((a, b) -> a + "/" + b)
+						.orElse("");
+
+				if (!newPtwFtw.equals(oldPtwFtw)) {
+
+					log.logInfo("filesToWatch value updated in " + ptw.getProjectId());
+
+					// We only need to update project object if we didn't previously update it in
+					// the method)
+					if (!wasProjectObjectUpdatedInThisBlock) {
+						po.updateProjectToWatch(ptw);
+					}
+
+					// Finally, update the list of watched files, if applicable.
+					individualFileWatchService.setFilesToWatch(ptw.getProjectId(), ptw.getFilesToWatch());
+
+				}
+
+			}
+
+		} // end existing project-to-watch else
 
 	}
 
@@ -653,6 +693,44 @@ public class Filewatcher {
 		}
 	}
 
+	public void internal_receiveIndividualChangesFileList(String projectId, Collection<ChangedFileEntry> changedFiles) {
+
+		List<String> projectRootPaths;
+		synchronized (projectsMap_synch) {
+			projectRootPaths = projectsMap_synch.values().stream().map(e -> e.getProjectToWatch().getPathToMonitor())
+					.collect(Collectors.toList());
+		}
+
+		List<ChangedFileEntry> filteredChanges = changedFiles.stream().filter(cfParam -> {
+
+			for (String projectRoot : projectRootPaths) {
+
+				if (cfParam.getPath().startsWith(projectRoot)) {
+					log.logInfo("Ignoring file change that was under a project root: " + cfParam.getPath()
+							+ ", project root: " + projectRoot);
+					return false;
+				}
+
+			}
+
+			return true;
+
+		}).collect(Collectors.toList());
+
+		if (filteredChanges.size() == 0) {
+			log.logInfo("No remaining individual file changes to transmit");
+			return;
+		}
+
+		FileChangeEventBatchUtil processing = getEventProcessing(projectId).orElse(null);
+		if (processing != null) {
+			processing.addChangedFiles(filteredChanges);
+		} else {
+			log.logSevere("Could not locate event processing for project id " + projectId);
+		}
+
+	}
+
 	private void receiveWatchSuccessStatus(ProjectToWatch ptw, boolean successParam) {
 
 		if (successParam) {
@@ -757,7 +835,7 @@ public class Filewatcher {
 		private void informCwctlOfFileChanges() {
 			ProjectToWatch ptw = getProjectToWatch();
 			if (cliState.isPresent()) {
-				cliState.get().onFileChangeEvent(ptw.getProjectCreationTimeInAbsoluteMsecs().orElse(null));
+				cliState.get().onFileChangeEvent(ptw.getProjectCreationTimeInAbsoluteMsecs().orElse(null), ptw);
 			}
 
 		}

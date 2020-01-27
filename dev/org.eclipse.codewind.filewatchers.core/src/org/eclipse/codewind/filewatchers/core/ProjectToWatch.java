@@ -30,6 +30,8 @@ import org.json.JSONObject;
  */
 public class ProjectToWatch {
 
+	private static final FWLogger log = FWLogger.getInstance();
+
 	private final String projectId;
 
 	/** Path (inside the container) to monitor */
@@ -37,6 +39,8 @@ public class ProjectToWatch {
 
 	private final List<String> ignoredPaths = new ArrayList<>();
 	private final List<String> ignoredFilenames = new ArrayList<>();
+
+	private final List<String> filesToWatch = new ArrayList<>();
 
 	private final String projectWatchStateId;
 
@@ -85,6 +89,20 @@ public class ProjectToWatch {
 
 		this.projectCreationTimeInAbsoluteMsecs = pct != 0 ? pct : null;
 
+		// Added as part of codewind/1399
+		JSONArray refPaths = json.optJSONArray("refPaths");
+		if (refPaths != null) {
+			for (int x = 0; x < refPaths.length(); x++) {
+				JSONObject pathObj = refPaths.getJSONObject(x);
+				String fromPath = pathObj.optString("from");
+				if (fromPath != null && !fromPath.trim().isEmpty()) {
+					this.filesToWatch.add(fromPath);
+				} else {
+					log.logSevere("'from' field of refPaths could not be found or was null");
+				}
+			}
+		}
+
 	}
 
 	/** This should ONLY be called from the clone method below. */
@@ -106,6 +124,7 @@ public class ProjectToWatch {
 		// Replace the old value, with specified parameter.
 		this.projectCreationTimeInAbsoluteMsecs = projectCreationTimeInAbsoluteMsecsParam;
 
+		this.filesToWatch.addAll(old.filesToWatch);
 	}
 
 	/**
@@ -159,6 +178,10 @@ public class ProjectToWatch {
 
 	public boolean isExternal() {
 		return external;
+	}
+
+	public List<String> getFilesToWatch() {
+		return filesToWatch;
 	}
 
 	public Optional<Long> getProjectCreationTimeInAbsoluteMsecs() {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation
+ * Copyright (c) 2019, 2020 IBM Corporation
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -19,10 +19,17 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Base64.Encoder;
 import java.util.List;
 
 import org.eclipse.codewind.filewatchers.core.FWLogger;
 import org.eclipse.codewind.filewatchers.core.FilewatcherUtils;
+import org.eclipse.codewind.filewatchers.core.PathUtils;
+import org.eclipse.codewind.filewatchers.core.ProjectToWatch;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /* The purpose of this class is to call the cwctl project sync command, in order to allow the
  * Codewind CLI to detect and communicate file changes to the server.
@@ -55,6 +62,8 @@ public class CLIState {
 	private boolean processActive_synch_lock = false;
 	private boolean requestWaiting_synch_lock = false;
 
+	private ProjectToWatch lastDebugPtwSeen_synch_lock = null;
+
 	private final Object lock = new Object();
 
 	public CLIState(String projectId, String installerPath, String projectPath) {
@@ -70,7 +79,11 @@ public class CLIState {
 		this.mockInstallerPath = System.getenv("MOCK_CWCTL_INSTALLER_PATH");
 	}
 
-	public void onFileChangeEvent(Long projectCreationTimeInAbsoluteMsecsParam /* nullable */) {
+	public void onFileChangeEvent(Long projectCreationTimeInAbsoluteMsecsParam /* nullable */,
+			ProjectToWatch debugPtwParam) {
+
+		// debugPtw parameter should only be used for debugging/automated testing,
+		// otherwise create a new parameter for the value.
 
 		if (this.projectPath == null || this.projectPath.trim().isEmpty()) {
 			log.logSevere("Project path passed to CLIState is empty, so ignoring file change event.");
@@ -80,6 +93,10 @@ public class CLIState {
 		boolean callCLI = false;
 
 		synchronized (lock) {
+			if (debugPtwParam != null) {
+				this.lastDebugPtwSeen_synch_lock = debugPtwParam;
+			}
+
 			// This, along with callCLI(), ensures that only one instance of `project sync`
 			// is running at a time.
 			if (processActive_synch_lock) {
@@ -118,13 +135,17 @@ public class CLIState {
 			}
 
 			FilewatcherUtils.newThread(() -> {
-				callCLI();
+				ProjectToWatch currentProjectToWatch;
+				synchronized (lock) {
+					currentProjectToWatch = this.lastDebugPtwSeen_synch_lock;
+				}
+				callCLI(currentProjectToWatch);
 			});
 		}
 
 	}
 
-	private void callCLI() {
+	private void callCLI(ProjectToWatch debugPtw) {
 
 		// Sanity check the processActive field
 		synchronized (lock) {
@@ -150,7 +171,7 @@ public class CLIState {
 
 			} else {
 				// Call CLI and wait for result
-				result = runProjectCommand();
+				result = runProjectCommand(debugPtw);
 			}
 
 			if (result != null) {
@@ -183,12 +204,12 @@ public class CLIState {
 		}
 
 		if (requestWaiting) {
-			onFileChangeEvent(null);
+			onFileChangeEvent(null, null);
 		}
 
 	}
 
-	private RunProjectReturn runProjectCommand() throws IOException, InterruptedException {
+	private RunProjectReturn runProjectCommand(ProjectToWatch debugPtw) throws IOException, InterruptedException {
 
 		String currInstallerPath = this.installerPath;
 
@@ -200,6 +221,7 @@ public class CLIState {
 		}
 
 		if (this.mockInstallerPath == null || this.mockInstallerPath.trim().isEmpty()) {
+			// Normal call to `cwctl project sync`
 			args.add(installerPath);
 
 			// Example:
@@ -210,11 +232,43 @@ public class CLIState {
 					projectId, "-t", "" + latestTimestamp }));
 		} else {
 
+			// The filewatcher is being run in an automated test scenario: we will now run a
+			// mock version of cwctl that simulates the project sync command. This mock
+			// version takes slightly different parameters.
+
+			// Create a simplified version of the project to watch JSON.
+			JSONObject jo = new JSONObject();
+			try {
+				JSONArray pathFilters = new JSONArray();
+				debugPtw.getIgnoredPaths().forEach(e -> {
+					pathFilters.put(e);
+				});
+				jo.put("ignoredPaths", pathFilters);
+
+				JSONArray filenameFilters = new JSONArray();
+				debugPtw.getIgnoredFilenames().forEach(e -> {
+					filenameFilters.put(e);
+				});
+				jo.put("ignoredFilenames", filenameFilters);
+
+				JSONArray watchedFiles = new JSONArray();
+				debugPtw.getFilesToWatch().forEach(e -> {
+					watchedFiles.put(PathUtils.convertAbsoluteUnixStyleNormalizedPathToLocalFile(e));
+				});
+				jo.put("filesToWatch", watchedFiles);
+
+			} catch (JSONException je) {
+				log.logSevere("Unable to create JSON", je, debugPtw.getProjectId());
+			}
+
+			// Convert the mock project JSON to base 64, for use as a parameter.
+			Encoder encoder = Base64.getEncoder();
+
+			String base64 = encoder.encodeToString(jo.toString().getBytes());
 			args.add("java");
 
 			args.addAll(Arrays.asList(new String[] { "-jar", this.mockInstallerPath, "-p", this.projectPath, "-i",
-					this.projectId, "-t", "" + latestTimestamp }));
-
+					this.projectId, "-t", "" + latestTimestamp, "-projectJson", base64 }));
 			currInstallerPath = mockInstallerPath;
 		}
 
@@ -258,7 +312,7 @@ public class CLIState {
 
 		} else {
 			log.logInfo("Successfully ran installer command: " + debugStr);
-			log.logInfo("Output:" + stdout + stderr); // TODO: Convert to DEBUG once everything matures.
+			log.logInfo("Std(out/err):" + stdout + stderr); // TODO: Convert to DEBUG once everything matures.
 
 			return new RunProjectReturn(result, stdout, spawnTime);
 

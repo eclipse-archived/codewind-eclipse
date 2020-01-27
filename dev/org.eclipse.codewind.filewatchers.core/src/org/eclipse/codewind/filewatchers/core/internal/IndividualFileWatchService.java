@@ -76,6 +76,10 @@ public class IndividualFileWatchService {
 	 */
 	public void setFilesToWatch(String projectId, List<String> pathsFromPtw) {
 
+		if (disposed.get()) {
+			return;
+		}
+
 		List<Path> paths = pathsFromPtw.stream()
 				.map(e -> PathUtils.convertAbsoluteUnixStyleNormalizedPathToLocalFile(e)).map(e -> Paths.get(e))
 				.collect(Collectors.toList());
@@ -205,12 +209,16 @@ public class IndividualFileWatchService {
 				try {
 					innerRun();
 
-					synchronized (filesToWatchMap_synch) {
-						filesToWatchMap_synch.wait(1000);
-					}
-
 				} catch (Throwable t) {
 					log.logError("Unexpected error thrown in polling thread, ignoring.", t);
+				}
+
+				synchronized (filesToWatchMap_synch) {
+					try {
+						filesToWatchMap_synch.wait(1000);
+					} catch (InterruptedException e) {
+						/* ignore - dispose is the primary mechanism to end this thread. */
+					}
 				}
 
 			}
@@ -307,7 +315,7 @@ public class IndividualFileWatchService {
 
 	/**
 	 * Struct class containing the most recent observed state of a file we have been
-	 * told to watch
+	 * told to watch.
 	 */
 	private static class PollEntry {
 

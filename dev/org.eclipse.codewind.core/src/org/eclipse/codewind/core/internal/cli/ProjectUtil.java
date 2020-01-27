@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -46,7 +46,7 @@ public class ProjectUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, CREATE_CMD, new String[] {PATH_OPTION, path, URL_OPTION, url});
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, CREATE_CMD, new String[] {PATH_OPTION, path, URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			if (result.getExitValue() != 0) {
 				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -48,7 +48,7 @@ public abstract class BaseDebugTest extends BaseTest {
     
     @Test
     public void test04_modifyJavaFile() throws Exception {
-    	IPath path = projectFolder.append(projectName);
+    	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), currentText, newText);
     	refreshProject();
@@ -64,7 +64,7 @@ public abstract class BaseDebugTest extends BaseTest {
     
     @Test
     public void test05_modifyDockerfile() throws Exception {
-    	IPath path = projectFolder.append(projectName);
+    	IPath path = project.getLocation();
     	path = path.append(dockerfile);
     	TestUtil.prependToFile(path.toOSString(), "# no comment\n");
     	refreshProject();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -44,15 +44,17 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     
     @Test
     public void test04_modifyFile() throws Exception {
-    	IPath path = projectFolder.append(projectName);
+    	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
     	refreshProject();
+    	// Make sure the status doesn't change
+    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindUtil.checkStableAppStatus(app, AppStatus.STARTED, 5, 1);
     	// Check that the old text is still there
     	pingApp(text1);
     	// Run a build
     	build();
-    	CodewindApplication app = connection.getAppByName(projectName);
     	CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
     	assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
     	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
@@ -67,7 +69,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     
     @Test
     public void test06_modifyFile() throws Exception {
-    	IPath path = projectFolder.append(projectName);
+    	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text2, text3);
     	refreshProject();

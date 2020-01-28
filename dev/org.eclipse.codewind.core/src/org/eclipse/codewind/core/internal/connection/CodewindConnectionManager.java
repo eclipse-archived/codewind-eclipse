@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -42,6 +42,8 @@ import org.eclipse.osgi.util.NLS;
  * and manage persisting them to and from the Preferences.
  */
 public class CodewindConnectionManager {
+	
+	public static final String RESTORE_CONNECTIONS_FAMILY = CodewindCorePlugin.PLUGIN_ID + ".restoreConnectionsFamily";;
 	
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static CodewindConnectionManager instance;
@@ -220,6 +222,11 @@ public class CodewindConnectionManager {
 					Logger.logError("An error occurred trying to restore the connections", e); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, Messages.ConnectionManager_RestoreGeneralError, e);
 				}
+			}
+
+			@Override
+			public boolean belongsTo(Object family) {
+				return RESTORE_CONNECTIONS_FAMILY.equals(family);
 			}
 		};
 		job.schedule();

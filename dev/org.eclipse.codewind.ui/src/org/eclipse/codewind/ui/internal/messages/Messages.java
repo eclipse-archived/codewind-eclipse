@@ -370,25 +370,25 @@ public class Messages extends NLS {
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;
-	public static String AppOverviewEditorGeneralSection;
+	public static String AppOverviewEditorProjectInfoSection;
 	public static String AppOverviewEditorTypeEntry;
 	public static String AppOverviewEditorLanguageEntry;
 	public static String AppOverviewEditorLocationEntry;
 	public static String AppOverviewEditorAppUrlEntry;
 	public static String AppOverviewEditorHostAppPortEntry;
 	public static String AppOverviewEditorHostDebugPortEntry;
+	public static String AppOverviewEditorNotDebugging;
 	public static String AppOverviewEditorProjectIdEntry;
 	public static String AppOverviewEditorContainerIdEntry;
 	public static String AppOverviewEditorStatusEntry;
 	public static String AppOverviewEditorStatusEnabled;
 	public static String AppOverviewEditorStatusDisabled;
-	public static String AppOverviewEditorProjectSettingsSection;
-	public static String AppOverviewEditorContextRootEntry;
+	public static String AppOverviewEditorProjectStatusSection;
 	public static String AppOverviewEditorAppPortEntry;
 	public static String AppOverviewEditorDebugPortEntry;
 	public static String AppOverviewEditorEditProjectSettings;
 	public static String AppOverviewEditorProjectSettingsInfo;
-	public static String AppOverviewEditorBuildSection;
+	public static String AppOverviewEditorAppInfoSection;
 	public static String AppOverviewEditorAutoBuildEntry;
 	public static String AppOverviewEditorAutoBuildOn;
 	public static String AppOverviewEditorAutoBuildOff;
@@ -403,6 +403,7 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorRefreshButton;
 	public static String AppOverviewEditorNotAvailable;
 	public static String AppOverviewEditorDebugNotSupported;
+	public static String AppOverviewEditorNoDebugRemote;
 	public static String AppOverviewEditorOpenSettingsErrorTitle;
 	public static String AppOverviewEditorOpenSettingsErrorMsg;
 	public static String AppOverviewEditorOpenSettingsNotFound;

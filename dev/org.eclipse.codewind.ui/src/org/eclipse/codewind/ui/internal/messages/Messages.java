@@ -470,8 +470,7 @@ public class Messages extends NLS {
 	public static String RegMgmtUsernameColumn;
 	public static String RegMgmtNamespaceColumn;
 	public static String RegMgmtPushRegColumn;
-	public static String RegMgmtPushRegTrue;
-	public static String RegMgmtPushRegFalse;
+	public static String RegMgmtPushRegSet;
 	
 	public static String RegMgmtAddDialogShell;
 	public static String RegMgmtAddDialogTitle;

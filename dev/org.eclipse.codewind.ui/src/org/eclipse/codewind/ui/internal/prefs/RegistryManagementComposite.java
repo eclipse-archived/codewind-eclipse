@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -249,7 +249,9 @@ public class RegistryManagementComposite extends Composite {
 			if (supportsPushReg) {
 				item.setText(2, regEntry.namespace == null ? "" : regEntry.namespace); //$NON-NLS-1$
 				item.setForeground(2, regEntry.isPushReg ? item.getForeground() : getGray(item));
-				item.setText(3, regEntry.isPushReg ? Messages.RegMgmtPushRegTrue : Messages.RegMgmtPushRegFalse);
+				if (regEntry.isPushReg) {
+					item.setText(3, Messages.RegMgmtPushRegSet);
+				}
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -93,6 +93,20 @@ public class CodewindUtil {
 			}
 		}, timeout, interval);
 		return app.getBuildStatus() == status;
+	}
+	
+	public static boolean checkStableAppStatus(CodewindApplication app, AppStatus status, long timeout, long interval) {
+		for (long time = 0; time < timeout; time += interval) {
+			if (app.getAppStatus() != status) {
+				return false;
+			}
+			try {
+				Thread.sleep(1000 * interval);
+			} catch (InterruptedException e) {
+				// ignore
+			}
+		}
+		return app.getAppStatus() == status;
 	}
 
 }

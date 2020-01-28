@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,6 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
-import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
@@ -49,6 +48,8 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.IJobManager;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.ui.IMarkerResolution;
@@ -65,10 +66,10 @@ public abstract class BaseTest extends TestCase {
 	
 	protected static final String APPSODY_PROJECT_TYPE="appsodyExtension";
 	protected static final String LAGOM_ID = "lagomJavaTemplate";
-	protected static final String GO_ID = "microclimateGoTemplate";
+	protected static final String GO_ID = "goTemplate";
 	protected static final String JAVA_MICROPROFILE_ID = "javaMicroProfileTemplate";
 	protected static final String NODE_EXPRESS_ID = "nodeExpressTemplate";
-	protected static final String PYTHON_ID = "SVTPythonTemplate";
+	protected static final String PYTHON_ID = "pythonTemplate";
 	protected static final String SPRING_JAVA_ID = "springJavaTemplate";
 	protected static final String APPSODY_JAVA_MICROPROFILE_ID = "java-microprofile.*default";
 	protected static final String APPSODY_NODE_EXPRESS_ID = "nodejs-express.*simple";
@@ -81,7 +82,6 @@ public abstract class BaseTest extends TestCase {
 	protected static CodewindConnection connection;
 	protected static IProject project;
 	
-	protected static IPath projectFolder;
 	protected static String projectName;
 	protected static String projectType = null;
 	protected static String templateId;
@@ -92,16 +92,22 @@ public abstract class BaseTest extends TestCase {
 	
     public void doSetup() throws Exception {
     	// Check that Codewind is installed
+    	CodewindManager.getManager().refreshInstallStatus(new NullProgressMonitor());
     	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus().isStarted());
     	
     	// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
     	
-    	// Create a temporary folder for the project
-    	projectFolder = TestUtil.getTempFolder("codewindTest");
-    	
         // Get the local Codewind connection
         connection = CodewindConnectionManager.getLocalConnection();
+        if (connection == null) {
+            IJobManager jobManager = Job.getJobManager();
+            Job[] jobs = jobManager.find(CodewindConnectionManager.RESTORE_CONNECTIONS_FAMILY);
+            for (Job job : jobs) {
+            	job.join();
+            }
+            connection = CodewindConnectionManager.getLocalConnection();
+        }
         assertNotNull("The connection should not be null.", connection);
         
         // Create a new microprofile project
@@ -127,12 +133,6 @@ public abstract class BaseTest extends TestCase {
 			TestUtil.print("Test case cleanup failed", e);
 		}
 		
-		try {
-			FileUtil.deleteDirectory(projectFolder.toOSString(), true);
-		} catch (Exception e) {
-			TestUtil.print("Failed to delete the temporary project folder: " + projectFolder.toOSString(), e);
-		}
-    	
 		// Restore workspace auto build setting
 		if (origAutoBuildSetting != null) {
 			setWorkspaceAutoBuild(origAutoBuildSetting.booleanValue());
@@ -285,10 +285,9 @@ public abstract class BaseTest extends TestCase {
 			}
 		}
 		assertNotNull("No template found that matches the id: " + id, templateInfo);
-		IPath path = projectFolder.append(name);
+		IPath path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(name);
 		ProjectUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), connection.getConid(), new NullProgressMonitor());
-		ProjectUtil.bindProject(name, projectFolder + "/" + name, templateInfo.getLanguage(), templateInfo.getProjectType(), connection.getConid(), new NullProgressMonitor());
-
+		ProjectUtil.bindProject(name, path.toOSString(), templateInfo.getLanguage(), templateInfo.getProjectType(), connection.getConid(), new NullProgressMonitor());
 	}
 	
 	protected void refreshProject() throws CoreException {

@@ -44,6 +44,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -60,6 +61,8 @@ import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 public class RegistryManagementComposite extends Composite {
+	
+	private static final String[] regAddresses = new String[] {"docker.io", "https://quay.io", "docker-registry.default.svc:5000"};
 	
 	private final CodewindConnection connection;
 	private final List<RegistryInfo> regList;
@@ -459,8 +462,9 @@ public class RegistryManagementComposite extends Composite {
 			label.setText(Messages.RegMgmtAddDialogAddressLabel);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			
-			Text addressText = new Text(composite, SWT.BORDER);
-			addressText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+			Combo addressCombo = new Combo(composite, SWT.NONE);
+			addressCombo.setItems(regAddresses);
+			addressCombo.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
 			label = new Label(composite, SWT.NONE);
 			label.setText(Messages.RegMgmtAddDialogUsernameLabel);
@@ -476,10 +480,10 @@ public class RegistryManagementComposite extends Composite {
 			Text passwordText = new Text(composite, SWT.BORDER | SWT.PASSWORD);
 			passwordText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
-			addressText.addModifyListener(new ModifyListener() {
+			addressCombo.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e) {
-					address = addressText.getText().trim();
+					address = addressCombo.getText().trim();
 					enableOKButton(validate());
 				}
 			});
@@ -581,6 +585,12 @@ public class RegistryManagementComposite extends Composite {
 				return new RegEntry(address, namespace, username, password, isPushReg);
 			}
 			return null;
+		}
+		
+		@Override
+		protected Point getInitialSize() {
+			Point point = super.getInitialSize();
+			return new Point(550, point.y);
 		}
 	}
 	

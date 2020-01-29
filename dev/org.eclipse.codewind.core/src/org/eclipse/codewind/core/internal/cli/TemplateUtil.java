@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,11 +13,9 @@ package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
@@ -49,17 +47,9 @@ public class TemplateUtil {
 		Process process = null;
 		String[] options = enabledOnly ? new String[] {ENABLED_ONLY_OPTION, CLIUtil.CON_ID_OPTION, conid} : new String[] {CLIUtil.CON_ID_OPTION, conid};
 		try {
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, LIST_CMD, options);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, LIST_CMD, options);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("List templates failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("List templates had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from list templates is empty."); //$NON-NLS-1$
-			}
+			CLIUtil.checkResult(LIST_CMD, result, true);
 			JSONArray templateArray = new JSONArray(result.getOutput().trim());
 			List<ProjectTemplateInfo> templates = new ArrayList<ProjectTemplateInfo>();
 			for (int i = 0; i < templateArray.length(); i++) {
@@ -77,17 +67,9 @@ public class TemplateUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, REPO_LIST_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid});
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, REPO_LIST_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("List templates sources failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("List template sources had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from list template sources is empty."); //$NON-NLS-1$
-			}
+			CLIUtil.checkResult(REPO_LIST_CMD, result, true);
 			JSONArray repoArray = new JSONArray(result.getOutput());
 			List<RepositoryInfo> repos = new ArrayList<RepositoryInfo>();
 			for (int i = 0; i < repoArray.length(); i++) {
@@ -118,12 +100,9 @@ public class TemplateUtil {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		Process process = null;
 		try {
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, command, options, args);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, command, options, args);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 60, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("The " + Arrays.toString(command) + " command with options " + Arrays.toString(options) + " failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				throw new IOException(result.getErrorMsg());
-			}
+			CLIUtil.checkResult(command, result, false);
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();

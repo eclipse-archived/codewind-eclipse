@@ -48,15 +48,7 @@ public class ProjectUtil {
 		try {
 			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, CREATE_CMD, new String[] {PATH_OPTION, path, URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("Project create failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("Project create had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from project create is empty."); //$NON-NLS-1$
-			}
+			CLIUtil.checkResult(CREATE_CMD, result, true);
 			JSONObject resultJson = new JSONObject(result.getOutput());
 			if (!CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
 				String msg = "Project create failed for project: " + name + " with output: " + result.getOutput(); //$NON-NLS-1$ //$NON-NLS-2$
@@ -75,12 +67,9 @@ public class ProjectUtil {
 		Process process = null;
 		try {
 			String[] options = new String[] {NAME_OPTION, name, LANGUAGE_OPTION, language, TYPE_OPTION, projectType, PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid};
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, BIND_CMD, options);
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, BIND_CMD, options);
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("Project bind failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
+			CLIUtil.checkResult(BIND_CMD, result, false);
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();
@@ -93,19 +82,10 @@ public class ProjectUtil {
 		Process process = null;
 		try {
 			process = (hint == null) ?
-					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, VALIDATE_CMD, new String[] {PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid}) :
-					CLIUtil.runCWCTL(CLIUtil.GLOBAL_INSECURE, VALIDATE_CMD, new String[] {TYPE_OPTION, hint, PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid});
+					CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, VALIDATE_CMD, new String[] {PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid}) :
+					CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, VALIDATE_CMD, new String[] {TYPE_OPTION, hint, PATH_OPTION, path, CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("Project validate failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("Project validate had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from project validate is empty."); //$NON-NLS-1$
-			}
-		    
+			CLIUtil.checkResult(VALIDATE_CMD, result, true);
 			JSONObject resultJson = new JSONObject(result.getOutput());
 			if (CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
 				if (resultJson.has(CoreConstants.KEY_RESULT)) {

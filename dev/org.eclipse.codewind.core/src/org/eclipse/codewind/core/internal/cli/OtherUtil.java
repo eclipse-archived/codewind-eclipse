@@ -34,15 +34,7 @@ public class OtherUtil {
 		try {
 			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, LOGLEVELS_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("Get loglevels failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("Get loglevels had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from loglevels is empty."); //$NON-NLS-1$
-			}
+			CLIUtil.checkResult(LOGLEVELS_CMD, result, true);
 			JSONObject resultJson = new JSONObject(result.getOutput());
 			return new LogLevels(resultJson);
 		} finally {
@@ -58,15 +50,7 @@ public class OtherUtil {
 		try {
 			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, LOGLEVELS_CMD, new String[] {CLIUtil.CON_ID_OPTION, conid}, new String[] {level});
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
-			if (result.getExitValue() != 0) {
-				Logger.logError("Set loglevels failed with rc: " + result.getExitValue() + " and error: " + result.getErrorMsg()); //$NON-NLS-1$ //$NON-NLS-2$
-				throw new IOException(result.getErrorMsg());
-			}
-			if (result.getOutput() == null || result.getOutput().trim().isEmpty()) {
-				// This should not happen
-				Logger.logError("Set loglevels had 0 return code but the output is empty"); //$NON-NLS-1$
-				throw new IOException("The output from loglevels is empty."); //$NON-NLS-1$
-			}
+			CLIUtil.checkResult(LOGLEVELS_CMD, result, true);
 			JSONObject resultJson = new JSONObject(result.getOutput());
 			LogLevels logLevels = new LogLevels(resultJson);
 			if (!logLevels.getCurrentLevel().equals(level)) {

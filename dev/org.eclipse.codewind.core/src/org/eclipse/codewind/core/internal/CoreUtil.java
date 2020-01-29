@@ -14,9 +14,10 @@ package org.eclipse.codewind.core.internal;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -150,22 +151,11 @@ public class CoreUtil {
 
 	/**
 	 * In: [ "Here", "Is", "Some Input" ]
+	 * Separator: ", "
 	 * Out: "Here, Is, Some Input"
 	 */
-	public static String toCommaSeparatedString(Collection<String> collection) {
-		StringBuilder resultBuilder = new StringBuilder();
-
-		final String separator = ", "; //$NON-NLS-1$
-		for (String s : collection) {
-			resultBuilder.append(s).append(separator);
-		}
-
-		// Remove the last separator
-		if (resultBuilder.length() > separator.length()) {
-			resultBuilder.setLength(resultBuilder.length() - separator.length());
-		}
-
-		return resultBuilder.toString();
+	public static String formatString(String[] strArray, String separator) {
+		return Arrays.stream(strArray).collect(Collectors.joining(separator));
 	}
 	
 	public static int parsePort(String portStr) {

@@ -31,7 +31,7 @@ public class Main {
 			url = "https://localhost:9090";
 
 		} else if (args.length == 1) {
-			url = args[1];
+			url = args[0];
 			if (!url.startsWith("http://") && !url.startsWith("https://")) {
 				System.err.println("Argument should begin with http:// or https://.");
 				return;

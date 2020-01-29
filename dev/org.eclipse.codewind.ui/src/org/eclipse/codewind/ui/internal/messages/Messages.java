@@ -257,8 +257,16 @@ public class Messages extends NLS {
 	public static String EditConnectionActionLabel;
 	
 	public static String ShowLogFilesMenu;
+	public static String ShowLogFileJobLabel;
+	public static String ShowLogFileError;
+	public static String HideLogFileJobLabel;
+	public static String HideLogFileError;
 	public static String ShowAllLogFilesAction;
+	public static String ShowAllLogFilesJobLabel;
+	public static String ShowAllLogFilesError;
 	public static String HideAllLogFilesAction;
+	public static String HideAllLogFilesJobLabel;
+	public static String HideAllLogFilesError;
 	public static String ErrorOnShowLogFileDialogTitle;
 	public static String ShowOnContentChangeAction;
 	

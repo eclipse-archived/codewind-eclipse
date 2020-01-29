@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ public class SocketConsole extends IOConsole {
 	private boolean isInitialized = false;
 	private boolean showOnUpdate = false;
 
-	public SocketConsole(String consoleName, ProjectLogInfo logInfo, CodewindApplication app) {
+	public SocketConsole(String consoleName, ProjectLogInfo logInfo, CodewindApplication app) throws Exception {
 		super(consoleName, CodewindConsoleFactory.CODEWIND_CONSOLE_TYPE,
 				CodewindCorePlugin.getIcon(CodewindCorePlugin.DEFAULT_ICON_PATH),
 				true);
@@ -42,12 +42,8 @@ public class SocketConsole extends IOConsole {
 		this.socket = app.connection.getSocket();
 		socket.registerSocketConsole(this);
 
-		try {
-			this.outputStream.write(Messages.LogFileInitialMsg);
-			app.connection.requestEnableLogStream(app, logInfo);
-		} catch (Exception e) {
-			Logger.logError("Error opening console output stream for: " + this.getName(), e);
-		}
+		this.outputStream.write(Messages.LogFileInitialMsg);
+		app.connection.requestEnableLogStream(app, logInfo);
 	}
 
 	public void update(String contents, boolean reset) throws IOException {

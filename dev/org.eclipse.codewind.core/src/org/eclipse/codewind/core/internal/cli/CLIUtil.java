@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,11 +53,6 @@ public class CLIUtil {
 	// Common keys
 	public static final String ERROR_KEY = "error";
 	public static final String ERROR_DESCRIPTION_KEY = "error_description";
-	private static final String STATUS_KEY = "status";
-	private static final String STATUS_MSG_KEY = "status_message";
-	
-	// Common values
-	private static final String STATUS_OK_VALUE = "OK";
 		
 	private static final String INSTALLER_DIR = "installerWorkDir";
 	
@@ -189,45 +183,38 @@ public class CLIUtil {
 	}
 	
 	public static void checkResult(String[] command, ProcessResult result, boolean checkOutput) throws IOException {
-		// Check for json error output (may still get a 0 return code in this case)
-		// Throws an exception if there is an error
-		checkErrorResult(command, result);
-		
-		if (result.getExitValue() != 0) {
-			String msg;
-			String error = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
-			if (error == null || error.isEmpty()) {
-				msg = String.format("The %s command exited with return code %d", Arrays.toString(command), result.getExitValue()); //$NON-NLS-1$
-			} else {
-				msg = String.format("The %s command exited with return code %d and error: %s", Arrays.toString(command), result.getExitValue(), error); //$NON-NLS-1$
-			}
-			Logger.logError(msg);
-			throw new IOException(msg);
-		} else if (checkOutput && (result.getOutput() == null || result.getOutput().isEmpty())) {
-			String msg = String.format("The %s command exited with return code 0 but the output was empty", Arrays.toString(command));  //$NON-NLS-1$
-			Logger.logError(msg);
-			throw new IOException(msg);
-		}
-	}
-	
-	private static void checkErrorResult(String[] command, ProcessResult result) throws IOException {
+		// Check for json error output (may still get a 0 return code in this case). If it is in the expected format
+		// then use this for the error message, otherwise fall back to using the system error if not empty or the
+		// system output.
+		// Expected format:
+		//    {"error":"con_not_found","error_description":"Connection AGALJKAFD not found"}
 		try {
 			if (result.getOutput() != null && !result.getOutput().isEmpty()) {
 				JSONObject obj = new JSONObject(result.getOutput());
-				if (obj.has(ERROR_KEY)) {
-					String msg = String.format("The %s command failed with error: %s", Arrays.toString(command), obj.getString(ERROR_DESCRIPTION_KEY)); //$NON-NLS-1$
+				if (obj.has(ERROR_KEY) && obj.has(ERROR_DESCRIPTION_KEY)) {
+					String msg = String.format("The '%s' command failed with error: %s", CoreUtil.formatString(command, " "), obj.getString(ERROR_DESCRIPTION_KEY)); //$NON-NLS-1$
 					Logger.logError(msg);
 					throw new IOException(obj.getString(ERROR_DESCRIPTION_KEY));
-				}
-				if (obj.has(STATUS_KEY) && !STATUS_OK_VALUE.equals(obj.getString(STATUS_KEY))) {
-					String msg = String.format("The %s command failed with error: %s", Arrays.toString(command), obj.getString(STATUS_MSG_KEY)); //$NON-NLS-1$
-					Logger.logError(msg);
-					throw new IOException(obj.getString(STATUS_MSG_KEY));
 				}
 			}
 		} catch (JSONException e) {
 			// Ignore
 		}
+		
+		if (result.getExitValue() != 0) {
+			String msg;
+			String error = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+			if (error == null || error.isEmpty()) {
+				msg = String.format("The '%s' command exited with return code %d", CoreUtil.formatString(command, " "), result.getExitValue()); //$NON-NLS-1$
+			} else {
+				msg = String.format("The '%s' command exited with return code %d and error: %s", CoreUtil.formatString(command, " "), result.getExitValue(), error); //$NON-NLS-1$
+			}
+			Logger.logError(msg);
+			throw new IOException(msg);
+		} else if (checkOutput && (result.getOutput() == null || result.getOutput().isEmpty())) {
+			String msg = String.format("The '%s' command exited with return code 0 but the output was empty", CoreUtil.formatString(command, " "));  //$NON-NLS-1$
+			Logger.logError(msg);
+			throw new IOException(msg);
+		}
 	}
-
 }

@@ -804,6 +804,18 @@ public class CodewindConnection {
 		return requestGetPushRegistry() != null;
 	}
 	
+	public void requestDeletePushRegistry(String address) throws IOException, JSONException {
+		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_IMAGEPUSHREGISTRY);
+		JSONObject payload = new JSONObject();
+		payload.put(CoreConstants.KEY_ADDRESS, address);
+		
+		HttpResult result = HttpUtil.delete(uri, getAuthToken(false), payload);
+		if (hasAuthFailure(result)) {
+			result = HttpUtil.delete(uri, getAuthToken(true), payload);
+		}
+		checkResult(result, uri, false);
+	}
+	
 	public void requestInjectMetrics(String projectID, boolean enable) throws IOException, JSONException {
 		String endpoint = CoreConstants.APIPATH_PROJECT_LIST + "/"	//$NON-NLS-1$
 				+ projectID + "/"	//$NON-NLS-1$

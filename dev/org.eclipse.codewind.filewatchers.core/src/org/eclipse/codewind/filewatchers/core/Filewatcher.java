@@ -772,6 +772,9 @@ public class Filewatcher {
 					log.logError("Unable to inform server of watch status for '" + ptw.getProjectWatchStateId() + "'",
 							t);
 					success = false;
+				}
+
+				if (!success) {
 					backoffUtil.sleepIgnoreInterrupt();
 					backoffUtil.failIncrease();
 				}

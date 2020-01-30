@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -78,6 +78,7 @@ public class CodewindSocket {
 			EVENT_LOG_UPDATE = "log-update",						//$NON-NLS-1$
 			EVENT_PROJECT_LOGS_LIST_CHANGED = "projectLogsListChanged",		//$NON-NLS-1$
 			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged",	//$NON-NLS-1$
+			EVENT_PROJECT_WATCH_STATUS_CHANGED = "projectWatchStatusChanged",	//$NON-NLS-1$
 			EVENT_AUTHENTICATED = "authenticated", //$NON-NLS-1$
 			EVENT_UNAUTHORIZED = "unauthorized"; //$NON-NLS-1$
 
@@ -302,6 +303,18 @@ public class CodewindSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onValidationEvent(event);
+				} catch (JSONException e) {
+					Logger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		}).on(EVENT_PROJECT_WATCH_STATUS_CHANGED, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				Logger.log(EVENT_PROJECT_WATCH_STATUS_CHANGED + ": " + arg0[0].toString()); //$NON-NLS-1$
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectWatchStatusChanged(event);
 				} catch (JSONException e) {
 					Logger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -586,6 +599,22 @@ public class CodewindSocket {
 			}
 		} else {
 			Logger.log("Validation event indicates failure but no validation results,"); //$NON-NLS-1$
+		}
+	}
+	
+	private void onProjectWatchStatusChanged(JSONObject event) throws JSONException {
+		String projectID = event.getString(CoreConstants.KEY_PROJECT_ID);
+		CodewindApplication app = connection.getAppByID(projectID);
+		if (app == null) {
+			Logger.logError("No application found matching the project id for the project watch status changed event: " + projectID); //$NON-NLS-1$
+			return;
+		}
+		
+		app.setEnabled(true);
+		
+		if (event.has(CoreConstants.KEY_STATUS) && !CoreConstants.VALUE_STATUS_SUCCESS.equals(event.getString(CoreConstants.KEY_STATUS))) {
+			// Just log for now until the JSON object includes the path that caused the issue
+			Logger.logError("Project watch status failure for: " + app.name + ", with id: " + app.projectID); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	

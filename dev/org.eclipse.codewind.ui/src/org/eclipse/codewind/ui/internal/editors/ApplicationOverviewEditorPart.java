@@ -324,7 +324,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final StringEntry locationEntry;
 		
 		public ProjectInfoSection(Composite parent, FormToolkit toolkit, int hSpan, int vSpan) {
-			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
+			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR);
 	        section.setText(Messages.AppOverviewEditorProjectInfoSection);
 	        section.setLayoutData(new GridData(SWT.FILL,SWT.FILL, true, false, hSpan, vSpan));
 	        section.setExpanded(true);
@@ -364,7 +364,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final StringEntry lastImageBuildEntry;
 		
 		public ProjectStatusSection(Composite parent, FormToolkit toolkit, int hSpan, int vSpan) {
-			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
+			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR);
 	        section.setText(Messages.AppOverviewEditorProjectStatusSection);
 	        section.setLayoutData(new GridData(SWT.FILL,SWT.FILL, true, false, hSpan, vSpan));
 	        section.setExpanded(true);
@@ -421,7 +421,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		private final Button infoButton;
 		
 		public AppInfoSection(Composite parent, FormToolkit toolkit, int hSpan, int vSpan) {
-			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR | Section.DESCRIPTION);
+			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR);
 	        section.setText(Messages.AppOverviewEditorAppInfoSection);
 	        section.setLayoutData(new GridData(SWT.FILL,SWT.FILL, true, false, hSpan, vSpan));
 	        section.setExpanded(true);

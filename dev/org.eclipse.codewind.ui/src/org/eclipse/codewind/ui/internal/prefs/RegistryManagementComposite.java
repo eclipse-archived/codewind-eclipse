@@ -306,6 +306,9 @@ public class RegistryManagementComposite extends Composite {
 			if (entry == null) {
 				// Remove the registry
 				try {
+					if (pushReg != null && pushReg.getAddress().equals(info.getAddress())) {
+						connection.requestDeletePushRegistry(info.getAddress());
+					}
 					connection.requestRemoveRegistry(info.getAddress(), info.getUsername());
 				} catch (Exception e) {
 					Logger.logError("Failed to remove registry: " + info.getAddress(), e); //$NON-NLS-1$

@@ -546,7 +546,9 @@ public class CodewindApplication {
 				ProjectType.TYPE_SPRING,
 				ProjectType.TYPE_NODEJS
 		);
-		return projectTypesWithMetricInjection.contains(projectType);
+		return projectTypesWithMetricInjection.contains(projectType) ||
+				(ProjectType.TYPE_DOCKER.equals(projectType) &&
+				 ProjectLanguage.LANGUAGE_JAVA.equals(projectLanguage));
 	}
 
 	@Override

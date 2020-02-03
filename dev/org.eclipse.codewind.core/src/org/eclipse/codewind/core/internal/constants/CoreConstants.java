@@ -78,6 +78,8 @@ public class CoreConstants {
 			KEY_DETAILED_APP_STATUS = "detailedAppStatus",
 			KEY_MESSAGE = "message",
 			KEY_NOTIFY = "notify",
+			KEY_LINK = "link",
+			KEY_LINK_LABEL = "linkLabel",
 			KEY_BUILD_STATUS = "buildStatus",
 			KEY_DETAILED_BUILD_STATUS = "detailedBuildStatus",
 			KEY_LAST_BUILD = "lastbuild",

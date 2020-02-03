@@ -13,6 +13,7 @@ package org.eclipse.codewind.core.internal;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,8 +27,18 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Link;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 /**
  * General utils that don't belong anywhere else
@@ -61,16 +72,44 @@ public class CoreUtil {
 	}
 	
 	public static void openDialog(DialogType type, String title, String msg) {
-		final int kind = type.getValue();
-
 		Display.getDefault().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				MessageDialog.open(kind, Display.getDefault().getActiveShell(), title, msg, 0);
+				MessageDialog.open(type.getValue(), Display.getDefault().getActiveShell(), title, msg, 0);
 			}
 		});
 	}
-	
+
+	public static void openDialogWithLink(DialogType type, String title, String msg, String linkLabel, String linkUrl) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				MessageDialog dialog = new MessageDialog(Display.getDefault().getActiveShell(), title, null, msg, type.getValue(), 0, IDialogConstants.OK_LABEL) {
+					@Override
+					protected Control createCustomArea(Composite parent) {
+						Link link = new Link(parent, SWT.WRAP);
+						link.setText("<a>" + linkLabel + "</a>"); //$NON-NLS-1$ //$NON-NLS-2$
+						link.addSelectionListener(new SelectionAdapter() {
+							@Override
+							public void widgetSelected(SelectionEvent event) {
+								try {
+									IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
+									IWebBrowser browser = browserSupport.getExternalBrowser();
+									URL url = new URL(linkUrl);
+									browser.openURL(url);
+								} catch (Exception e) {
+									Logger.logError("An error occurred trying to open an external browser at: " + link, e); //$NON-NLS-1$
+								}
+							}
+						});
+						return link;
+					}
+				};
+				dialog.open();
+			}
+		});
+	}
+
 	public static boolean openConfirmDialog(String title, String msg) {
 		final boolean[] result = new boolean[1];
 		Display.getDefault().syncExec(new Runnable() {

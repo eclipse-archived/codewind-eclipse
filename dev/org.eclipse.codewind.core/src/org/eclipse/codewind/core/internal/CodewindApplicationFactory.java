@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -21,9 +21,7 @@ import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
-import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.osgi.util.NLS;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -177,7 +175,17 @@ public class CodewindApplicationFactory {
 									type = CoreUtil.DialogType.INFO;
 								}
 							}
-							CoreUtil.openDialog(type, app.name, detail);
+							// Get the link and link label
+							String link = null, linkLabel = null;
+							if (detailObj.has(CoreConstants.KEY_LINK) && detailObj.has(CoreConstants.KEY_LINK_LABEL)) {
+								link = detailObj.getString(CoreConstants.KEY_LINK);
+								linkLabel = detailObj.getString(CoreConstants.KEY_LINK_LABEL);
+							}
+							if (link != null && !link.isEmpty() && linkLabel != null && !linkLabel.isEmpty()) {
+								CoreUtil.openDialogWithLink(type, app.name, detail, linkLabel, link);
+							} else {
+								CoreUtil.openDialog(type, app.name, detail);
+							}
 						}
 					}
 				}

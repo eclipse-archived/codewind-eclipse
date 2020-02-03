@@ -417,6 +417,8 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorOpenSettingsNotFound;
 	public static String AppOverviewEditorNoConnection;
 	public static String AppOverviewEditorNoApplication;
+	public static String AppOverviewEditorAppStatusEntry;
+	public static String AppOverviewEditorBuildStatusEntry;
 	
 	public static String StopAllDialog_Title;
 	public static String StopAllDialog_Message;

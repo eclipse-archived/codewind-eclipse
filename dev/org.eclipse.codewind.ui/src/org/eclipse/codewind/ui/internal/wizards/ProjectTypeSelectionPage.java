@@ -195,9 +195,6 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		subtypeLabel.setVisible(false);
 		subtypeViewer.getTable().setVisible(false);
 
-		initTypeMap();
-		updateTables(true);
-
 		typeViewer.getTable().setFocus();
 		setControl(composite);
 	}
@@ -254,18 +251,20 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 	}
 	
-	public void setProjectInfo(ProjectInfo projectInfo) {
+	public void initPage(CodewindConnection connection, ProjectInfo projectInfo) {
+		this.connection = connection;
+		initTypeMap();
 		this.projectInfo = projectInfo;
 		if (projectInfo == null) {
 			projectTypeInfo = null;
 			projectSubtypeInfo = null;
-		} else if (typeMap != null) {
+		} else {
 			projectTypeInfo = typeMap.get(projectInfo.type.getId());
 			projectSubtypeInfo = projectTypeInfo.new ProjectSubtypeInfo(projectInfo.language.getId());
 		}
 		updateTables(true);
 	}
-
+	
 	public void initTypeMap() {
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
@@ -285,11 +284,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			return;
 		}
 	}
-	
-	public CodewindConnection getConnection() {
-		return connection;
-	}
-	
+
 	public ProjectTypeInfo getType() {
 		return projectTypeInfo;
 	}

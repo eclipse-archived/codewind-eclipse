@@ -174,6 +174,11 @@ public class Messages extends NLS {
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
 	
+	public static String SelectConnectionPageName;
+	public static String SelectConnectionPageTitle;
+	public static String SelectConnectionPageDescription;
+	public static String SelectConnectionPageNoSelectionMsg;
+	
 	public static String MoveProjectJobLabel;
 	public static String MoveProjectError;
 	

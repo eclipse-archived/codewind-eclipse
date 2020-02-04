@@ -36,7 +36,6 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
-import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -58,7 +57,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class ProjectSelectionPage extends WizardPage {
 	
-	private final BindProjectWizard wizard;
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 	private final CodewindConnection connection;
 	private Button workspaceProject;
@@ -71,12 +69,11 @@ public class ProjectSelectionPage extends WizardPage {
 	private String projectPath = null;
 	private boolean hasValidProjects = false;
 
-	protected ProjectSelectionPage(BindProjectWizard wizard, CodewindConnection connection) {
+	protected ProjectSelectionPage(CodewindConnection connection) {
 		super(Messages.SelectProjectPageName);
 		setTitle(Messages.SelectProjectPageTitle);
 		setDescription(Messages.SelectProjectPageDescription);
 		pattern.setPattern("*");
-		this.wizard = wizard;
 		this.connection = connection;
 		hasValidProjects = hasValidProjects();
 	}
@@ -387,11 +384,8 @@ public class ProjectSelectionPage extends WizardPage {
 		return canFinish();
 	}
 
-	@Override
-	public IWizardPage getNextPage() {
-		// Set the project so the next page has it.
-		wizard.setProject(project, getProjectPath());
-		return super.getNextPage();
+	public boolean isActivePage() {
+		return isCurrentPage();
 	}
 
 	public boolean canFinish() {

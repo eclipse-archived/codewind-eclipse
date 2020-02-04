@@ -11,12 +11,20 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.cli.InstallStatus;
+import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
@@ -25,10 +33,12 @@ import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubt
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
+import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -38,20 +48,24 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 
 public class BindProjectWizard extends Wizard implements INewWizard {
 
+	private ConnectionSelectionPage connectionPage;
 	private ProjectSelectionPage projectPage;
 	private ProjectValidationPage projectValidationPage;
 	private ProjectTypeSelectionPage projectTypePage;
 	
-	private final CodewindConnection connection;
+	private CodewindConnection connection;
 	private IProject project = null;
 	private IPath projectPath = null;
 	
@@ -81,14 +95,51 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	@Override
 	public void addPages() {
 		setWindowTitle(Messages.BindProjectWizardTitle);
+		if (connection == null) {
+			List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
+			if (connections.size() == 1) {
+				connection = connections.get(0);
+				if ((connection.isLocal() && !checkInstallStatus()) || (!connection.isLocal() && !checkRemoteStatus())) {
+					if (getContainer() != null) {
+						getContainer().getShell().close();
+					}
+					return;
+				}
+			} else {
+				connectionPage = new ConnectionSelectionPage(connections);
+				addPage(connectionPage);
+			}
+		}
 		if (projectPath == null) {
-			projectPage = new ProjectSelectionPage(this, connection);
+			projectPage = new ProjectSelectionPage(connection);
 			addPage(projectPage);
 		}
-		projectValidationPage = new ProjectValidationPage(this, connection, project);
+		projectValidationPage = new ProjectValidationPage(connection, project);
 		projectTypePage = new ProjectTypeSelectionPage(connection);
 		addPage(projectValidationPage);
 		addPage(projectTypePage);
+	}
+
+	@Override
+	public IWizardPage getNextPage(IWizardPage page) {
+		if (connectionPage != null && connectionPage.isActivePage()) {
+			connection = connectionPage.getConnection();
+			if ((connection.isLocal() && !checkInstallStatus()) || (!connection.isLocal() && !checkRemoteStatus())) {
+				if (getContainer() != null) {
+					getContainer().getShell().close();
+				}
+				return null;
+			}
+			projectValidationPage.setConnection(connection);
+			return projectValidationPage;
+		} else if (projectPage != null && projectPage.isActivePage()) {
+			projectValidationPage.setProject(projectPage.getProject(), projectPage.getProjectPath());
+			return projectValidationPage;
+		} else if (projectValidationPage.isActivePage()) {
+			projectTypePage.initPage(connection, projectValidationPage.getProjectInfo());
+			return projectTypePage;
+		}
+		return null;
 	}
 
 	@Override
@@ -124,6 +175,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 
 		final String name = project != null ? project.getName() : projectPath.lastSegment();
 		
+		// Check if this application is already deployed on another connection
 		final List<CodewindApplication> existingDeployments = new ArrayList<CodewindApplication>();
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
 			if (conn.isConnected()) {
@@ -134,6 +186,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			}
 		}
 		
+		// If the application is deployed on another connection, ask the user what they want to do
 		final ProjectDeployedDialog.Behaviour selectedBehaviour;
 		if (!existingDeployments.isEmpty()) {
 			ProjectDeployedDialog dialog = new ProjectDeployedDialog(getShell(), projectPath);
@@ -253,6 +306,9 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						}
 					}
 					mon.done();
+					ViewHelper.openCodewindExplorerView();
+					ViewHelper.refreshCodewindExplorerView(null);
+					ViewHelper.expandConnection(connection);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + projectPath.toOSString(), e); //$NON-NLS-1$
@@ -265,15 +321,144 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		return true;
 	}
 	
-	public void setProjectInfo(ProjectInfo projectInfo) {
-		if (projectTypePage != null) {
-			projectTypePage.setProjectInfo(projectInfo);
+	private boolean checkInstallStatus() {
+		// If the installer is currently running, show a dialog to the user
+		final InstallerStatus installerStatus = CodewindManager.getManager().getInstallerStatus();
+		if (installerStatus != null) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					CodewindInstall.installerActiveDialog(installerStatus);
+				}
+			});
+			return false;
 		}
+		
+		// Install or start Codewind if necessary
+		if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
+			setupLocalConnection();
+		} else {
+			CodewindInstall.codewindInstallerDialog(project);
+			return false;
+		}
+
+		// If the connection is still not set up then display an error dialog
+		if (!connection.isConnected()) {
+			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, NLS.bind(Messages.BindProjectConnectionError, connection.getName()));
+			return false;
+		}
+		
+		// Check for project errors (project is already deployed on the connection)
+		String projectError = getProjectError(connection, project);
+		if (projectError != null) {
+			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, projectError);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean checkRemoteStatus() {
+		// Try to connect if disconnected
+		if (!connection.isConnected()) {
+			connectCodewind();
+		}
+		
+		// If still not connected then display an error dialog
+		if (!connection.isConnected()) {
+			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, NLS.bind(Messages.BindProjectConnectionError, connection.getName()));
+			return false;
+		}
+		
+		// Check for project errors (project is already deployed on the connection)
+		String projectError = getProjectError(connection, project);
+		if (projectError != null) {
+			CoreUtil.openDialog(true, Messages.BindProjectErrorTitle, projectError);
+			return false;
+		}
+		
+		return true;
 	}
 
-	public void setProject(IProject project, IPath projectPath) {
-		if (projectValidationPage != null) {
-			projectValidationPage.setProject(project, projectPath, true);
+	private void setupLocalConnection() {
+		if (connection.isConnected()) {
+			return;
+		}
+		InstallStatus status = CodewindManager.getManager().getInstallStatus();
+		if (status.isStarted()) {
+			if (!connection.isConnected()) {
+				// This should not happen since the connection should be established as part of the start action
+				Logger.logError("Local Codewind is started but the connection has not been established or is down");
+			}
+			return;
+		}
+		if (!status.isInstalled()) {
+			Logger.logError("In BindProjectWizard run method and Codewind is not installed or has unknown status."); //$NON-NLS-1$
+			return;
+		}
+		
+		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+			@Override
+			public void run(IProgressMonitor monitor) throws InvocationTargetException {
+				try {
+					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
+					if (result.getExitValue() != 0) {
+						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
+						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + errorText); //$NON-NLS-1$
+					}
+					CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
+					ViewHelper.refreshCodewindExplorerView(connection);
+				} catch (TimeoutException e) {
+					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage()); //$NON-NLS-1$
+				} catch (Exception e) {
+					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
+				}
+			}
+		};
+		try {
+			if (getPageCount() > 0 && getContainer() != null) {
+				getContainer().run(true, true, runnable);
+			} else {
+				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
+			}
+		} catch (InvocationTargetException e) {
+			Logger.logError("An error occurred trying to start Codewind", e); //$NON-NLS-1$
+		} catch (InterruptedException e) {
+			Logger.logError("Codewind start was interrupted", e); //$NON-NLS-1$
 		}
 	}
+	
+	private void connectCodewind() {
+		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+			@Override
+			public void run(IProgressMonitor monitor) throws InvocationTargetException {
+				try {
+					connection.connect(monitor);
+					ViewHelper.refreshCodewindExplorerView(connection);
+				} catch (Exception e) {
+					throw new InvocationTargetException(e, "An error occurred trying to connect to " + connection.getName() + ": " + e.getMessage()); //$NON-NLS-1$  //$NON-NLS-2$
+				}
+			}
+		};
+		try {
+			if (getPageCount() > 0 && getContainer() != null) {
+				getContainer().run(true, true, runnable);
+			} else {
+				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
+			}
+		} catch (InvocationTargetException e) {
+			Logger.logError("An error occurred trying to connect to: " + connection.getName(), e); //$NON-NLS-1$
+		} catch (InterruptedException e) {
+			Logger.logError("Codewind connect was interrupted for: " + connection.getName(), e); //$NON-NLS-1$
+		}
+	}
+	
+	private String getProjectError(CodewindConnection connection, IProject project) {
+		if (connection.getAppByLocation(project.getLocation()) != null) {
+			return NLS.bind(Messages.BindProjectAlreadyExistsError,  new String[] {project.getName(), connection.getName()});
+		}
+		return null;
+	}
+
 }

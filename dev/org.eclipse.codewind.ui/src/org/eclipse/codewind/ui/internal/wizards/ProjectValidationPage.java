@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -17,7 +17,6 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
-import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
@@ -38,7 +37,6 @@ import org.eclipse.ui.PlatformUI;
 
 public class ProjectValidationPage extends WizardPage {
 
-	private BindProjectWizard wizard;
 	private CodewindConnection connection;
 	private IProject project;
 	private IPath projectPath;
@@ -48,11 +46,10 @@ public class ProjectValidationPage extends WizardPage {
 	private Text typeText, languageText;
 	private Font boldFont;
 
-	protected ProjectValidationPage(BindProjectWizard wizard, CodewindConnection connection, IProject project) {
+	protected ProjectValidationPage(CodewindConnection connection, IProject project) {
 		super(Messages.ProjectValidationPageName);
 		setTitle(Messages.ProjectValidationPageTitle);
 		setDescription(Messages.ProjectValidationPageDescription);
-		this.wizard = wizard;
 		this.connection = connection;
 		this.project = project;
 		if (project != null) {
@@ -105,7 +102,7 @@ public class ProjectValidationPage extends WizardPage {
 		languageText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
 		IDEUtil.normalizeBackground(languageText, composite);
 		
-		setProject(project, projectPath, false);
+		updatePage(false);
 
 		validateMsg.setFocus();
 		setControl(composite);
@@ -119,6 +116,11 @@ public class ProjectValidationPage extends WizardPage {
 		super.dispose();
 	}
 
+	@Override
+	public boolean canFlipToNextPage() {
+		return canFinish();
+	}
+
 	public boolean canFinish() {
 		return projectInfo != null;
 	}
@@ -130,14 +132,23 @@ public class ProjectValidationPage extends WizardPage {
 	public ProjectInfo getProjectInfo() {
 		return projectInfo;
 	}
-
-	public void setProject(IProject project, IPath projectPath, boolean fromPrevPage) {
+	
+	public void setConnection(CodewindConnection connection) {
+		this.connection = connection;
+		updatePage(true);
+	}
+	
+	public void setProject(IProject project, IPath projectPath) {
 		this.project = project;
 		this.projectPath = projectPath;
-		this.projectInfo = null;
-		if (projectPath == null) {
+		updatePage(true);
+	}
+
+	private void updatePage(boolean fromPrevPage) {
+		if (connection == null || projectPath == null) {
 			return;
 		}
+		this.projectInfo = null;
 		
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
@@ -158,7 +169,6 @@ public class ProjectValidationPage extends WizardPage {
 		} catch (InterruptedException e) {
 			// The user cancelled the operation
 		}
-		wizard.setProjectInfo(projectInfo);
 		if (projectInfo != null) {
 			validateMsg.setText(NLS.bind(Messages.ProjectValidationPageMsg, getProjectName()));
 			typeText.setText(projectInfo.type.getDisplayName());

@@ -247,9 +247,13 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		}
 		return styledString;
 	}
-
+	
 	@Override
 	public Image getImage(Object element) {
+		return getCodewindImage(element);
+	}
+
+	public static Image getCodewindImage(Object element) {
 		if (element instanceof CodewindManager) {
 			return CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_ICON);
 		} else if (element instanceof LocalConnection) {

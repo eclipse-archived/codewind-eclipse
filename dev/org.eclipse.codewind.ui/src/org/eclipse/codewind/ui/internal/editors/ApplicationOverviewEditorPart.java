@@ -383,17 +383,17 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        
 	        autoBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorAutoBuildEntry);
 	        injectMetricsEntry = new StringEntry(composite, Messages.AppOverviewEditorInjectMetricsEntry);
-	        appStatusEntry = new StringEntry(composite, "Application Status:");
-	        buildStatusEntry = new StringEntry(composite, "Build Status:");
+	        appStatusEntry = new StringEntry(composite, Messages.AppOverviewEditorAppStatusEntry);
+	        buildStatusEntry = new StringEntry(composite, Messages.AppOverviewEditorBuildStatusEntry);
 	        lastImageBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastImageBuildEntry);
 	        lastBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastBuildEntry);
 		}
 		
 		public void update(CodewindApplication app) {
-			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, app.isAvailable());
-			injectMetricsEntry.setValue(metricsInjectionState(app.canInjectMetrics(), app.isInjectMetrics()), app.isAvailable());
-			appStatusEntry.setValue(app.getAppStatus().getDisplayString(app.getStartMode()), app.isAvailable());
-			buildStatusEntry.setValue(app.getBuildStatus().getDisplayString(), app.isAvailable());
+			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, true);
+			injectMetricsEntry.setValue(metricsInjectionState(app.canInjectMetrics(), app.isInjectMetrics()), true);
+			appStatusEntry.setValue(app.isAvailable() ? app.getAppStatus().getDisplayString(app.getStartMode()) : Messages.AppOverviewEditorStatusDisabled, true);
+			buildStatusEntry.setValue(app.isAvailable() ? app.getBuildStatus().getDisplayString() : null, true);
 			long lastImageBuild = app.getLastImageBuild();
 			String lastImageBuildStr = Messages.AppOverviewEditorImageNeverBuilt;
 			if (lastImageBuild > 0) {

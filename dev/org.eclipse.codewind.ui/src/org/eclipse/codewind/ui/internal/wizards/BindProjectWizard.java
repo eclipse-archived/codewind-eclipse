@@ -454,6 +454,9 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	}
 	
 	private String getProjectError(CodewindConnection connection, IProject project) {
+		if (connection == null || project == null) {
+			return null;
+		}
 		if (connection.getAppByLocation(project.getLocation()) != null) {
 			return NLS.bind(Messages.BindProjectAlreadyExistsError,  new String[] {project.getName(), connection.getName()});
 		}

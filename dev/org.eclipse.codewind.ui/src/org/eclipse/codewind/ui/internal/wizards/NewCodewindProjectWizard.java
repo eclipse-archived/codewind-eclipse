@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,8 @@ import java.util.List;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -37,6 +39,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
@@ -46,7 +49,7 @@ import org.eclipse.ui.IWorkbench;
 public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	private CodewindConnection connection = null;
-	private List<ProjectTemplateInfo> templateList = null;
+	private ConnectionSelectionPage connectionPage = null;
 	private NewCodewindProjectPage newProjectPage = null;
 	
 	public NewCodewindProjectWizard() {
@@ -55,10 +58,9 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		setNeedsProgressMonitor(true);		
 	}
 	
-	public NewCodewindProjectWizard(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
+	public NewCodewindProjectWizard(CodewindConnection connection) {
 		this();
 		this.connection = connection;
-		this.templateList = templateList;
 	}
 
 	@Override
@@ -68,41 +70,42 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
 	@Override
 	public void addPages() {
-		if (connection == null || connection.isLocal()) {
-			if (CodewindManager.getManager().getInstallerStatus() != null) {
-				// The installer is currently running
-				CodewindInstall.installerActiveDialog(CodewindManager.getManager().getInstallerStatus());
-				if (getContainer() != null) {
-					getContainer().getShell().close();
-				}
-			} else if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
-				setupWizard();
+		setWindowTitle(Messages.NewProjectPage_ShellTitle);
+		// If there is only one connection then use it
+		if (connection == null) {
+			List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
+			if (connections.size() == 1) {
+				connection = connections.get(0);
 			} else {
-				CodewindInstall.codewindInstallerDialog();
-				if (getContainer() != null) {
-					getContainer().getShell().close();
-				}
+				connectionPage = new ConnectionSelectionPage(connections);
+				addPage(connectionPage);
 			}
-		} else {
-			setupWizard();
 		}
+		if (connection != null && ((connection.isLocal() && !checkInstallStatus()) || (!connection.isLocal() && !checkRemoteStatus()))) {
+			if (getContainer() != null) {
+				getContainer().getShell().close();
+			}
+			return;
+		}
+		newProjectPage = new NewCodewindProjectPage(connection);
+		addPage(newProjectPage);
+		
 	}
 	
-	private void setupWizard() {
-		setWindowTitle(Messages.NewProjectPage_ShellTitle);
-		newProjectPage = new NewCodewindProjectPage(connection, templateList);
-		addPage(newProjectPage);
-	}
-
 	@Override
-	public boolean performCancel() {
-		if (newProjectPage != null) {
-			CodewindConnection newConnection = newProjectPage.getConnection();
-			if (newConnection != null && CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
-				newConnection.disconnect();
+	public IWizardPage getNextPage(IWizardPage page) {
+		if (connectionPage != null && connectionPage.isActivePage()) {
+			connection = connectionPage.getConnection();
+			if ((connection.isLocal() && !checkInstallStatus()) || (!connection.isLocal() && !checkRemoteStatus())) {
+				if (getContainer() != null) {
+					getContainer().getShell().close();
+				}
+				return null;
 			}
+			newProjectPage.setConnection(connection);
+			return newProjectPage;
 		}
-		return super.performCancel();
+		return null;
 	}
 
 	@Override
@@ -126,9 +129,8 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			location = location.append(projectName);
 		}
 		final IPath projectPath = location;
-		CodewindConnection newConnection = newProjectPage.getConnection();
-		if (info == null || projectName == null || projectPath == null || newConnection == null) {
-			Logger.logError("The connection, project type, name or location was null for the new project wizard"); //$NON-NLS-1$
+		if (info == null || projectName == null || projectPath == null) {
+			Logger.logError("The project type, name or location was null for the new project wizard"); //$NON-NLS-1$
 			return false;
 		}
 		
@@ -139,7 +141,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					SubMonitor mon = SubMonitor.convert(monitor, 140);
 					
 					// Check for a push registry if Codewind style project
-					if (!newConnection.isLocal() && info.isCodewindStyle() && !newConnection.requestHasPushRegistry()) {
+					if (!connection.isLocal() && info.isCodewindStyle() && !connection.requestHasPushRegistry()) {
 						Display.getDefault().syncExec(new Runnable() {
 							@Override
 							public void run() {
@@ -160,24 +162,21 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					mon.setWorkRemaining(100);
 					
 					// Create and bind the project
-					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), newConnection.getConid(), mon.split(40));
+					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), connection.getConid(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
-					ProjectUtil.bindProject(projectName, projectPath.toOSString(), info.getLanguage(), info.getProjectType(), newConnection.getConid(), mon.split(40));
-					if (CodewindConnectionManager.getActiveConnection(newConnection.getBaseURI().toString()) == null) {
-						CodewindConnectionManager.add(newConnection);
-					}
-					if (mon.isCanceled()) {
-						return Status.CANCEL_STATUS;
-					}
-					mon.split(10);
-					newConnection.refreshApps(null);
+					ProjectUtil.bindProject(projectName, projectPath.toOSString(), info.getLanguage(), info.getProjectType(), connection.getConid(), mon.split(40));
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;
 					}
 					mon.split(10);
-					CodewindApplication app = newConnection.getAppByName(projectName);
+					connection.refreshApps(null);
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.split(10);
+					CodewindApplication app = connection.getAppByName(projectName);
 					if (app != null) {
 						ImportProjectAction.importProject(app);
 						if (CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE)) {
@@ -189,8 +188,8 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					mon.worked(10);
 					mon.done();
 					ViewHelper.openCodewindExplorerView();
-					ViewHelper.refreshCodewindExplorerView(newConnection);
-					ViewHelper.expandConnection(newConnection);
+					ViewHelper.refreshCodewindExplorerView(connection);
+					ViewHelper.expandConnection(connection);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to create a project with type: " + info.getUrl() + ", and name: " + projectName, e); //$NON-NLS-1$ //$NON-NLS-2$
@@ -201,4 +200,50 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		job.schedule();
 		return true;
 	}
+	
+	private boolean checkInstallStatus() {
+		// If the installer is currently running, show a dialog to the user
+		final InstallerStatus installerStatus = CodewindManager.getManager().getInstallerStatus();
+		if (installerStatus != null) {
+			Display.getDefault().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					CodewindInstall.installerActiveDialog(installerStatus);
+				}
+			});
+			return false;
+		}
+		
+		// Install or start Codewind if necessary
+		if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
+			BindProjectWizard.setupLocalConnection(connection, this);
+		} else {
+			CodewindInstall.codewindInstallerDialog();
+			return false;
+		}
+
+		// If the connection is still not set up then display an error dialog
+		if (!connection.isConnected()) {
+			CoreUtil.openDialog(true, Messages.NewProjectWizard_ErrorTitle, NLS.bind(Messages.NewProjectWizard_ConnectionError, connection.getName()));
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean checkRemoteStatus() {
+		// Try to connect if disconnected
+		if (!connection.isConnected()) {
+			BindProjectWizard.connectCodewind(connection, this);
+		}
+		
+		// If still not connected then display an error dialog
+		if (!connection.isConnected()) {
+			CoreUtil.openDialog(true, Messages.NewProjectWizard_ErrorTitle, NLS.bind(Messages.NewProjectWizard_ConnectionError, connection.getName()));
+			return false;
+		}
+		
+		return true;
+	}
+
 }

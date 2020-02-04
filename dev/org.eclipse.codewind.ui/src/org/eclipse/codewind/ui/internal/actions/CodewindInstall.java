@@ -256,8 +256,13 @@ public class CodewindInstall {
 				Shell shell = Display.getDefault().getActiveShell();
 				if (MessageDialog.openQuestion(shell, Messages.InstallCodewindDialogTitle,
 						Messages.InstallCodewindNewProjectMessage)) {
-					Wizard wizard = new NewCodewindProjectWizard();
-					WizardLauncher.launchWizardWithoutSelection(wizard);
+					CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
+					if (connection != null && connection.isConnected()) {
+						Wizard wizard = new NewCodewindProjectWizard(connection);
+						WizardLauncher.launchWizardWithoutSelection(wizard);
+					} else {
+						Logger.logError("Codewind did not install or start properly in order to create a new project."); //$NON-NLS-1$
+					}
 				}
 			}
 		};
@@ -276,7 +281,6 @@ public class CodewindInstall {
 						WizardLauncher.launchWizardWithoutSelection(wizard);
 					} else {
 						Logger.logError("Codewind not installed or has unknown status when trying to bind project: " + project.getName()); //$NON-NLS-1$
-						return;
 					}
 				}
 			}

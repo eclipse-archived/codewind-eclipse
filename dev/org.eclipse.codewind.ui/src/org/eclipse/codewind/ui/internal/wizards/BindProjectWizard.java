@@ -99,16 +99,16 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
 			if (connections.size() == 1) {
 				connection = connections.get(0);
-				if ((connection.isLocal() && !checkInstallStatus()) || (!connection.isLocal() && !checkRemoteStatus())) {
-					if (getContainer() != null) {
-						getContainer().getShell().close();
-					}
-					return;
-				}
 			} else {
 				connectionPage = new ConnectionSelectionPage(connections);
 				addPage(connectionPage);
 			}
+		}
+		if (connection != null && ((connection.isLocal() && !checkInstallStatus()) || (!connection.isLocal() && !checkRemoteStatus()))) {
+			if (getContainer() != null) {
+				getContainer().getShell().close();
+			}
+			return;
 		}
 		if (projectPath == null) {
 			projectPage = new ProjectSelectionPage(connection);
@@ -336,7 +336,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		
 		// Install or start Codewind if necessary
 		if (CodewindManager.getManager().getInstallStatus().isInstalled()) {
-			setupLocalConnection();
+			setupLocalConnection(connection, this);
 		} else {
 			CodewindInstall.codewindInstallerDialog(project);
 			return false;
@@ -361,7 +361,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	private boolean checkRemoteStatus() {
 		// Try to connect if disconnected
 		if (!connection.isConnected()) {
-			connectCodewind();
+			connectCodewind(connection, this);
 		}
 		
 		// If still not connected then display an error dialog
@@ -380,13 +380,13 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		return true;
 	}
 
-	private void setupLocalConnection() {
-		if (connection.isConnected()) {
+	public static void setupLocalConnection(CodewindConnection conn, Wizard wizard) {
+		if (conn.isConnected()) {
 			return;
 		}
 		InstallStatus status = CodewindManager.getManager().getInstallStatus();
 		if (status.isStarted()) {
-			if (!connection.isConnected()) {
+			if (!conn.isConnected()) {
 				// This should not happen since the connection should be established as part of the start action
 				Logger.logError("Local Codewind is started but the connection has not been established or is down");
 			}
@@ -407,8 +407,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 						throw new InvocationTargetException(null, "There was a problem trying to start Codewind: " + errorText); //$NON-NLS-1$
 					}
-					CodewindConnection connection = CodewindConnectionManager.getLocalConnection();
-					ViewHelper.refreshCodewindExplorerView(connection);
+					ViewHelper.refreshCodewindExplorerView(conn);
 				} catch (TimeoutException e) {
 					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage()); //$NON-NLS-1$
 				} catch (Exception e) {
@@ -417,8 +416,8 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 			}
 		};
 		try {
-			if (getPageCount() > 0 && getContainer() != null) {
-				getContainer().run(true, true, runnable);
+			if (wizard.getPageCount() > 0 && wizard.getContainer() != null) {
+				wizard.getContainer().run(true, true, runnable);
 			} else {
 				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
 			}
@@ -429,28 +428,28 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		}
 	}
 	
-	private void connectCodewind() {
+	public static void connectCodewind(CodewindConnection conn, Wizard wizard) {
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			@Override
 			public void run(IProgressMonitor monitor) throws InvocationTargetException {
 				try {
-					connection.connect(monitor);
-					ViewHelper.refreshCodewindExplorerView(connection);
+					conn.connect(monitor);
+					ViewHelper.refreshCodewindExplorerView(conn);
 				} catch (Exception e) {
-					throw new InvocationTargetException(e, "An error occurred trying to connect to " + connection.getName() + ": " + e.getMessage()); //$NON-NLS-1$  //$NON-NLS-2$
+					throw new InvocationTargetException(e, "An error occurred trying to connect to " + conn.getName() + ": " + e.getMessage()); //$NON-NLS-1$  //$NON-NLS-2$
 				}
 			}
 		};
 		try {
-			if (getPageCount() > 0 && getContainer() != null) {
-				getContainer().run(true, true, runnable);
+			if (wizard.getPageCount() > 0 && wizard.getContainer() != null) {
+				wizard.getContainer().run(true, true, runnable);
 			} else {
 				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
 			}
 		} catch (InvocationTargetException e) {
-			Logger.logError("An error occurred trying to connect to: " + connection.getName(), e); //$NON-NLS-1$
+			Logger.logError("An error occurred trying to connect to: " + conn.getName(), e); //$NON-NLS-1$
 		} catch (InterruptedException e) {
-			Logger.logError("Codewind connect was interrupted for: " + connection.getName(), e); //$NON-NLS-1$
+			Logger.logError("Codewind connect was interrupted for: " + conn.getName(), e); //$NON-NLS-1$
 		}
 	}
 	

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,23 +11,16 @@
 
 package org.eclipse.codewind.ui.internal.wizards;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
-import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
-import org.eclipse.codewind.core.internal.cli.InstallStatus;
-import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
-import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
@@ -38,7 +31,6 @@ import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
-import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -70,6 +62,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.SearchPattern;
 import org.eclipse.ui.dialogs.WizardNewProjectCreationPage;
 
@@ -82,55 +75,21 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 	private SearchPattern pattern = new SearchPattern(SearchPattern.RULE_PATTERN_MATCH | SearchPattern.RULE_PREFIX_MATCH | SearchPattern.RULE_BLANK_MATCH);
 	private Text filterText;
 	private Table selectionTable;
-	private Text descriptionLabel;
-	private Text styleLabel;
-	private Text sourceLabel;
+	private Text descriptionLabel, styleLabel, sourceLabel;
+	private Composite manageReposComp, manageRegistriesComp;
+	private Link manageReposLink, manageRegistriesLink;
 	
-	protected NewCodewindProjectPage(CodewindConnection connection, List<ProjectTemplateInfo> templateList) {
+	protected NewCodewindProjectPage(CodewindConnection connection) {
 		super(Messages.NewProjectPage_ShellTitle);
 		setTitle(Messages.NewProjectPage_WizardTitle);
 		setDescription(Messages.NewProjectPage_WizardDescription);
 		this.connection = connection;
-		this.templateList = templateList;
-		setPageComplete(false);
 	}
 
 	@Override
 	public void createControl(Composite parent) {
 		super.createControl(parent);
 		Composite composite = (Composite) getControl();
-		
-		if (connection == null) {
-			setupConnection();
-			if (connection == null) {
-				setErrorMessage(Messages.NewProjectPage_CodewindConnectError);
-				setControl(composite);
-				return;
-			}
-		}
-		
-		if (templateList == null || templateList.isEmpty()) {
-			try {
-				templateList = TemplateUtil.listTemplates(true, connection.getConid(), new NullProgressMonitor());
-			} catch (Exception e) {
-				Logger.logError("An error occurred trying to get the list of templates", e); //$NON-NLS-1$
-				setErrorMessage(Messages.NewProjectPage_TemplateListError);
-				setControl(composite);
-				return;
-			}
-		}
-		
-		if (templateList.isEmpty()) {
-			setErrorMessage(Messages.NewProjectPage_EmptyTemplateList);
-		} else {
-			templateList.sort(new Comparator<ProjectTemplateInfo>() {
-				@Override
-				public int compare(ProjectTemplateInfo info1, ProjectTemplateInfo info2) {
-					return info1.getLabel().compareTo(info2.getLabel());
-				}
-			});
-		}
-
 		createContents(composite);
 	}
 
@@ -238,16 +197,16 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		IDEUtil.normalizeBackground(sourceLabel, detailsComp);
 		
 		// Manage repositories link
-		Composite manageReposComp = new Composite(parent, SWT.NONE);
+		manageReposComp = new Composite(parent, SWT.NONE);
 		manageReposComp.setLayout(new GridLayout(1, false));
 		manageReposComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
 		
-		Link manageRepoLink = new Link(manageReposComp, SWT.NONE);
-		manageRepoLink.setText(Messages.NewProjectPage_ManageRepoLabel + " <a>" + Messages.NewProjectPage_ManageRepoLink + "</a>");
-		manageRepoLink.setToolTipText(Messages.NewProjectPage_ManageRepoTooltip);
-		manageRepoLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
+		manageReposLink = new Link(manageReposComp, SWT.NONE);
+		manageReposLink.setText(Messages.NewProjectPage_ManageRepoLabel + " <a>" + Messages.NewProjectPage_ManageRepoLink + "</a>");
+		manageReposLink.setToolTipText(Messages.NewProjectPage_ManageRepoTooltip);
+		manageReposLink.setLayoutData(new GridData(GridData.END, GridData.CENTER, false, false));
 
-		manageRepoLink.addSelectionListener(new SelectionAdapter() {
+		manageReposLink.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				List<RepositoryInfo> repoList;
@@ -294,60 +253,54 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		});
 		
 
-		if (!connection.isLocal()) {
-			// Manage registries link
-			Composite manageRegistriesComp = new Composite(parent, SWT.NONE);
-			manageRegistriesComp.setLayout(new GridLayout(1, false));
-			manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
-		
-			Link manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
-			manageRegistriesLink.setText(Messages.ManageRegistriesLinkLabel + " <a>" + Messages.ManageRegistriesLinkText + "</a>");
-			if (connection.isLocal()) {
-				manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltipLocal);
-			} else {
-				manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltip);
-			}
-			manageRegistriesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+		// Manage registries link
+		manageRegistriesComp = new Composite(parent, SWT.NONE);
+		manageRegistriesComp.setLayout(new GridLayout(1, false));
+		manageRegistriesComp.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
 	
-			manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent event) {
-					try {
-						List<RegistryInfo> regList = connection.requestRegistryList();
-						ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
-						RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
-						if (regDialog.open() == Window.OK) {
-							if (regDialog.hasChanges()) {
-								IRunnableWithProgress runnable = new IRunnableWithProgress() {
-									@Override
-									public void run(IProgressMonitor monitor) throws InvocationTargetException {
-										SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
-										IStatus status = regDialog.updateRegistries(mon.split(75));
-										if (!status.isOK()) {
-											throw new InvocationTargetException(status.getException(), status.getMessage());
-										}
-										if (mon.isCanceled()) {
-											return;
-										}
+		manageRegistriesLink = new Link(manageRegistriesComp, SWT.NONE);
+		manageRegistriesLink.setText(Messages.ManageRegistriesLinkLabel + " <a>" + Messages.ManageRegistriesLinkText + "</a>");
+		manageRegistriesLink.setToolTipText(Messages.ManageRegistriesLinkTooltip);
+		manageRegistriesLink.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+
+		manageRegistriesLink.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					List<RegistryInfo> regList = connection.requestRegistryList();
+					ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
+					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
+					if (regDialog.open() == Window.OK) {
+						if (regDialog.hasChanges()) {
+							IRunnableWithProgress runnable = new IRunnableWithProgress() {
+								@Override
+								public void run(IProgressMonitor monitor) throws InvocationTargetException {
+									SubMonitor mon = SubMonitor.convert(monitor, Messages.RegUpdateTask, 100);
+									IStatus status = regDialog.updateRegistries(mon.split(75));
+									if (!status.isOK()) {
+										throw new InvocationTargetException(status.getException(), status.getMessage());
 									}
-								};
-								try {
-									getWizard().getContainer().run(true, true, runnable);
-								} catch (InvocationTargetException e) {
-									MessageDialog.openError(getShell(), Messages.RegUpdateErrorTitle, e.getMessage());
-									return;
-								} catch (InterruptedException e) {
-									// The user cancelled the operation
-									return;
+									if (mon.isCanceled()) {
+										return;
+									}
 								}
+							};
+							try {
+								getWizard().getContainer().run(true, true, runnable);
+							} catch (InvocationTargetException e) {
+								MessageDialog.openError(getShell(), Messages.RegUpdateErrorTitle, e.getMessage());
+								return;
+							} catch (InterruptedException e) {
+								// The user cancelled the operation
+								return;
 							}
 						}
-					} catch (Exception e) {
-						MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
 					}
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
 				}
-			});
-		}
+			}
+		});
 
 		// Listeners
 		filterText.addModifyListener(new ModifyListener() {
@@ -394,10 +347,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		detailsScroll.setExpandVertical(true);
 		detailsScroll.setMinSize(detailsScroll.getContent().computeSize(SWT.DEFAULT, SWT.DEFAULT));
 		
-		if (selectionTable.getItemCount() > 0) {
-			selectionTable.setSelection(0);
-		}
-		updateDetails();
+		initContent();
 	}
 	
 	protected boolean canFinish() {
@@ -462,13 +412,69 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		return null;
 	}
 	
-	public CodewindConnection getConnection() {
-		return connection;
+	public void setConnection(CodewindConnection connection) {
+		this.connection = connection;
+		initContent();
+	}
+	
+	public void initContent() {
+		if (connection == null) {
+			return;
+		}
+		setErrorMessage(null);
+		setPageComplete(false);
+		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+			@Override
+			public void run(IProgressMonitor monitor) throws InvocationTargetException {
+				try {
+					SubMonitor mon = SubMonitor.convert(monitor, Messages.NewProjectPage_GetTemplatesTask, 100);
+					templateList = TemplateUtil.listTemplates(true, connection.getConid(), mon.split(100));
+				} catch (Exception e) {
+					throw new InvocationTargetException(e);
+				}
+			}
+		};
+			
+		try {
+			if (getWizard().getPageCount() > 0 && getWizard().getContainer() != null) {
+				getWizard().getContainer().run(true, true, runnable);
+			} else {
+				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(runnable);
+			}
+		} catch (InvocationTargetException e) {
+			Logger.logError("An error occurred getting the templates for the " + connection.getName() + " connection.", e.getTargetException()); //$NON-NLS-1$ //$NON-NLS-2$
+			setErrorMessage(Messages.NewProjectPage_TemplateListError);
+			return;
+		} catch (InterruptedException e) {
+			// The user cancelled the operation
+		}
+		
+		if (templateList.isEmpty()) {
+			setErrorMessage(Messages.NewProjectPage_EmptyTemplateList);
+		} else {
+			templateList.sort(new Comparator<ProjectTemplateInfo>() {
+				@Override
+				public int compare(ProjectTemplateInfo info1, ProjectTemplateInfo info2) {
+					return info1.getLabel().compareTo(info2.getLabel());
+				}
+			});
+			createItems(selectionTable, getFilterText());
+			if (selectionTable.getItemCount() > 0) {
+				selectionTable.setSelection(0);
+			}
+			updateDetails();
+		}
+		
+		manageRegistriesComp.setVisible(!connection.isLocal());
+		((GridData)manageRegistriesComp.getLayoutData()).exclude = connection.isLocal();
 	}
 
 	private void createItems(Table table, String filter) {
 		// Create the items for the table.
 		table.removeAll();
+		if (templateList == null || templateList.isEmpty()) {
+			return;
+		}
 		pattern.setPattern("*" + filter + "*");
 		for (ProjectTemplateInfo templateInfo : templateList) {
 			String template = templateInfo.getLabel();
@@ -541,15 +547,22 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 	}
 	
 	private void updateSelectionTable() {
-		String text = filterText.getText();
-		if (text == null) {
-			text = "";
-		}
-		createItems(selectionTable, text);
+		createItems(selectionTable, getFilterText());
 		if (selectionTable.getItemCount() > 0)
 			selectionTable.select(0);
 		updateDetails();
 		setPageComplete(validate());
+	}
+	
+	private String getFilterText() {
+		String text = null;
+		if (filterText != null && !filterText.isDisposed()) {
+			text = filterText.getText();
+		}
+		if (text == null) {
+			text = "";
+		}
+		return text;
 	}
 	
 	public void updateDetails() {
@@ -597,54 +610,6 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		int newWidth = text.getParent().getClientArea().width;
 		if (newWidth != width) {
 			text.setSize(newWidth, text.computeSize(newWidth, SWT.DEFAULT).y);
-		}
-	}
-	
-	private void setupConnection() {
-		final CodewindManager manager = CodewindManager.getManager();
-		connection = CodewindConnectionManager.getLocalConnection();
-		if (connection != null && connection.isConnected()) {
-			return;
-		}
-		InstallStatus status = manager.getInstallStatus();
-		if (status.isStarted()) {
-			connection = CodewindConnectionManager.getLocalConnection();
-			return;
-		}
-		if (!status.isInstalled()) {
-			Logger.logError("In NewCodewindProjectPage setupConnection method and Codewind is not installed or has unknown status.");
-			connection = null;
-			return;
-		}
-		
-		connection = null;
-		IRunnableWithProgress runnable = new IRunnableWithProgress() {
-			@Override
-			public void run(IProgressMonitor monitor) throws InvocationTargetException {
-				try {
-					ProcessResult result = InstallUtil.startCodewind(status.getVersion(), monitor);
-					if (result.getExitValue() != 0) {
-						Logger.logError("Installer start failed with return code: " + result.getExitValue() + ", output: " + result.getOutput() + ", error: " + result.getError()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-						String errorText = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
-						throw new InvocationTargetException(null, "There was a problem while trying to start Codewind: " + errorText); //$NON-NLS-1$
-					}
-					connection = CodewindConnectionManager.getLocalConnection();
-					ViewHelper.refreshCodewindExplorerView(connection);
-				} catch (IOException e) {
-					throw new InvocationTargetException(e, "An error occurred trying to start Codewind: " + e.getMessage()); //$NON-NLS-1$
-				} catch (TimeoutException e) {
-					throw new InvocationTargetException(e, "Codewind did not start in the expected time: " + e.getMessage()); //$NON-NLS-1$
-				}
-			}
-		};
-		try {
-			getWizard().getContainer().run(true, true, runnable);
-		} catch (InvocationTargetException e) {
-			Logger.logError("An error occurred trying to start Codewind", e); //$NON-NLS-1$
-			return;
-		} catch (InterruptedException e) {
-			Logger.logError("Codewind start was interrupted", e); //$NON-NLS-1$
-			return;
 		}
 	}
 }

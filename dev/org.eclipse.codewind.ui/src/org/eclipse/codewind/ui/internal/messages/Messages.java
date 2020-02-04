@@ -335,6 +335,8 @@ public class Messages extends NLS {
 	
 	public static String NewProjectAction_Label;
 	public static String NewProjectWizard_ShellTitle;
+	public static String NewProjectWizard_ErrorTitle;
+	public static String NewProjectWizard_ConnectionError;
 	public static String NewProjectPage_ShellTitle;
 	public static String NewProjectPage_WizardDescription;
 	public static String NewProjectPage_WizardTitle;
@@ -357,6 +359,7 @@ public class Messages extends NLS {
 	public static String NewProjectPage_ManageRepoLabel;
 	public static String NewProjectPage_ManageRepoLink;
 	public static String NewProjectPage_ManageRepoTooltip;
+	public static String NewProjectPage_GetTemplatesTask;
 	public static String NewProjectPage_RefreshTemplatesTask;
 	public static String NewProjectPage_RefreshTemplatesError;
 	public static String NewProjectPage_ProjectExistsError;

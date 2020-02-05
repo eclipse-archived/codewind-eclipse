@@ -40,6 +40,10 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     @Test
     public void test03_disableAutoBuild() throws Exception {
     	setAutoBuild(false);
+    	// Some project types need to restart when auto build changes (node.js)
+    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPING, 5, 1);
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     }
     
     @Test
@@ -65,6 +69,10 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     @Test
     public void test05_enableAutoBuild() throws Exception {
     	setAutoBuild(true);
+    	// Some project types need to restart when auto build changes (node.js)
+    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindUtil.waitForAppState(app, AppStatus.STOPPING, 5, 1);
+    	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     }
     
     @Test

@@ -12,6 +12,7 @@
 package org.eclipse.codewind.test.util;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
@@ -76,23 +77,21 @@ public class CodewindUtil {
 	}
 	
 	public static boolean waitForAppState(CodewindApplication app, AppStatus status, long timeout, long interval) {
-		TestUtil.wait(new Condition() {
-			@Override
-			public boolean test() {
-				return app.getAppStatus() == status;
-			}
-		}, timeout, interval);
-		return app.getAppStatus() == status;
+		return waitForAppUpdate(app, a -> a.getAppStatus() == status, timeout, interval);
 	}
 	
 	public static boolean waitForBuildState(CodewindApplication app, BuildStatus status, long timeout, long interval) {
+		return waitForAppUpdate(app, a -> a.getBuildStatus() == status, timeout, interval);
+	}
+	
+	public static boolean waitForAppUpdate(CodewindApplication app, Predicate<CodewindApplication> tester, long timeout, long interval) {
 		TestUtil.wait(new Condition() {
 			@Override
 			public boolean test() {
-				return app.getBuildStatus() == status;
+				return tester.test(app);
 			}
 		}, timeout, interval);
-		return app.getBuildStatus() == status;
+		return tester.test(app);
 	}
 	
 	public static boolean checkStableAppStatus(CodewindApplication app, AppStatus status, long timeout, long interval) {

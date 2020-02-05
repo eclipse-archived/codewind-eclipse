@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -52,7 +52,7 @@ public class InstallUtil {
 	private static final String[] REMOVE_CMD = new String[] {"remove"};
 	private static final String[] UPGRADE_CMD = new String[] {"upgrade"};
 	
-	public static final String DEFAULT_INSTALL_VERSION = "latest";
+	public static final String DEFAULT_INSTALL_VERSION = "0.9.0";
 	
 	private static final String TAG_OPTION = "-t";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";

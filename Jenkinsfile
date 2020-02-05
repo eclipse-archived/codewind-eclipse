@@ -17,7 +17,7 @@ pipeline {
     }
 
     parameters {
-        string(name: "APPSODY_VERSION", defaultValue: "0.5.7", description: "Appsody executable version to download")
+        string(name: "APPSODY_VERSION", defaultValue: "0.5.8", description: "Appsody executable version to download")
     }
 
     stages {

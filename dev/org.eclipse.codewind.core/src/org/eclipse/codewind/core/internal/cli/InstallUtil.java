@@ -52,7 +52,7 @@ public class InstallUtil {
 	private static final String[] REMOVE_CMD = new String[] {"remove"};
 	private static final String[] UPGRADE_CMD = new String[] {"upgrade"};
 	
-	public static final String DEFAULT_INSTALL_VERSION = "0.8.0";
+	public static final String DEFAULT_INSTALL_VERSION = "0.8.1";
 	
 	private static final String TAG_OPTION = "-t";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";

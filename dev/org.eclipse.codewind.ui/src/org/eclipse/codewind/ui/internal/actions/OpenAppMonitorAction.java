@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -36,7 +36,7 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
     protected CodewindApplication app;
     
 	public OpenAppMonitorAction(ISelectionProvider selectionProvider) {
-        super(selectionProvider, Messages.ActionOpenAppMonitor);
+        super(selectionProvider, Messages.ActionOpenMetricsDashboard);
         selectionChanged(getStructuredSelection());
     }
 
@@ -68,15 +68,15 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
         	return;
         }
 
-        URL url = app.getMetricsUrl();
+        URL url = app.getMetricsDashboardUrl();
 		if (url == null) {
 			// this should not happen
 			Logger.logError("OpenAppMonitorAction ran but could not construct the url"); //$NON-NLS-1$
 			return;
 		}
-		
+
         app.confirmMetricsAvailable();
-        if (!app.hasAppMonitor()) {
+        if (!app.hasMetricsDashboard()) {
         	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.AppMonitorNotSupported);
         	return;
         }
@@ -101,11 +101,11 @@ public class OpenAppMonitorAction extends SelectionProviderAction {
 
 	        browser.openURL(url);
 		} catch (PartInitException e) {
-			Logger.logError("Error opening the app monitor in browser", e); //$NON-NLS-1$
+			Logger.logError("Error opening the metrics dashboard in browser", e); //$NON-NLS-1$
 		}
     }
     
     public boolean showAction() {
-    	return app != null && app.hasAppMonitor() && app.projectLanguage.getMetricsRoot() != null;
+    	return app != null && app.hasMetricsDashboard();
     }
 }

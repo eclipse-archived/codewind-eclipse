@@ -164,11 +164,8 @@ public class CodewindApplicationFactory {
 					JSONObject detailObj = appJso.getJSONObject(CoreConstants.KEY_DETAILED_APP_STATUS);
 					if (detailObj != null && detailObj.has(CoreConstants.KEY_MESSAGE)) {
 						detail = detailObj.getString(CoreConstants.KEY_MESSAGE);
-						String notificationID = null;
-						if (detailObj.has(CoreConstants.KEY_NOTIFICATION_ID)) {
-							notificationID = detailObj.getString(CoreConstants.KEY_NOTIFICATION_ID);
-						}
-						if (notificationID == null || notificationID.isEmpty()) {
+						String notificationID = getStringValue(detailObj, CoreConstants.KEY_NOTIFICATION_ID);
+						if (notificationID == null) {
 							// If there is no notification id then clear the list
 							app.clearNotificationIDs();
 						} else if (!app.hasNotificationID(notificationID)) {
@@ -311,9 +308,21 @@ public class CodewindApplicationFactory {
 				app.setCapabilitiesReady(appJso.getBoolean(CoreConstants.KEY_CAPABILITIES_READY));
 			}
 			
-			// Set inject metrics
-			if (appJso.has(CoreConstants.KEY_INJECT_METRICS)) {
-				app.setInjectMetrics(appJso.getBoolean(CoreConstants.KEY_INJECT_METRICS));
+			// Set inject metrics info
+			if (appJso.has(CoreConstants.KEY_INJECTION)) {
+				JSONObject injectObj = appJso.getJSONObject(CoreConstants.KEY_INJECTION);
+				app.setMetricsInjectionInfo(injectObj.getBoolean(CoreConstants.KEY_INJECTABLE), injectObj.getBoolean(CoreConstants.KEY_INJECTED));
+			}
+			
+			// Set metrics dashboard info
+			if (appJso.has(CoreConstants.KEY_METRICS_DASHBOARD)) {
+				JSONObject metricsObj = appJso.getJSONObject(CoreConstants.KEY_METRICS_DASHBOARD);
+				app.setMetricsDashboardInfo(getStringValue(metricsObj, CoreConstants.KEY_METRICS_HOSTING), getStringValue(metricsObj, CoreConstants.KEY_METRICS_PATH));
+			}
+			
+			// Set perf dashboard info
+			if (appJso.has(CoreConstants.KEY_PERF_DASHBOARD_PATH)) {
+				app.setPerfDashboardInfo(getStringValue(appJso, CoreConstants.KEY_PERF_DASHBOARD_PATH));
 			}
 		} catch(JSONException e) {
 			Logger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$
@@ -328,21 +337,16 @@ public class CodewindApplicationFactory {
 		} catch (Exception e) {
 			Logger.logError("An error occurred while updating the log information for project: " + app.name, e);
 		}
-		
-		// Check for metrics support
-		updateMetricsAvailable(app);
 	}
 	
-	public static void updateMetricsAvailable(CodewindApplication app) {
-		boolean metricsAvailable = true;
-		try {
-			JSONObject obj = app.connection.requestProjectMetricsStatus(app);
-			if (obj != null && obj.has(CoreConstants.KEY_METRICS_AVAILABLE)) {
-				metricsAvailable = obj.getBoolean(CoreConstants.KEY_METRICS_AVAILABLE);
-			}
-		} catch (Exception e) {
-			Logger.logError("An error occurred checking if metrics are available: " + app.name, e);
+	private static String getStringValue(JSONObject obj, String key) throws JSONException {
+		if (!obj.has(key) || obj.isNull(key)) {
+			return null;
 		}
-		app.setMetricsAvailable(metricsAvailable);
+		String value = obj.getString(key);
+		if (value == null || value.isEmpty()) {
+			return null;
+		}
+		return value;
 	}
 }

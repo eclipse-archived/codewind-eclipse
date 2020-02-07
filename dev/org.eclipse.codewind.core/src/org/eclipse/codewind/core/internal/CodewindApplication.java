@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -64,6 +65,7 @@ public class CodewindApplication {
 	private long lastImageBuild = -1;
 	private boolean isHttps = false;
 	private boolean deleteContents = false;
+	private final Vector<String> activeNotificationIDs = new Vector<String>();
 	
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -549,6 +551,22 @@ public class CodewindApplication {
 		return projectTypesWithMetricInjection.contains(projectType) ||
 				(ProjectType.TYPE_DOCKER.equals(projectType) &&
 				 ProjectLanguage.LANGUAGE_JAVA.equals(projectLanguage));
+	}
+	
+	public boolean hasNotificationID(String id) {
+		Logger.log(String.format("The %s notification id for the %s application is contained: %b", id, name, activeNotificationIDs.contains(id))); //$NON-NLS-1$
+		return activeNotificationIDs.contains(id);
+	}
+	
+	// Call hasNotificationID first before adding
+	public void addNotificationID(String id) {
+		Logger.log(String.format("Adding notification id %s to the %s application", id, name)); //$NON-NLS-1$
+		activeNotificationIDs.add(id);
+	}
+	
+	public void clearNotificationIDs() {
+		Logger.log(String.format("Clearing notification ids for the %s application", name)); //$NON-NLS-1$
+		activeNotificationIDs.clear();
 	}
 
 	@Override

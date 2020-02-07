@@ -164,8 +164,20 @@ public class CodewindApplicationFactory {
 					JSONObject detailObj = appJso.getJSONObject(CoreConstants.KEY_DETAILED_APP_STATUS);
 					if (detailObj != null && detailObj.has(CoreConstants.KEY_MESSAGE)) {
 						detail = detailObj.getString(CoreConstants.KEY_MESSAGE);
-						if (detailObj.has(CoreConstants.KEY_NOTIFY) && detailObj.getBoolean(CoreConstants.KEY_NOTIFY)) {
-							// Need to notify the user of the problem
+						String notificationID = null;
+						if (detailObj.has(CoreConstants.KEY_NOTIFICATION_ID)) {
+							notificationID = detailObj.getString(CoreConstants.KEY_NOTIFICATION_ID);
+						}
+						if (notificationID == null || notificationID.isEmpty()) {
+							// If there is no notification id then clear the list
+							app.clearNotificationIDs();
+						} else if (!app.hasNotificationID(notificationID)) {
+							// If there is a new notifiction id then need to notify the user
+							
+							// First store the notification id so the user does not get the same notification twice
+							app.addNotificationID(notificationID);
+							
+							// Notify the user in a dialog with a link to more information if available
 							CoreUtil.DialogType type = CoreUtil.DialogType.ERROR;
 							if (detailObj.has(CoreConstants.KEY_SEVERITY)) {
 								String severity = detailObj.getString(CoreConstants.KEY_SEVERITY);

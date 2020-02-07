@@ -53,7 +53,6 @@ public class CoreConstants {
 			KEY_CONTEXT_ROOT = "contextRoot",
 			KEY_CONTAINER_ID = "containerId",
 			KEY_IS_HTTPS = "isHttps",
-			KEY_INJECT_METRICS = "injectMetrics",
 			KEY_CAPABILITIES_READY = "capabilitiesReady",
 
 			KEY_BUILD_LOG = "build-log",
@@ -91,8 +90,8 @@ public class CoreConstants {
 			KEY_INTERNAL_DEBUG_PORT = "internalDebugPort",
 			KEY_AUTO_BUILD = "autoBuild",
 			KEY_APP_BASE_URL = "appBaseURL",
-			KEY_INJECT_METRICS_ENABLE = "enable",
 			
+			KEY_INJECT_METRICS_ENABLE = "enable",
 			KEY_INJECTION = "injection",
 			KEY_INJECTABLE = "injectable",
 			KEY_INJECTED = "injected",
@@ -146,7 +145,6 @@ public class CoreConstants {
 			KEY_CAPABILIITES = "capabilities",
 			KEY_START_MODES = "startModes",
 			KEY_CONTROL_COMMANDS = "controlCommands",
-			KEY_METRICS_AVAILABLE = "metricsAvailable",
 			
 			KEY_AUTO_GENERATE = "autoGenerate",
 			
@@ -177,8 +175,7 @@ public class CoreConstants {
 			QUERY_VIEW = "view",
 			VIEW_MONITOR = "monitor",
 			VIEW_OVERVIEW = "overview",
-			PERF_MONITOR = "performance/charts",
-			PERF_METRICS_DASH = "performance/monitor/dashboard"
+			PERF_MONITOR = "performance/charts"
 
 			;
 }

@@ -93,6 +93,16 @@ public class CoreConstants {
 			KEY_APP_BASE_URL = "appBaseURL",
 			KEY_INJECT_METRICS_ENABLE = "enable",
 			
+			KEY_INJECTION = "injection",
+			KEY_INJECTABLE = "injectable",
+			KEY_INJECTED = "injected",
+			KEY_METRICS_DASHBOARD = "metricsDashboard",
+			KEY_METRICS_HOSTING = "hosting",
+			VALUE_METRICS_HOSTING_PROJECT = "project",
+			VALUE_METRICS_HOSTING_PERF_CONTAINER = "performanceContainer",
+			KEY_METRICS_PATH = "path",
+			KEY_PERF_DASHBOARD_PATH = "perfDashboardPath",
+			
 			VALUE_INFO = "INFO",
 			VALUE_WARN = "WARN",
 			VALUE_ERROR = "ERROR",

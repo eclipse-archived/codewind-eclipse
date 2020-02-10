@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
@@ -938,37 +937,7 @@ public class CodewindConnection {
 		}
 		return null;
 	}
-	
-	public URL getAppMonitorURL(CodewindApplication app) {
-		return getAppViewURL(app, CoreConstants.VIEW_MONITOR);
-	}
 
-	public URL getAppViewURL(CodewindApplication app, String view) {
-		try {
-			URI uri = baseUri;
-			String query = CoreConstants.QUERY_PROJECT + "=" + app.projectID;
-			query = query + "&" + CoreConstants.QUERY_VIEW + "=" + view;
-			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
-			return uri.toURL();
-		} catch (Exception e) {
-			Logger.logError("Failed to get the URL for the " + view + " view and the " + app.name + "application.", e);  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$ 
-		}
-		return null;
-	}
-	
-	public URL getPerformanceMonitorURL(CodewindApplication app) {
-		try {
-			URI uri = baseUri;
-			uri = uri.resolve(CoreConstants.PERF_MONITOR);
-			String query = CoreConstants.QUERY_PROJECT + "=" + app.projectID;
-			uri = new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
-			return uri.toURL();
-		} catch (Exception e) {
-			Logger.logError("Failed to get the performance monitor URL for the " + app.name + "application.", e);  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$ 
-		}
-		return null;
-	}
-	
 	public boolean isLocal() {
 		return false;
 	}

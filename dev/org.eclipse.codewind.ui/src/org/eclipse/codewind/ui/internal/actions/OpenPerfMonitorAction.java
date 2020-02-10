@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -36,7 +36,7 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
     protected CodewindApplication app;
     
 	public OpenPerfMonitorAction(ISelectionProvider selectionProvider) {
-        super(selectionProvider, Messages.ActionOpenPerformanceMonitor);
+        super(selectionProvider, Messages.ActionOpenPerfDashboard);
         selectionChanged(getStructuredSelection());
     }
 
@@ -74,7 +74,7 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
         	return;
         }
 
-        URL url = app.connection.getPerformanceMonitorURL(app);
+        URL url = app.getPerfDashboardUrl();
 		if (url == null) {
 			Logger.logError("OpenPerformanceMonitorAction ran but could not get the url"); //$NON-NLS-1$
 			return;
@@ -100,11 +100,11 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
 
 			browser.openURL(url);
 		} catch (PartInitException e) {
-			Logger.logError("Error opening the performance monitor in browser", e); //$NON-NLS-1$
+			Logger.logError("Error opening the performance dashboard in browser", e); //$NON-NLS-1$
 		}
     }
     
     public boolean showAction() {
-    	return app != null && app.hasPerfDashboard() && app.projectLanguage.getMetricsRoot() != null;
+    	return app != null && app.hasPerfDashboard();
     }
 }

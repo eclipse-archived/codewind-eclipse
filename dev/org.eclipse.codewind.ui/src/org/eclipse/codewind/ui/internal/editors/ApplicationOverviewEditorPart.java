@@ -391,7 +391,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		
 		public void update(CodewindApplication app) {
 			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, true);
-			injectMetricsEntry.setValue(metricsInjectionState(app.canInjectMetrics(), app.isInjectMetrics()), true);
+			injectMetricsEntry.setValue(metricsInjectionState(app.canInjectMetrics(), app.isMetricsInjected()), true);
 			appStatusEntry.setValue(app.isAvailable() ? app.getAppStatus().getDisplayString(app.getStartMode()) : Messages.AppOverviewEditorStatusDisabled, true);
 			buildStatusEntry.setValue(app.isAvailable() ? app.getBuildStatus().getDisplayString() : null, true);
 			long lastImageBuild = app.getLastImageBuild();

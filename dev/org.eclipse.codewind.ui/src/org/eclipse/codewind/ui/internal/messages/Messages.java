@@ -277,9 +277,9 @@ public class Messages extends NLS {
 	
 	public static String ActionNewConnection;
 	
-	public static String ActionOpenAppMonitor;
+	public static String ActionOpenMetricsDashboard;
 	
-	public static String ActionOpenPerformanceMonitor;
+	public static String ActionOpenPerfDashboard;
 	
 	public static String ActionOpenTektonDashboard;
 	public static String ActionOpenTektonDashboardErrorDialogTitle;

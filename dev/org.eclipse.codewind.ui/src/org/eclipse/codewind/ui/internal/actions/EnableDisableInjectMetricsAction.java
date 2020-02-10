@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,6 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
-import org.eclipse.codewind.core.internal.CodewindApplicationFactory;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -45,7 +44,7 @@ public class EnableDisableInjectMetricsAction extends SelectionProviderAction {
             if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication)obj;
             	if (app.isAvailable() && app.canInjectMetrics()) {
-	            	if (app.isInjectMetrics()) {
+	            	if (app.isMetricsInjected()) {
 	                	setText(Messages.DisableInjectMetricsLabel);
 	                } else {
 	                	setText(Messages.EnableInjectMetricsLabel);
@@ -66,7 +65,7 @@ public class EnableDisableInjectMetricsAction extends SelectionProviderAction {
 			return;
 		}
         
-        enableDisableInjectMetrics(app, !app.isInjectMetrics());
+        enableDisableInjectMetrics(app, !app.isMetricsInjected());
     }
     
 	public static void enableDisableInjectMetrics(CodewindApplication app, boolean enable) {
@@ -75,8 +74,7 @@ public class EnableDisableInjectMetricsAction extends SelectionProviderAction {
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					app.connection.requestInjectMetrics(app.projectID, enable);
-					app.setInjectMetrics(enable);
-					CodewindApplicationFactory.updateMetricsAvailable(app);
+					app.connection.refreshApps(app.projectID);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occurred changing inject metric setting for: " + app.name + ", with id: " + app.projectID, e); //$NON-NLS-1$ //$NON-NLS-2$
@@ -88,7 +86,7 @@ public class EnableDisableInjectMetricsAction extends SelectionProviderAction {
 	}
 	
 	public boolean showAction() {
-		// Don't show the action if the app does support inject metrics
+		// Don't show the action if the app does not support inject metrics
     	return (app != null && app.canInjectMetrics());
 	}
 

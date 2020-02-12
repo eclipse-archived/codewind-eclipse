@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -192,7 +193,7 @@ public class CLIUtil {
 			if (result.getOutput() != null && !result.getOutput().isEmpty()) {
 				JSONObject obj = new JSONObject(result.getOutput());
 				if (obj.has(ERROR_KEY) && obj.has(ERROR_DESCRIPTION_KEY)) {
-					String msg = String.format("The '%s' command failed with error: %s", CoreUtil.formatString(command, " "), obj.getString(ERROR_DESCRIPTION_KEY)); //$NON-NLS-1$
+					String msg = String.format("The cwctl '%s' command failed with error: %s", CoreUtil.formatString(command, " "), obj.getString(ERROR_DESCRIPTION_KEY)); //$NON-NLS-1$
 					Logger.logError(msg);
 					throw new IOException(obj.getString(ERROR_DESCRIPTION_KEY));
 				}
@@ -205,16 +206,18 @@ public class CLIUtil {
 			String msg;
 			String error = result.getError() != null && !result.getError().isEmpty() ? result.getError() : result.getOutput();
 			if (error == null || error.isEmpty()) {
-				msg = String.format("The '%s' command exited with return code %d", CoreUtil.formatString(command, " "), result.getExitValue()); //$NON-NLS-1$
+				msg = String.format("The cwctl '%s' command exited with return code %d", CoreUtil.formatString(command, " "), result.getExitValue()); //$NON-NLS-1$
 			} else {
-				msg = String.format("The '%s' command exited with return code %d and error: %s", CoreUtil.formatString(command, " "), result.getExitValue(), error); //$NON-NLS-1$
+				msg = String.format("The cwctl '%s' command exited with return code %d and error: %s", CoreUtil.formatString(command, " "), result.getExitValue(), error); //$NON-NLS-1$
 			}
 			Logger.logError(msg);
 			throw new IOException(msg);
 		} else if (checkOutput && (result.getOutput() == null || result.getOutput().isEmpty())) {
-			String msg = String.format("The '%s' command exited with return code 0 but the output was empty", CoreUtil.formatString(command, " "));  //$NON-NLS-1$
+			String msg = String.format("The cwctl '%s' command exited with return code 0 but the output was empty", CoreUtil.formatString(command, " "));  //$NON-NLS-1$
 			Logger.logError(msg);
 			throw new IOException(msg);
 		}
+		
+		Logger.log(String.format("Result of the cwctl '%s' command: \n%s", CoreUtil.formatString(command, " "), Optional.ofNullable(result.getOutput()).orElse("<empty>")));
 	}
 }

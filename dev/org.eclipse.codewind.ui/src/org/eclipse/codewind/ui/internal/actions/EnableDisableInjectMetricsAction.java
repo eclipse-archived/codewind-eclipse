@@ -87,7 +87,9 @@ public class EnableDisableInjectMetricsAction extends SelectionProviderAction {
 	
 	public boolean showAction() {
 		// Don't show the action if the app does not support inject metrics
-    	return (app != null && app.canInjectMetrics());
+		// Also don't show if the application already has metrics that are not injected
+		// (if injected, still need to allow the user to remove)
+		return (app != null && app.canInjectMetrics() && !(app.hasMetricsDashboard() && !app.isMetricsInjected()));
 	}
 
 }

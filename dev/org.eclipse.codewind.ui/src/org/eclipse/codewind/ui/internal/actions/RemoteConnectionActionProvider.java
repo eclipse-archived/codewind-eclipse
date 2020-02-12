@@ -107,7 +107,7 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 				if (!connection.isConnected()) {
 					ConnectDisconnectAction.connectRemoteCodewind(connection);
 				} else {
-					ViewHelper.toggleExpansion(connection);
+					ViewHelper.expandConnection(connection);
 				}
 			}
 		}

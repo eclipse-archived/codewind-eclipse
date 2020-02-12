@@ -25,7 +25,8 @@ import org.eclipse.codewind.ui.internal.UIConstants;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.CodewindPrefsParentPage;
-import org.eclipse.codewind.ui.internal.views.UpdateHandler.AppUpdateListener;
+import org.eclipse.codewind.ui.internal.views.UpdateHandler.UpdateListener;
+import org.eclipse.codewind.ui.internal.views.UpdateHandler.UpdateType;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
@@ -71,7 +72,7 @@ import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.EditorPart;
 
-public class ApplicationOverviewEditorPart extends EditorPart {
+public class ApplicationOverviewEditorPart extends EditorPart implements UpdateListener {
 	
 	private static final String SETTINGS_FILE = ".cw-settings";
 	private static final String JSON_EDITOR_ID = "org.eclipse.wst.json.ui.JSONEditor";
@@ -136,42 +137,15 @@ public class ApplicationOverviewEditorPart extends EditorPart {
         
         setPartName(NLS.bind(Messages.AppOverviewEditorPartName, new String[] {appName, connectionName}));
         
-        CodewindUIPlugin.getUpdateHandler().addAppUpdateListener(connectionId, projectId, new AppUpdateListener() {
-			@Override
-			public void update() {
-				CodewindConnection conn = getConn();
-				CodewindApplication app = getApp(conn);
-				if (app != null) {
-					Display.getDefault().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							ApplicationOverviewEditorPart.this.update(conn, app);
-						}
-					});
-				}
-			}
-
-			@Override
-			public void remove() {
-				Display.getDefault().asyncExec(new Runnable() {
-					@Override
-					public void run() {
-						ApplicationOverviewEditorPart.this.getEditorSite().getPage().closeEditor(ApplicationOverviewEditorPart.this, false);
-					}
-				});
-			}
-        });
+        CodewindUIPlugin.getUpdateHandler().addUpdateListener(this);
 	}
 
 	@Override
 	public void dispose() {
-		// Dispose can be called if the part fails to init in which case these may be null
-		if (connectionId != null && projectId != null) {
-			CodewindUIPlugin.getUpdateHandler().removeAppUpdateListener(connectionId, projectId);
-		}
 		if (boldFont != null) {
 			boldFont.dispose();
 		}
+		CodewindUIPlugin.getUpdateHandler().removeUpdateListener(this);
 		super.dispose();
 	}
 
@@ -222,7 +196,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		appInfoSection = new AppInfoSection(sectionComp, toolkit, 2, 1);
 		addSpacer(sectionComp, toolkit, 2, 1);
 		
-		toolkit.createLabel(sectionComp, "", SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));;
+		toolkit.createLabel(sectionComp, "", SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 		
 		addSpacer(sectionComp, toolkit, 2, 1);
 		
@@ -276,6 +250,27 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		update(conn, getApp(conn), true);
 	}
 	
+	@Override
+	public void update(UpdateType type, Object element) {
+		if (element instanceof CodewindApplication && ((CodewindApplication)element).projectID.equals(projectId)) {
+			Display.getDefault().asyncExec(() -> {
+				switch(type) {
+				case MODIFY:
+					CodewindApplication app = (CodewindApplication)element;
+					ApplicationOverviewEditorPart.this.update(app.connection, app);
+					break;
+				case REMOVE:
+					ApplicationOverviewEditorPart.this.getEditorSite().getPage().closeEditor(ApplicationOverviewEditorPart.this, false);
+					break;
+				}
+			});
+		} else if (element instanceof CodewindConnection && ((CodewindConnection)element).getConid().equals(connectionId) && type == UpdateType.REMOVE) {
+			Display.getDefault().asyncExec(() -> {
+				ApplicationOverviewEditorPart.this.getEditorSite().getPage().closeEditor(ApplicationOverviewEditorPart.this, false);
+			});
+		}
+	}
+
 	public void update(CodewindConnection conn, CodewindApplication app) {
 		update(conn, app, false);
 	}

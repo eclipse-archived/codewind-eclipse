@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
+import java.util.List;
+
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -56,13 +58,26 @@ public class NewProjectAction extends SelectionProviderAction {
 			Logger.logError("NewProjectAction ran but no connection was selected"); //$NON-NLS-1$
 			return;
 		}
-
+		openNewProjectWizard(connection);
+	}
+	
+	public static void openNewProjectWizard(CodewindConnection connection) {
 		try {
 			NewCodewindProjectWizard wizard = new NewCodewindProjectWizard(connection);
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
 			dialog.open();
 		} catch (Exception e) {
-			Logger.logError("An error occurred running the new project action on connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
+			Logger.logError("An error occurred opening the new project wizard for connection: " + connection.getBaseURI(), e); //$NON-NLS-1$
+		}
+	}
+	
+	public static void openNewProjectWizard(List<CodewindConnection> connections) {
+		try {
+			NewCodewindProjectWizard wizard = new NewCodewindProjectWizard(connections);
+			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
+			dialog.open();
+		} catch (Exception e) {
+			Logger.logError("An error occurred opening the new project wizard", e); //$NON-NLS-1$
 		}
 	}
 }

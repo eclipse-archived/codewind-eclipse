@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
-import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.CoreUtil;
@@ -96,6 +96,10 @@ public class CodewindConnectionManager {
 		return null;
 	}
 	
+	public synchronized static List<CodewindConnection> activeRemoteConnections() {
+		return activeConnections().stream().filter(conn -> !conn.isLocal()).collect(Collectors.toList());
+	}
+	
 	public synchronized static CodewindConnection getConnectionById(String id) {
 		for(CodewindConnection conn : activeConnections()) {
 			if(conn.getBaseURI() != null && conn.getConid().equals(id)) {
@@ -129,10 +133,9 @@ public class CodewindConnectionManager {
 
 		CodewindConnection connection = CodewindConnectionManager.getActiveConnection(baseUrl.toString());
 		if (connection != null) {
-			List<CodewindApplication> apps = connection.getApps();
 			connection.disconnect();
 			removeResult = instance().connections.remove(connection);
-			CoreUtil.removeConnection(apps);
+			CoreUtil.removeConnection(connection);
 			if (!connection.isLocal() && connection.getConid() != null) {
 				try {
 					ConnectionUtil.removeConnection(connection.getConid(), new NullProgressMonitor());

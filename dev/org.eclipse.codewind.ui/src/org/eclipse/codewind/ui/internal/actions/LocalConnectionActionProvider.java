@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,17 +13,10 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
-import org.eclipse.codewind.core.internal.cli.InstallUtil;
-import org.eclipse.codewind.core.internal.connection.LocalConnection;
-import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
-import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
@@ -40,7 +33,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
 	private ManageReposAction manageReposAction;
-	private CodewindDoubleClickAction doubleClickAction;
+	private LocalDoubleClickAction doubleClickAction;
 	private LogLevelAction logLevelAction;
 	
     @Override
@@ -52,7 +45,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
         manageReposAction = new ManageReposAction(selProvider);
         installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
-        doubleClickAction = new CodewindDoubleClickAction(selProvider);
+        doubleClickAction = new LocalDoubleClickAction(selProvider);
         logLevelAction = new LogLevelAction(selProvider);
     }
     
@@ -80,49 +73,5 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 	public void fillActionBars(IActionBars actionBars) {
 		super.fillActionBars(actionBars);
 		actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, doubleClickAction);
-	}
-
-	private static class CodewindDoubleClickAction extends SelectionProviderAction {
-		
-		LocalConnection connection = null;
-		
-		public CodewindDoubleClickAction(ISelectionProvider selectionProvider) {
-			super(selectionProvider, "");
-			selectionChanged(getStructuredSelection());
-		}
-
-		@Override
-		public void selectionChanged(IStructuredSelection sel) {
-			if (sel.size() == 1) {
-				Object obj = sel.getFirstElement();
-				if (obj instanceof LocalConnection) {
-					connection = (LocalConnection) obj;
-					return;
-				}
-			}
-			connection = null;
-		}
-
-		@Override
-		public void run() {
-			if (connection != null) {
-				CodewindManager manager = CodewindManager.getManager();
-				InstallStatus status = manager.getInstallStatus();
-				if (status.isStarted()) {
-					ViewHelper.toggleExpansion(connection);
-				} else if (status.isInstalled()) {
-					CodewindInstall.startCodewind(status.getVersion(), null);
-				} else if (status.hasInstalledVersions()) {
-					boolean result = IDEUtil.openConfirmDialog(Messages.UpdateCodewindDialogTitle, Messages.UpdateCodewindDialogMsg);
-					if (result) {
-						CodewindInstall.updateCodewind(InstallUtil.getVersion(), true, null);
-					}
-				} else if (status.isUnknown()) {
-					// An error occurred so do nothing (the error is displayed to the user)
-				} else {
-					CodewindInstall.installCodewind(InstallUtil.getVersion(), null);
-				}
-			}
-		}
 	}
 }

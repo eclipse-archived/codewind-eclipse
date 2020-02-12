@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -22,7 +22,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -92,14 +91,11 @@ public class ViewHelper {
 		        if (window != null) {
 		            IWorkbenchPage page = window.getActivePage();
 		            if (page != null) {
-		                IWorkbenchPart part = page.findView(viewId);
-		                if (part == null) {
-		                    try {
-		                        part = page.showView(viewId);
-		                    } catch (PartInitException e) {
-		                        Logger.logError("An error occurred when trying to open the navigator view: " + viewId, e);
-		                    }
-		                }
+	                    try {
+	                        page.showView(viewId);
+	                    } catch (PartInitException e) {
+	                        Logger.logError("An error occurred when trying to open the navigator view: " + viewId, e);
+	                    }
 		            }
 		        }
             }

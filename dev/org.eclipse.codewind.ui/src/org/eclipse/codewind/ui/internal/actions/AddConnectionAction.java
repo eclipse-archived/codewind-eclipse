@@ -48,6 +48,10 @@ public class AddConnectionAction extends SelectionProviderAction {
 
 	@Override
 	public void run() {
+		openConnectionWizard();
+	}
+	
+	public static void openConnectionWizard() {
 		try {
 			NewCodewindConnectionWizard wizard = new NewCodewindConnectionWizard();
 			WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);

@@ -48,6 +48,7 @@ import org.eclipse.ui.IWorkbench;
 
 public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 
+	private List<CodewindConnection> connections = null;
 	private CodewindConnection connection = null;
 	private ConnectionSelectionPage connectionPage = null;
 	private NewCodewindProjectPage newProjectPage = null;
@@ -62,6 +63,11 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		this();
 		this.connection = connection;
 	}
+	
+	public NewCodewindProjectWizard(List<CodewindConnection> connections) {
+		this();
+		this.connections = connections;
+	}
 
 	@Override
 	public void init(IWorkbench arg0, IStructuredSelection arg1) {
@@ -73,7 +79,9 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 		setWindowTitle(Messages.NewProjectPage_ShellTitle);
 		// If there is only one connection then use it
 		if (connection == null) {
-			List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
+			if (connections == null) {
+				connections = CodewindConnectionManager.activeConnections();
+			}
 			if (connections.size() == 1) {
 				connection = connections.get(0);
 			} else {
@@ -188,8 +196,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 					mon.worked(10);
 					mon.done();
 					ViewHelper.openCodewindExplorerView();
-					ViewHelper.refreshCodewindExplorerView(connection);
-					ViewHelper.expandConnection(connection);
+					CodewindUIPlugin.getUpdateHandler().updateConnection(connection);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to create a project with type: " + info.getUrl() + ", and name: " + projectName, e); //$NON-NLS-1$ //$NON-NLS-2$

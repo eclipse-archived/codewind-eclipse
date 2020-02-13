@@ -411,6 +411,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	
 	private class AppInfoSection {
 		private final StringEntry containerIdEntry;
+		private final StringEntry podNameEntry;
+		private final StringEntry namespaceEntry;
 		private final LinkEntry appURLEntry;
 		private final StringEntry hostAppPortEntry;
 		private final StringEntry appPortEntry;
@@ -439,6 +441,8 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 	        section.setClient(composite);
 	        
 	        containerIdEntry = new StringEntry(composite, Messages.AppOverviewEditorContainerIdEntry);
+	        podNameEntry = new StringEntry(composite, Messages.AppOverviewEditorPodNameEntry);
+	        namespaceEntry = new StringEntry(composite, Messages.AppOverviewEditorNamespaceEntry);
 	        appURLEntry = new LinkEntry(composite, toolkit, Messages.AppOverviewEditorAppUrlEntry, (url) -> {
 	        	CodewindApplication app = getApp(getConn());
 	        	if (app == null) {
@@ -530,8 +534,12 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		public void update(CodewindApplication app) {
 			if (app.connection.isLocal()) {
 				containerIdEntry.setValue(app.isAvailable() ? app.getContainerId() : null, true);
+				podNameEntry.setValue(null, false);
+				namespaceEntry.setValue(null, false);
 			} else {
 				containerIdEntry.setValue(null, false);
+				podNameEntry.setValue(app.isAvailable() ? app.getPodName() : null, true);
+				namespaceEntry.setValue(app.isAvailable() ? app.getNamespace() : null, true);
 			}
 			appURLEntry.setValue(app.isAvailable() && app.getRootUrl() != null ? app.getRootUrl().toString() : null, true);
 			hostAppPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);

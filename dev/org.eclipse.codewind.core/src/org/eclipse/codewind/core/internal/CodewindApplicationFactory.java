@@ -240,11 +240,10 @@ public class CodewindApplicationFactory {
 			app.setIsHttps(isHttps);
 			
 			// Get the container id
-			String containerId = null;
-			if (appJso.has(CoreConstants.KEY_CONTAINER_ID)) {
-			    containerId = appJso.getString(CoreConstants.KEY_CONTAINER_ID);
-			}
-			app.setContainerId(containerId);
+			app.setContainerId(getStringValue(appJso, CoreConstants.KEY_CONTAINER_ID));
+			
+			// Get the pod information
+			app.setPodInfo(getStringValue(appJso, CoreConstants.KEY_POD_NAME), getStringValue(appJso, CoreConstants.KEY_NAMESPACE));
 			
 			// Get the ports if they are available
 			try {

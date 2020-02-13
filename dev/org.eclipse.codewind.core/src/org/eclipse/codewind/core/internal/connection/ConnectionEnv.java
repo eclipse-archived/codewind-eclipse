@@ -21,6 +21,7 @@ public class ConnectionEnv extends JSONObjectResult {
 	public static final String KEY_VERSION = "codewind_version"; //$NON-NLS-1$
 	public static final String UNKNOWN_VERSION = "unknown"; //$NON-NLS-1$
 	public static final String KEY_SOCKET_NAMESPACE = "socket_namespace"; //$NON-NLS-1$
+	public static final String KEY_NAMESPACE = "namespace"; //$NON-NLS-1$
 	public static final String KEY_TEKTON_DASHBOARD = "tekton_dashboard"; //$NON-NLS-1$
 	
 	private TektonDashboard tektonDashboard;
@@ -39,6 +40,10 @@ public class ConnectionEnv extends JSONObjectResult {
 	
 	public String getSocketNamespace() {
 		return getString(KEY_SOCKET_NAMESPACE);
+	}
+	
+	public String getNamespace() {
+		return getString(KEY_NAMESPACE);
 	}
 	
 	public TektonDashboard getTektonDashboard() {

@@ -18,7 +18,7 @@ public class UIConstants {
 	// Documentation links
 	public static final String 
 		DOC_BASE_URL = "https://www.eclipse.org/codewind",
-		CWSETTINGS_INFO_URL = DOC_BASE_URL + "/mdteclipsemanagingprojects.html",
+		CWSETTINGS_INFO_URL = DOC_BASE_URL + "/project-settings.html",
 		TEMPLATES_INFO_URL = DOC_BASE_URL + "/workingwithtemplates.html",
 		REGISTRY_INFO_URL = DOC_BASE_URL + "/image-registry-credentials.html",
 		REMOTE_SETUP_URL =  DOC_BASE_URL +"/remotedeploy-eclipse.html";

@@ -60,6 +60,8 @@ public class CodewindApplication {
 	private boolean hasConfirmedMetrics = false; 		// see confirmMetricsAvailable
 	private boolean enabled = true;
 	private String containerId;
+	private String podName;
+	private String namespace;
 	private boolean capabilitiesReady = false;
 	private ProjectCapabilities projectCapabilities;
 	private String action;
@@ -197,6 +199,11 @@ public class CodewindApplication {
 	
 	public synchronized void setContainerId(String id) {
 		this.containerId = id;
+	}
+	
+	public synchronized void setPodInfo(String podName, String namespace) {
+		this.podName = podName;
+		this.namespace = namespace;
 	}
 	
 	public synchronized void setAction(String action) {
@@ -361,6 +368,14 @@ public class CodewindApplication {
 	
 	public synchronized String getContainerId() {
 		return containerId;
+	}
+	
+	public synchronized String getPodName() {
+		return podName;
+	}
+	
+	public synchronized String getNamespace() {
+		return namespace;
 	}
 	
 	public boolean isActive() {

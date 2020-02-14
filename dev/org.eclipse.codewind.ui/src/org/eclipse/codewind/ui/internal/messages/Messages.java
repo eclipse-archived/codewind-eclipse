@@ -396,6 +396,8 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorNotDebugging;
 	public static String AppOverviewEditorProjectIdEntry;
 	public static String AppOverviewEditorContainerIdEntry;
+	public static String AppOverviewEditorPodNameEntry;
+	public static String AppOverviewEditorNamespaceEntry;
 	public static String AppOverviewEditorStatusEntry;
 	public static String AppOverviewEditorStatusEnabled;
 	public static String AppOverviewEditorStatusDisabled;

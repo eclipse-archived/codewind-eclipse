@@ -52,6 +52,7 @@ public class CoreConstants {
 			KEY_CONTEXTROOT = "contextroot",
 			KEY_CONTEXT_ROOT = "contextRoot",
 			KEY_CONTAINER_ID = "containerId",
+			KEY_POD_NAME = "podName",
 			KEY_IS_HTTPS = "isHttps",
 			KEY_CAPABILITIES_READY = "capabilitiesReady",
 

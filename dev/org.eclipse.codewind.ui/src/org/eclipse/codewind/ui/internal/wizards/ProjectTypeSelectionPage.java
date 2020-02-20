@@ -260,7 +260,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			projectSubtypeInfo = null;
 		} else {
 			projectTypeInfo = typeMap.get(projectInfo.type.getId());
-			projectSubtypeInfo = projectTypeInfo.new ProjectSubtypeInfo(projectInfo.language.getId());
+			projectSubtypeInfo = projectTypeInfo != null ? projectTypeInfo.new ProjectSubtypeInfo(projectInfo.language.getId()) : null;
 		}
 		updateTables(true);
 	}
@@ -341,8 +341,13 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 		setErrorMessage(null);
 
-		// when first entering the wizard, attempt to select type that matches the detected type
-		if (init && projectInfo != null) { 
+		if (projectTypes.size() == 1) {
+			// If there is only one project type then select it
+			ProjectTypeInfo[] typeArray = projectTypes.toArray(new ProjectTypeInfo[1]);
+			typeViewer.setCheckedElements(typeArray);
+			updateSubtypes(init, typeArray[0]);
+		} else if (init && projectInfo != null) { 
+			// If first entering the wizard, attempt to select type that matches the detected type
 			projectTypeInfo = typeMap.get(projectInfo.type.getId());
 			if (projectTypeInfo != null) {
 				typeViewer.setCheckedElements(new Object[] { projectTypeInfo });
@@ -350,10 +355,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				typeViewer.setAllChecked(false);
 			}
 			updateSubtypes(init, projectTypeInfo);
-		}
-		// otherwise, see if anything got unchecked
-		// e.g. removing a repo that contained previously selected type
-		else {
+		} else {
+			// otherwise, see if anything got unchecked
+			// e.g. removing a repo that contained previously selected type
 			Object[] checked = typeViewer.getCheckedElements();
 			if (checked.length == 0)
 				updateSubtypes(init, null);

@@ -102,6 +102,9 @@ public class Messages extends NLS {
 	
 	public static String UpgradeResultMigrated;
 	public static String UpgradeResultNotMigrated;
+	
+	public static String DebugPortNotifyTitle;
+	public static String DebugPortNotifyMsg;
 
 	static {
 		// initialize resource bundle

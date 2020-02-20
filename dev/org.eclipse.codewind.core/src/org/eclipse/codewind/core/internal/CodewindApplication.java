@@ -574,8 +574,9 @@ public class CodewindApplication {
 	}
 	
 	public boolean supportsDebug() {
-		// Override as needed
-		return false;
+		// Check if the project supports restart in debug mode
+		ProjectCapabilities capabilities = getProjectCapabilities();
+		return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();
 	}
 	
 	public void buildComplete() {

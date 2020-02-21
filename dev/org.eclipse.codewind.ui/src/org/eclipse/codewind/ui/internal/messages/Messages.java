@@ -312,6 +312,10 @@ public class Messages extends NLS {
 	public static String ProjectOpenJob;
 	public static String ProjectOpenError;
 	
+	public static String NoDebugSetupDialogTitle;
+	public static String NoDebugSetupDialogMsg;
+	public static String NoDebugSetupDialogToggle;
+	
 	public static String BrowserTooltipApp;
 	public static String BrowserTooltipAppMonitor;
 	public static String BrowserTooltipPerformanceMonitor;

@@ -19,7 +19,6 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
-import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.launch.CodewindLaunchConfigDelegate;
@@ -72,6 +71,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	
 	// Debug launch, null if not debugging
 	private ILaunch launch = null;
+	private boolean debugPortNotify = false;
 
 	CodewindEclipseApplication(CodewindConnection connection, String id, String name,
 			ProjectType projectType, ProjectLanguage language, IPath localPath)
@@ -106,6 +106,10 @@ public class CodewindEclipseApplication extends CodewindApplication {
 		return launch;
 	}
 	
+	public synchronized void setDebugPortNotify(boolean value) {
+		debugPortNotify = value;
+	}
+	
 	@Override
 	public void clearDebugger() {
 		if (launch != null) {
@@ -133,6 +137,13 @@ public class CodewindEclipseApplication extends CodewindApplication {
 
 	@Override
 	public void connectDebugger() {
+		if (!canInitiateDebugSession()) {
+			if (debugPortNotify) {
+				debugPortNotify = false;
+				CoreUtil.openDialog(CoreUtil.DialogType.INFO, NLS.bind(Messages.DebugPortNotifyTitle, name), NLS.bind(Messages.DebugPortNotifyMsg, new String[] {name, String.valueOf(getDebugPort())}));
+			}
+			return;
+		}
 		final CodewindEclipseApplication app = this;
 		Job job = new Job(Messages.ConnectDebugJob) {
 			@Override
@@ -306,13 +317,11 @@ public class CodewindEclipseApplication extends CodewindApplication {
         }
     }
 
-	@Override
-	public boolean supportsDebug() {
+	public boolean canInitiateDebugSession() {
 		// Only supported for certain languages
 		if (projectLanguage.isJava() || projectLanguage.isJavaScript()) {
 			// And only if the project supports it
-			ProjectCapabilities capabilities = getProjectCapabilities();
-			return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();
+			return supportsDebug();
 		}
 		return false;
 	}

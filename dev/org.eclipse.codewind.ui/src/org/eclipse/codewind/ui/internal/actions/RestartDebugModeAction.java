@@ -26,9 +26,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
@@ -107,6 +110,17 @@ public class RestartDebugModeAction extends SelectionProviderAction {
 	        		return;
 	        	}
 	        }
+        } else if (!app.canInitiateDebugSession()) {
+        	// If can't attach or help launch a debugger, inform the user and allow them to cancel the operation
+        	MessageDialogWithToggle noDebugSessionQuestion = MessageDialogWithToggle.openOkCancelConfirm(
+					Display.getDefault().getActiveShell(), NLS.bind(Messages.NoDebugSetupDialogTitle, app.name),
+					Messages.NoDebugSetupDialogMsg,
+					Messages.NoDebugSetupDialogToggle, true, null, null);
+			if (noDebugSessionQuestion.getReturnCode() == IDialogConstants.CANCEL_ID) {
+				return;
+			}
+			// If the user requested it, notify them when the debug port becomes available
+			app.setDebugPortNotify(noDebugSessionQuestion.getToggleState());
         }
 
         try {

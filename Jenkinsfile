@@ -83,7 +83,12 @@ pipeline {
                 dir("dev") {
                     sh """#!/usr/bin/env bash
 
-                    export GIT_DIFF_OUTPUT=`git diff "$BRANCH_NAME" "$CHANGE_TARGET"`
+                    echo "Git output:"
+
+                    git diff "$BRANCH_NAME" "$CHANGE_TARGET"
+
+
+                    # export GIT_DIFF_OUTPUT=`git diff "$BRANCH_NAME" "$CHANGE_TARGET"`
 
                     printf %s "$GIT_DIFF_OUTPUT"
 

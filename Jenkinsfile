@@ -89,7 +89,13 @@ pipeline {
 
                     git status
 
-                    git diff remotes/origin/"$CHANGE_TARGET" master
+                    echo pre
+
+                    git diff "@{upstream}"
+
+                    echo post
+
+                    # git diff remotes/origin/"$CHANGE_TARGET" master
 
                     # git diff "$BRANCH_NAME" "$CHANGE_TARGET"
 

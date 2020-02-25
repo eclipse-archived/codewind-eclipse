@@ -88,10 +88,6 @@ pipeline {
                     git diff "$BRANCH_NAME" "$CHANGE_TARGET"
 
 
-                    # export GIT_DIFF_OUTPUT=`git diff "$BRANCH_NAME" "$CHANGE_TARGET"`
-
-                    # printf %s "$GIT_DIFF_OUTPUT"
-
                     # PR-595 and master
                     #echo "jgw: $BRANCH_NAME and $CHANGE_TARGET"
 

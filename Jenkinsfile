@@ -81,9 +81,18 @@ pipeline {
                 dir("dev") {
                     sh """#!/usr/bin/env bash
 
-                    # GIT_DIFF_OUTPUT=`git diff $BRANCH_NAME $CHANGE_TARGET`
+                    GIT_DIFF_OUTPUT=`git diff $BRANCH_NAME $CHANGE_TARGET`
 
-                    echo "jgw: $BRANCH_NAME and $CHANGE_TARGET"
+                    printf %s $GIT_DIFF_OUTPUT
+
+                    # PR-595 and master
+                    #echo "jgw: $BRANCH_NAME and $CHANGE_TARGET"
+
+                    # git clone git@github.com:eclipse/codewind-filewatchers
+                    # cd codewind-filewatchers
+                    # git checkout "$BRANCH_NAME"
+
+
 
 
                     """

@@ -74,6 +74,22 @@ pipeline {
                 }
             }
         } 
+
+
+        stage('Test') {
+            steps {
+                dir("dev") {
+                    sh """#!/usr/bin/env bash
+
+                    # GIT_DIFF_OUTPUT=`git diff $BRANCH_NAME $CHANGE_TARGET`
+
+                    echo "jgw: $BRANCH_NAME and $CHANGE_TARGET"
+
+
+                    """
+                }
+            }
+        }
         
         stage('Deploy') {
             steps {

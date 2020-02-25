@@ -70,7 +70,9 @@ pipeline {
                         which java    
                     '''
                     
-                    dir('dev') { sh './gradlew --stacktrace' }
+                    dir('dev') { sh 'exit 0' }
+
+                    // dir('dev') { sh './gradlew --stacktrace' }
                 }
             }
         } 
@@ -92,9 +94,6 @@ pipeline {
                     # cd codewind-filewatchers
                     # git checkout "$BRANCH_NAME"
 
-
-
-
                     """
                 }
             }
@@ -106,6 +105,9 @@ pipeline {
                     println("Deploying codewind-eclipse to downoad area...")
                   
                     sh '''
+
+exit 0
+
                         export REPO_NAME="codewind-eclipse"
                         export OUTPUT_NAME="codewind"
                         export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"

@@ -85,7 +85,13 @@ pipeline {
 
                     echo "Git output:"
 
-                    git diff "$BRANCH_NAME" "$CHANGE_TARGET"
+                    git remote -v
+
+                    git status
+
+                    git diff remotes/origin/"$CHANGE_TARGET" master
+
+                    # git diff "$BRANCH_NAME" "$CHANGE_TARGET"
 
 
                     # PR-595 and master

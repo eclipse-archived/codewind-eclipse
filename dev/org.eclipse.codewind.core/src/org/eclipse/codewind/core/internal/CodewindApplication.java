@@ -412,7 +412,7 @@ public class CodewindApplication {
 	}
 	
 	public synchronized boolean hasPerfDashboard() {
-		return metricsAvailable && perfPath != null;
+		return perfPath != null;
 	}
 	
 	public synchronized void setMetricsInjectionInfo(boolean injectable, boolean injected) {

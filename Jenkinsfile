@@ -86,19 +86,12 @@ pipeline {
                 dir("dev") {
                     sh """#!/usr/bin/env bash
 
-                    echo "Git output:"
-
-                    git remote -v
-
-                    git status
-
                     echo pre
 
-                    GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET`
+                    export CHANGE_TARGET=\$CHANGE_TARGET
 
-                    CHANGE_COUNT=`printf %s "\$GIT_DIFF"`
-
-                    echo change count \$CHANGE_COUNT
+                    cd org.eclipse.codewind.filewatchers.standalonenio
+                    ./run_fwd_tests_if_needed.sh
 
                     echo post
 

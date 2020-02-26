@@ -93,7 +93,7 @@ pipeline {
 
                     GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
 
-                    echo \$GIT_DIFF
+                    printf %s "\$GIT_DIFF"
 
                     echo post
 

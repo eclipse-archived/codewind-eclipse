@@ -35,17 +35,16 @@ tar xzf apache-maven-3.6.3-bin.tar.gz
 cd apache-maven-3.6.3/bin
 export PATH=`pwd`:$PATH
 
-
-cd "$SCRIPT_LOCT"
+cd "$SCRIPT_LOCT/../org.eclipse.codewind.filewatchers.core"
 
 mvn install
 
-cd "$SCRIPT_LOCT/../org.eclipse.codewind.filewatchers.core"
+
+cd "$SCRIPT_LOCT"
 
 mvn package
 
 ls -l target/
-
 
 echo post
 

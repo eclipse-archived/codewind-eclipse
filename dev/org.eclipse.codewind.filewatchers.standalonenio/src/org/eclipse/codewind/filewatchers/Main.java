@@ -38,7 +38,7 @@ public class Main {
 			}
 
 		} else {
-			System.err.println("Argument should be URL to server instance.");
+			System.err.println("Argument should be URL to server instance!");
 			return;
 		}
 

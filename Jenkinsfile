@@ -26,6 +26,9 @@ pipeline {
             steps {
                 dir("dev/org.eclipse.codewind.core/binaries") {
                     sh """#!/usr/bin/env bash
+
+                        exit 0 
+
                         export VSCODE_REPO="https://github.com/eclipse/codewind-vscode.git"
                         export CW_VSCODE_BRANCH=master
 
@@ -91,9 +94,11 @@ pipeline {
 
                     echo pre
 
-                    GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
+                    GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET`
 
-                    printf %s "\$GIT_DIFF"
+                    CHANGE_COUNT=`printf %s "\$GIT_DIFF" | grep "Jenkins" | grep -v "filewatchers.eclipse" |  wc -l"`
+
+                    echo change count \$CHANGE_COUNT
 
                     echo post
 

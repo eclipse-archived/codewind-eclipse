@@ -8,7 +8,7 @@ set -euo pipefail
 
 echo pre
 
-GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET`
+GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
 
 CHANGE_COUNT=`printf %s "$GIT_DIFF" | grep "Jenkins" | grep -v "filewatchers.eclipse" |  wc -l"`
 

@@ -86,26 +86,10 @@ pipeline {
                 dir("dev") {
                     sh """#!/usr/bin/env bash
 
-                    echo pre
-
                     export CHANGE_TARGET=\$CHANGE_TARGET
 
                     cd org.eclipse.codewind.filewatchers.standalonenio
                     ./run_fwd_tests_if_needed.sh
-
-                    echo post
-
-                    # git diff remotes/origin/"$CHANGE_TARGET" master
-
-                    # git diff "$BRANCH_NAME" "$CHANGE_TARGET"
-
-
-                    # PR-595 and master
-                    #echo "jgw: $BRANCH_NAME and $CHANGE_TARGET"
-
-                    # git clone git@github.com:eclipse/codewind-filewatchers
-                    # cd codewind-filewatchers
-                    # git checkout "$BRANCH_NAME"
 
                     """
                 }

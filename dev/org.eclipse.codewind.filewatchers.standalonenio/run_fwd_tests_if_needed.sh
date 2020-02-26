@@ -5,12 +5,7 @@ export SCRIPT_LOCT=`cd $SCRIPT_LOCT; pwd`
 cd $SCRIPT_LOCT
 
 
-echo pre
-
-
 GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
-
-printf %s "$GIT_DIFF"
 
 CHANGE_COUNT=`printf %s "$GIT_DIFF" | grep "diff --git" | grep "eclipse.codewind.filewatchers" | grep -v "filewatchers.eclipse" |  wc -l`
 
@@ -19,34 +14,36 @@ if [ "$CHANGE_COUNT" == "0" ]; then
     exit 0
 fi
 
+# Output Git Diff for debug purposes, until the above code matures.
+echo "Git Diff:"
+printf %s "$GIT_DIFF"
+
+
 set -euo pipefail
-
-echo change count $CHANGE_COUNT
-
-
-cd "$SCRIPT_LOCT"
 
 
 echo 
 echo "Download Maven and add to path"
 echo
+cd "$SCRIPT_LOCT"
 curl -LO http://mirror.dsrg.utoronto.ca/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
 tar xzf apache-maven-3.6.3-bin.tar.gz
 cd apache-maven-3.6.3/bin
 export PATH=`pwd`:$PATH
 
+
+echo
+echo "Building Java filewatcher"
+echo
 cd "$SCRIPT_LOCT/../org.eclipse.codewind.filewatchers.core"
-
 mvn install
-
-
 cd "$SCRIPT_LOCT"
-
 mvn package
 
-ls -l target/
 
-
+echo
+echo "Build and run test suite"
+echo
 cd "$SCRIPT_LOCT"
 git clone "https://github.com/eclipse/codewind-filewatchers"
 cd codewind-filewatchers
@@ -55,18 +52,3 @@ cd Tests/
 
 ./run_tests_java_filewatcher_on_target.sh "$SCRIPT_LOCT/../.."
 
-
-echo post
-
-
-# git diff remotes/origin/"$CHANGE_TARGET" master
-
-# git diff "$BRANCH_NAME" "$CHANGE_TARGET"
-
-
-# PR-595 and master
-#echo "jgw: $BRANCH_NAME and $CHANGE_TARGET"
-
-# git clone git@github.com:eclipse/codewind-filewatchers
-# cd codewind-filewatchers
-# git checkout "$BRANCH_NAME"

@@ -46,6 +46,16 @@ mvn package
 
 ls -l target/
 
+
+cd "$SCRIPT_LOCT"
+git clone "https://github.com/eclipse/codewind-filewatchers"
+cd codewind-filewatchers
+git checkout "$CHANGE_TARGET"
+cd Tests/
+
+./run_tests_java_filewatcher_on_target.sh "$SCRIPT_LOCT/../.."
+
+
 echo post
 
 

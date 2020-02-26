@@ -12,7 +12,7 @@ GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
 
 printf %s "$GIT_DIFF"
 
-CHANGE_COUNT=`printf %s "$GIT_DIFF" | grep "filewatchers" | grep -v "filewatchers.eclipse" |  wc -l`
+CHANGE_COUNT=`printf %s "$GIT_DIFF" | grep "diff --git" | grep "eclipse.codewind.filewatchers" | grep -v "filewatchers.eclipse" |  wc -l`
 
 if [ "$CHANGE_COUNT" == "0" ]; then
 	echo "* No filewatcherd changes detected in Git diff list."
@@ -21,10 +21,20 @@ fi
 
 set -euo pipefail
 
-
 echo change count $CHANGE_COUNT
 
-echo post
+
+cd "$SCRIPT_LOCT"
+
+
+echo 
+echo "Download Maven and add to path"
+echo
+cd $STEP_ROOT_PATH
+curl -LO http://mirror.dsrg.utoronto.ca/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+tar xzf apache-maven-3.6.3-bin.tar.gz
+cd apache-maven-3.6.3/bin
+export PATH=`pwd`:$PATH
 
 
 cd "$SCRIPT_LOCT"
@@ -37,6 +47,8 @@ mvn package
 
 ls -l target/
 
+
+echo post
 
 
 # git diff remotes/origin/"$CHANGE_TARGET" master

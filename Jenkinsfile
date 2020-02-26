@@ -91,13 +91,11 @@ pipeline {
 
                     echo pre
 
-                    git diff remotes/origin/"$CHANGE_TARGET"
+                    GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
+
+                    echo $GIT_DIFF
 
                     echo post
-
-                    git diff origin/"$CHANGE_TARGET"
-
-                    echo post2
 
                     # git diff remotes/origin/"$CHANGE_TARGET" master
 

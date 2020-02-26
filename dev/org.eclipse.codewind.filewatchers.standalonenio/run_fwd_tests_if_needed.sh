@@ -38,7 +38,7 @@ export PATH=`pwd`:$PATH
 
 cd "$SCRIPT_LOCT"
 
-mvn install org.eclipse.codewind.filewatchers.standalonenio
+mvn install
 
 cd "$SCRIPT_LOCT/../org.eclipse.codewind.filewatchers.core"
 

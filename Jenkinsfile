@@ -96,7 +96,7 @@ pipeline {
 
                     GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET`
 
-                    CHANGE_COUNT=`printf %s "\$GIT_DIFF" | grep "Jenkins" | grep -v "filewatchers.eclipse" |  wc -l"`
+                    CHANGE_COUNT=`printf %s "\$GIT_DIFF"`
 
                     echo change count \$CHANGE_COUNT
 

@@ -30,7 +30,6 @@ cd "$SCRIPT_LOCT"
 echo 
 echo "Download Maven and add to path"
 echo
-cd $STEP_ROOT_PATH
 curl -LO http://mirror.dsrg.utoronto.ca/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
 tar xzf apache-maven-3.6.3-bin.tar.gz
 cd apache-maven-3.6.3/bin

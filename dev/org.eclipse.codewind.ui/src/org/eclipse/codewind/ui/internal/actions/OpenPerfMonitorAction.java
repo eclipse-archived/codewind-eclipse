@@ -68,7 +68,6 @@ public class OpenPerfMonitorAction extends SelectionProviderAction {
         	return;
         }
         
-        app.confirmMetricsAvailable();
         if (!app.hasPerfDashboard()) {
         	CoreUtil.openDialog(true, Messages.GenericActionNotSupported, Messages.PerfDashboardNotSupported);
         	return;

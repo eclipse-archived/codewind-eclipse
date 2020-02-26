@@ -26,9 +26,6 @@ pipeline {
             steps {
                 dir("dev/org.eclipse.codewind.core/binaries") {
                     sh """#!/usr/bin/env bash
-
-                        exit 0 
-
                         export VSCODE_REPO="https://github.com/eclipse/codewind-vscode.git"
                         export CW_VSCODE_BRANCH=master
 
@@ -73,9 +70,7 @@ pipeline {
                         which java    
                     '''
                     
-                    dir('dev') { sh 'exit 0' }
-
-                    // dir('dev') { sh './gradlew --stacktrace' }
+                    dir('dev') { sh './gradlew --stacktrace' }
                 }
             }
         } 
@@ -102,9 +97,6 @@ pipeline {
                     println("Deploying codewind-eclipse to downoad area...")
                   
                     sh '''
-
-exit 0
-
                         export REPO_NAME="codewind-eclipse"
                         export OUTPUT_NAME="codewind"
                         export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"

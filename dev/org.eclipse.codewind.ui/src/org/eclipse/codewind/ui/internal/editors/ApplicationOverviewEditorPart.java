@@ -205,7 +205,7 @@ public class ApplicationOverviewEditorPart extends EditorPart {
 		messageLabel = toolkit.createLabel(messageComp, "");
 		messageLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
 		
-		boldFont = IDEUtil.getBoldFont(parent.getShell(), parent.getFont());
+		boldFont = IDEUtil.newFont(parent.getShell(), parent.getFont(), SWT.BOLD);
 		
 		sectionComp = toolkit.createComposite(form.getBody());
 		GridLayout layout = new GridLayout();

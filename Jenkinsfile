@@ -74,6 +74,22 @@ pipeline {
                 }
             }
         } 
+
+
+        stage('Test') {
+            steps {
+                dir("dev") {
+                    sh """#!/usr/bin/env bash
+
+                    export CHANGE_TARGET=\$CHANGE_TARGET
+
+                    cd org.eclipse.codewind.filewatchers.standalonenio
+                    ./run_fwd_tests_if_needed.sh
+
+                    """
+                }
+            }
+        }
         
         stage('Deploy') {
             steps {

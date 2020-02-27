@@ -87,7 +87,7 @@ public class ProjectValidationPage extends WizardPage {
 		
 		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 2, 1));
 		
-		boldFont = IDEUtil.getBoldFont(getShell(), getFont());
+		boldFont = IDEUtil.newFont(getShell(), getFont(), SWT.BOLD);
         
 		typeLabel = new Label(composite, SWT.NONE);
 		typeLabel.setText("Type:");

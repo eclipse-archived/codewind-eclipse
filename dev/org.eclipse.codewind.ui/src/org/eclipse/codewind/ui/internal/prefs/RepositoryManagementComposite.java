@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -180,7 +180,7 @@ public class RepositoryManagementComposite extends Composite {
 		detailsComp.setLayout(detailsLayout);
 		detailsComp.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 		
-		boldFont = IDEUtil.getBoldFont(getShell(), getFont());
+		boldFont = IDEUtil.newFont(getShell(), getFont(), SWT.BOLD);
 		
 		descLabel = new Label(detailsComp, SWT.NONE);
 		descLabel.setFont(boldFont);

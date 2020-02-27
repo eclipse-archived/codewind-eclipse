@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -69,14 +69,6 @@ public class IDEUtil {
 		return result[0];
 	}
     
-	public static Font getBoldFont(Shell shell, Font font) {
-		Display display = shell.getDisplay();
-		FontData[] fontData = font.getFontData();
-		fontData[0].setStyle(SWT.BOLD);
-		fontData[0].setHeight(fontData[0].getHeight());
-		return new Font(display, fontData);
-	}
-    
     public static void setBold(StyledText text) {
 		StyleRange range = new StyleRange();
 		range.start = 0;
@@ -104,5 +96,15 @@ public class IDEUtil {
     	return new MultiStatus(CodewindUIPlugin.PLUGIN_ID, IStatus.ERROR,
     			statusList.toArray(new Status[statusList.size()]), e.toString(), e);
     }
+
+	// Fonts returned by this method must be disposed!
+	public static Font newFont(Shell shell, Font font, int style) {
+		FontData[] data = font.getFontData();
+		FontData[] newData = new FontData[data.length];
+		for (int i = 0; i < data.length; i++) {
+			newData[i] = new FontData(data[i].getName(), data[i].getHeight(), data[i].getStyle() | style);
+		}
+		return new Font(shell.getDisplay(), newData);
+	}
 
 }

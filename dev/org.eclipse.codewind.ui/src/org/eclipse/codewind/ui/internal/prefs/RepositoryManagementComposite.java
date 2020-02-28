@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.prefs;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -119,7 +120,7 @@ public class RepositoryManagementComposite extends Composite {
 		
 		new Label(this, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 2, 1));
 		
-		repoViewer = CheckboxTableViewer.newCheckList(this, SWT.BORDER | SWT.V_SCROLL);
+		repoViewer = CheckboxTableViewer.newCheckList(this, SWT.BORDER | SWT.V_SCROLL | SWT.MULTI);
 		repoViewer.setContentProvider(new RepoContentProvider());
 		repoViewer.setLabelProvider(new RepoLabelProvider());
 		repoViewer.setInput(repoEntries.toArray(new RepoEntry[repoEntries.size()]));
@@ -161,11 +162,8 @@ public class RepositoryManagementComposite extends Composite {
 		removeButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				TableItem[] items = repoViewer.getTable().getSelection();
-				for (TableItem item : items) {
-					repoEntries.remove(item.getData());
-					repoViewer.refresh();
-				}
+				Arrays.stream(repoViewer.getTable().getSelection()).forEach(item -> { repoEntries.remove(item.getData()); });
+				repoViewer.refresh();
 			}
 		});
 		

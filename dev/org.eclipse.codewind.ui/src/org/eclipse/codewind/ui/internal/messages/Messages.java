@@ -41,6 +41,7 @@ public class Messages extends NLS {
 	public static String PrefsParentPage_DebugTimeoutLabel;
 	public static String PrefsParentPage_ErrInvalidTimeout;
 
+	public static String NewConnectionActionLabel;
 	public static String NewConnectionPage_ShellTitle;
 	public static String NewConnectionPage_WizardDescription;
 	public static String NewConnectionPage_WizardTitle;

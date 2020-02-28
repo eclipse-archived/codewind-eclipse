@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.wizards.NewCodewindConnectionWizard;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -27,7 +28,7 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 public class AddConnectionAction extends SelectionProviderAction {
 
 	public AddConnectionAction(ISelectionProvider selectionProvider) {
-		super(selectionProvider, "New Connection");
+		super(selectionProvider, Messages.NewConnectionActionLabel);
 		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.NEW_REMOTE_ICON));
 		selectionChanged(getStructuredSelection());
 	}

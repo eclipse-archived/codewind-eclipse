@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation
+ * Copyright (c) 2019, 2020 IBM Corporation
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -207,6 +207,10 @@ public class FileChangeEventBatchUtil {
 			int index = cfe.getPath().lastIndexOf("/");
 			if (index != -1) {
 				filename = filename.substring(index + 1);
+
+				if (filename.length() == 0) {
+					filename = "/"; // Handle event on the root project directory as "/"
+				}
 			}
 
 			fileChangeSummaryList.append(filename);

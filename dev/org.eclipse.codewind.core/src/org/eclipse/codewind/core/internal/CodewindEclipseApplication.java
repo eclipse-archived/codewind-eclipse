@@ -12,7 +12,9 @@
 package org.eclipse.codewind.core.internal;
 
 import java.net.MalformedURLException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -44,6 +46,7 @@ import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.debug.core.model.IDebugTarget;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
@@ -144,19 +147,35 @@ public class CodewindEclipseApplication extends CodewindApplication {
 			}
 			return;
 		}
+		
 		final CodewindEclipseApplication app = this;
 		Job job = new Job(Messages.ConnectDebugJob) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
 					if (app.projectLanguage.isJava()) {
-						ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID);
-				        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
-				        CodewindLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
-				        ILaunchConfiguration launchConfig = workingCopy.doSave();
-			            ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
+//						ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+//				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID);
+//				        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
+//				        CodewindLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
+//				        ILaunchConfiguration launchConfig = workingCopy.doSave();
+//			            ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
+//			            app.setLaunch(launch);
+
+						// Get rid of codewind delegate
+						ILaunchManager manager = DebugPlugin.getDefault().getLaunchManager();
+				        ILaunchConfigurationType type = manager.getLaunchConfigurationType(IJavaLaunchConfigurationConstants.ID_REMOTE_JAVA_APPLICATION);
+				        final ILaunchConfigurationWorkingCopy debugConfiguration = type.newInstance(null, "NewDebug-" + app.name);
+				        debugConfiguration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, app.name);
+				        Map<String, String> connectMapAttrs = new HashMap<String, String>();
+				        connectMapAttrs.put("hostname", app.host);
+				        connectMapAttrs.put("port", String.valueOf(app.getDebugPort()));
+				        debugConfiguration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CONNECT_MAP, connectMapAttrs);
+				        debugConfiguration.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_CONNECTOR, "org.eclipse.jdt.launching.socketAttachConnector");
+				        ILaunchConfiguration launchConfig = debugConfiguration.doSave();
+				        ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
 			            app.setLaunch(launch);
+
 			            return Status.OK_STATUS;
 					} else {
 						IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(app.projectLanguage.getId());

@@ -32,4 +32,8 @@
          id="org.eclipse.codewind.base"
          version="0.0.0"/>
 
+   <requires>
+      <import feature="org.eclipse.epp.package.jee.feature" version="4.11.0.20190314-1200" match="greaterOrEqual"/>
+   </requires>
+
 </feature>

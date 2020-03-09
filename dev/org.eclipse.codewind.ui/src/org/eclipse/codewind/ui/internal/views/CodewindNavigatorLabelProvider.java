@@ -79,11 +79,14 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			} else {
 				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
-					String text = name + " [" + Messages.CodewindRunningQualifier + "]";
-					if (connection.getApps().size() == 0) {
-						text = text + " (" + Messages.CodewindConnectionNoProjects + ")";
+					if (connection.isConnected()) {
+						String text = name + " [" + Messages.CodewindRunningQualifier + "]";
+						if (connection.getApps().size() == 0) {
+							text = text + " (" + Messages.CodewindConnectionNoProjects + ")";
+						}
+						return text;
 					}
-					return text;
+					return name + " [" + Messages.CodewindErrorQualifier + "] (" + Messages.CodewindErrorMsg + ")";
 				} else if (status.isInstalled()) {
 					if (status.hasStartedVersions()) {
 						// An older version is running
@@ -172,9 +175,14 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			} else {
 				InstallStatus status = manager.getInstallStatus();
 				if (status.isStarted()) {
-					styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
-					if (connection.getApps().size() == 0) {
-						styledString.append(" (" + Messages.CodewindConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
+					if (connection.isConnected()) {
+						styledString.append(" [" + Messages.CodewindRunningQualifier + "]", StyledString.DECORATIONS_STYLER);
+						if (connection.getApps().size() == 0) {
+							styledString.append(" (" + Messages.CodewindConnectionNoProjects + ")", StyledString.DECORATIONS_STYLER);
+						}
+					} else {
+						styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" [" + Messages.CodewindErrorMsg + "]", ERROR_STYLER);
 					}
 				} else if (status.isInstalled()) {
 					if (status.hasStartedVersions()) {

@@ -18,7 +18,8 @@ Require-Bundle: org.eclipse.ui,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: org.eclipse.codewind.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
-Export-Package: org.eclipse.codewind.ui.internal.actions
+Export-Package: org.eclipse.codewind.ui.internal,
+ org.eclipse.codewind.ui.internal.actions
 Import-Package: org.eclipse.tm.terminal.view.core,
  org.eclipse.tm.terminal.view.core.interfaces,
  org.eclipse.tm.terminal.view.core.interfaces.constants,

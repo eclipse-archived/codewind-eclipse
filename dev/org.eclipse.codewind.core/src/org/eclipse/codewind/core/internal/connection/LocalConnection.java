@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,9 @@ package org.eclipse.codewind.core.internal.connection;
 
 import java.net.URI;
 
+import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.runtime.NullProgressMonitor;
 
 public class LocalConnection extends CodewindConnection {
 	
@@ -27,6 +29,12 @@ public class LocalConnection extends CodewindConnection {
 	@Override
 	public boolean isLocal() {
 		return true;
+	}
+
+	@Override
+	public synchronized void onConnectionError() {
+		CodewindManager.getManager().refreshInstallStatus(new NullProgressMonitor());
+		super.onConnectionError();
 	}
 
 }

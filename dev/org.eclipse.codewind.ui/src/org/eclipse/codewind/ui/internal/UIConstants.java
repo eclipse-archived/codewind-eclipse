@@ -15,11 +15,21 @@ public class UIConstants {
 	
 	private UIConstants() {}
 	
-	// Documentation links
+	// Codewind documentation links
 	public static final String 
 		DOC_BASE_URL = "https://www.eclipse.org/codewind",
 		CWSETTINGS_INFO_URL = DOC_BASE_URL + "/project-settings.html",
 		TEMPLATES_INFO_URL = DOC_BASE_URL + "/workingwithtemplates.html",
 		REGISTRY_INFO_URL = DOC_BASE_URL + "/remote-setupregistries.html",
-		REMOTE_SETUP_URL =  DOC_BASE_URL +"/remotedeploy-eclipse.html";
+		REMOTE_SETUP_URL =  DOC_BASE_URL + "/remotedeploy-eclipse.html",
+		COMMANDS_OVERVIEW_URL = DOC_BASE_URL + "/project-actions.html";
+	
+	// Eclipse Marketplace
+	private static final String MKTPLACE_BASE_URL = "https://marketplace.eclipse.org/content";
+	public static final String
+		CODEWIND_OPENAPI_URL = MKTPLACE_BASE_URL + "/codewind-openapi-tools",
+		DOCKER_TOOLS_URL = MKTPLACE_BASE_URL + "/eclipse-docker-tooling";
+	
+	// Docker
+	public static final String DOCKER_INSTALL_URL = "https://docs.docker.com/install/";
 }

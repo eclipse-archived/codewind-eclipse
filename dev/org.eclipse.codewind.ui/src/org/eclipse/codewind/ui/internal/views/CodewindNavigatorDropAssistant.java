@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -129,8 +129,7 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 					}
 					mon.worked(10);
 					mon.done();
-					ViewHelper.refreshCodewindExplorerView(targetConn);
-					ViewHelper.expandConnection(targetConn);
+					CodewindUIPlugin.getUpdateHandler().updateConnection(targetConn);
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to move project: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.MoveProjectError, new String[] {sourceApp.name, sourceApp.connection.getName(), targetConn.getName()}), e);

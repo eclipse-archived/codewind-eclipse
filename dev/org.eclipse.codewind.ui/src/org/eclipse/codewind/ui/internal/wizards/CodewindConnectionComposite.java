@@ -247,10 +247,8 @@ public class CodewindConnectionComposite extends Composite {
 		} finally {
 			if (connection != null) {
 				CodewindConnectionManager.add(connection);
-				
 				ViewHelper.openCodewindExplorerView();
-				ViewHelper.refreshCodewindExplorerView(null);
-				ViewHelper.expandConnection(connection);
+				CodewindUIPlugin.getUpdateHandler().updateAll();
 			}
 		}
 		return Status.OK_STATUS;
@@ -285,8 +283,7 @@ public class CodewindConnectionComposite extends Composite {
 			return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.CodewindConnectionUpdateError, name), e);
 		} finally {
 			ViewHelper.openCodewindExplorerView();
-			ViewHelper.refreshCodewindExplorerView(null);
-			ViewHelper.expandConnection(connection);
+			CodewindUIPlugin.getUpdateHandler().updateConnection(connection);
 		}
 		
 		return Status.OK_STATUS;

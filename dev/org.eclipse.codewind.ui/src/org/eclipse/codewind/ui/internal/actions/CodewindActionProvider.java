@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -23,18 +23,21 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
 public class CodewindActionProvider extends CommonActionProvider {
 	
 	private ISelectionProvider selProvider;
+	private OpenWelcomePageAction openWelcomePageAction;
 	private AddConnectionAction addConnectionAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
         selProvider = aSite.getStructuredViewer();
+        openWelcomePageAction = new OpenWelcomePageAction(selProvider);
         addConnectionAction = new AddConnectionAction(selProvider);
     }
     
     @Override
     public void fillContextMenu(IMenuManager menu) {
     	selProvider.setSelection(selProvider.getSelection());
+    	menu.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openWelcomePageAction);
 	    menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, addConnectionAction);
     }
 }

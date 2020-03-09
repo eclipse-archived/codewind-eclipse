@@ -65,6 +65,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	private ProjectValidationPage projectValidationPage;
 	private ProjectTypeSelectionPage projectTypePage;
 	
+	private List<CodewindConnection> connections;
 	private CodewindConnection connection;
 	private IProject project = null;
 	private IPath projectPath = null;
@@ -72,6 +73,12 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	// If a connection is passed in and no project then the project selection page will be shown
 	public BindProjectWizard(CodewindConnection connection) {
 		this(connection, null);
+	}
+	
+	// If a list of connections is passed in, let the user select from this list
+	public BindProjectWizard(List<CodewindConnection> connections) {
+		this(null, null);
+		this.connections = connections;
 	}
 	
 	// If the project is passed in then the project selection page will not be shown
@@ -96,7 +103,9 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 	public void addPages() {
 		setWindowTitle(Messages.BindProjectWizardTitle);
 		if (connection == null) {
-			List<CodewindConnection> connections = CodewindConnectionManager.activeConnections();
+			if (connections == null) {
+				connections = CodewindConnectionManager.activeConnections();
+			}
 			if (connections.size() == 1) {
 				connection = connections.get(0);
 			} else {
@@ -307,8 +316,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 					}
 					mon.done();
 					ViewHelper.openCodewindExplorerView();
-					ViewHelper.refreshCodewindExplorerView(null);
-					ViewHelper.expandConnection(connection);
+					CodewindUIPlugin.getUpdateHandler().updateConnection(connection);
 					return Status.OK_STATUS;
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + projectPath.toOSString(), e); //$NON-NLS-1$

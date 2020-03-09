@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -65,7 +65,8 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 			PYTHON_ICON = "obj16/python.png",
 			SPRING_ICON = "obj16/spring.png",
 			SWIFT_ICON = "obj16/swift.png",
-			GENERIC_PROJECT_ICON = "obj16/generic_project.png";
+			GENERIC_PROJECT_ICON = "obj16/generic_project.png",
+			WELCOME_IMAGE = "welcome.png";
 
 	// The shared instance
 	private static CodewindUIPlugin plugin;
@@ -154,6 +155,7 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
         registerImage(registry, SPRING_ICON, ICON_BASE_URL + SPRING_ICON);
         registerImage(registry, SWIFT_ICON, ICON_BASE_URL + SWIFT_ICON);
         registerImage(registry, GENERIC_PROJECT_ICON, ICON_BASE_URL + GENERIC_PROJECT_ICON);
+        registerImage(registry, WELCOME_IMAGE, ICON_BASE_URL + WELCOME_IMAGE);
 
         return registry;
     }

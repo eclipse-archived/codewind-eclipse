@@ -162,6 +162,8 @@ public class Messages extends NLS {
 	public static String WorkspaceUpgradeError;
 	public static String WorkspaceUpgradeTitle;
 	
+	public static String CodewindInstalledDialogTitle;
+	public static String CodewindInstalledDialogMsg;
 	public static String UpdateCodewindDialogTitle;
 	public static String UpdateCodewindDialogMsg;
 	
@@ -537,6 +539,51 @@ public class Messages extends NLS {
 	public static String LogLevelDialogMessage;
 	public static String LogLevelDialogLogLabel;
 	public static String LogLevelDialogLogDefault;
+	
+	public static String GetStartedIntroMessage;
+	
+	public static String WelcomePageAction;
+	public static String WelcomePageEditorPartName;
+	public static String WelcomePageEditorCreateError;
+	public static String WelcomePageEditorFormTitle;
+	public static String WelcomePageEditorFormMessage;
+	public static String WelcomePageWelcomeHeader;
+	public static String WelcomePageWelcomeText;
+	public static String WelcomePageCodewindExplorerLink;
+	public static String WelcomePageQuickStartHeader;
+	public static String WelcomePageQuickStartText;
+	public static String WelcomePageQuickStartLocalButton;
+	public static String WelcomePageQuickStartRemoteButton;
+	public static String WelcomePageQuickStartSetUpLabel;
+	public static String WelcomePageQuickStartProjectLabel;
+	public static String WelcomePageQuickStartStep;
+	public static String WelcomePageQuickStartOr;
+	public static String WelcomePageQuickStartInstallDockerButton;
+	public static String WelcomePageQuickStartInstallImagesButton;
+	public static String WelcomePageQuickStartNewConnectionButton;
+	public static String WelcomePageQuickStartNoConnectionTitle;
+	public static String WelcomePageQuickStartNoConnectionMsg;
+	public static String WelcomePageQuickStartNewProjectButton;
+	public static String WelcomePageQuickStartAddProjectButton;
+	public static String WelcomePageLearnHeader;
+	public static String WelcomePageLearnCommandsLabel;
+	public static String WelcomePageLearnCommandsTooltip;
+	public static String WelcomePageLearnCommandsText;
+	public static String WelcomePageLearnCommandsLink;
+	public static String WelcomePageLearnCommandsLinkTooltip;
+	public static String WelcomePageLearnDocsLabel;
+	public static String WelcomePageLearnDocsTooltip;
+	public static String WelcomePageLearnDocsText;
+	public static String WelcomePageLearnDocsTemplatesLink;
+	public static String WelcomePageLearnDocsTemplatesTooltip;
+	public static String WelcomePageLearnDocsRemoteLink;
+	public static String WelcomePageLearnDocsRemoteTooltip;
+	public static String WelcomePageLearnExtensionsLabel;
+	public static String WelcomePageLearnExtensionsText;
+	public static String WelcomePageLearnExtensionsOpenAPILink;
+	public static String WelcomePageLearnExtensionsOpenAPITooltip;
+	public static String WelcomePageLearnExtensionsDockerLink;
+	public static String WelcomePageLearnExtensionsDockerTooltip;
 	
 	static {
 		// initialize resource bundle

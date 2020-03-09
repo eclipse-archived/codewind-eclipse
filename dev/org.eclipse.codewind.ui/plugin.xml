@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright (c) 2018, 2019 IBM Corporation and others.
+    Copyright (c) 2018, 2020 IBM Corporation and others.
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v2.0
     which accompanies this distribution, and is available at
@@ -12,6 +12,16 @@
  -->
 
 <plugin>
+
+   <!-- Welcome Page Content -->
+   <extension point="org.eclipse.ui.intro.configExtension">
+      <configExtension configId="org.eclipse.ui.intro.universalConfig"
+                       content="intro/overview.xml"/>
+      <action
+            name="codewindGetStarted"
+            replaces="runAction?pluginId=org.eclipse.codewind.ui&amp;class=org.eclipse.codewind.ui.internal.actions.GetStartedAction">
+      </action>
+   </extension>
 
    	<extension
          point="org.eclipse.ui.preferencePages">
@@ -303,6 +313,18 @@
 				id="org.eclipse.codewind.ui.internal.wizards.bindProject">
 			</action>
 		</objectContribution>
+	</extension>
+	
+	<extension point="org.eclipse.ui.editors">
+	    <editor id="org.eclipse.codewind.ui.editors.welcomePage"
+	        name="Codewind Welcome Page"
+	        icon="icons/codewind.png"
+	        class="org.eclipse.codewind.ui.internal.editors.WelcomePageEditorPart"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.elementFactories">
+		<factory id="org.eclipse.codewind.ui.editors.welcomePageEditorInputFactory"
+			class="org.eclipse.codewind.ui.internal.editors.WelcomePageEditorInputFactory"/>
 	</extension>
 	
 	<extension point="org.eclipse.ui.editors">

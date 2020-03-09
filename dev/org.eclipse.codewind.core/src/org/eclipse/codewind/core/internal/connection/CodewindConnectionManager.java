@@ -154,6 +154,11 @@ public class CodewindConnectionManager {
 	 * Deletes all of the instance's connections. Called when the plugin is stopped.
 	 */
 	public synchronized static void clear() {
+		if (instance == null) {
+			// Never initialized so just return
+			return;
+		}
+		
 		Logger.log("Clearing " + instance().connections.size() + " connections"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Iterator<CodewindConnection> it = instance().connections.iterator();

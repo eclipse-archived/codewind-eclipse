@@ -128,17 +128,22 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			
 			if (app.isEnabled()) {
 				AppStatus appStatus = app.getAppStatus();
-				if (appStatus != AppStatus.UNKNOWN) {
-					String displayString = appStatus.getDisplayString(app.getStartMode());
-					builder.append(" [" + displayString + "]");
-				}
-				
 				BuildStatus buildStatus = app.getBuildStatus();
-				String buildDetails = app.getBuildDetails();
-				if (buildDetails != null && !buildDetails.isEmpty()) {
-					builder.append(" [" + buildStatus.getDisplayString() + ": " + buildDetails + "]");
+				if (appStatus == AppStatus.UNKNOWN && buildStatus == BuildStatus.UNKOWN) {
+					builder.append(" [" + Messages.CodewindProjectNoStatus + "]");
 				} else {
-					builder.append(" [" + buildStatus.getDisplayString() + "]");
+					if (appStatus != AppStatus.UNKNOWN) {
+						builder.append(" [" + appStatus.getDisplayString(app.getStartMode()) + "]");
+					}
+					
+					if (buildStatus != BuildStatus.UNKOWN) {
+						String buildDetails = app.getBuildDetails();
+						if (buildDetails != null && !buildDetails.isEmpty()) {
+							builder.append(" [" + buildStatus.getDisplayString() + ": " + buildDetails + "]");
+						} else {
+							builder.append(" [" + buildStatus.getDisplayString() + "]");
+						}
+					}
 				}
 			} else {
 				builder.append(" [" + Messages.CodewindProjectDisabled + "]");
@@ -233,19 +238,24 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			
 			if (app.isEnabled()) {
 				AppStatus appStatus = app.getAppStatus();
-				if (appStatus != AppStatus.UNKNOWN) {
-					String displayString = appStatus.getDisplayString(app.getStartMode());
-					styledString.append(" [" + displayString + "]", StyledString.DECORATIONS_STYLER);
-				}
-				
 				BuildStatus buildStatus = app.getBuildStatus();
-				String buildDetails = app.getBuildDetails();
-				if (buildDetails != null) {
-					styledString.append(" [" + buildStatus.getDisplayString() + ": ", StyledString.DECORATIONS_STYLER);
-					styledString.append(buildDetails, StyledString.QUALIFIER_STYLER);
-					styledString.append("]", StyledString.DECORATIONS_STYLER);
+				if (appStatus == AppStatus.UNKNOWN && buildStatus == BuildStatus.UNKOWN) {
+					styledString.append(" [" + Messages.CodewindProjectNoStatus + "]", StyledString.DECORATIONS_STYLER);
 				} else {
-					styledString.append(" [" + buildStatus.getDisplayString() + "]", StyledString.DECORATIONS_STYLER);
+					if (appStatus != AppStatus.UNKNOWN) {
+						styledString.append(" [" + appStatus.getDisplayString(app.getStartMode()) + "]", StyledString.DECORATIONS_STYLER);
+					}
+					
+					if (buildStatus != BuildStatus.UNKOWN) {
+						String buildDetails = app.getBuildDetails();
+						if (buildDetails != null) {
+							styledString.append(" [" + buildStatus.getDisplayString() + ": ", StyledString.DECORATIONS_STYLER);
+							styledString.append(buildDetails, StyledString.QUALIFIER_STYLER);
+							styledString.append("]", StyledString.DECORATIONS_STYLER);
+						} else {
+							styledString.append(" [" + buildStatus.getDisplayString() + "]", StyledString.DECORATIONS_STYLER);
+						}
+					}
 				}
 			} else {
 				styledString.append(" [" + Messages.CodewindProjectDisabled + "]", StyledString.DECORATIONS_STYLER);

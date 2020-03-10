@@ -108,6 +108,7 @@ public class Messages extends NLS {
 	public static String CodewindConnected;
 	public static String CodewindDisconnected;
 	public static String CodewindDisconnectedDetails;
+	public static String CodewindProjectNoStatus;
 	public static String CodewindProjectDisabled;
 	public static String CodewindConnectionNoProjects;
 	public static String CodewindDescriptionContextRoot;

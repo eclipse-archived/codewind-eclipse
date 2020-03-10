@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,19 +11,18 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.internal.wizards.datatransfer.SmartImportJob;
 
 /**
@@ -31,34 +30,34 @@ import org.eclipse.ui.internal.wizards.datatransfer.SmartImportJob;
  * the source available for editing and debugging.
  */
 @SuppressWarnings("restriction")
-public class ImportProjectAction implements IObjectActionDelegate {
+public class ImportProjectAction extends SelectionProviderAction {
 
 	protected CodewindApplication app;
+	
+	public ImportProjectAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.ImportProjectActionLabel);
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.IMPORT_ICON));
+		selectionChanged(getStructuredSelection());
+	}
 
 	@Override
-	public void selectionChanged(IAction action, ISelection selection) {
-		if (!(selection instanceof IStructuredSelection)) {
-			action.setEnabled(false);
-			return;
-		}
-
-		IStructuredSelection sel = (IStructuredSelection) selection;
+	public void selectionChanged(IStructuredSelection sel) {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindApplication) {
 				app = (CodewindApplication) obj;
 				if (app.isAvailable()) {
 					IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(app.name);
-					action.setEnabled(project == null || !project.exists());
+					setEnabled(project == null || !project.exists());
 					return;
 				}
 			}
 		}
-		action.setEnabled(false);
+		setEnabled(false);
 	}
 
 	@Override
-	public void run(IAction action) {
+	public void run() {
 		if (app == null) {
 			// should not be possible
 			Logger.logError("ImportProjectAction ran but no application was selected"); //$NON-NLS-1$
@@ -66,11 +65,6 @@ public class ImportProjectAction implements IObjectActionDelegate {
 		}
 
 		importProject(app);
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
 	}
 	
 	/**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -16,43 +16,42 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorInput;
 import org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorPart;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action to open the application overview in a browser.
  */
-public class OpenAppOverviewAction implements IObjectActionDelegate {
+public class OpenAppOverviewAction extends SelectionProviderAction {
 
     protected CodewindApplication app;
+    
+	public OpenAppOverviewAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.OpenAppOverviewAction_Label);
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.CODEWIND_ICON));
+		selectionChanged(getStructuredSelection());
+	}
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication) obj;
-            	action.setEnabled(true);
+            	setEnabled(true);
             	return;
             }
         }
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("OpenAppOverviewAction ran but no application was selected"); //$NON-NLS-1$
@@ -76,9 +75,4 @@ public class OpenAppOverviewAction implements IObjectActionDelegate {
 			Logger.logError("An error occurred opening the editor for application: " + app.name, e); //$NON-NLS-1$
 		}
     }
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
-	}
 }

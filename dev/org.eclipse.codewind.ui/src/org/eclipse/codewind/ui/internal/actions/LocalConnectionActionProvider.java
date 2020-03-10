@@ -15,12 +15,12 @@ import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.ui.internal.actions.InstallerAction.ActionType;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
-import org.eclipse.ui.navigator.ICommonMenuConstants;
 
 /**
  * Action provider for the Codewind view.
@@ -49,23 +49,26 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
         logLevelAction = new LogLevelAction(selProvider);
     }
     
-    @Override
-    public void fillContextMenu(IMenuManager menu) {
-    	if (CodewindManager.getManager().getInstallerStatus() != null) {
-    		// If the installer is active then the install actions should not be shown
-    		return;
-    	}
-    	selProvider.setSelection(selProvider.getSelection());
-    	menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
-    	menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
-    	menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageReposAction);
-    	InstallStatus status = CodewindManager.getManager().getInstallStatus();
-    	menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, installUninstallAction);
-    	if (status.isInstalled()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, startStopAction);
-    	}
-    	if (logLevelAction.showAction()) {
-			menu.appendToGroup(ICommonMenuConstants.GROUP_PROPERTIES, logLevelAction);
+	@Override
+	public void fillContextMenu(IMenuManager menu) {
+		if (CodewindManager.getManager().getInstallerStatus() != null) {
+			// If the installer is active then the install actions should not be shown
+			return;
+		}
+		selProvider.setSelection(selProvider.getSelection());
+		menu.add(newProjectAction);
+		menu.add(bindAction);
+		menu.add(new Separator());
+		menu.add(manageReposAction);
+		menu.add(new Separator());
+		InstallStatus status = CodewindManager.getManager().getInstallStatus();
+		menu.add(installUninstallAction);
+		if (status.isInstalled()) {
+			menu.add(startStopAction);
+		}
+		if (logLevelAction.showAction()) {
+			menu.add(new Separator());
+			menu.add(logLevelAction);
 		}
 	}
 

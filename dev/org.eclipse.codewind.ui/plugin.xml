@@ -141,15 +141,6 @@
 					</or>
 				</enablement>
 			</actionProvider>
-			<actionProvider
-				id="org.eclipse.codewind.ui.logFileActionProvider"
-				class="org.eclipse.codewind.ui.internal.actions.LogFileActionProvider">
-				<enablement>
-					<or>
-						<instanceof value="org.eclipse.codewind.core.internal.CodewindApplication" />
-					</or>
-				</enablement>
-			</actionProvider>
 			<dropAssistant
 				id="org.eclipse.codewind.ui.navigatorDropAssistant"
 				class="org.eclipse.codewind.ui.internal.views.CodewindNavigatorDropAssistant">
@@ -166,34 +157,6 @@
 		<objectContribution
 			id="org.eclipse.codewind.ui.appObjectActions"
 			objectClass="org.eclipse.codewind.core.internal.CodewindApplication">
-			<action
-				id="org.eclipse.codewind.ui.openAppOverview"
-				enablesFor="1"
-				menubarPath="group.open"
-				icon="%DEFAULT_ICON_PATH"
-				label="%ACTION_OPEN_APP_OVERVIEW"
-				class="org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction"/>
-			<action
-				id="org.eclipse.codewind.ui.openApplication"
-				enablesFor="1"
-				menubarPath="group.open"
-				icon="%OPEN_APP_ICON_PATH"
-				label="%ACTION_OPEN_APP"
-				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction"/>
-			<action
-				id="org.eclipse.codewind.ui.importApplication"
-				enablesFor="1"
-				menubarPath="group.show"
-				icon="%IMPORT_ICON_PATH"
-				label="%ACTION_IMPORT_PROJECT"
-				class="org.eclipse.codewind.ui.internal.actions.ImportProjectAction"/>
-			<action
-				id="org.eclipse.codewind.ui.buildApplication"
-				enablesFor="1"
-				menubarPath="group.build"
-				icon="%BUILD_ICON_PATH"
-				label="%ACTION_START_BUILD"
-				class="org.eclipse.codewind.ui.internal.actions.StartBuildAction"/>
 			<action
 				id="org.eclipse.codewind.ui.refreshApplication"
 				enablesFor="1"
@@ -230,14 +193,6 @@
 		<viewContribution
 			id="org.eclipse.codewind.ui.explorerViewActions"
 			targetID="org.eclipse.codewind.ui.explorerView">
-			<action
-				id="org.eclipse.codewind.ui.openApplication"
-				label="%ACTION_OPEN_APP"
-				menubarPath="group.open"
-				toolbarPath="group.open"
-				icon="%OPEN_APP_ICON_PATH"
-				class="org.eclipse.codewind.ui.internal.actions.OpenAppAction">
-			</action>
 			<action
 				id="org.eclipse.codewind.ui.newCloudConnectionToolbarAction"
 				label="%ACTION_NEW_CLOUD_CONNECTION"

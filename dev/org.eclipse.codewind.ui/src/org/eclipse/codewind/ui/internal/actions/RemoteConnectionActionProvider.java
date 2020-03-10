@@ -14,6 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IActionBars;
@@ -21,7 +22,6 @@ import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
-import org.eclipse.ui.navigator.ICommonMenuConstants;
 
 /**
  * Action provider for a Codewind connection.
@@ -59,18 +59,22 @@ public class RemoteConnectionActionProvider extends CommonActionProvider {
 	@Override
 	public void fillContextMenu(IMenuManager menu) {
 		selProvider.setSelection(selProvider.getSelection());
-		menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, newProjectAction);
-		menu.appendToGroup(ICommonMenuConstants.GROUP_NEW, bindAction);
-		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageRegistriesAction);
-		menu.appendToGroup(ICommonMenuConstants.GROUP_GENERATE, manageReposAction);
-		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, connectDisconnectAction);
-		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, editConnectionAction);
-		menu.appendToGroup(ICommonMenuConstants.GROUP_ADDITIONS, removeConnectionAction);
+		menu.add(newProjectAction);
+		menu.add(bindAction);
+		menu.add(new Separator());
+		menu.add(manageRegistriesAction);
+		menu.add(manageReposAction);
+		menu.add(new Separator());
 		if (openTektonDashboardAction.showAction()) {
-    		menu.appendToGroup(ICommonMenuConstants.GROUP_BUILD, openTektonDashboardAction);
-    	}
+			menu.add(openTektonDashboardAction);
+			menu.add(new Separator());
+		}
+		menu.add(connectDisconnectAction);
+		menu.add(editConnectionAction);
+		menu.add(removeConnectionAction);
 		if (logLevelAction.showAction()) {
-			menu.appendToGroup(ICommonMenuConstants.GROUP_PROPERTIES, logLevelAction);
+			menu.add(new Separator());
+			menu.add(logLevelAction);
 		}
 	}
     

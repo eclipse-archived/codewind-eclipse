@@ -15,7 +15,6 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -71,7 +70,7 @@ public class ConnectDisconnectAction extends SelectionProviderAction {
 				protected IStatus run(IProgressMonitor monitor) {
 					try {
 						conn.disconnect();
-						ViewHelper.refreshCodewindExplorerView(conn);
+						CodewindUIPlugin.getUpdateHandler().updateConnection(conn);
 						return Status.OK_STATUS;
 					} catch (Exception e) {
 						Logger.logError("An error occurred disconnecting from: " + conn.getBaseURI(), e); //$NON-NLS-1$

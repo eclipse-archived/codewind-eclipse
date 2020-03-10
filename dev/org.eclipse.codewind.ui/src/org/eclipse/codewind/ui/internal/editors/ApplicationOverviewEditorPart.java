@@ -264,9 +264,18 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 					break;
 				}
 			});
-		} else if (element instanceof CodewindConnection && ((CodewindConnection)element).getConid().equals(connectionId) && type == UpdateType.REMOVE) {
+		} else if (element instanceof CodewindConnection && ((CodewindConnection)element).getConid().equals(connectionId)) {
 			Display.getDefault().asyncExec(() -> {
-				ApplicationOverviewEditorPart.this.getEditorSite().getPage().closeEditor(ApplicationOverviewEditorPart.this, false);
+				switch(type) {
+				case MODIFY:
+					CodewindConnection conn = (CodewindConnection)element;
+					CodewindApplication app = conn.getAppByID(projectId);
+					ApplicationOverviewEditorPart.this.update(conn, app);
+					break;
+				case REMOVE:
+					ApplicationOverviewEditorPart.this.getEditorSite().getPage().closeEditor(ApplicationOverviewEditorPart.this, false);
+					break;
+				}
 			});
 		}
 	}
@@ -277,11 +286,11 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 	
 	public void update(CodewindConnection conn, CodewindApplication app, boolean init) {
 		boolean changed = false;
-		if (conn == null || app == null) {
+		if (conn == null || !conn.isConnected() || app == null) {
 			changed = !messageComp.getVisible();
 			messageComp.setVisible(true);
 			((GridData)messageComp.getLayoutData()).exclude = false;
-			messageLabel.setText(conn == null ? Messages.AppOverviewEditorNoConnection : Messages.AppOverviewEditorNoApplication);
+			messageLabel.setText(conn == null || !conn.isConnected() ? Messages.AppOverviewEditorNoConnection : Messages.AppOverviewEditorNoApplication);
 			sectionComp.setVisible(false);
 			((GridData)sectionComp.getLayoutData()).exclude = true;
 		} else {

@@ -860,8 +860,7 @@ public class CodewindConnection {
 		synchronized(appMap) {
 			appMap.clear();
 		}
-		// Update everything as Codewind might be down as well
-		CoreUtil.updateAll();
+		CoreUtil.updateConnection(this);
 	}
 
 	/**
@@ -891,21 +890,21 @@ public class CodewindConnection {
 					Logger.logError("Failed to create a new socket with updated URI: " + socket.socketUri);
 					// Clear the message so that it just shows the basic disconnected message
 					this.connectionErrorMsg = null;
-					CoreUtil.updateAll();
+					CoreUtil.updateConnection(this);
 					return;
 				}
 			}
 		} catch (Exception e) {
 			Logger.logError("An exception occurred while trying to update the connection information", e);
 			this.connectionErrorMsg = Messages.Connection_ErrConnection_UpdateCacheException;
-			CoreUtil.updateAll();
+			CoreUtil.updateConnection(this);
 			return;
 		}
 		
 		this.connectionErrorMsg = null;
 		isConnected = true;
 		refreshApps(null);
-		CoreUtil.updateAll();
+		CoreUtil.updateConnection(this);
 	}
 
 	@Override

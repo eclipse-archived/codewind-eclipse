@@ -60,6 +60,7 @@
         <antcall target="cw_imports.generateCWSuppliersUpdateSiteRestore"/>
 
         <antcall target="cw_imports.generateCWUpdateSite"/>
+        <antcall target="cw_test_imports.generateCWTestUpdateSite"/>
         
         <echo message="Delete tools.image"/>
         <delete dir="${cw_build.basedir}/tools.image" failonerror="false"/>

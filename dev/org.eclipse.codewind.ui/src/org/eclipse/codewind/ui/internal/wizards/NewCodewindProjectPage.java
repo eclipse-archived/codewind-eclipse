@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.RegistryUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
@@ -267,7 +268,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				try {
-					List<RegistryInfo> regList = connection.requestRegistryList();
+					List<RegistryInfo> regList = RegistryUtil.listRegistrySecrets(connection.getConid(), new NullProgressMonitor());
 					ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
 					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
 					if (regDialog.open() == Window.OK) {
@@ -464,9 +465,6 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 			}
 			updateDetails();
 		}
-		
-		manageRegistriesComp.setVisible(!connection.isLocal());
-		((GridData)manageRegistriesComp.getLayoutData()).exclude = connection.isLocal();
 	}
 
 	private void createItems(Table table, String filter) {

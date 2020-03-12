@@ -291,6 +291,8 @@ public class Messages extends NLS {
 	public static String ActionOpenTektonDashboardOtherError;
 	
 	public static String ActionOpenContainerShell;
+	public static String ActionOpenContainerShellMissingDepsTitle;
+	public static String ActionOpenContainerShellMissingDepsMsg;
 
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,11 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.tm.terminal.view.core.TerminalServiceFactory;
 import org.eclipse.tm.terminal.view.core.interfaces.ITerminalService;
 import org.eclipse.tm.terminal.view.core.interfaces.constants.ITerminalsConnectorConstants;
@@ -30,6 +33,8 @@ import org.eclipse.ui.actions.SelectionProviderAction;
  */
 public class ContainerShellAction extends SelectionProviderAction {
 	
+	private static final String TERMINAL_SERVICE_BUNDLE_ID = "org.eclipse.tm.terminal.view.core"; //$NON-NLS-1$
+	private static final String LAUNCHER_BUNDLE_ID = "org.eclipse.tm.terminal.connector.local"; //$NON-NLS-1$
 	private static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
 	
     protected CodewindApplication app;
@@ -63,6 +68,13 @@ public class ContainerShellAction extends SelectionProviderAction {
         if (app.getContainerId() == null) {
         	Logger.logError("ContainerShellAction ran but the container id for the application is not set: " + app.name); //$NON-NLS-1$
 			return;
+        }
+        
+        // Check that the required bundles are installed and show a dialog if not
+        if (Platform.getBundle(TERMINAL_SERVICE_BUNDLE_ID) == null || Platform.getBundle(LAUNCHER_BUNDLE_ID) == null) {
+        	Logger.logError("The container shell cannot be opened because the required terminal service dependencies are not installed."); //$NON-NLS-1$
+        	MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.ActionOpenContainerShellMissingDepsTitle, Messages.ActionOpenContainerShellMissingDepsMsg);
+        	return;
         }
         
         // exec bash if it's installed, else exec sh

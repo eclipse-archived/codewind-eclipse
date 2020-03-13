@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation
+ * Copyright (c) 2019, 2020 IBM Corporation
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -221,8 +221,6 @@ public class JavaNioWatchService implements IPlatformWatchService {
 
 		private final PathFilter pathFilter;
 
-		private static boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
-
 		private final ProjectToWatch projectToWatch;
 
 		private boolean threadActive = true;
@@ -423,9 +421,7 @@ public class JavaNioWatchService implements IPlatformWatchService {
 					keys.remove(key);
 					watchedPaths.remove(dir);
 
-					if (isMac && !dir.toFile().exists()) {
-						// Mac WatchService only reports the invalidation of the watch service, rather
-						// than the actual directory delete.
+					if (!dir.toFile().exists()) {
 						newEvents.add(new WatchEventEntry(WatchEventEntry.EventType.DELETE, dir, true));
 					}
 

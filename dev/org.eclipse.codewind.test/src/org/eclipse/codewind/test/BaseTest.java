@@ -23,6 +23,8 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
+import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -93,6 +95,12 @@ public abstract class BaseTest extends TestCase {
     public void doSetup() throws Exception {
     	// Check that Codewind is installed
     	CodewindManager.getManager().refreshInstallStatus(new NullProgressMonitor());
+    	if (!CodewindManager.getManager().getInstallStatus().isInstalled()) {
+    		installCodewind();
+    		startCodewind();
+    	} else if (!CodewindManager.getManager().getInstallStatus().isStarted()) {
+    		startCodewind();
+    	}
     	assertTrue("Codewind must be installed and started before the tests can be run", CodewindManager.getManager().getInstallStatus().isStarted());
     	
     	// Disable workspace auto build
@@ -300,4 +308,21 @@ public abstract class BaseTest extends TestCase {
 		TestUtil.copyFile(srcPath, destPath);
 	}
 
+	protected void installCodewind() throws Exception {
+		TestUtil.print("Installing Codewind version: " + InstallUtil.getVersion());
+		ProcessResult result = InstallUtil.installCodewind(InstallUtil.getVersion(), new NullProgressMonitor());
+		checkResult(result);
+		assertTrue("Codewind should be installed", CodewindManager.getManager().getInstallStatus().isInstalled());
+	}
+	
+	protected void startCodewind() throws Exception {
+		TestUtil.print("Starting Codewind version: " + InstallUtil.getVersion());
+		ProcessResult result = InstallUtil.startCodewind(InstallUtil.getVersion(), new NullProgressMonitor());
+		checkResult(result);
+		assertTrue("Codewind should be started", CodewindManager.getManager().getInstallStatus().isStarted());
+	}
+	
+	protected void checkResult(ProcessResult result) throws Exception {
+		assertTrue("The process failed with exit code: " + result.getExitValue() + ", and error: " + result.getErrorMsg(), result.getExitValue() == 0);
+	}
 }

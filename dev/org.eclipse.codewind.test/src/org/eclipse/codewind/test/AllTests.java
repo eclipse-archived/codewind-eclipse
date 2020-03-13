@@ -16,7 +16,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	ExternalLinkTest.class
+	GoAutoBuildTest.class
 })
 
 public class AllTests {

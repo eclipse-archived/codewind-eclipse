@@ -14,6 +14,7 @@ package org.eclipse.codewind.core.internal.cli;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -155,7 +156,8 @@ public class CLIUtil {
 		// Copy the executable over
 		InputStream stream = null;
 		try {
-			stream = FileLocator.openStream(CodewindCorePlugin.getDefault().getBundle(), new Path(relPath), false);
+			URL url = CodewindCorePlugin.getDefault().getBundle().getEntry(relPath);
+			stream = url.openStream();
 			FileUtil.copyFile(stream, execPath);
 			if (PlatformUtil.getOS() != PlatformUtil.OperatingSystem.WINDOWS) {
 				Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rwxr-xr-x");

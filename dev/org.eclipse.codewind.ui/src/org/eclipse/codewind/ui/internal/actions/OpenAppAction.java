@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -17,48 +17,47 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IViewActionDelegate;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.SelectionProviderAction;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 /**
  * Action to open the application in a browser.
  */
-public class OpenAppAction implements IObjectActionDelegate, IViewActionDelegate {
+public class OpenAppAction extends SelectionProviderAction {
+	
+	public static final String ACTION_ID = "org.eclipse.codewind.ui.openAppAction";
 
     protected CodewindApplication app;
+    
+	public OpenAppAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.OpenAppAction_Label);
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.OPEN_APP_ICON));
+		selectionChanged(getStructuredSelection());
+	}
 
     @Override
-    public void selectionChanged(IAction action, ISelection selection) {
-        if (!(selection instanceof IStructuredSelection)) {
-            action.setEnabled(false);
-            return;
-        }
-
-        IStructuredSelection sel = (IStructuredSelection) selection;
+    public void selectionChanged(IStructuredSelection sel) {
         if (sel.size() == 1) {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication)obj;
-            	action.setEnabled(app.isAvailable() && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED));
+            	setEnabled(app.isAvailable() && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED));
             	return;
             }
         }
-        action.setEnabled(false);
+        setEnabled(false);
     }
 
     @Override
-    public void run(IAction action) {
+    public void run() {
         if (app == null) {
         	// should not be possible
         	Logger.logError("OpenAppAction ran but no application was selected"); //$NON-NLS-1$
@@ -92,15 +91,5 @@ public class OpenAppAction implements IObjectActionDelegate, IViewActionDelegate
 		} catch (PartInitException e) {
 			Logger.logError("Error opening app in browser", e); //$NON-NLS-1$
 		}
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// empty
-	}
-
-	@Override
-	public void init(IViewPart arg0) {
-		// empty
 	}
 }

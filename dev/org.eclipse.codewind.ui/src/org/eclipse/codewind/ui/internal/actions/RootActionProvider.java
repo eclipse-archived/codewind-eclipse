@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -29,6 +29,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
  */
 public class RootActionProvider extends CommonActionProvider {
 	
+	private OpenAppAction openAppAction;
 	private RestartRunModeAction restartRunAction;
 	private RestartDebugModeAction restartDebugAction;
 	
@@ -36,6 +37,7 @@ public class RootActionProvider extends CommonActionProvider {
     public void init(ICommonActionExtensionSite aSite) {
         super.init(aSite);
         ISelectionProvider selProvider = aSite.getStructuredViewer();
+        openAppAction = new OpenAppAction(selProvider);
         restartRunAction = new RestartRunModeAction(selProvider);
         restartDebugAction = new RestartDebugModeAction(selProvider);
     }
@@ -43,6 +45,7 @@ public class RootActionProvider extends CommonActionProvider {
 	@Override
 	public void fillActionBars(IActionBars actionBars) {
 		super.fillActionBars(actionBars);
+		actionBars.setGlobalActionHandler(OpenAppAction.ACTION_ID, openAppAction);
 		actionBars.setGlobalActionHandler(RestartRunModeAction.ACTION_ID, restartRunAction);
 		actionBars.setGlobalActionHandler(RestartDebugModeAction.ACTION_ID, restartDebugAction);
 		
@@ -53,6 +56,9 @@ public class RootActionProvider extends CommonActionProvider {
 			if (item instanceof ActionContributionItem) {
 				existingActions.add(((ActionContributionItem)item).getAction());
 			}
+		}
+		if (!existingActions.contains(openAppAction)) {
+			cm.appendToGroup(ICommonMenuConstants.GROUP_OPEN, openAppAction);
 		}
 		if (!existingActions.contains(restartRunAction)) {
 			cm.appendToGroup(ICommonMenuConstants.GROUP_OPEN, restartRunAction);

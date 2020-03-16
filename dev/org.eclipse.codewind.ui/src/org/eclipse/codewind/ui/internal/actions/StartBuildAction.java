@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,49 +11,48 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
  * Action to start an application build.
  */
-public class StartBuildAction implements IObjectActionDelegate {
+public class StartBuildAction extends SelectionProviderAction {
 
 	protected CodewindApplication app;
+	
+	public StartBuildAction(ISelectionProvider selectionProvider) {
+		super(selectionProvider, Messages.StartBuildActionLabel);
+		setImageDescriptor(CodewindUIPlugin.getImageDescriptor(CodewindUIPlugin.BUILD_ICON));
+		selectionChanged(getStructuredSelection());
+	}
 
 	@Override
-	public void selectionChanged(IAction action, ISelection selection) {
-		if (!(selection instanceof IStructuredSelection)) {
-			action.setEnabled(false);
-			return;
-		}
-
-		IStructuredSelection sel = (IStructuredSelection) selection;
+	public void selectionChanged(IStructuredSelection sel) {
 		if (sel.size() == 1) {
 			Object obj = sel.getFirstElement();
 			if (obj instanceof CodewindApplication) {
 				app = (CodewindApplication) obj;
 				if (app.isAvailable() && app.getBuildStatus() != BuildStatus.IN_PROGRESS && app.getBuildStatus() != BuildStatus.QUEUED) {
-					action.setEnabled(true);
+					setEnabled(true);
 					return;
 				}
 			}
 		}
-		action.setEnabled(false);
+		setEnabled(false);
 	}
 
 	@Override
-	public void run(IAction action) {
+	public void run() {
 		if (app == null) {
 			// should not be possible
 			Logger.logError("StartBuildAction ran but no application was selected"); //$NON-NLS-1$
@@ -67,10 +66,5 @@ public class StartBuildAction implements IObjectActionDelegate {
 			CoreUtil.openDialog(true, NLS.bind(Messages.StartBuildError, app.name), e.getMessage());
 			return;
 		}
-	}
-
-	@Override
-	public void setActivePart(IAction arg0, IWorkbenchPart arg1) {
-		// nothing
 	}
 }

@@ -81,6 +81,9 @@ public class Messages extends NLS {
 	public static String CodewindConnectionConnectError;
 	public static String CodewindConnectionUpdateError;
 
+	public static String OpenAppOverviewAction_Label;
+	
+	public static String OpenAppAction_Label;
 	public static String OpenAppAction_CantOpenNotRunningAppMsg;
 	public static String OpenAppAction_CantOpenNotRunningAppTitle;
 
@@ -303,7 +306,9 @@ public class Messages extends NLS {
 	public static String RefreshConnectionJobLabel;
 	public static String RefreshProjectJobLabel;
 	
+	public static String ImportProjectActionLabel;
 	public static String ImportProjectError;
+	public static String StartBuildActionLabel;
 	public static String StartBuildError;
 	
 	public static String DialogYesButton;

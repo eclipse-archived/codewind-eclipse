@@ -23,9 +23,9 @@ echo "Unzipping features..."
 
 cd /development/ant_build/artifacts/
 
-unzip codewind-0*.zip -d code
+unzip codewind-*.zip -d code
 
-unzip codewind-test*.zip -d test
+unzip codewind_test-*.zip -d test
 
 cd /home
 

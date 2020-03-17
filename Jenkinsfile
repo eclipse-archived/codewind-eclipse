@@ -10,6 +10,7 @@ pipeline {
     options {
         timestamps() 
         skipStagesAfterUnstable()
+        timeout(time: 1, unit: 'HOURS')
     }
 
     triggers {

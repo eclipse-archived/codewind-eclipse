@@ -63,7 +63,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	private CheckboxTableViewer subtypeViewer = null;
 	private Text typeLabel = null;
 	private CheckboxTableViewer typeViewer = null;
-	private ProjectInfo projectInfo = null;
+	private ProjectInfo detectedProjectInfo = null;
 	private ProjectTypeInfo projectTypeInfo = null;
 	private ProjectSubtypeInfo projectSubtypeInfo = null;
 
@@ -84,6 +84,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		composite.setLayout(layout);
 		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
+		// Project type table
 		typeLabel = new Text(composite, SWT.READ_ONLY);
 		typeLabel.setText(Messages.SelectProjectTypePageProjectTypeLabel);
 		typeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
@@ -98,6 +99,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		typeViewerData.minimumHeight = 200;
 		typeViewer.getTable().setLayoutData(typeViewerData);
 	   
+		// Project subtype table. This will show the language for docker project types. This table
+		// is only shown in certain circumstances.
 		subtypeLabel = new Text(composite, SWT.READ_ONLY);
 		subtypeLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 		subtypeLabel.setBackground(composite.getBackground());
@@ -192,6 +195,8 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			}
 		});
  
+		// Don't show the subtype table by default, when updateTables is called it will decide
+		// whether to show it nor not
 		subtypeLabel.setVisible(false);
 		subtypeViewer.getTable().setVisible(false);
 
@@ -208,14 +213,14 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		if (typeViewer == null)
 			return false;
 		
-		ProjectTypeInfo projectType = getType();
+		ProjectTypeInfo projectType = getProjectTypeInfo();
 		if (projectType == null)
 			return false;
 		
-		// for docker type language selection is optional
-		// for non-docker when selected type is different than the detected type,
-		// user need to choose a subtype to proceed
-		if (!projectType.eq(TYPE_DOCKER) && (projectInfo == null || !projectType.eq(projectInfo.type))) {
+		// For docker type projects the language selection is optional
+		// For non-docker type projects if the selected type is different than the detected type,
+		// the user must choose a subtype to proceed
+		if (!projectType.eq(TYPE_DOCKER) && (detectedProjectInfo == null || !projectType.eq(detectedProjectInfo.type))) {
 			return subtypeViewer.getCheckedElements().length != 0;
 		}
 		
@@ -247,20 +252,24 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		@Override
 		public String getText(Object element) {
 			String label = ((ProjectSubtypeInfo) element).label;
+			// If the label is a language then this will return a display name
+			// for the language, otherwise it will just return the label passed in
 			return ProjectLanguage.getDisplayName(label);
 		}
 	}
 	
-	public void initPage(CodewindConnection connection, ProjectInfo projectInfo) {
+	public void initPage(CodewindConnection connection, ProjectInfo detectedProjectInfo) {
 		this.connection = connection;
 		initTypeMap();
-		this.projectInfo = projectInfo;
-		if (projectInfo == null) {
+		this.detectedProjectInfo = detectedProjectInfo;
+		// If the project type could not be detected then detectedProjectInfo will be null
+		if (detectedProjectInfo == null) {
 			projectTypeInfo = null;
 			projectSubtypeInfo = null;
 		} else {
-			projectTypeInfo = typeMap.get(projectInfo.type.getId());
-			projectSubtypeInfo = projectTypeInfo != null ? projectTypeInfo.new ProjectSubtypeInfo(projectInfo.language.getId()) : null;
+			// The type may not be in the typeMap if the user has disabled some template sources
+			projectTypeInfo = typeMap.get(detectedProjectInfo.type.getId());
+			projectSubtypeInfo = projectTypeInfo != null ? projectTypeInfo.new ProjectSubtypeInfo(detectedProjectInfo.language.getId()) : null;
 		}
 		updateTables(true);
 	}
@@ -285,23 +294,23 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 	}
 
-	public ProjectTypeInfo getType() {
+	public ProjectTypeInfo getProjectTypeInfo() {
 		return projectTypeInfo;
 	}
 	
-	public ProjectSubtypeInfo getSubtype() {
+	public ProjectSubtypeInfo getProjectSubtypeInfo() {
 		
-		ProjectTypeInfo projectType = getType();
+		ProjectTypeInfo projectType = getProjectTypeInfo();
 		
-		// no subtype if:
-		// 1. no type is selected
-		// 2. selected type has no subtypes label; it is a Codewind built-in type which has language, not subtype
-		// 3. selected type is same as detected type (the subtype is only needed if a different type was selected
+		// There is no subtype when:
+		// 1. No type is selected
+		// 2. The selected type has no subtypes label; it is a Codewind built-in type which has language, not subtype
+		// 3. The selected type is the same as the detected type (the subtype is only needed if a different type was selected
 		//    in order to run validate again with the new type and subtype; if the detected type is used then
 		//    validate does not need to be run again)
 		if (projectType == null ||  
 			projectType.getSubtypesLabel().length() == 0 || 
-			(projectInfo != null && projectType.eq(projectInfo.type))) {
+			(detectedProjectInfo != null && projectType.eq(detectedProjectInfo.type))) {
 			return null;
 		}
 		
@@ -310,7 +319,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 	
 	public String getLanguage() {
 		
-		ProjectTypeInfo projectType = getType();
+		ProjectTypeInfo projectType = getProjectTypeInfo();
 		
 		// no language if no type is selected
 		if (projectType == null)
@@ -323,7 +332,7 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		}
 		
 		// for non-Codewind types, fallback to detected language
-		return projectInfo == null ? ProjectLanguage.LANGUAGE_UNKNOWN.getId() : projectInfo.language.getId();
+		return detectedProjectInfo == null ? ProjectLanguage.LANGUAGE_UNKNOWN.getId() : detectedProjectInfo.language.getId();
 	}
 
 	private void updateTables(boolean init) {
@@ -346,9 +355,9 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			ProjectTypeInfo[] typeArray = projectTypes.toArray(new ProjectTypeInfo[1]);
 			typeViewer.setCheckedElements(typeArray);
 			updateSubtypes(init, typeArray[0]);
-		} else if (init && projectInfo != null) { 
+		} else if (init && detectedProjectInfo != null) { 
 			// If first entering the wizard, attempt to select type that matches the detected type
-			projectTypeInfo = typeMap.get(projectInfo.type.getId());
+			projectTypeInfo = typeMap.get(detectedProjectInfo.type.getId());
 			if (projectTypeInfo != null) {
 				typeViewer.setCheckedElements(new Object[] { projectTypeInfo });
 			} else {
@@ -379,25 +388,25 @@ public class ProjectTypeSelectionPage extends WizardPage {
 			List<ProjectSubtypeInfo> projectSubtypes = projectType.getSubtypes();
 			subtypeViewer.setInput(projectSubtypes);
 			
-			// only 1 possible choice, select it
+			// If only 1 possible choice then select it
 			if (projectSubtypes.size() == 1) {
 				projectSubtypeInfo = projectSubtypes.get(0);
 				subtypeViewer.setCheckedElements(new Object[] { projectSubtypeInfo });
 			}
-			// otherwise if more than 1 choice, allow subtype/language selection if:
-			// 1. selected type is docker (can select language)
-			// 2. selected type is different than the detected type
-			//    e.g. project was detected as docker, then user switch selection to an 
+			// If there is more than 1 choice, allow subtype/language selection if:
+			// 1. The selected type is docker (can select language)
+			// 2. The selected type is different than the detected type
+			//    e.g. project was detected as docker, but the user switched the selection to an 
 			//    extension project type, they should be allowed to choose the subtype
 			else if (projectSubtypes.size() > 1) {
 				
 				boolean isDocker = projectType.eq(TYPE_DOCKER);
 			
-				if (isDocker || projectInfo == null || !projectType.eq(projectInfo.type)) {
+				if (isDocker || detectedProjectInfo == null || !projectType.eq(detectedProjectInfo.type)) {
 					
-					// if possible, select language that was detected
-					if (init && isDocker && projectInfo != null) {
-						projectSubtypeInfo = projectType.new ProjectSubtypeInfo(projectInfo.language.getId());
+					// If possible, select language that was detected
+					if (init && isDocker && detectedProjectInfo != null) {
+						projectSubtypeInfo = projectType.new ProjectSubtypeInfo(detectedProjectInfo.language.getId());
 						subtypeViewer.setCheckedElements(new Object[] { projectSubtypeInfo });
 					}
 					

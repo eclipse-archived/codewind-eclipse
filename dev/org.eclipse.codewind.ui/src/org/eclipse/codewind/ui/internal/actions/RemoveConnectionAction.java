@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,11 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
@@ -53,6 +56,11 @@ public class RemoveConnectionAction extends SelectionProviderAction {
 			return;
 		}
 
+		// Verify that the user wants to remove the connection
+		if (!MessageDialog.openConfirm(Display.getDefault().getActiveShell(), Messages.RemoveConnectionActionConfirmTitle,
+				NLS.bind(Messages.RemoveConnectionActionConfirmMsg, new String[] {connection.getName(), connection.getBaseURI().toString()}))) {
+			return;
+		}
 		try {
 			CodewindConnectionManager.remove(connection.getBaseURI().toString());
 		} catch (Exception e) {

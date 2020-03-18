@@ -10,6 +10,7 @@ pipeline {
     options {
         timestamps() 
         skipStagesAfterUnstable()
+        timeout(time: 2, unit: 'HOURS')
     }
 
     triggers {
@@ -71,12 +72,17 @@ pipeline {
                     '''
                     
                     dir('dev') { sh './gradlew --stacktrace' }
+                    dir('dev/ant_build/artifacts') {
+                        stash name: 'codewind_test.zip', includes: 'codewind_test-*.zip'
+                        sh 'rm codewind_test-*.zip'
+                        stash name: 'codewind.zip', includes: 'codewind-*.zip'
+                    }
                 }
             }
         } 
 
 
-        stage('Test') {
+        stage('Test filewatcher') {
             steps {
                 dir("dev") {
                     sh """#!/usr/bin/env bash
@@ -90,6 +96,45 @@ pipeline {
                 }
             }
         }
+
+        stage('Test') {
+            agent {
+                label "docker-build"
+            }
+        
+            steps {
+                script {
+                    try {
+                        dir('dev/ant_build/artifacts') { 
+                            unstash 'codewind_test.zip'
+                            unstash 'codewind.zip'
+                        }
+
+                        sh '''#!/usr/bin/env bash
+                            docker build --no-cache -t test-image ./dev
+                            export CWD=$(pwd)
+                            echo "Current directory is ${CWD}"
+                            docker run -v /var/run/docker.sock:/var/run/docker.sock -v ${CWD}/dev:/development --network=host test-image
+                        '''
+                    } finally {
+                        junit 'dev/junit-results.xml'
+                    }
+                }
+            }
+            post {
+                always {
+                    sh '''#!/usr/bin/env bash
+                        # Docker system prune
+                        echo "Docker system prune ..."
+                        docker system df
+                        docker system prune -a --volumes -f
+                        docker builder prune -a -f
+                        docker system df
+                        df -lh
+                    '''
+                }
+            }      
+        }  
         
         stage('Deploy') {
             steps {

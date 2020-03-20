@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
+import org.eclipse.codewind.core.internal.cli.RegistryUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
@@ -27,6 +28,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -128,7 +130,7 @@ public class ProjectValidationPage extends WizardPage {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				try {
-					List<RegistryInfo> regList = connection.requestRegistryList();
+					List<RegistryInfo> regList = RegistryUtil.listRegistrySecrets(connection.getConid(), new NullProgressMonitor());
 					ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
 					RegistryManagementDialog regDialog = new RegistryManagementDialog(getShell(), connection, regList, pushReg);
 					if (regDialog.open() == Window.OK) {
@@ -253,9 +255,6 @@ public class ProjectValidationPage extends WizardPage {
 			languageLabel.setVisible(false);
 			languageText.setVisible(false);
 		}
-		
-		manageRegistriesComp.setVisible(!connection.isLocal());
-		((GridData)manageRegistriesComp.getLayoutData()).exclude = connection.isLocal();
 		
 		int width = validateMsg.getParent().getClientArea().width;
 		validateMsg.setSize(width, validateMsg.computeSize(width, SWT.DEFAULT).y);

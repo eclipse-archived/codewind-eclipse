@@ -17,7 +17,6 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -719,55 +718,6 @@ public class CodewindConnection {
 			projectTypes.add(new ProjectTypeInfo(array.getJSONObject(i)));
 		}
 		return projectTypes;
-	}
-	
-	public List<RegistryInfo> requestRegistryList() throws IOException, JSONException {
-		List<RegistryInfo> regList = new ArrayList<RegistryInfo>();
-		URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
-		HttpResult result = HttpUtil.get(uri, getAuthToken(false));
-		if (hasAuthFailure(result)) {
-			result = HttpUtil.get(uri, getAuthToken(true));
-		}
-		checkResult(result, uri, true);
-		
-		JSONArray array = new JSONArray(result.response);
-		for (int i = 0; i < array.length(); i++) {
-			regList.add(new RegistryInfo(array.getJSONObject(i)));
-		}
-		
-		return regList;
-	}
-	
-	public void requestAddRegistry(String address, String username, String password) throws IOException, JSONException {
-		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
-		
-		JSONObject credentials = new JSONObject();
-		credentials.put(CoreConstants.KEY_USERNAME, username);
-		credentials.put(CoreConstants.KEY_PASSWORD, password);
-		String encoding = Base64.getEncoder().encodeToString(credentials.toString().getBytes("UTF-8"));
-		JSONObject payload = new JSONObject();
-		payload.put(CoreConstants.KEY_ADDRESS, address);
-		payload.put(CoreConstants.KEY_CREDENTIALS, encoding);
-		
-		HttpResult result = HttpUtil.post(uri, getAuthToken(false), payload);
-		if (hasAuthFailure(result)) {
-			result = HttpUtil.post(uri, getAuthToken(true), payload);
-		}
-		checkResult(result, uri, true);
-	}
-	
-	public void requestRemoveRegistry(String address, String username) throws IOException, JSONException {
-		final URI uri = baseUri.resolve(CoreConstants.APIPATH_BASE + "/" + CoreConstants.APIPATH_REGISTRYSECRETS);
-		
-		JSONObject payload = new JSONObject();
-		payload.put(CoreConstants.KEY_ADDRESS, address);
-//		payload.put(CoreConstants.KEY_USERNAME, username);
-		
-		HttpResult result = HttpUtil.delete(uri, getAuthToken(false), payload);
-		if (hasAuthFailure(result)) {
-			result = HttpUtil.delete(uri, getAuthToken(true), payload);
-		}
-		checkResult(result, uri, true);
 	}
 
 	public void requestSetPushRegistry(String address, String namespace) throws IOException, JSONException {

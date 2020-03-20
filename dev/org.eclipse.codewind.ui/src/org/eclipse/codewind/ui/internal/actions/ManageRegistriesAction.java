@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.RegistryUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
@@ -21,6 +22,7 @@ import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -64,7 +66,7 @@ public class ManageRegistriesAction extends SelectionProviderAction {
 			return;
 		}
 		try {
-			List<RegistryInfo> regList = connection.requestRegistryList();
+			List<RegistryInfo> regList = RegistryUtil.listRegistrySecrets(connection.getConid(), new NullProgressMonitor());
 			ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
 			RegistryManagementDialog regDialog = new RegistryManagementDialog(Display.getDefault().getActiveShell(), connection, regList, pushReg);
 			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {

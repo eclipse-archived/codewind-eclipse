@@ -91,6 +91,13 @@ public class IDEUtil {
     	control.setForeground(parent.getForeground());
     }
     
+	public static void paintBackgroundToMatch(Control control, Control parent) {
+		control.addPaintListener(event -> {
+			control.setBackground(parent.getBackground());
+			control.setForeground(parent.getForeground());
+		});
+	}
+    
 	public static void setControlVisibility(Control control, boolean visible) {
 		control.setVisible(visible);
 		((GridData)control.getLayoutData()).exclude = !visible;

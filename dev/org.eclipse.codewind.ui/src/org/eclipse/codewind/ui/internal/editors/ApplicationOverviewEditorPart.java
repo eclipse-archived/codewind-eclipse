@@ -614,7 +614,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 	        text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 	        text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
 	        text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, false));
-	        IDEUtil.normalizeBackground(text, composite);
+	        IDEUtil.paintBackgroundToMatch(text, composite);
 		}
 		
 		public void setValue(String value, boolean visible) {
@@ -655,7 +655,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
 			text.setText(Messages.AppOverviewEditorNotAvailable);
 			text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
-			IDEUtil.normalizeBackground(text, composite);
+			IDEUtil.paintBackgroundToMatch(text, composite);
 	        
 			link = toolkit.createHyperlink(composite, "", SWT.WRAP);
 			link.setVisible(false);

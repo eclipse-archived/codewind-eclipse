@@ -15,6 +15,11 @@ export SCRIPT_LOCT=`dirname $0`
 export SCRIPT_LOCT=`cd $SCRIPT_LOCT; pwd`
 cd $SCRIPT_LOCT
 
+# Filewatcher tests only run in PR builds that contain filewatcher code changes.
+if [[ -z "$CHANGE_ID" ]]; then
+	echo "* Filewatcher test script detected a non-PR build, so exiting."
+    exit 0
+fi
 
 GIT_DIFF=`git diff remotes/origin/"$CHANGE_TARGET"`
 

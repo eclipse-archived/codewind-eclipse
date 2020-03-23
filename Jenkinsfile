@@ -72,6 +72,7 @@ pipeline {
                     '''
                     
                     dir('dev') { sh './gradlew --stacktrace' }
+
                     dir('dev/ant_build/artifacts') {
                         stash name: 'codewind_test.zip', includes: 'codewind_test-*.zip'
                         sh 'rm codewind_test-*.zip'
@@ -136,7 +137,7 @@ pipeline {
                     deleteDir() /* clean up our workspace */
                 }
             }      
-        }  
+        }
         
         stage('Deploy') {
             steps {

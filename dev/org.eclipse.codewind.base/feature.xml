@@ -12,7 +12,7 @@
 <feature
       id="org.eclipse.codewind.base"
       label="%featureName"
-      version="1.5.3.qualifier"
+      version="1.6.0.qualifier"
       provider-name="%providerName">
 
    <description>

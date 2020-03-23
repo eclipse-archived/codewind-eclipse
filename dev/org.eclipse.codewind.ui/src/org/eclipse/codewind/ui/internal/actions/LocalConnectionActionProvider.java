@@ -32,6 +32,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 	private InstallerAction startStopAction;
 	private NewProjectAction newProjectAction;
 	private BindAction bindAction;
+	private ManageRegistriesAction manageRegistriesAction;
 	private ManageReposAction manageReposAction;
 	private LocalDoubleClickAction doubleClickAction;
 	private LogLevelAction logLevelAction;
@@ -42,6 +43,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
         selProvider = aSite.getStructuredViewer();
         newProjectAction = new NewProjectAction(selProvider);
         bindAction = new BindAction(selProvider);
+        manageRegistriesAction = new ManageRegistriesAction(selProvider);
         manageReposAction = new ManageReposAction(selProvider);
         installUninstallAction = new InstallerAction(ActionType.INSTALL_UNINSTALL, selProvider);
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
@@ -59,6 +61,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 		menu.add(newProjectAction);
 		menu.add(bindAction);
 		menu.add(new Separator());
+		menu.add(manageRegistriesAction);
 		menu.add(manageReposAction);
 		menu.add(new Separator());
 		InstallStatus status = CodewindManager.getManager().getInstallStatus();

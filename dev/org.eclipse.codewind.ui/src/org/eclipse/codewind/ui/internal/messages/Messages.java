@@ -266,6 +266,8 @@ public class Messages extends NLS {
 	public static String DisconnectJobError;
 	
 	public static String RemoveConnectionActionLabel;
+	public static String RemoveConnectionActionConfirmTitle;
+	public static String RemoveConnectionActionConfirmMsg;
 	public static String EditConnectionActionLabel;
 	
 	public static String ShowLogFilesMenu;

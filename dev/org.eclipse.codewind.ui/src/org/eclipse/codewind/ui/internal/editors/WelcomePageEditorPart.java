@@ -156,7 +156,7 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		int borderStyle = toolkit.getBorderStyle();
 		toolkit.setBorderStyle(SWT.NONE);
 		Text welcomeText = toolkit.createText(welcomeComp, Messages.WelcomePageWelcomeText, SWT.WRAP | SWT.READ_ONLY);
-		IDEUtil.normalizeBackground(welcomeText, welcomeComp);
+		IDEUtil.paintBackgroundToMatch(welcomeText, welcomeComp);
 		welcomeText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		toolkit.setBorderStyle(borderStyle);
 		
@@ -179,7 +179,7 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		borderStyle = toolkit.getBorderStyle();
 		toolkit.setBorderStyle(SWT.NONE);
 		Text quickStartText = toolkit.createText(quickStartComp, Messages.WelcomePageQuickStartText, SWT.WRAP | SWT.READ_ONLY);
-		IDEUtil.normalizeBackground(welcomeText, quickStartComp);
+		IDEUtil.paintBackgroundToMatch(quickStartText, quickStartComp);
 		quickStartText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		toolkit.setBorderStyle(borderStyle);
 		
@@ -249,7 +249,7 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		borderStyle = toolkit.getBorderStyle();
 		toolkit.setBorderStyle(SWT.NONE);
 		Text commandsText = toolkit.createText(learnInnerComp, Messages.WelcomePageLearnCommandsText, SWT.WRAP | SWT.READ_ONLY);
-		IDEUtil.normalizeBackground(commandsText, learnInnerComp);
+		IDEUtil.paintBackgroundToMatch(commandsText, learnInnerComp);
 		commandsText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		toolkit.setBorderStyle(borderStyle);
 		
@@ -274,7 +274,7 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		borderStyle = toolkit.getBorderStyle();
 		toolkit.setBorderStyle(SWT.NONE);
 		Text docsText = toolkit.createText(learnInnerComp, Messages.WelcomePageLearnDocsText, SWT.WRAP | SWT.READ_ONLY);
-		IDEUtil.normalizeBackground(docsText, learnInnerComp);
+		IDEUtil.paintBackgroundToMatch(docsText, learnInnerComp);
 		docsText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		toolkit.setBorderStyle(borderStyle);
 		
@@ -303,7 +303,7 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		borderStyle = toolkit.getBorderStyle();
 		toolkit.setBorderStyle(SWT.NONE);
 		Text extensionsText = toolkit.createText(learnInnerComp, Messages.WelcomePageLearnExtensionsText, SWT.WRAP | SWT.READ_ONLY);
-		IDEUtil.normalizeBackground(extensionsText, learnInnerComp);
+		IDEUtil.paintBackgroundToMatch(extensionsText, learnInnerComp);
 		extensionsText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		toolkit.setBorderStyle(borderStyle);
 		

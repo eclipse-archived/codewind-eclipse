@@ -37,6 +37,10 @@ public class ViewHelper {
 		openNavigatorView(CodewindExplorerView.VIEW_ID);
 	}
 	
+	public static void openCodewindExplorerViewNoExec() {
+		openNavigatorViewNoExec(CodewindExplorerView.VIEW_ID);
+	}
+	
 	public static void refreshCodewindExplorerView(Object element) {
 		final Object obj = element == null ? CodewindManager.getManager() : element;
         refreshNavigatorView(CodewindExplorerView.VIEW_ID, obj);
@@ -87,19 +91,23 @@ public class ViewHelper {
     	Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-		        IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		        if (window != null) {
-		            IWorkbenchPage page = window.getActivePage();
-		            if (page != null) {
-	                    try {
-	                        page.showView(viewId);
-	                    } catch (PartInitException e) {
-	                        Logger.logError("An error occurred when trying to open the navigator view: " + viewId, e);
-	                    }
-		            }
-		        }
+		        openNavigatorViewNoExec(viewId);
             }
     	});
+    }
+    
+    public static void openNavigatorViewNoExec(String viewId) {
+    	IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window != null) {
+            IWorkbenchPage page = window.getActivePage();
+            if (page != null) {
+                try {
+                    page.showView(viewId);
+                } catch (PartInitException e) {
+                    Logger.logError("An error occurred when trying to open the navigator view: " + viewId, e);
+                }
+            }
+        }
     }
 
     public static void refreshNavigatorView(String viewId, Object element) {

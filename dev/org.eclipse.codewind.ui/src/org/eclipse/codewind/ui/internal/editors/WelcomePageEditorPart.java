@@ -139,26 +139,27 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		medBoldFont = IDEUtil.newFont(parent.getShell(), parent.getFont(), 10, SWT.BOLD);
 		largeFont = IDEUtil.newFont(parent.getShell(), parent.getFont(), 14, SWT.NONE);
 		
+		int borderStyle = toolkit.getBorderStyle();
+		toolkit.setBorderStyle(SWT.NONE);
+		
 		// Welcome section
 		Composite welcomeComp = toolkit.createComposite(form.getBody());
 		welcomeComp.setLayout(getCompLayout(10, 20, 2));
 		welcomeComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
-		Label welcomeLabel = toolkit.createLabel(welcomeComp, Messages.WelcomePageWelcomeHeader);
+		Text welcomeLabel = toolkit.createText(welcomeComp, Messages.WelcomePageWelcomeHeader, SWT.READ_ONLY);
 		welcomeLabel.setFont(largeFont);
 		welcomeLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+		IDEUtil.paintBackgroundToMatch(welcomeLabel, welcomeComp);
 		focusControl = welcomeLabel;
 		
 		Label imageLabel = toolkit.createLabel(welcomeComp, "");
 		imageLabel.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.WELCOME_IMAGE));
 		imageLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 4));
 		
-		int borderStyle = toolkit.getBorderStyle();
-		toolkit.setBorderStyle(SWT.NONE);
 		Text welcomeText = toolkit.createText(welcomeComp, Messages.WelcomePageWelcomeText, SWT.WRAP | SWT.READ_ONLY);
 		IDEUtil.paintBackgroundToMatch(welcomeText, welcomeComp);
 		welcomeText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		toolkit.setBorderStyle(borderStyle);
 		
 		Hyperlink viewLink = toolkit.createHyperlink(welcomeComp, Messages.WelcomePageCodewindExplorerLink, SWT.WRAP);
 		viewLink.setLayoutData(new GridData(GridData.CENTER, GridData.FILL, false, false));
@@ -172,16 +173,14 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		quickStartComp.setLayout(getCompLayout(10, 20, 2));
 		quickStartComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
-		Label quickStartLabel = toolkit.createLabel(quickStartComp, Messages.WelcomePageQuickStartHeader);
+		Text quickStartLabel = toolkit.createText(quickStartComp, Messages.WelcomePageQuickStartHeader, SWT.READ_ONLY);
 		quickStartLabel.setFont(largeFont);
+		IDEUtil.paintBackgroundToMatch(quickStartLabel, quickStartComp);
 		quickStartLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
 		
-		borderStyle = toolkit.getBorderStyle();
-		toolkit.setBorderStyle(SWT.NONE);
 		Text quickStartText = toolkit.createText(quickStartComp, Messages.WelcomePageQuickStartText, SWT.WRAP | SWT.READ_ONLY);
 		IDEUtil.paintBackgroundToMatch(quickStartText, quickStartComp);
 		quickStartText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
-		toolkit.setBorderStyle(borderStyle);
 		
 		// Radio button composite
 		Composite radioComp = toolkit.createComposite(quickStartComp);
@@ -230,8 +229,9 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		learnComp.setLayout(getCompLayout(10, 20, 1));
 		learnComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		
-		Label learnLabel = toolkit.createLabel(learnComp, Messages.WelcomePageLearnHeader);
+		Text learnLabel = toolkit.createText(learnComp, Messages.WelcomePageLearnHeader, SWT.READ_ONLY);
 		learnLabel.setFont(largeFont);
+		IDEUtil.paintBackgroundToMatch(learnLabel, learnComp);
 		learnLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
 		
 		Composite learnInnerComp = toolkit.createComposite(learnComp);
@@ -246,12 +246,9 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		commandsLink.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.OPEN_APP_ICON));
 		setHyperlinkAction(commandsLink, () -> ViewHelper.openCodewindExplorerView());
 		
-		borderStyle = toolkit.getBorderStyle();
-		toolkit.setBorderStyle(SWT.NONE);
 		Text commandsText = toolkit.createText(learnInnerComp, Messages.WelcomePageLearnCommandsText, SWT.WRAP | SWT.READ_ONLY);
 		IDEUtil.paintBackgroundToMatch(commandsText, learnInnerComp);
 		commandsText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		toolkit.setBorderStyle(borderStyle);
 		
 		Hyperlink commandsDocLink = toolkit.createHyperlink(learnInnerComp, Messages.WelcomePageLearnCommandsLink, SWT.WRAP);
 		commandsDocLink.setToolTipText(Messages.WelcomePageLearnCommandsLinkTooltip);
@@ -271,12 +268,9 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		docsLink.setImage(CodewindUIPlugin.getImage(CodewindUIPlugin.OPEN_APP_ICON));
 		setHyperlinkAction(docsLink, () -> IDEUtil.openExternalBrowser(UIConstants.DOC_BASE_URL));
 		
-		borderStyle = toolkit.getBorderStyle();
-		toolkit.setBorderStyle(SWT.NONE);
 		Text docsText = toolkit.createText(learnInnerComp, Messages.WelcomePageLearnDocsText, SWT.WRAP | SWT.READ_ONLY);
 		IDEUtil.paintBackgroundToMatch(docsText, learnInnerComp);
 		docsText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		toolkit.setBorderStyle(borderStyle);
 		
 		Hyperlink templatesDocLink = toolkit.createHyperlink(learnInnerComp, Messages.WelcomePageLearnDocsTemplatesLink, SWT.WRAP);
 		templatesDocLink.setToolTipText(Messages.WelcomePageLearnDocsTemplatesTooltip);
@@ -300,12 +294,9 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		extensionsLabel.setForeground(docsLink.getForeground());
 		extensionsLabel.setFont(medBoldFont);
 		
-		borderStyle = toolkit.getBorderStyle();
-		toolkit.setBorderStyle(SWT.NONE);
 		Text extensionsText = toolkit.createText(learnInnerComp, Messages.WelcomePageLearnExtensionsText, SWT.WRAP | SWT.READ_ONLY);
 		IDEUtil.paintBackgroundToMatch(extensionsText, learnInnerComp);
 		extensionsText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		toolkit.setBorderStyle(borderStyle);
 		
 		Hyperlink openAPILink = toolkit.createHyperlink(learnInnerComp, Messages.WelcomePageLearnExtensionsOpenAPILink, SWT.WRAP);
 		openAPILink.setToolTipText(Messages.WelcomePageLearnExtensionsOpenAPITooltip);
@@ -320,6 +311,8 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		data.horizontalIndent = 40;
 		dockerToolsLink.setLayoutData(data);
 		setHyperlinkAction(dockerToolsLink, () -> IDEUtil.openExternalBrowser(UIConstants.DOCKER_TOOLS_URL));
+		
+		toolkit.setBorderStyle(borderStyle);
 		
 		// Initialize
 		localButton.setSelection(true);
@@ -381,11 +374,13 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		List<Button> buttons = new ArrayList<Button>();
 		
 		// Set up section
-		Label setupLabel = toolkit.createLabel(setupComp, Messages.WelcomePageQuickStartSetUpLabel);
+		Text setupLabel = toolkit.createText(setupComp, Messages.WelcomePageQuickStartSetUpLabel, SWT.READ_ONLY);
 		setupLabel.setFont(medBoldFont);
+		IDEUtil.paintBackgroundToMatch(setupLabel, setupComp);
 		setupLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 		
-		Label stepLabel = toolkit.createLabel(setupComp, NLS.bind(Messages.WelcomePageQuickStartStep, 1), SWT.NONE);
+		Text stepLabel = toolkit.createText(setupComp, NLS.bind(Messages.WelcomePageQuickStartStep, 1), SWT.READ_ONLY);
+		IDEUtil.paintBackgroundToMatch(stepLabel, setupComp);
 		stepLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 		
 		if (isLocal) {
@@ -402,7 +397,8 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 				}
 			});
 			
-			stepLabel = toolkit.createLabel(setupComp, NLS.bind(Messages.WelcomePageQuickStartStep, 2), SWT.NONE);
+			stepLabel = toolkit.createText(setupComp, NLS.bind(Messages.WelcomePageQuickStartStep, 2), SWT.READ_ONLY);
+			IDEUtil.paintBackgroundToMatch(stepLabel, setupComp);
 			stepLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 			
 			imagesButton = new Button(setupComp, SWT.PUSH);
@@ -434,11 +430,13 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		}
 		
 		// Project section
-		Label projectLabel = toolkit.createLabel(projectComp, Messages.WelcomePageQuickStartProjectLabel);
+		Text projectLabel = toolkit.createText(projectComp, Messages.WelcomePageQuickStartProjectLabel, SWT.READ_ONLY);
 		projectLabel.setFont(medBoldFont);
+		IDEUtil.paintBackgroundToMatch(projectLabel, projectComp);
 		projectLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 		
-		stepLabel = toolkit.createLabel(projectComp, NLS.bind(Messages.WelcomePageQuickStartStep, isLocal ? 3 : 2), SWT.NONE);
+		stepLabel = toolkit.createText(projectComp, NLS.bind(Messages.WelcomePageQuickStartStep, isLocal ? 3 : 2), SWT.READ_ONLY);
+		IDEUtil.paintBackgroundToMatch(stepLabel, projectComp);
 		stepLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 		
 		Button newProjectButton = new Button(projectComp, SWT.PUSH);
@@ -463,7 +461,9 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 			}
 		});
 		
-		toolkit.createLabel(projectComp, Messages.WelcomePageQuickStartOr, SWT.NONE).setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, false));
+		Text orLabel = toolkit.createText(projectComp, Messages.WelcomePageQuickStartOr, SWT.READ_ONLY);
+		IDEUtil.paintBackgroundToMatch(orLabel, projectComp);
+		orLabel.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, false));
 		
 		Button addProjectButton = new Button(projectComp, SWT.PUSH);
 		addProjectButton.setText(Messages.WelcomePageQuickStartAddProjectButton);

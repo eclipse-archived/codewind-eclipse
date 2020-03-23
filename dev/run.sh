@@ -24,8 +24,10 @@ echo "Unzipping features..."
 cd /development/ant_build/artifacts/
 
 unzip codewind-*.zip -d code
+chmod -R 755 code
 
 unzip codewind_test-*.zip -d test
+chmod -R 755 test
 
 cd /home
 

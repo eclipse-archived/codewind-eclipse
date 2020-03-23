@@ -97,7 +97,7 @@ pipeline {
             }
         }
 
-        stage('Test') {
+        stage('Test on docker agent') {
             agent {
                 label "docker-build"
             }
@@ -132,6 +132,8 @@ pipeline {
                         docker system df
                         df -lh
                     '''
+                    echo 'Clean up workspace'	
+                    deleteDir() /* clean up our workspace */
                 }
             }      
         }  

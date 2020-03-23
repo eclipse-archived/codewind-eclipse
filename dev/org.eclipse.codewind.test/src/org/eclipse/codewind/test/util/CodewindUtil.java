@@ -51,6 +51,10 @@ public class CodewindUtil {
 	}
 	
 	public static void cleanup(CodewindConnection connection) throws Exception {
+		if (connection == null) {
+			// The connection could be null if the Codewind install failed
+			return;
+		}
 		// Remove projects
 		List<CodewindApplication> apps = connection.getApps();
 		for (CodewindApplication app: apps) {

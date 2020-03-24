@@ -22,7 +22,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 # Install dbus (needed by SWTBot)
-RUN apt-get clean && apt-get update && apt-get install -y dbus && apt-get install -y dbus-x11
+# RUN apt-get clean && apt-get update && apt-get install -y dbus && apt-get install -y dbus-x11
 # Install Eclipse
 RUN wget http://www.eclipse.org/external/technology/epp/downloads/release/2019-12/R/eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz
 RUN tar xzf eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz

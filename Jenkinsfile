@@ -72,12 +72,13 @@ pipeline {
                     '''
                     
                     dir('dev') { sh './gradlew --stacktrace' }
-
+/*
                     dir('dev/ant_build/artifacts') {
                         stash name: 'codewind_test.zip', includes: 'codewind_test-*.zip'
                         sh 'rm codewind_test-*.zip'
                         stash name: 'codewind.zip', includes: 'codewind-*.zip'
                     }
+*/
                 }
             }
         } 
@@ -98,7 +99,8 @@ pipeline {
             }
         }
 
-        stage('Test on docker agent') {
+/*
+        stage('Test') {
             agent {
                 label "docker-build"
             }
@@ -133,11 +135,10 @@ pipeline {
                         docker system df
                         df -lh
                     '''
-                    echo 'Clean up workspace'	
-                    deleteDir() /* clean up our workspace */
                 }
             }      
-        }
+        }  
+*/
         
         stage('Deploy') {
             steps {

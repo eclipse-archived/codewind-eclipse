@@ -15,7 +15,7 @@ export SCRIPT_DIR=`dirname $0`
 export SCRIPT_DIR=`cd $SCRIPT_DIR; pwd`
 cd $SCRIPT_DIR
 
-if [[ -z $CODE_TESTS_WORKSPACE ]]; then
+if [ -z $CODE_TESTS_WORKSPACE ]; then
     export CODE_TESTS_WORKSPACE="${PWD}/cw-test-workspace/"
 fi
 

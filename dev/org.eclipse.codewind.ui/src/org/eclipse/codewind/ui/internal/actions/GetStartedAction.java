@@ -34,9 +34,10 @@ public class GetStartedAction extends Action {
 		}
 		
 		// Open the Codewind Explorer view
-		ViewHelper.openCodewindExplorerView();
+		ViewHelper.openCodewindExplorerViewNoExec();
 		
 		// Open the Codewind welcome page
+		// Make sure this done last so that it has focus
 		OpenWelcomePageAction.openWelcomePage();
 	}
 

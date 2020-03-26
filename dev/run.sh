@@ -11,7 +11,19 @@
 #     IBM Corporation - initial API and implementation
 #*******************************************************************************
 
-cd /home
+export SCRIPT_DIR=`dirname $0`
+export SCRIPT_DIR=`cd $SCRIPT_DIR; pwd`
+cd $SCRIPT_DIR
+
+if [[ -z $CODE_TESTS_WORKSPACE ]]; then
+    export CODE_TESTS_WORKSPACE="${PWD}/cw-test-workspace/"
+fi
+
+mkdir -p $CODE_TESTS_WORKSPACE
+cd $CODE_TESTS_WORKSPACE
+
+wget http://www.eclipse.org/external/technology/epp/downloads/release/2019-12/R/eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz
+tar xzf eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz
 
 chmod 755 eclipse/eclipse
 
@@ -21,7 +33,7 @@ eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -reposito
 
 echo "Unzipping features..."
 
-cd /development/ant_build/artifacts/
+cd $SCRIPT_DIR/ant_build/artifacts/
 
 unzip codewind-*.zip -d code
 chmod -R 777 code
@@ -29,16 +41,16 @@ chmod -R 777 code
 unzip codewind_test-*.zip -d test
 chmod -R 777 test
 
-cd /home
+cd $CODE_TESTS_WORKSPACE
 
 echo "Installing codewind and codewind test..."
 
-eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:/development/ant_build/artifacts/code" -installIU "org.eclipse.codewind.feature.group"
-eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:/development/ant_build/artifacts/test" -installIU "org.eclipse.codewind.test.feature.feature.group"
+eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:$SCRIPT_DIR/ant_build/artifacts/code" -installIU "org.eclipse.codewind.feature.group"
+eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:$SCRIPT_DIR/ant_build/artifacts/test" -installIU "org.eclipse.codewind.test.feature.feature.group"
 
 echo "Run junit tests"
 
-xvfb-run ./runTest.sh
+xvfb-run -a ./runTest.sh
 
 return_code=$?
 

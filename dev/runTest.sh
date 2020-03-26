@@ -18,16 +18,15 @@ export LAUNCHER_LIBRARY=`ls eclipse/plugins/org.eclipse.equinox.launcher.gtk.lin
 
 export LAUNCHER_JAR=`ls eclipse/plugins/org.eclipse.equinox.launcher_*.jar`
 
-
 export APPLICATION_TYPE=org.eclipse.swtbot.eclipse.junit.headless.swtbottestapplication
 
-export ADDITIONAL_ENV_VARS="-Dorg.eclipse.tips.startup.default=disable $ADDITIONAL_ENV_VARS"
+export INSECURE_KEYRING=true
 
+export ADDITIONAL_ENV_VARS="-Dorg.eclipse.tips.startup.default=disable $ADDITIONAL_ENV_VARS"
 if [ "$ENV_VAR_PROPERTIES" != ""  ]; then
 	echo \* The ENV_VAR_PROPERTIES value is $ENV_VAR_PROPERTIES
 	export ADDITIONAL_ENV_VARS="$ENV_VAR_PROPERTIES $ADDITIONAL_ENV_VARS"
 fi
-
 export ADDITIONAL_ENV_VARS="-Duser.timezone=America/Toronto  $ADDITIONAL_ENV_VARS"
 
 echo TEST CLASS NAME is $TEST_CLASS_NAME

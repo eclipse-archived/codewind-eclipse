@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.test;
 
+import java.net.URL;
+
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
@@ -25,6 +27,7 @@ import org.junit.runners.MethodSorters;
 public abstract class BaseAutoBuildTest extends BaseTest {
 	
 	protected static String text1, text2, text3;
+	protected static boolean extendedTest;
 	
     @Test
     public void test01_doSetup() throws Exception {
@@ -38,7 +41,12 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     }
     
     @Test
-    public void test03_disableAutoBuild() throws Exception {
+    public void test03_checkDashboards() throws Exception {
+    	checkDashboards();
+    }
+    
+    @Test
+    public void test04_disableAutoBuild() throws Exception {
     	setAutoBuild(false);
     	// Some project types need to restart when auto build changes (node.js)
     	CodewindApplication app = connection.getAppByName(projectName);
@@ -47,7 +55,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     }
     
     @Test
-    public void test04_modifyFile() throws Exception {
+    public void test05_modifyFile() throws Exception {
     	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
@@ -67,7 +75,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     }
     
     @Test
-    public void test05_enableAutoBuild() throws Exception {
+    public void test06_enableAutoBuild() throws Exception {
     	setAutoBuild(true);
     	// Some project types need to restart when auto build changes (node.js)
     	CodewindApplication app = connection.getAppByName(projectName);
@@ -76,7 +84,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     }
     
     @Test
-    public void test06_modifyFile() throws Exception {
+    public void test07_modifyFile() throws Exception {
     	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text2, text3);
@@ -90,6 +98,37 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	pingApp(text3);
     }
     
+    @Test
+    public void test08_disableProject() throws Exception {
+    	if (!extendedTest) return;
+    	URL appURL = getAppURL();
+    	disableProject();
+    	checkAppUnavailable(appURL);
+    }
+    
+    @Test
+    public void test09_enableProject() throws Exception {
+    	if (!extendedTest) return;
+    	enableProject();
+    	checkApp(text3);
+    }
+    
+    @Test
+    public void test10_removeProject() throws Exception {
+    	if (!extendedTest) return;
+    	URL appURL = getAppURL();
+    	removeProject();
+    	checkAppUnavailable(appURL);
+    }
+    
+    @Test
+    public void test11_addProject() throws Exception {
+    	if (!extendedTest) return;
+    	addProject();
+    	assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForProjectStart(connection, projectName, 600, 5));
+    	checkApp(text3);
+    }
+
     @Test
     public void test99_tearDown() {
     	doTearDown();

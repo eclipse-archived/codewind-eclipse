@@ -28,6 +28,7 @@ public class NodeAutoBuildTest extends BaseAutoBuildTest {
 		text1 = "Planet";
 		text2 = "Earth";
 		text3 = "World";
+		extendedTest = true;
 	}
 
 	@Override

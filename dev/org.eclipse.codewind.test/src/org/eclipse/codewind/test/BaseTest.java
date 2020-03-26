@@ -23,6 +23,7 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.HttpUtil;
+import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
@@ -35,6 +36,7 @@ import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.Condition;
@@ -127,8 +129,13 @@ public abstract class BaseTest extends TestCase {
         // Wait for the project to be started
         assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForProjectStart(connection, projectName, 600, 5));
         
+        // Get the application
+        CodewindApplication app = getApp();
+        if (projectType == null) {
+        	projectType = app.projectType.getId();
+        }
+        
         // Import the application into eclipse
-        CodewindApplication app = connection.getAppByName(projectName);
         ImportProjectAction.importProject(app);
         project = ImportUtil.waitForProject(projectName);
         assertNotNull("The " + projectName + " project should be imported in eclipse", project);
@@ -146,9 +153,18 @@ public abstract class BaseTest extends TestCase {
 			setWorkspaceAutoBuild(origAutoBuildSetting.booleanValue());
 		}
 	}
+	
+	public CodewindApplication getApp() {
+		return connection.getAppByName(projectName);
+	}
+    
+    protected URL getAppURL() throws Exception {
+    	URL url = getApp().getRootUrl();
+    	return new URL(url.toExternalForm() + relativeURL);
+    }
     
     public void checkApp(String text) throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindApplication app = getApp();
     	assertTrue("App should be in started state.  Current state is: " + app.getAppStatus(), CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 2));
     	pingApp(text);
     	checkMode(StartMode.RUN);
@@ -156,10 +172,17 @@ public abstract class BaseTest extends TestCase {
     	checkConsoles();
     }
     
+    public void checkAppUnavailable(URL url) throws Exception {
+    	try {
+    		assertTrue("The application URL should not be available: " + url, !pingUnavailableURL(url).isGoodResponse);
+    	} catch (IOException e) {
+    		// This is expected if the application is not available
+    	}
+    	checkNoConsoles();
+    }
+    
     protected void pingApp(String expectedText) throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
-    	URL url = app.getRootUrl();
-    	url = new URL(url.toExternalForm() + relativeURL);
+    	URL url = getAppURL();
     	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
     	for (int i = 0; i < 15 && !result.isGoodResponse; i++) {
     		Thread.sleep(1000);
@@ -168,9 +191,9 @@ public abstract class BaseTest extends TestCase {
     	assertTrue("The response code should be 200: " + result.responseCode, result.responseCode == 200);
     	assertTrue("The response should contain the expected text: " + expectedText, result.response != null && result.response.contains(expectedText));   	
     }
-    
+
     protected void checkMode(StartMode mode) throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindApplication app = getApp();
     	for (int i = 0; i < 5 && app.getStartMode() != mode; i++) {
     		Thread.sleep(1000);
     	}
@@ -187,7 +210,7 @@ public abstract class BaseTest extends TestCase {
     }
     
     protected void switchMode(StartMode mode) throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindApplication app = getApp();
     	connection.requestProjectRestart(app, mode.startMode);
     	// For Java builds the states can go by quickly so don't do an assert on this
     	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 30, 1);
@@ -196,7 +219,7 @@ public abstract class BaseTest extends TestCase {
     }
     
     protected void showConsoles() throws Exception {
-    	CodewindEclipseApplication app = (CodewindEclipseApplication) connection.getAppByName(projectName);
+    	CodewindEclipseApplication app = (CodewindEclipseApplication) getApp();
 		for (ProjectLogInfo logInfo : app.getLogInfos()) {
     		if (app.getConsole(logInfo) == null) {
     			SocketConsole console = CodewindConsoleFactory.createLogFileConsole(app, logInfo);
@@ -206,7 +229,7 @@ public abstract class BaseTest extends TestCase {
     }
 
     protected void checkConsoles() throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindApplication app = getApp();
     	Set<String> expectedConsoles = new HashSet<String>();
     	Set<String> foundConsoles = new HashSet<String>();
 		for (ProjectLogInfo logInfo : app.getLogInfos()) {
@@ -236,15 +259,64 @@ public abstract class BaseTest extends TestCase {
     	assertTrue("Did not find all expected consoles", foundConsoles.size() == expectedConsoles.size());
     }
     
+    protected void checkNoConsoles() throws Exception {
+    	IConsoleManager manager = ConsolePlugin.getDefault().getConsoleManager();
+    	boolean hasConsoles = false;
+    	for (IConsole console : manager.getConsoles()) {
+    		if (console.getName().contains(projectName)) {
+    			TestUtil.print("Found unexpected console for the " + projectName + " project: " + console.getName());
+    			hasConsoles = true;
+    		}
+    	}
+    	assertFalse("The " + projectName + " project should not have any consoles.", hasConsoles);
+    }
+    
+    protected void checkDashboards() throws Exception {
+    	CodewindApplication app = getApp();
+    	if (app.hasMetricsDashboard()) {
+    		URL url = app.getMetricsDashboardUrl();
+    		assertTrue("Expecting a good response code for ping of metrics dashboard: " + url.toString(), pingURL(url).isGoodResponse);
+    	}
+    	if (app.hasPerfDashboard()) {
+    		URL url = app.getPerfDashboardUrl();
+    		assertTrue("Expecting a good response code for ping of performance dashboard: " + url.toString(), pingURL(url).isGoodResponse);
+    	}
+    }
+    
+    protected HttpResult pingURL(URL url) throws Exception {
+    	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
+    	for (int i = 0; i < 15 && !result.isGoodResponse; i++) {
+    		Thread.sleep(1000);
+    		result = HttpUtil.get(url.toURI());
+    	}
+    	if (!result.isGoodResponse) {
+    		String msg = result.error == null || result.error.isEmpty() ? result.response : result.error;
+    		TestUtil.print("Ping of " + url.toString() + " gave response code: " + result.responseCode + " and output: " + msg);
+    	} else {
+    		TestUtil.print("Ping of " + url.toString() + " was successful");
+    	}
+    	return result;
+    }
+    
+    protected HttpResult pingUnavailableURL(URL url) throws Exception {
+    	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
+    	for (int i = 0; i < 15 && result.isGoodResponse; i++) {
+    		Thread.sleep(1000);
+    		result = HttpUtil.get(url.toURI());
+    	}
+    	if (result.isGoodResponse) {
+    		TestUtil.print("The URL is not supposed to be available: " + url.toString());
+    	}
+    	return result;
+    }
+    
     protected void build() throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
-		connection.requestProjectBuild(app, CoreConstants.VALUE_ACTION_BUILD);
+		connection.requestProjectBuild(getApp(), CoreConstants.VALUE_ACTION_BUILD);
     }
     
     protected void setAutoBuild(boolean enabled) throws Exception {
     	String actionKey = enabled ? CoreConstants.VALUE_ACTION_ENABLEAUTOBUILD : CoreConstants.VALUE_ACTION_DISABLEAUTOBUILD;
-    	CodewindApplication app = connection.getAppByName(projectName);
-		connection.requestProjectBuild(app, actionKey);
+		connection.requestProjectBuild(getApp(), actionKey);
     }
     
     protected IMarker[] getMarkers(IResource resource) throws Exception {
@@ -252,8 +324,7 @@ public abstract class BaseTest extends TestCase {
     }
     
     protected void runValidation() throws Exception {
-    	CodewindApplication app = connection.getAppByName(projectName);
-		connection.requestValidate(app);
+		connection.requestValidate(getApp());
     }
     
     protected void runQuickFix(IResource resource) throws Exception {
@@ -296,6 +367,32 @@ public abstract class BaseTest extends TestCase {
 		IPath path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(name);
 		ProjectUtil.createProject(name, path.toOSString(), templateInfo.getUrl(), connection.getConid(), new NullProgressMonitor());
 		ProjectUtil.bindProject(name, path.toOSString(), templateInfo.getLanguage(), templateInfo.getProjectType(), connection.getConid(), new NullProgressMonitor());
+	}
+	
+	protected void disableProject() throws Exception {
+		CodewindApplication app = getApp();
+		app.connection.requestProjectOpenClose(app, false);
+		assertTrue("The " + projectName + " project should be disabled", TestUtil.wait(() -> !getApp().isEnabled(), 15, 1));
+	}
+	
+	protected void enableProject() throws Exception {
+		CodewindApplication app = getApp();
+		app.connection.requestProjectOpenClose(app, true);
+		assertTrue("The " + projectName + " project should be enabled", TestUtil.wait(() -> getApp().isEnabled(), 15, 1));
+		assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForProjectStart(connection, projectName, 600, 5));
+	}
+	
+	protected void removeProject() throws Exception {
+		CodewindApplication app = getApp();
+		ProjectUtil.removeProject(app.name, app.projectID, new NullProgressMonitor());
+		assertTrue("The " + projectName + " project should be removed from Codewind", TestUtil.wait(() -> getApp() == null, 15, 1));
+	}
+	
+	protected void addProject() throws Exception {
+		ProjectInfo info = ProjectUtil.validateProject(project.getName(), project.getLocation().toOSString(), null, connection.getConid(), new NullProgressMonitor());
+		assertTrue("Validation result for " + project.getName() + " should not be null.", info != null && info.type != null);
+		assertTrue("Project type should be the same as when the project was created. Expected: " + projectType + ", Actual: " + info.type.getId(), info.type.getId().equals(projectType));
+		ProjectUtil.bindProject(project.getName(), project.getLocation().toOSString(), info.language.getId(), info.type.getId(), connection.getConid(), new NullProgressMonitor());
 	}
 	
 	protected void refreshProject() throws CoreException {

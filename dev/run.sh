@@ -11,6 +11,8 @@
 #     IBM Corporation - initial API and implementation
 #*******************************************************************************
 
+set -e
+
 export SCRIPT_DIR=`dirname $0`
 export SCRIPT_DIR=`cd $SCRIPT_DIR; pwd`
 cd $SCRIPT_DIR
@@ -49,6 +51,8 @@ eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -reposito
 eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:$SCRIPT_DIR/ant_build/artifacts/test" -installIU "org.eclipse.codewind.test.feature.feature.group"
 
 cd $SCRIPT_DIR
+
+set +e
 
 echo "Run junit tests"
 

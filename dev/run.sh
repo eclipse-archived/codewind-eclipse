@@ -22,7 +22,7 @@ fi
 mkdir -p $CODE_TESTS_WORKSPACE
 cd $CODE_TESTS_WORKSPACE
 
-wget http://www.eclipse.org/external/technology/epp/downloads/release/2019-12/R/eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz
+wget --no-verbose http://www.eclipse.org/external/technology/epp/downloads/release/2019-12/R/eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz
 tar xzf eclipse-jee-2019-12-R-linux-gtk-x86_64.tar.gz
 
 chmod 755 eclipse/eclipse
@@ -47,6 +47,8 @@ echo "Installing codewind and codewind test..."
 
 eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:$SCRIPT_DIR/ant_build/artifacts/code" -installIU "org.eclipse.codewind.feature.group"
 eclipse/eclipse -nosplash -application org.eclipse.equinox.p2.director -repository "file:$SCRIPT_DIR/ant_build/artifacts/test" -installIU "org.eclipse.codewind.test.feature.feature.group"
+
+cd $SCRIPT_DIR
 
 echo "Run junit tests"
 

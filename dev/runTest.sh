@@ -62,7 +62,7 @@ $ADDITIONAL_ENV_VARS \
 -application $APPLICATION_TYPE  \
 -data /tmp/workspace-location  \
 -testPluginName $TEST_PLUGIN_NAME  \
--className $TEST_CLASS_NAME formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/development/junit-results.xml  \
+-className $TEST_CLASS_NAME formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,$SCRIPT_DIR/junit-results.xml  \
 -vmargs  \
 -Xms256m  \
 -Xmx1024m  \

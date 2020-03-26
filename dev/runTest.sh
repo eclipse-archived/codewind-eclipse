@@ -11,9 +11,11 @@
 
 # Running Test
 
+cd $CODE_TESTS_WORKSPACE
+
 export TEST_CLASS_NAME=org.eclipse.codewind.test.AllTests
 export TEST_PLUGIN_NAME=org.eclipse.codewind.test
-export ECLIPSE_PATH=/home
+export ECLIPSE_PATH=$CODE_TESTS_WORKSPACE
 export LAUNCHER_LIBRARY=`ls eclipse/plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64*/*.so`
 
 export LAUNCHER_JAR=`ls eclipse/plugins/org.eclipse.equinox.launcher_*.jar`

@@ -23,6 +23,8 @@ export APPLICATION_TYPE=org.eclipse.swtbot.eclipse.junit.headless.swtbottestappl
 
 export ADDITIONAL_ENV_VARS="-Dorg.eclipse.tips.startup.default=disable $ADDITIONAL_ENV_VARS"
 
+export INSECURE_KEYRING=true
+
 if [ "$ENV_VAR_PROPERTIES" != ""  ]; then
 	echo \* The ENV_VAR_PROPERTIES value is $ENV_VAR_PROPERTIES
 	export ADDITIONAL_ENV_VARS="$ENV_VAR_PROPERTIES $ADDITIONAL_ENV_VARS"

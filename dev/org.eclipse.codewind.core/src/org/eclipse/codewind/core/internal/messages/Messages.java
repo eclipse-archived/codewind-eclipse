@@ -105,6 +105,9 @@ public class Messages extends NLS {
 	
 	public static String DebugPortNotifyTitle;
 	public static String DebugPortNotifyMsg;
+	
+	public static String StartFailForKeyringTitle;
+	public static String StartFailForKeyringMsg;
 
 	static {
 		// initialize resource bundle

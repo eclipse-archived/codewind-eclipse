@@ -36,13 +36,14 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	
 	public static final String DEFAULT_ICON_PATH = "icons/codewind.png"; //$NON-NLS-1$
 	
-	public static final String CW_INSTALL_TIMEOUT = "cwInstallTimeout";
-	public static final String CW_START_TIMEOUT = "cwStartTimeout";
-	public static final String CW_STOP_TIMEOUT = "cwStopTimeout";
-	public static final String CW_UNINSTALL_TIMEOUT = "cwUninstallTimeout";
+	public static final String CW_INSTALL_TIMEOUT = "cwInstallTimeout"; //$NON-NLS-1$
+	public static final String CW_START_TIMEOUT = "cwStartTimeout"; //$NON-NLS-1$
+	public static final String CW_STOP_TIMEOUT = "cwStopTimeout"; //$NON-NLS-1$
+	public static final String CW_UNINSTALL_TIMEOUT = "cwUninstallTimeout"; //$NON-NLS-1$
 	
-	public static final String AUTO_OPEN_OVERVIEW_PAGE = "autoOpenOverviewPage";
-	public static final String ENABLE_SUPPORT_FEATURES = "enableSupportFeatures";
+	public static final String AUTO_OPEN_OVERVIEW_PAGE = "autoOpenOverviewPage"; //$NON-NLS-1$
+	public static final String ENABLE_KEYRING_ACCESS = "enabledKeyringAccess"; //$NON-NLS-1$
+	public static final String ENABLE_SUPPORT_FEATURES = "enableSupportFeatures"; //$NON-NLS-1$
 
 	public static final String
 			// Int option for debug timeout in seconds
@@ -83,6 +84,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 		getPreferenceStore().setDefault(CW_START_TIMEOUT, InstallUtil.START_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(CW_STOP_TIMEOUT, InstallUtil.STOP_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(AUTO_OPEN_OVERVIEW_PAGE, true);
+		getPreferenceStore().setDefault(ENABLE_KEYRING_ACCESS, true);
 		getPreferenceStore().setDefault(ENABLE_SUPPORT_FEATURES, false);
 	}
 

@@ -28,6 +28,7 @@ import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
@@ -92,6 +93,9 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		super.createControl(parent);
 		Composite composite = (Composite) getControl();
 		createContents(composite);
+		
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, CodewindUIPlugin.MAIN_CONTEXTID);
 	}
 
 	private void createContents(Composite parent) {
@@ -350,7 +354,7 @@ public class NewCodewindProjectPage extends WizardNewProjectCreationPage {
 		
 		initContent();
 	}
-	
+
 	protected boolean canFinish() {
 		return validate();
 	}

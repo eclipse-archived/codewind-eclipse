@@ -21,6 +21,7 @@ import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ImagePushRegistryInfo;
 import org.eclipse.codewind.core.internal.connection.RegistryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
@@ -167,8 +168,18 @@ public class ProjectValidationPage extends WizardPage {
 		
 		updatePage(false);
 
-		validateMsg.setFocus();
 		setControl(composite);
+		
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(getControl(), CodewindUIPlugin.MAIN_CONTEXTID);
+	}
+
+	@Override
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			validateMsg.setFocus();
+		}
 	}
 
 	@Override

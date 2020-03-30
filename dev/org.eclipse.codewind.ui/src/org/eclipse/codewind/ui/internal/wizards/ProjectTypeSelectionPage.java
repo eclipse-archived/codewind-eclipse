@@ -28,6 +28,7 @@ import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RepositoryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -54,6 +55,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 
 public class ProjectTypeSelectionPage extends WizardPage {
 
@@ -194,7 +196,10 @@ public class ProjectTypeSelectionPage extends WizardPage {
 				}
 			}
 		});
- 
+		
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, CodewindUIPlugin.MAIN_CONTEXTID);
+
 		// Don't show the subtype table by default, when updateTables is called it will decide
 		// whether to show it nor not
 		subtypeLabel.setVisible(false);
@@ -204,6 +209,14 @@ public class ProjectTypeSelectionPage extends WizardPage {
 		setControl(composite);
 	}
 	
+	@Override
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			typeViewer.getTable().setFocus();
+		}
+	}
+
 	public boolean isActivePage() {
 		return isCurrentPage();
 	}

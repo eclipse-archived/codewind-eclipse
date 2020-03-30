@@ -50,6 +50,14 @@ public class NewCodewindConnectionPage extends WizardPage implements CompositeCo
 		return canFinish();
 	}
 	
+	@Override
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			composite.setFocus();
+		}
+	}
+
 	public boolean canFinish() {
 		return composite.canFinish();
 	}

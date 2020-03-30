@@ -227,6 +227,9 @@ public class RegistryManagementComposite extends Composite {
 			}
 		});
 		
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(this, CodewindUIPlugin.MAIN_CONTEXTID);
+		
 		// Set the description text
 		String descText = supportsPushReg ? Messages.RegMgmtDescription : Messages.RegMgmtLocalDescription;
 		description.setText(descText);
@@ -242,6 +245,12 @@ public class RegistryManagementComposite extends Composite {
 		
 		createItems();
 		updateButtons();
+		regTable.setFocus();
+	}
+
+	@Override
+	public boolean setFocus() {
+		return regTable.setFocus();
 	}
 
 	private void createItems() {

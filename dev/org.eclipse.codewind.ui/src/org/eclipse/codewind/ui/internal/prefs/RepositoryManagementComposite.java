@@ -254,13 +254,22 @@ public class RepositoryManagementComposite extends Composite {
 			}
 		});
 		
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(this, CodewindUIPlugin.MAIN_CONTEXTID);
+		
 		if (repoViewer.getTable().getItemCount() > 0) {
 			repoViewer.getTable().setSelection(0);
 		}
 		updateDetails();
 		updateButtons();
+		repoViewer.getTable().setFocus();
 	}
 	
+	@Override
+	public boolean setFocus() {
+		return repoViewer.getTable().setFocus();
+	}
+
 	@Override
 	public void dispose() {
 		if (boldFont != null) {

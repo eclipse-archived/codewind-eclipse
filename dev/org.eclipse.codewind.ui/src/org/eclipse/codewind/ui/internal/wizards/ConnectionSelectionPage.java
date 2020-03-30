@@ -16,6 +16,7 @@ import java.util.List;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.core.internal.connection.RemoteConnection;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.views.CodewindNavigatorLabelProvider;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -28,11 +29,13 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.PlatformUI;
 
 public class ConnectionSelectionPage extends WizardPage {
 	
 	private List<CodewindConnection> connections;
 	private CodewindConnection connection;
+	private TableViewer connViewer;
 
 	protected ConnectionSelectionPage(List<CodewindConnection> connections) {
 		super(Messages.SelectConnectionPageName);
@@ -52,7 +55,7 @@ public class ConnectionSelectionPage extends WizardPage {
 		GridData data = new GridData(GridData.FILL_HORIZONTAL);
 		composite.setLayoutData(data);
 		
-		TableViewer connViewer = new TableViewer(composite, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
+		connViewer = new TableViewer(composite, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
 		connViewer.setContentProvider(ArrayContentProvider.getInstance());
 		connViewer.setLabelProvider(new ConnLabelProvider());
 		connViewer.setInput(connections);
@@ -61,10 +64,21 @@ public class ConnectionSelectionPage extends WizardPage {
 			connection = (CodewindConnection)connViewer.getStructuredSelection().getFirstElement();
 			validate();
 		});
+		
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, CodewindUIPlugin.MAIN_CONTEXTID);
 
 		setControl(composite);
 	}
 	
+	@Override
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			connViewer.getTable().setFocus();
+		}
+	}
+
 	private void validate() {
 		String errorMsg = null;
 		if (connection == null) {

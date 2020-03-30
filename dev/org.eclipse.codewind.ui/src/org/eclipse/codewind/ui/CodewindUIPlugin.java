@@ -34,6 +34,8 @@ public class CodewindUIPlugin extends AbstractUIPlugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.eclipse.codewind.ui"; //$NON-NLS-1$
+	
+	public static String MAIN_CONTEXTID = PLUGIN_ID + ".codewindmain";
 
 	private static URL ICON_BASE_URL;
 	protected Map<String, ImageDescriptor> imageDescriptors = new HashMap<String, ImageDescriptor>();

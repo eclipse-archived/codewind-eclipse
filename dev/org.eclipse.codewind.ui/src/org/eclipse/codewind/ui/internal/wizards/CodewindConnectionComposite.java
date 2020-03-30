@@ -113,6 +113,9 @@ public class CodewindConnectionComposite extends Composite {
 			}
 		});
 
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(this, CodewindUIPlugin.MAIN_CONTEXTID);
+
         initialize();
         connNameText.setFocus();
 	}
@@ -140,6 +143,11 @@ public class CodewindConnectionComposite extends Composite {
 		return text;
 	}
 	
+	@Override
+	public boolean setFocus() {
+		return connNameText.setFocus();
+	}
+
 	private void initialize() {
 		if (connection != null) {
 			isUpdating = true;

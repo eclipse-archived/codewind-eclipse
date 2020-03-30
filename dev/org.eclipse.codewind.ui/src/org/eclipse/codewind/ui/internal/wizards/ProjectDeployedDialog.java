@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 public class ProjectDeployedDialog extends TitleAreaDialog {
 	
@@ -85,9 +86,13 @@ public class ProjectDeployedDialog extends TitleAreaDialog {
 		Button removeButton = addBehaviourButton(radioGroup, Messages.ProjectDeployedDialogRemoveLabel, Messages.ProjectDeployedDialogRemoveTooltip, Behaviour.REMOVE);
 		addBehaviourButton(radioGroup, Messages.ProjectDeployedDialogDisableLabel, Messages.ProjectDeployedDialogDisableTooltip, Behaviour.DISABLE);
 		addBehaviourButton(radioGroup, Messages.ProjectDeployedDialogMaintainLabel, Messages.ProjectDeployedDialogMaintainTooltip, Behaviour.MAINTAIN);
+
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, CodewindUIPlugin.MAIN_CONTEXTID);
 		
 		selectedBehaviour = Behaviour.REMOVE;
 		removeButton.setSelection(true);
+		removeButton.setFocus();
 		
 		return composite;
 	}

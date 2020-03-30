@@ -13,6 +13,14 @@
 
 set -e
 
+echo "Install docker-compose if necessary"
+which docker-compose
+status=$?
+if [ $status != 0 ]; then
+    curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod 755 /usr/local/bin/docker-compose
+fi      
+
 export SCRIPT_DIR=`dirname $0`
 export SCRIPT_DIR=`cd $SCRIPT_DIR; pwd`
 cd $SCRIPT_DIR

@@ -28,7 +28,7 @@ status=$?
 if [ $status != 0 ]; then
     curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o $CODE_TESTS_WORKSPACE/docker-compose
     chmod 755 $CODE_TESTS_WORKSPACE/docker-compose
-    export PATH=$PATH;$CODE_TESTS_WORKSPACE
+    export PATH=$PATH:$CODE_TESTS_WORKSPACE
 fi
 
 set -e

@@ -11,16 +11,6 @@
 #     IBM Corporation - initial API and implementation
 #*******************************************************************************
 
-set -e
-
-echo "Install docker-compose if necessary"
-command -v docker-compose
-status=$?
-if [ $status != 0 ]; then
-    curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod 755 /usr/local/bin/docker-compose
-fi      
-
 export SCRIPT_DIR=`dirname $0`
 export SCRIPT_DIR=`cd $SCRIPT_DIR; pwd`
 cd $SCRIPT_DIR
@@ -31,6 +21,17 @@ fi
 
 mkdir -p $CODE_TESTS_WORKSPACE
 cd $CODE_TESTS_WORKSPACE
+
+echo "Install docker-compose if necessary"
+which docker-compose
+status=$?
+if [ $status != 0 ]; then
+    curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o $CODE_TESTS_WORKSPACE/docker-compose
+    chmod 755 $CODE_TESTS_WORKSPACE/docker-compose
+    export PATH=$PATH;$CODE_TESTS_WORKSPACE
+fi
+
+set -e
 
 echo "Downloading eclipse..."
 

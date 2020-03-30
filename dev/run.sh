@@ -14,7 +14,7 @@
 set -e
 
 echo "Install docker-compose if necessary"
-which docker-compose
+command -v docker-compose
 status=$?
 if [ $status != 0 ]; then
     curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose

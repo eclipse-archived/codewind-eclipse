@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 public class LogLevelSelectionDialog extends TitleAreaDialog {
 
@@ -91,10 +92,15 @@ public class LogLevelSelectionDialog extends TitleAreaDialog {
 					selectedLevel = levelList.get(index);
 			}
 		});
+
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, CodewindUIPlugin.MAIN_CONTEXTID);
 		
 		if (currentLevel >= 0) {
 			logLevelCombo.select(currentLevel);
 		}
+		
+		logLevelCombo.setFocus();
 		
 		return composite;
 	}

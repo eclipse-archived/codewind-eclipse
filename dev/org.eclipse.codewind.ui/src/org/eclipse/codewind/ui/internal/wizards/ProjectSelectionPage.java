@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.wizards;
 
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.resources.IProject;
@@ -38,6 +39,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.SearchPattern;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -205,7 +207,10 @@ public class ProjectSelectionPage extends WizardPage {
 				validate();
 			}
 		});
-		
+
+		// Add Context Sensitive Help
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, CodewindUIPlugin.MAIN_CONTEXTID);
+
 		if (hasValidProjects) {
 			workspaceProject.setSelection(true);
 			fileSystemProject.setSelection(false);
@@ -229,11 +234,22 @@ public class ProjectSelectionPage extends WizardPage {
 		if (hasValidProjects && workspaceProject.getSelection() && projectList.getTable().getItemCount() == 1) {
 			projectList.setChecked(projectList.getElementAt(0), true);
 		}
-
+		
 		validate();
 		setControl(composite);
 	}
 	
+	@Override
+	public void setVisible(boolean visible) {
+		super.setVisible(visible);
+		if (visible) {
+			if (workspaceProject.getSelection()) {
+				filterText.setFocus();
+			}
+			pathText.setFocus();
+		}
+	}
+
 	private boolean hasValidProjects() {
 		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (IProject project : projects) {

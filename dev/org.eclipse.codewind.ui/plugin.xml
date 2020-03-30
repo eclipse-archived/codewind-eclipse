@@ -314,5 +314,9 @@
 	        <viewShortcut id="org.eclipse.codewind.ui.explorerView"/>
 		</perspectiveExtension> 
 	</extension>
+	
+	<extension point="org.eclipse.help.contexts">
+		<contexts file="xml/CodewindUIContexts.xml" plugin="org.eclipse.codewind.ui" />
+	</extension>
 
 </plugin>

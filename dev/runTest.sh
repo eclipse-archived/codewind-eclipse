@@ -11,24 +11,26 @@
 
 # Running Test
 
+cd $CODE_TESTS_WORKSPACE
+
 export TEST_CLASS_NAME=org.eclipse.codewind.test.AllTests
 export TEST_PLUGIN_NAME=org.eclipse.codewind.test
-export ECLIPSE_PATH=/home
+export ECLIPSE_PATH=$CODE_TESTS_WORKSPACE
 export LAUNCHER_LIBRARY=`ls eclipse/plugins/org.eclipse.equinox.launcher.gtk.linux.x86_64*/*.so`
 
 export LAUNCHER_JAR=`ls eclipse/plugins/org.eclipse.equinox.launcher_*.jar`
 
-
 export APPLICATION_TYPE=org.eclipse.swtbot.eclipse.junit.headless.swtbottestapplication
 
 export ADDITIONAL_ENV_VARS="-Dorg.eclipse.tips.startup.default=disable $ADDITIONAL_ENV_VARS"
-
 if [ "$ENV_VAR_PROPERTIES" != ""  ]; then
 	echo \* The ENV_VAR_PROPERTIES value is $ENV_VAR_PROPERTIES
 	export ADDITIONAL_ENV_VARS="$ENV_VAR_PROPERTIES $ADDITIONAL_ENV_VARS"
 fi
-
 export ADDITIONAL_ENV_VARS="-Duser.timezone=America/Toronto  $ADDITIONAL_ENV_VARS"
+
+# Allow cwctl to run in insecure keyring mode (no keyring on the jenkins machines)
+export INSECURE_KEYRING=true
 
 echo TEST CLASS NAME is $TEST_CLASS_NAME
 echo TEST PLUG-IN NAME is $TEST_PLUGIN_NAME
@@ -61,7 +63,7 @@ $ADDITIONAL_ENV_VARS \
 -application $APPLICATION_TYPE  \
 -data /tmp/workspace-location  \
 -testPluginName $TEST_PLUGIN_NAME  \
--className $TEST_CLASS_NAME formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,/development/junit-results.xml  \
+-className $TEST_CLASS_NAME formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,$SCRIPT_DIR/junit-results.xml  \
 -vmargs  \
 -Xms256m  \
 -Xmx1024m  \

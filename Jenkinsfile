@@ -72,13 +72,11 @@ pipeline {
                     '''
                     
                     dir('dev') { sh './gradlew --stacktrace' }
-/*
                     dir('dev/ant_build/artifacts') {
                         stash name: 'codewind_test.zip', includes: 'codewind_test-*.zip'
                         sh 'rm codewind_test-*.zip'
                         stash name: 'codewind.zip', includes: 'codewind-*.zip'
                     }
-*/
                 }
             }
         } 
@@ -99,8 +97,11 @@ pipeline {
             }
         }
 
-/*
         stage('Test') {
+            options {
+               timeout(time: 1, unit: "HOURS")
+            }
+
             agent {
                 label "docker-build"
             }
@@ -114,10 +115,8 @@ pipeline {
                         }
 
                         sh '''#!/usr/bin/env bash
-                            docker build --no-cache -t test-image ./dev
-                            export CWD=$(pwd)
-                            echo "Current directory is ${CWD}"
-                            docker run -v /var/run/docker.sock:/var/run/docker.sock -v ${CWD}/dev:/development --network=host test-image
+                            echo "Git commit is: $(git log --format=medium -1 ${GIT_COMMIT})"
+                            ./dev/run.sh
                         '''
                     } finally {
                         junit 'dev/junit-results.xml'
@@ -138,7 +137,6 @@ pipeline {
                 }
             }      
         }  
-*/
         
         stage('Deploy') {
             steps {

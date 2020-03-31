@@ -129,6 +129,7 @@ pipeline {
                         # Docker system prune
                         echo "Docker system prune ..."
                         docker system df
+                        echo "First remove containers ..."
                         if [[ $(docker ps -a -q | wc -l) -gt 0 ]]; then
                             docker rm -f $(docker ps -a -q)
                         fi

@@ -11,13 +11,11 @@
 
 package org.eclipse.codewind.test;
 
-import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
-import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.core.runtime.IPath;
 
-public class AppsodyJavaMicroprofileAutoBuildTest extends BaseBuildTest {
+public class AppsodyJavaMicroprofileAutoBuildTest extends BaseAppsodyAutoBuildTest {
 
 	static {
 		projectName = "appsodyjavamicroprofileautobuildtest";
@@ -36,11 +34,11 @@ public class AppsodyJavaMicroprofileAutoBuildTest extends BaseBuildTest {
 		IPath destPath = project.getLocation();
 		destPath = destPath.append(srcPath);
 		copyFile("appsodyJavaMicroprofile/Hello.java", destPath);
-		refreshProject();
+		refreshProject(project);
     	
-		CodewindApplication app = connection.getAppByName(projectName);
-		CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
-		assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
-		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
+		// No build states for Appsody, check that app goes into starting state
+		// (may not for some project types so don't do an assert)
+    	CodewindUtil.waitForAppState(app, AppStatus.STARTING, 15, 1);
+		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));
 	}
 }

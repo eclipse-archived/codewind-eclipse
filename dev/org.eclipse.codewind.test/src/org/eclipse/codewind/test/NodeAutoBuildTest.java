@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.test;
 
-import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
@@ -41,9 +40,8 @@ public class NodeAutoBuildTest extends BaseAutoBuildTest {
 		IPath path = project.getLocation();
 		path = path.append(srcPath);
 		TestUtil.updateFile(path.toOSString(), origText, newText);
-		refreshProject();
+		refreshProject(project);
     	
-		CodewindApplication app = connection.getAppByName(projectName);
 		CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
 		assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
 		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));

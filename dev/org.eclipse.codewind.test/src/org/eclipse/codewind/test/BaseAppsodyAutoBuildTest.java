@@ -12,29 +12,55 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
-import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class BaseBuildTest extends BaseTest {
+public abstract class BaseAppsodyAutoBuildTest extends BaseTest {
+	
+	protected static CodewindConnection conn;
+	protected static CodewindApplication app;
+	protected static IProject project;
+	
+	protected static String projectName;
+	protected static String projectType = null;
+	protected static String templateId;
+	protected static String relativeURL;
+	protected static String srcPath;
 	
 	protected static String text1, text2;
 	
+	protected void doSetup() throws Exception {
+        setup();
+        conn = getLocalConnection();
+        
+        app = createProject(conn, projectType, templateId, projectName);
+        if (projectType == null) {
+        	projectType = app.projectType.getId();
+        }
+        
+        // Wait for the project to be started
+        assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForAppState(getApp(conn, projectName), AppStatus.STARTED, 600, 5));
+        
+        project = importProject(app);
+	}
+	
     @Test
     public void test01_doSetup() throws Exception {
-        TestUtil.print("Starting test: " + getName());
+    	TestUtil.print("Starting test: " + getName());
         doSetup();
     }
     
     @Test
     public void test02_checkApp() throws Exception {
-    	checkApp(text1);
+    	checkApp(app, relativeURL, text1);
     }
     
     @Test
@@ -42,19 +68,19 @@ public abstract class BaseBuildTest extends BaseTest {
     	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), text1, text2);
-    	refreshProject();
-    	// Check that build is started automatically
-    	CodewindApplication app = connection.getAppByName(projectName);
-    	CodewindUtil.waitForBuildState(app, BuildStatus.IN_PROGRESS, 30, 1);
-    	assertTrue("Build should be successful", CodewindUtil.waitForBuildState(app, BuildStatus.SUCCESS, 300, 1));
+    	refreshProject(project);
+    	// No build states for Appsody, check that app goes into starting state
+    	// (may not for some project types so don't do an assert)
+    	CodewindUtil.waitForAppState(app, AppStatus.STARTING, 15, 1);
     	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
     	// Check for the new text
-    	pingApp(text2);
+    	pingApp(app, relativeURL, text2);
     }
     
     @Test
     public void test99_tearDown() {
-    	doTearDown();
+    	cleanupConnection(conn);
+    	cleanup();
     	TestUtil.print("Ending test: " + getName());
     }
 

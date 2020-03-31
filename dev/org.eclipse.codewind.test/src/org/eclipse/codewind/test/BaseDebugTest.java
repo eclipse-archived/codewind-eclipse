@@ -12,10 +12,12 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -24,6 +26,16 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class BaseDebugTest extends BaseTest {
 	
+	protected static CodewindConnection conn;
+	protected static CodewindApplication app;
+	protected static IProject project;
+	
+	protected static String projectName;
+	protected static String projectType = null;
+	protected static String templateId;
+	protected static String relativeURL;
+	protected static String srcPath;
+	
 	protected static String currentText;
 	protected static String newText;
 	protected static String dockerfile;
@@ -31,19 +43,30 @@ public abstract class BaseDebugTest extends BaseTest {
     @Test
     public void test01_doSetup() throws Exception {
         TestUtil.print("Starting test: " + getName());
-        doSetup();
+        setup();
+        conn = getLocalConnection();
+        
+        app = createProject(conn, projectType, templateId, projectName);
+        if (projectType == null) {
+        	projectType = app.projectType.getId();
+        }
+        
+        // Wait for the project to be started
+        assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForAppState(getApp(conn, projectName), AppStatus.STARTED, 600, 5));
+        
+        project = importProject(app);
     }
     
     @Test
     public void test02_checkApp() throws Exception {
-    	checkApp(currentText);
+    	checkApp(app, relativeURL, currentText);
     }
     
     @Test
     public void test03_switchToDebugMode() throws Exception {
-    	switchMode(StartMode.DEBUG);
-    	pingApp(currentText);
-    	checkConsoles();
+    	switchMode(app, StartMode.DEBUG);
+    	pingApp(app, relativeURL, currentText);
+    	checkConsoles(app);
     }
     
     @Test
@@ -51,15 +74,15 @@ public abstract class BaseDebugTest extends BaseTest {
     	IPath path = project.getLocation();
     	path = path.append(srcPath);
     	TestUtil.updateFile(path.toOSString(), currentText, newText);
-    	refreshProject();
+    	refreshProject(project);
     	currentText = newText;
-    	CodewindApplication app = connection.getAppByName(projectName);
+    	CodewindApplication app = conn.getAppByName(projectName);
     	// For Java builds the states can go by quickly so don't do an assert on this
     	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
     	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));
-    	pingApp(currentText);
-    	checkMode(StartMode.DEBUG);
-    	checkConsoles();
+    	pingApp(app, relativeURL, currentText);
+    	checkMode(app, StartMode.DEBUG);
+    	checkConsoles(app);
     }
     
     @Test
@@ -67,26 +90,27 @@ public abstract class BaseDebugTest extends BaseTest {
     	IPath path = project.getLocation();
     	path = path.append(dockerfile);
     	TestUtil.prependToFile(path.toOSString(), "# no comment\n");
-    	refreshProject();
-    	CodewindApplication app = connection.getAppByName(projectName);
+    	refreshProject(project);
+    	CodewindApplication app = conn.getAppByName(projectName);
     	assertTrue("App should be in stopped state", CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1));
     	assertTrue("App should be in starting state", CodewindUtil.waitForAppState(app, AppStatus.STARTING, 600, 1));
     	assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));
-    	pingApp(currentText);
-    	checkMode(StartMode.DEBUG);
-    	checkConsoles();
+    	pingApp(app, relativeURL, currentText);
+    	checkMode(app, StartMode.DEBUG);
+    	checkConsoles(app);
     }
     
     @Test
     public void test06_switchToRunMode() throws Exception {
-    	switchMode(StartMode.RUN);
-    	pingApp(currentText);
-    	checkConsoles();
+    	switchMode(app, StartMode.RUN);
+    	pingApp(app, relativeURL, currentText);
+    	checkConsoles(app);
     }
     
     @Test
     public void test99_tearDown() {
-    	doTearDown();
+    	cleanupConnection(conn);
+    	cleanup();
     	TestUtil.print("Ending test: " + getName());
     }
 

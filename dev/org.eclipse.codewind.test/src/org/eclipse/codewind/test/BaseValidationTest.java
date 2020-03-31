@@ -12,7 +12,10 @@
 package org.eclipse.codewind.test;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
+import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.Condition;
 import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.core.resources.IMarker;
@@ -27,8 +30,33 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class BaseValidationTest extends BaseTest {
 	
+	protected static CodewindConnection conn;
+	protected static CodewindApplication app;
+	protected static IProject project;
+	
+	protected static String projectName;
+	protected static String projectType = null;
+	protected static String templateId;
+	protected static String relativeURL;
+	protected static String srcPath;
+	
 	protected static String text;
 	protected static String dockerfile;
+	
+	protected void doSetup() throws Exception {
+        setup();
+        conn = getLocalConnection();
+        
+        app = createProject(conn, projectType, templateId, projectName);
+        if (projectType == null) {
+        	projectType = app.projectType.getId();
+        }
+        
+        // Wait for the project to be started
+        assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForAppState(getApp(conn, projectName), AppStatus.STARTED, 600, 5));
+        
+        project = importProject(app);
+	}
 	
     @Test
     public void test01_doSetup() throws Exception {
@@ -38,12 +66,12 @@ public abstract class BaseValidationTest extends BaseTest {
     
     @Test
     public void test02_checkApp() throws Exception {
-    	checkApp(text);
+    	checkApp(app, relativeURL, text);
     }
     
     @Test
     public void test03_disableAutoBuild() throws Exception {
-    	setAutoBuild(false);
+    	setAutoBuild(app, false);
     }
     
     @Test
@@ -53,7 +81,6 @@ public abstract class BaseValidationTest extends BaseTest {
     	TestUtil.deleteFile(path.toOSString());
     	// Wait and check that the build is still marked as successful
     	Thread.sleep(2000);
-    	CodewindApplication app = connection.getAppByName(projectName);
     	assertTrue("The application build should be successful for project: " + projectName, app.getBuildStatus() == BuildStatus.SUCCESS);
     	// Check that there are no markers
     	IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
@@ -62,7 +89,7 @@ public abstract class BaseValidationTest extends BaseTest {
     
     @Test
     public void test05_runValidation() throws Exception {
-    	runValidation();
+    	runValidation(app);
     	IMarker[] markers = waitForMarkers(project);
     	assertTrue("There should be a marker for the missing dockerfile for project: " + projectName, markers.length > 0);
     }
@@ -82,7 +109,8 @@ public abstract class BaseValidationTest extends BaseTest {
 
     @Test
     public void test99_tearDown() {
-    	doTearDown();
+    	cleanupConnection(conn);
+    	cleanup();
     	TestUtil.print("Ending test: " + getName());
     }
     

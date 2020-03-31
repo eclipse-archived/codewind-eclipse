@@ -11,7 +11,6 @@
 
 package org.eclipse.codewind.test;
 
-import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.TestUtil;
@@ -34,8 +33,7 @@ public class NodeValidationTest extends BaseValidationTest {
 		IPath path = project.getLocation();
     	path = path.append(srcPath);
 		TestUtil.updateFile(path.toOSString(), "// Add your code here", "app.get('/hello', (req, res) => res.send('Hello World!'));");
-		build();
-		CodewindApplication app = connection.getAppByName(projectName);
+		build(app);
 		// For Java builds the states can go by quickly so don't do an assert on this
 		CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 120, 1);
 		assertTrue("App should be in started state", CodewindUtil.waitForAppState(app, AppStatus.STARTED, 300, 1));

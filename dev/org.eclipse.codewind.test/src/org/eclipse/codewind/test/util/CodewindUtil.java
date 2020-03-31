@@ -39,17 +39,6 @@ public class CodewindUtil {
 		return connection.getAppByName(projectName) != null;
 	}
 	
-	public static boolean waitForProjectStart(CodewindConnection connection, String projectName, long timeout, long interval) {
-		// Wait for the project to be started
-		TestUtil.wait(new Condition() {
-			@Override
-			public boolean test() {
-				return connection.getAppByName(projectName).isRunning();
-			}
-		}, timeout, interval);
-        return connection.getAppByName(projectName).isRunning();
-	}
-	
 	public static void cleanup(CodewindConnection connection) throws Exception {
 		if (connection == null) {
 			// The connection could be null if the Codewind install failed
@@ -58,11 +47,11 @@ public class CodewindUtil {
 		// Remove projects
 		List<CodewindApplication> apps = connection.getApps();
 		for (CodewindApplication app: apps) {
-			ProjectUtil.removeProject(app.name, app.projectID, new NullProgressMonitor());
 			try {
-				Thread.sleep(2000);
+				ProjectUtil.removeProject(app.name, app.projectID, new NullProgressMonitor());
+				TestUtil.wait(() -> app.connection.getAppByName(app.name) == null, 15, 1);
 			} catch (Exception e) {
-				// Ignore
+				TestUtil.print("Failed to remove application: " + app.name, e);
 			}
 		}
 		
@@ -77,7 +66,11 @@ public class CodewindUtil {
 			}
 		}
 		
-		CodewindConnectionManager.remove(connection.getBaseURI().toString());
+		TestUtil.waitForJobs(30, 5);
+		
+		if (!connection.isLocal()) {
+			CodewindConnectionManager.remove(connection.getBaseURI().toString());
+		}
 	}
 	
 	public static boolean waitForAppState(CodewindApplication app, AppStatus status, long timeout, long interval) {

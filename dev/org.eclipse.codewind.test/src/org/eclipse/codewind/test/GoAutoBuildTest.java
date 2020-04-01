@@ -13,7 +13,8 @@ package org.eclipse.codewind.test;
 
 public class GoAutoBuildTest extends BaseAutoBuildTest {
 	
-	static {
+	@Override
+	protected void doSetup() throws Exception {
 		projectName = "goautobuildtest";
 		templateId = GO_ID;
 		relativeURL = "/";
@@ -22,5 +23,6 @@ public class GoAutoBuildTest extends BaseAutoBuildTest {
 		text2 = "Hi there";
 		text3 = "Hola";
 		extendedTest = true;
+		super.doSetup();
 	}
 }

@@ -16,7 +16,9 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-	GoAutoBuildTest.class
+	GoAutoBuildTest.class,
+	NodeAutoBuildTest.class,
+	SpringDebugTest.class
 })
 
 public class AllTests {

@@ -13,7 +13,8 @@ package org.eclipse.codewind.test;
 
 public class AppsodyNodeExpressAutoBuildTest extends BaseAppsodyAutoBuildTest {
 
-	static {
+	@Override
+	protected void doSetup() throws Exception {
 		projectName = "appsodynodeexpressautobuildtest";
 		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_NODE_EXPRESS_ID;
@@ -21,5 +22,6 @@ public class AppsodyNodeExpressAutoBuildTest extends BaseAppsodyAutoBuildTest {
 		srcPath = "app.js";
 		text1 = "Hello";
 		text2 = "Hi there";
+		super.doSetup();
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,8 @@ package org.eclipse.codewind.test;
 
 public class LibertyDebugTest extends BaseDebugTest {
 
-	static {
+	@Override
+	protected void doSetup() throws Exception {
 		projectName = "libertydebugtest";
 		templateId = JAVA_MICROPROFILE_ID;
 		relativeURL = "/v1/example";
@@ -21,5 +22,6 @@ public class LibertyDebugTest extends BaseDebugTest {
 		currentText = "Congratulations";
 		newText = "Hello";
 		dockerfile = "Dockerfile";
+		super.doSetup();
 	}
 }

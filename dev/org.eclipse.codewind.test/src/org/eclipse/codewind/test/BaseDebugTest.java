@@ -29,32 +29,35 @@ public abstract class BaseDebugTest extends BaseTest {
 	protected static CodewindConnection conn;
 	protected static CodewindApplication app;
 	protected static IProject project;
+	protected static String projectType;
 	
+	// Must be set by the test case in doSetup
 	protected static String projectName;
-	protected static String projectType = null;
 	protected static String templateId;
 	protected static String relativeURL;
 	protected static String srcPath;
-	
 	protected static String currentText;
 	protected static String newText;
 	protected static String dockerfile;
 	
-    @Test
-    public void test01_doSetup() throws Exception {
-        TestUtil.print("Starting test: " + getName());
+	protected void doSetup() throws Exception {
         setup();
         conn = getLocalConnection();
         
         app = createProject(conn, projectType, templateId, projectName);
-        if (projectType == null) {
-        	projectType = app.projectType.getId();
-        }
+        projectType = app.projectType.getId();
         
         // Wait for the project to be started
         assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForAppState(getApp(conn, projectName), AppStatus.STARTED, 600, 5));
         
         project = importProject(app);
+	}
+	
+    @Test
+    public void test01_doSetup() throws Exception {
+        TestUtil.print("Starting test: " + getClass().getSimpleName());
+        clearVariables();
+        doSetup();
     }
     
     @Test
@@ -110,8 +113,15 @@ public abstract class BaseDebugTest extends BaseTest {
     @Test
     public void test99_tearDown() {
     	cleanupConnection(conn);
+    	clearVariables();
     	cleanup();
-    	TestUtil.print("Ending test: " + getName());
+    	TestUtil.print("Ending test: " + getClass().getSimpleName());
     }
-
+    
+    private void clearVariables() {
+    	conn = null;
+    	app = null;
+    	project = null;
+    	projectType = null;
+    }
 }

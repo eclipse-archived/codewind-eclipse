@@ -29,12 +29,12 @@ public abstract class BaseAppsodyAutoBuildTest extends BaseTest {
 	protected static CodewindApplication app;
 	protected static IProject project;
 	
+	// Must be set by the test case in doSetup
 	protected static String projectName;
-	protected static String projectType = null;
+	protected static String projectType;
 	protected static String templateId;
 	protected static String relativeURL;
 	protected static String srcPath;
-	
 	protected static String text1, text2;
 	
 	protected void doSetup() throws Exception {
@@ -42,9 +42,6 @@ public abstract class BaseAppsodyAutoBuildTest extends BaseTest {
         conn = getLocalConnection();
         
         app = createProject(conn, projectType, templateId, projectName);
-        if (projectType == null) {
-        	projectType = app.projectType.getId();
-        }
         
         // Wait for the project to be started
         assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForAppState(getApp(conn, projectName), AppStatus.STARTED, 600, 5));
@@ -54,7 +51,8 @@ public abstract class BaseAppsodyAutoBuildTest extends BaseTest {
 	
     @Test
     public void test01_doSetup() throws Exception {
-    	TestUtil.print("Starting test: " + getName());
+    	TestUtil.print("Starting test: " + getClass().getSimpleName());
+    	clearVariables();
         doSetup();
     }
     
@@ -80,8 +78,15 @@ public abstract class BaseAppsodyAutoBuildTest extends BaseTest {
     @Test
     public void test99_tearDown() {
     	cleanupConnection(conn);
+    	clearVariables();
     	cleanup();
-    	TestUtil.print("Ending test: " + getName());
+    	TestUtil.print("Ending test: " + getClass().getSimpleName());
     }
-
+    
+    private void clearVariables() {
+    	conn = null;
+    	app = null;
+    	project = null;
+    	projectType = null;
+    }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,8 @@ package org.eclipse.codewind.test;
 
 public class LagomAutoBuildTest extends BaseAutoBuildTest {
 	
-	static {
+	@Override
+	protected void doSetup() throws Exception {
 		projectName = "lagomautobuildtest";
 		templateId = LAGOM_ID;
 		relativeURL = "";
@@ -21,5 +22,6 @@ public class LagomAutoBuildTest extends BaseAutoBuildTest {
 		text1 = "hello:";
 		text2 = "hi there:";
 		text3 = "hola:";
+		super.doSetup();
 	}
 }

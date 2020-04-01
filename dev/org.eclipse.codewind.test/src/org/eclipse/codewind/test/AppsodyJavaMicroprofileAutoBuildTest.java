@@ -17,7 +17,8 @@ import org.eclipse.core.runtime.IPath;
 
 public class AppsodyJavaMicroprofileAutoBuildTest extends BaseAppsodyAutoBuildTest {
 
-	static {
+	@Override
+	public void doSetup() throws Exception {
 		projectName = "appsodyjavamicroprofileautobuildtest";
 		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_JAVA_MICROPROFILE_ID;
@@ -25,10 +26,7 @@ public class AppsodyJavaMicroprofileAutoBuildTest extends BaseAppsodyAutoBuildTe
 		srcPath = "src/main/java/dev/appsody/starter/hello/Hello.java";
 		text1 = "World";
 		text2 = "Earth";
-	}
-
-	@Override
-	public void doSetup() throws Exception {
+		
 		super.doSetup();
 		
 		IPath destPath = project.getLocation();

@@ -293,7 +293,10 @@ public class ProjectSelectionPage extends WizardPage {
 			project = null;
 			if (projectPath != null) {
 				IPath path = new Path(projectPath);
-				if (!path.toFile().exists()) {
+				if (path.segmentCount() == 0) {
+					errorMsg = Messages.SelectProjectPageIncompletePath;
+					projectPath = null;
+				} else if (!path.toFile().exists() || !path.toFile().isDirectory()) {
 					errorMsg = Messages.SelectProjectPageNoExistError;
 					projectPath = null;
 				} else {

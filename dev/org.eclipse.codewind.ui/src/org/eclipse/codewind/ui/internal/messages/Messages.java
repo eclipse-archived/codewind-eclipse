@@ -225,6 +225,7 @@ public class Messages extends NLS {
 	public static String SelectProjectPagePathLabel;
 	public static String SelectProjectPageBrowseButton;
 	public static String SelectProjectPageFilesystemDialogTitle;
+	public static String SelectProjectPageIncompletePath;
 	public static String SelectProjectPageNoExistError;
 	public static String SelectProjectPageLocationError;
 	public static String SelectProjectPageCWProjectExistsError;

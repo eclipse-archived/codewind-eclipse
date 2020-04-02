@@ -26,7 +26,7 @@ public class CodewindConsoleFactory {
 
 	public static SocketConsole createLogFileConsole(CodewindApplication app, ProjectLogInfo logInfo) throws Exception {
 		String consoleName;
-		consoleName = NLS.bind(Messages.LogFileConsoleName, app.name, logInfo.logName);
+		consoleName = NLS.bind(Messages.LogFileConsoleName, new String[] {app.name, app.connection.getName(), logInfo.logName});
 		SocketConsole console = new SocketConsole(consoleName, logInfo, app);
 		onNewConsole(console);
 		return console;

@@ -299,6 +299,7 @@ public class Messages extends NLS {
 	public static String ActionOpenContainerShell;
 	public static String ActionOpenContainerShellMissingDepsTitle;
 	public static String ActionOpenContainerShellMissingDepsMsg;
+	public static String ContainerShellTitle;
 
 	public static String ValidateLabel;
 	public static String AttachDebuggerLabel;

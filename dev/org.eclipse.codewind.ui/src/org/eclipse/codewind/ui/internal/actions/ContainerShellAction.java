@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.tm.terminal.view.core.TerminalServiceFactory;
 import org.eclipse.tm.terminal.view.core.interfaces.ITerminalService;
@@ -83,10 +84,11 @@ public class ContainerShellAction extends SelectionProviderAction {
         // Open a shell in the application container
         String envPath = CoreUtil.getEnvPath();
         String dockerPath = envPath != null ? envPath + "docker" : "docker"; //$NON-NLS-1$  //$NON-NLS-2$
+        String title = NLS.bind(Messages.ContainerShellTitle, app.name, app.connection.getName());
         Map<String, Object> properties = new HashMap<>();
         properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, LAUNCHER_DELEGATE_ID);
-        properties.put(ITerminalsConnectorConstants.PROP_SECONDARY_ID, app.name);
-        properties.put(ITerminalsConnectorConstants.PROP_TITLE, app.name);
+        properties.put(ITerminalsConnectorConstants.PROP_SECONDARY_ID, title);
+        properties.put(ITerminalsConnectorConstants.PROP_TITLE, title);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, dockerPath);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, "exec -it " + app.getContainerId() + " " + command); //$NON-NLS-1$ //$NON-NLS-2$
         ITerminalService terminal = TerminalServiceFactory.getService();

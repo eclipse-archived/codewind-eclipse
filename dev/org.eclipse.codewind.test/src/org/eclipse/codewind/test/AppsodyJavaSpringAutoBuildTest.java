@@ -13,7 +13,8 @@ package org.eclipse.codewind.test;
 
 public class AppsodyJavaSpringAutoBuildTest extends BaseAppsodyAutoBuildTest {
 
-	static {
+	@Override
+	protected void doSetup() throws Exception {
 		projectName = "appsodyjavaspringautobuildtest";
 		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_JAVA_SPRING_ID;
@@ -21,5 +22,6 @@ public class AppsodyJavaSpringAutoBuildTest extends BaseAppsodyAutoBuildTest {
 		srcPath = "src/main/java/application/LivenessEndpoint.java";
 		text1 = "UP";
 		text2 = "ALIVE";
+		super.doSetup();
 	}
 }

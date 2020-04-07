@@ -19,7 +19,8 @@ import org.eclipse.core.runtime.IPath;
 
 public class NodeAutoBuildTest extends BaseAutoBuildTest {
 
-	static {
+	@Override
+	public void doSetup() throws Exception {
 		projectName = "nodeautobuildtest";
 		templateId = NODE_EXPRESS_ID;
 		relativeURL = "/hello";
@@ -27,11 +28,7 @@ public class NodeAutoBuildTest extends BaseAutoBuildTest {
 		text1 = "Planet";
 		text2 = "Earth";
 		text3 = "World";
-		extendedTest = true;
-	}
-
-	@Override
-	public void doSetup() throws Exception {
+		
 		super.doSetup();
 		
 		String origText = "// Add your code here";

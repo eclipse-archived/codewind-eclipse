@@ -11,6 +11,8 @@
 
 package org.eclipse.codewind.ui.internal.views;
 
+import java.util.concurrent.TimeoutException;
+
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
@@ -21,6 +23,7 @@ import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
+import org.eclipse.codewind.ui.internal.wizards.BindProjectWizard;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -115,6 +118,7 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 					// Add the application to the target connection
 					ProjectUtil.bindProject(sourceApp.name, sourceApp.fullLocalPath.toOSString(), sourceApp.projectLanguage.getId(), sourceApp.projectType.getId(), targetConn.getConid(), mon.split(60));
 					if (mon.isCanceled()) {
+						BindProjectWizard.cleanup(sourceApp.name, targetConn);
 						return Status.CANCEL_STATUS;
 					}
 					mon.split(10);
@@ -130,6 +134,10 @@ public class CodewindNavigatorDropAssistant extends CommonDropAdapterAssistant {
 					mon.worked(10);
 					mon.done();
 					CodewindUIPlugin.getUpdateHandler().updateConnection(targetConn);
+				} catch (TimeoutException e) {
+					Logger.logError("A timeout occurred trying to move project: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$
+					BindProjectWizard.cleanup(sourceApp.name, targetConn);
+					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.MoveProjectTimeout, new String[] {sourceApp.name, sourceApp.connection.getName(), targetConn.getName()}), e);
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to move project: " + sourceApp.fullLocalPath.toOSString(), e); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.MoveProjectError, new String[] {sourceApp.name, sourceApp.connection.getName(), targetConn.getName()}), e);

@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.KubeUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.Platform;
@@ -51,13 +52,20 @@ public class ContainerShellAction extends SelectionProviderAction {
             Object obj = sel.getFirstElement();
             if (obj instanceof CodewindApplication) {
             	app = (CodewindApplication)obj;
-            	setEnabled(app.isAvailable() && app.getContainerId() != null);
+            	setEnabled(app.isAvailable() && checkApp(app));
             	return;
             }
         }
         setEnabled(false);
     }
-
+    
+	private boolean checkApp(CodewindApplication app) {
+		if (app.connection.isLocal()) {
+			return app.getContainerId() != null;
+		}
+		return app.getPodName() != null && app.getNamespace() != null;
+	}
+    
     @Override
     public void run() {
         if (app == null) {
@@ -66,9 +74,9 @@ public class ContainerShellAction extends SelectionProviderAction {
 			return;
 		}
         
-        if (app.getContainerId() == null) {
-        	Logger.logError("ContainerShellAction ran but the container id for the application is not set: " + app.name); //$NON-NLS-1$
-			return;
+        if (!checkApp(app)) {
+        	Logger.logError("ContainerShellAction ran but the container id or pod name and namespace for the application is not set: " + app.name); //$NON-NLS-1$
+        	return;
         }
         
         // Check that the required bundles are installed and show a dialog if not
@@ -81,16 +89,30 @@ public class ContainerShellAction extends SelectionProviderAction {
         // exec bash if it's installed, else exec sh
         String command = "sh -c \"if type bash > /dev/null; then bash; else sh; fi\"";
 
-        // Open a shell in the application container
-        String envPath = CoreUtil.getEnvPath();
-        String dockerPath = envPath != null ? envPath + "docker" : "docker"; //$NON-NLS-1$  //$NON-NLS-2$
+		// Open a shell in the application container
+		String processPath = null;
+		String processArgs = null;
+		if (app.connection.isLocal()) {
+			String envPath = CoreUtil.getEnvPath();
+			processPath = envPath != null ? envPath + "docker" : "docker"; //$NON-NLS-1$ //$NON-NLS-2$
+			processArgs = "exec -it " + app.getContainerId() + " " + command; //$NON-NLS-1$ //$NON-NLS-2$
+		} else {
+			processPath = KubeUtil.getCommand();
+			if (processPath == null) {
+				Logger.logError("The container shell cannot be opened because neither of the kubectl or oc commands could be found on the path");
+				MessageDialog.openError(Display.getDefault().getActiveShell(),
+						Messages.ActionOpenContainerShellErrorTitle, Messages.ActionOpenContainerShellNoKubectlMsg);
+				return;
+			}
+			processArgs = "exec -n " + app.getNamespace() + " -it " + app.getPodName() + " -- " + command; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		}
         String title = NLS.bind(Messages.ContainerShellTitle, app.name, app.connection.getName());
         Map<String, Object> properties = new HashMap<>();
         properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, LAUNCHER_DELEGATE_ID);
         properties.put(ITerminalsConnectorConstants.PROP_SECONDARY_ID, title);
         properties.put(ITerminalsConnectorConstants.PROP_TITLE, title);
-        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, dockerPath);
-        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, "exec -it " + app.getContainerId() + " " + command); //$NON-NLS-1$ //$NON-NLS-2$
+        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, processPath);
+        properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ARGS, processArgs);
         ITerminalService terminal = TerminalServiceFactory.getService();
         if (terminal == null) {
             // This should not happen
@@ -101,6 +123,6 @@ public class ContainerShellAction extends SelectionProviderAction {
     }
 
     public boolean showAction() {
-    	return app != null && app.connection.isLocal();
+    	return app != null;
     }
 }

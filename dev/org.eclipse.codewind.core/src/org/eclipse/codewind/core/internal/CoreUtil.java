@@ -316,5 +316,21 @@ public class CoreUtil {
 		}
 		return null;
 	}
-    
+	
+	public static String getExecutablePath(String name) {
+		String path = getEnvPath();
+		if (path != null) {
+			File file = new File(path, name);
+			if (file.isFile() && file.canExecute()) {
+				return file.getAbsolutePath();
+			}
+		}
+		for (String dir : System.getenv("PATH").split(File.pathSeparator)) {
+			File file = new File(dir, name);
+			if (file.isFile() && file.canExecute()) {
+				return file.getAbsolutePath();
+			}
+		}
+		return null;
+	}    
 }

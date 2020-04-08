@@ -12,6 +12,8 @@
 package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.Logger;
@@ -41,13 +43,14 @@ public class ProjectUtil {
 	private static final String TYPE_OPTION = "--type";
 	private static final String PATH_OPTION = "--path";
 	private static final String PROJECT_ID_OPTION = "--id";
+	private static final String DELETE_OPTION = "--delete";
 
 	public static void createProject(String name, String path, String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
 		Process process = null;
 		try {
 			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, CREATE_CMD, new String[] {PATH_OPTION, path, URL_OPTION, url, CLIUtil.CON_ID_OPTION, conid});
-			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 600, mon);
 			CLIUtil.checkResult(CREATE_CMD, result, true);
 			JSONObject resultJson = new JSONObject(result.getOutput());
 			if (!CoreConstants.VALUE_STATUS_SUCCESS.equals(resultJson.getString(CoreConstants.KEY_STATUS))) {
@@ -106,10 +109,20 @@ public class ProjectUtil {
 	}
 	
 	public static void removeProject(String name, String projectId, IProgressMonitor monitor) throws IOException, TimeoutException {
+		removeProject(name, projectId, false, monitor);
+	}
+	
+	public static void removeProject(String name, String projectId, boolean delete, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.RemoveProjectTaskLabel, name), 100);
 		Process process = null;
+		List<String> options = new ArrayList<String>();
+		if (delete) {
+			options.add(DELETE_OPTION);
+		}
+		options.add(PROJECT_ID_OPTION);
+		options.add(projectId);
 		try {
-			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, REMOVE_CMD, new String[] {PROJECT_ID_OPTION, projectId});
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, REMOVE_CMD, options.toArray(new String[options.size()]));
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			CLIUtil.checkResult(REMOVE_CMD, result, false);
 		} finally {

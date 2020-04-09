@@ -301,6 +301,8 @@ public class Messages extends NLS {
 	public static String ActionOpenContainerShell;
 	public static String ActionOpenContainerShellMissingDepsTitle;
 	public static String ActionOpenContainerShellMissingDepsMsg;
+	public static String ActionOpenContainerShellErrorTitle;
+	public static String ActionOpenContainerShellNoKubectlMsg;
 	public static String ContainerShellTitle;
 
 	public static String ValidateLabel;

@@ -180,6 +180,7 @@ public class Messages extends NLS {
 	public static String BindProjectWizardDisableTask;
 	public static String BindProjectWizardJobLabel;
 	public static String BindProjectWizardError;
+	public static String BindProjectWizardTimeout;
 	
 	public static String SelectConnectionPageName;
 	public static String SelectConnectionPageTitle;
@@ -188,6 +189,7 @@ public class Messages extends NLS {
 	
 	public static String MoveProjectJobLabel;
 	public static String MoveProjectError;
+	public static String MoveProjectTimeout;
 	
 	public static String ProjectDeployedDialogShell;
 	public static String ProjectDeployedDialogTitle;
@@ -388,12 +390,17 @@ public class Messages extends NLS {
 	public static String NewProjectPage_CreateJobLabel;
 	public static String NewProjectPage_ProjectCreateErrorTitle;
 	public static String NewProjectPage_ProjectCreateErrorMsg;
+	public static String NewProjectPage_ProjectCreateTimeoutMsg;
 	public static String NewProjectPage_CodewindConnectError;
 	public static String NewProjectPage_TemplateListError;
 	public static String NewProjectPage_EmptyTemplateList;
 	public static String NewProjectPage_NoLocationError;
 	public static String NewProjectPage_NoTemplateSelected;
 	public static String ProjectLocationInCodewindDataDirError;
+	
+	public static String ProjectCleanupJobLabel;
+	public static String ProjectCleanupError;
+	public static String DirectoryCleanupError;
 	
 	public static String ManageRegistriesLinkLabel;
 	public static String ManageRegistriesLinkText;

@@ -298,6 +298,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						ProjectUtil.bindProject(name, path, language, projectTypeInfo.getId(), connection.getConid(), mon.split(20));
 					}
 					if (mon.isCanceled()) {
+						cleanup(name, connection);
 						return Status.CANCEL_STATUS;
 					}
 					mon.split(10);
@@ -320,6 +321,10 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 					ViewHelper.openCodewindExplorerView();
 					CodewindUIPlugin.getUpdateHandler().updateConnection(connection);
 					return Status.OK_STATUS;
+				} catch (TimeoutException e) {
+					Logger.logError("A timeout occurred trying to add the " + name + " project to connection: " + connection.getName(), e); //$NON-NLS-1$ //$NON-NLS-2$
+					cleanup(name, connection);
+					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.BindProjectWizardTimeout, projectPath.toOSString()), e);
 				} catch (Exception e) {
 					Logger.logError("An error occured trying to add the project to Codewind: " + projectPath.toOSString(), e); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.BindProjectWizardError, projectPath.toOSString()), e);
@@ -329,6 +334,28 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		job.schedule();
 
 		return true;
+	}
+	
+	public static void cleanup(String projectName, CodewindConnection connection) {
+		Job job = new Job(NLS.bind(Messages.ProjectCleanupJobLabel, projectName)) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				SubMonitor mon = SubMonitor.convert(monitor, 30);
+				mon.split(10);
+				connection.refreshApps(null);
+				CodewindApplication app = connection.getAppByName(projectName);
+				if (app != null) {
+					try {
+						ProjectUtil.removeProject(app.name, app.projectID, mon.split(20));
+					} catch (Exception e) {
+						Logger.logError("An error occurred while trying to remove the project after bind project terminated for: " + projectName, e);
+						return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.ProjectCleanupError, projectName), null);
+					}
+				}
+				return Status.OK_STATUS;
+			}
+		};
+		job.schedule();
 	}
 	
 	private boolean checkInstallStatus() {

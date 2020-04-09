@@ -29,9 +29,6 @@ public enum StartMode {
 
 	public final String startMode;
 
-	/**
-	 * @param buildStatus - Internal build status used by Codewind
-	 */
 	private StartMode(String startMode) {
 		this.startMode = startMode;
 	}

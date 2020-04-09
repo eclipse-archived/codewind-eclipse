@@ -393,16 +393,7 @@ public class CodewindSocket {
 		if (event.has(CoreConstants.KEY_CONTEXT_ROOT)) {
 			app.setContextRoot(event.getString(CoreConstants.KEY_CONTEXT_ROOT));
 		}
-		if (event.has(CoreConstants.KEY_PORTS) && (event.get(CoreConstants.KEY_PORTS) instanceof JSONObject)) {
-			JSONObject portsObj = event.getJSONObject(CoreConstants.KEY_PORTS);
-			if (portsObj.has(CoreConstants.KEY_INTERNAL_PORT)) {
-				app.setContainerAppPort(portsObj.getString(CoreConstants.KEY_INTERNAL_PORT));
-			}
-			if (portsObj.has(CoreConstants.KEY_INTERNAL_DEBUG_PORT)) {
-				app.setContainerDebugPort(portsObj.getString(CoreConstants.KEY_INTERNAL_DEBUG_PORT));
-			}
-		}
-		
+		CodewindApplicationFactory.setPorts(event, app);
 		
 		CoreUtil.updateApplication(app);
 	}
@@ -441,23 +432,8 @@ public class CodewindSocket {
 			return;
 		}
 
-		// This event should always have a 'ports' sub-object
-		JSONObject portsObj = event.getJSONObject(CoreConstants.KEY_PORTS);
-
-		// The ports object should always have an http port
-		if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_PORT)) {
-			int port = CoreUtil.parsePort(portsObj.getString(CoreConstants.KEY_EXPOSED_PORT));
-			app.setHttpPort(port);
-		} else {
-			Logger.logError("No http port on project restart event for: " + app.name); //$NON-NLS-1$
-		}
-
-		// Debug port will be missing if the restart was into Run mode.
-		int debugPort = -1;
-		if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {
-			debugPort = CoreUtil.parsePort(portsObj.getString(CoreConstants.KEY_EXPOSED_DEBUG_PORT));
-		}
-		app.setDebugPort(debugPort);
+		// Update the ports
+		CodewindApplicationFactory.setPorts(event, app);
 		
 		StartMode startMode = StartMode.get(event);
 		app.setStartMode(startMode);
@@ -473,7 +449,7 @@ public class CodewindSocket {
 		// Make sure no old debugger is running
 		app.clearDebugger();
 		
-		if (StartMode.DEBUG_MODES.contains(startMode) && debugPort != -1) {
+		if (app.readyForDebugSession()) {
 			app.connectDebugger();
 		}
 	}

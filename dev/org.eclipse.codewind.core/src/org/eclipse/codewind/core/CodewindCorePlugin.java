@@ -21,6 +21,8 @@ import org.eclipse.codewind.core.internal.IUpdateHandler;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.launch.CodewindLaunchListener;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -57,6 +59,8 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	
 	private static Map<String, IDebugLauncher> debugLaunchers = new HashMap<String, IDebugLauncher>();
 
+	private static CodewindLaunchListener launchListener;
+	
 	/**
 	 * The constructor
 	 */
@@ -74,7 +78,10 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 
 		// Register our logger with the debug options service
 		context.registerService(DebugOptionsListener.class, Logger.instance(), null);
-
+		
+		launchListener = new CodewindLaunchListener();
+		DebugPlugin.getDefault().getLaunchManager().addLaunchListener(launchListener);
+		
 		// Set default preferences once, here
 		getPreferenceStore().setDefault(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY, InstallUtil.STOP_APP_CONTAINERS_DEFAULT);
 		getPreferenceStore().setDefault(DEBUG_CONNECT_TIMEOUT_PREFSKEY, CodewindEclipseApplication.DEFAULT_DEBUG_CONNECT_TIMEOUT);
@@ -92,6 +99,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	 */
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(launchListener);
 		CodewindConnectionManager.clear();
 		plugin = null;
 		super.stop(context);

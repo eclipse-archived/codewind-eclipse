@@ -32,9 +32,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.PlatformUtil.OperatingSystem;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.json.JSONException;
 import org.json.JSONObject;
 

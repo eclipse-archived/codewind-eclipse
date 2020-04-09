@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -12,8 +12,8 @@
 package org.eclipse.codewind.ui.internal.actions;
 
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -123,31 +123,37 @@ public class RestartDebugModeAction extends SelectionProviderAction {
 			app.setDebugPortNotify(noDebugSessionQuestion.getToggleState());
         }
 
-        try {
-        	// Clear out any old launch and debug target
-        	app.clearDebugger();
-        	
-        	// Restart the project in debug mode. The debugger will be attached when the restart result
-        	// event is received from Codewind.
-        	// Try debug mode first since it allows debug of initialization.  If not supported use
-        	// debugNoInit mode.
-        	if (app.getProjectCapabilities().supportsDebugMode()) {
-        		app.connection.requestProjectRestart(app, StartMode.DEBUG.startMode);
-        	} else if (app.getProjectCapabilities().supportsDebugNoInitMode()) {
-        		app.connection.requestProjectRestart(app, StartMode.DEBUG_NO_INIT.startMode);
-        	} else {
-        		// Should never get here
-        		Logger.logError("Project restart in debug mode requested but project does not support any debug modes: " + app.name); //$NON-NLS-1$
-        	}
-		} catch (Exception e) {
-			Logger.logError("Error initiating restart for project: " + app.name, e); //$NON-NLS-1$
-			CoreUtil.openDialog(true, Messages.ErrorOnRestartDialogTitle, e.getMessage());
-			return;
-		}
+		// Clear out any old launch and debug target
+		app.clearDebugger();
+
+		Job job = new Job(NLS.bind(Messages.RestartInDebugModeTask, app.name)) {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				try {
+					// Restart the project in debug mode. The debugger will be attached when the restart result
+					// event is received from Codewind.
+					// Try debug mode first since it allows debug of initialization. If not supported use
+					// debugNoInit mode.
+					if (app.getProjectCapabilities().supportsDebugMode()) {
+						ProjectUtil.restartProject(app.name, app.projectID, StartMode.DEBUG.startMode, app.connection.getConid(), monitor);
+					} else if (app.getProjectCapabilities().supportsDebugNoInitMode()) {
+						ProjectUtil.restartProject(app.name, app.projectID, StartMode.DEBUG_NO_INIT.startMode, app.connection.getConid(), monitor);
+					} else {
+						// Should never get here
+						Logger.logError("Project restart in debug mode requested but project does not support any debug modes: " + app.name); //$NON-NLS-1$
+					}
+					return Status.OK_STATUS;
+				} catch (Exception e) {
+					Logger.logError("Error initiating restart for project: " + app.name, e); //$NON-NLS-1$
+					return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.ErrorOnRestartMsg, app.name), e);
+				}
+			}
+		};
+		job.schedule();
     }
     
     public boolean showAction() {
     	// Don't show the action if the app does not support debug
-    	return (app != null && app.connection.isLocal() && app.isAvailable() && app.supportsDebug());
+    	return (app != null && app.isAvailable() && app.supportsDebug());
     }
 }

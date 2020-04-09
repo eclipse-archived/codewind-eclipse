@@ -44,6 +44,10 @@ public class Messages extends NLS {
 	public static String DebugLaunchConfigName;
 	public static String DebuggerConnectFailureDialogTitle;
 	public static String DebuggerConnectFailureDialogMsg;
+	
+	public static String RemoteDebugErrorTitle;
+	public static String RemoteDebugPortForwardErrorWithMsg;
+	public static String RemoteDebugPortForwardError;
 
 	public static String BuildConsoleName;
 	public static String AppConsoleName;
@@ -89,6 +93,7 @@ public class Messages extends NLS {
 	public static String BindingProjectTaskLabel;
 	public static String RemoveProjectTaskLabel;
 	public static String ValidateProjectTaskLabel;
+	public static String RestartProjectTaskLabel;
 	public static String DeleteProjectJobLabel;
 	public static String DeleteProjectError;
 	public static String FetchLogLevelsTaskLabel;
@@ -105,6 +110,15 @@ public class Messages extends NLS {
 	
 	public static String DebugPortNotifyTitle;
 	public static String DebugPortNotifyMsg;
+	
+	public static String ErrorNoKubectlMsg;
+	
+	public static String UtilityLaunchError;
+	
+	public static String PortForwardTitle;
+	public static String PortForwardTerminateTitle;
+	public static String PortForwardTerminateMsg;
+	public static String PortForwardTerminateToggleMsg;
 
 	static {
 		// initialize resource bundle

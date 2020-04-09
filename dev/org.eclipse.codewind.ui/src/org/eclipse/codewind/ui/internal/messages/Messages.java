@@ -243,8 +243,10 @@ public class Messages extends NLS {
 	public static String ProjectValidationTask;
 	
 	public static String RestartInDebugMode;
+	public static String RestartInDebugModeTask;
 	public static String RestartInRunMode;
-	public static String ErrorOnRestartDialogTitle;
+	public static String RestartInRunModeTask;
+	public static String ErrorOnRestartMsg;
 	
 	public static String EnableProjectLabel;
 	public static String DisableProjectLabel;
@@ -302,7 +304,7 @@ public class Messages extends NLS {
 	public static String ActionOpenContainerShellMissingDepsTitle;
 	public static String ActionOpenContainerShellMissingDepsMsg;
 	public static String ActionOpenContainerShellErrorTitle;
-	public static String ActionOpenContainerShellNoKubectlMsg;
+	public static String ErrorNoKubectlMsg;
 	public static String ContainerShellTitle;
 
 	public static String ValidateLabel;
@@ -421,6 +423,7 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorAppUrlEntry;
 	public static String AppOverviewEditorHostAppPortEntry;
 	public static String AppOverviewEditorHostDebugPortEntry;
+	public static String AppOverviewEditorLocalDebugPortEntry;
 	public static String AppOverviewEditorNotDebugging;
 	public static String AppOverviewEditorProjectIdEntry;
 	public static String AppOverviewEditorContainerIdEntry;
@@ -449,7 +452,6 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorRefreshButton;
 	public static String AppOverviewEditorNotAvailable;
 	public static String AppOverviewEditorDebugNotSupported;
-	public static String AppOverviewEditorNoDebugRemote;
 	public static String AppOverviewEditorOpenSettingsErrorTitle;
 	public static String AppOverviewEditorOpenSettingsErrorMsg;
 	public static String AppOverviewEditorOpenSettingsNotFound;
@@ -605,7 +607,7 @@ public class Messages extends NLS {
 	public static String WelcomePageLearnExtensionsOpenAPITooltip;
 	public static String WelcomePageLearnExtensionsDockerLink;
 	public static String WelcomePageLearnExtensionsDockerTooltip;
-	
+
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -14,7 +14,6 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
-import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -45,7 +44,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
             	} else {
             		this.setText(Messages.AttachDebuggerLabel);
             	}
-            	if (app.isAvailable() && StartMode.DEBUG_MODES.contains(app.getStartMode()) && app.getDebugPort() != -1 &&
+            	if (app.isAvailable() && app.readyForDebugSession() &&
             			(app.getAppStatus() == AppStatus.STARTED || app.getAppStatus() == AppStatus.STARTING)) {
             		setEnabled(app.canAttachDebugger());
             		return;
@@ -68,7 +67,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
     
     public boolean showAction() {
     	// Don't show the action if the app does not support debug
-    	return (app != null && app.connection.isLocal() && app.isAvailable() && app.canInitiateDebugSession());
+    	return (app != null && app.isAvailable() && app.canInitiateDebugSession());
     }
 
 }

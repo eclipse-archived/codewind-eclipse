@@ -457,7 +457,12 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 	        });
 	        hostAppPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostAppPortEntry);
 	        appPortEntry = new StringEntry(composite, Messages.AppOverviewEditorAppPortEntry);
-	        hostDebugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostDebugPortEntry);
+	        CodewindConnection conn = getConn();
+	        if (conn != null && !conn.isLocal()) {
+	        	hostDebugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorLocalDebugPortEntry);
+	        } else {
+	        	hostDebugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorHostDebugPortEntry);
+	        }
 	        debugPortEntry = new StringEntry(composite, Messages.AppOverviewEditorDebugPortEntry);
 	        
 	        Composite buttonComp = toolkit.createComposite(composite);
@@ -547,28 +552,20 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			}
 			appURLEntry.setValue(app.isAvailable() && app.getRootUrl() != null ? app.getRootUrl().toString() : null, true);
 			hostAppPortEntry.setValue(app.isAvailable() && app.getHttpPort() > 0 ? Integer.toString(app.getHttpPort()) : null, true);
-			appPortEntry.setValue(app.getContainerAppPort(), true);
+			appPortEntry.setValue(app.isAvailable() && app.getContainerAppPort() > 0 ? Integer.toString(app.getContainerAppPort()) : null, true);
 			String hostDebugPort = null;
-			if (!app.connection.isLocal()) {
-				hostDebugPort = Messages.AppOverviewEditorNoDebugRemote;
-			} else if (app.supportsDebug()) {
+			String debugPort = null;
+			if (app.supportsDebug()) {
 				if (app.getStartMode().isDebugMode()) {
-					hostDebugPort = app.isAvailable() && app.getDebugPort() > 0 ? Integer.toString(app.getDebugPort()) : null;
+					hostDebugPort = app.isAvailable() && app.getDebugConnectPort() > 0 ? Integer.toString(app.getDebugConnectPort()) : null;
+					debugPort = app.isAvailable() && app.getContainerDebugPort() > 0 ? Integer.toString(app.getContainerDebugPort()) : null;
 				} else {
-					hostDebugPort = Messages.AppOverviewEditorNotDebugging;
+					hostDebugPort = debugPort = Messages.AppOverviewEditorNotDebugging;
 				}
 			} else {
-				hostDebugPort = app.getCapabilitiesReady() ? Messages.AppOverviewEditorDebugNotSupported : null;
+				hostDebugPort = debugPort = app.getCapabilitiesReady() ? Messages.AppOverviewEditorDebugNotSupported : null;
 			}
 			hostDebugPortEntry.setValue(hostDebugPort, true);
-			String debugPort = null;
-			if (!app.connection.isLocal()) {
-				debugPort = Messages.AppOverviewEditorNoDebugRemote;
-			} else if (app.supportsDebug()) {
-				debugPort = app.getContainerDebugPort();
-			} else {
-				debugPort = app.getCapabilitiesReady() ? Messages.AppOverviewEditorDebugNotSupported : null;
-			}
 			debugPortEntry.setValue(debugPort, true);
 			boolean hasSettingsFile = hasSettingsFile(app);
 			IDEUtil.setControlVisibility(editButton, hasSettingsFile);

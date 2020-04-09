@@ -18,8 +18,8 @@ import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.KubeUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -34,10 +34,6 @@ import org.eclipse.ui.actions.SelectionProviderAction;
  * Action for opening a shell in the application container.
  */
 public class ContainerShellAction extends SelectionProviderAction {
-	
-	private static final String TERMINAL_SERVICE_BUNDLE_ID = "org.eclipse.tm.terminal.view.core"; //$NON-NLS-1$
-	private static final String LAUNCHER_BUNDLE_ID = "org.eclipse.tm.terminal.connector.local"; //$NON-NLS-1$
-	private static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
 	
     protected CodewindApplication app;
     
@@ -80,7 +76,7 @@ public class ContainerShellAction extends SelectionProviderAction {
         }
         
         // Check that the required bundles are installed and show a dialog if not
-        if (Platform.getBundle(TERMINAL_SERVICE_BUNDLE_ID) == null || Platform.getBundle(LAUNCHER_BUNDLE_ID) == null) {
+        if (!IDEUtil.canOpenTerminal()) {
         	Logger.logError("The container shell cannot be opened because the required terminal service dependencies are not installed."); //$NON-NLS-1$
         	MessageDialog.openError(Display.getDefault().getActiveShell(), Messages.ActionOpenContainerShellMissingDepsTitle, Messages.ActionOpenContainerShellMissingDepsMsg);
         	return;
@@ -101,14 +97,14 @@ public class ContainerShellAction extends SelectionProviderAction {
 			if (processPath == null) {
 				Logger.logError("The container shell cannot be opened because neither of the kubectl or oc commands could be found on the path");
 				MessageDialog.openError(Display.getDefault().getActiveShell(),
-						Messages.ActionOpenContainerShellErrorTitle, Messages.ActionOpenContainerShellNoKubectlMsg);
+						Messages.ActionOpenContainerShellErrorTitle, Messages.ErrorNoKubectlMsg);
 				return;
 			}
 			processArgs = "exec -n " + app.getNamespace() + " -it " + app.getPodName() + " -- " + command; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
         String title = NLS.bind(Messages.ContainerShellTitle, app.name, app.connection.getName());
         Map<String, Object> properties = new HashMap<>();
-        properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, LAUNCHER_DELEGATE_ID);
+        properties.put(ITerminalsConnectorConstants.PROP_DELEGATE_ID, IDEUtil.LAUNCHER_DELEGATE_ID);
         properties.put(ITerminalsConnectorConstants.PROP_SECONDARY_ID, title);
         properties.put(ITerminalsConnectorConstants.PROP_TITLE, title);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, processPath);

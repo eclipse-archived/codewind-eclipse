@@ -30,6 +30,7 @@ import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.debug.core.ILaunch;
 import org.json.JSONObject;
 
 /**
@@ -84,10 +85,7 @@ public class CodewindApplication {
 
 	// These are set by the CodewindSocket so we have to make sure the reads and writes are synchronized
 	// An httpPort of -1 indicates the app is not started - could be building or disabled.
-	private int httpPort = -1, debugPort = -1;
-	
-	// Container ports
-	private String containerAppPort = null, containerDebugPort = null;
+	private int httpPort = -1, debugPort = -1, containerAppPort = -1, containerDebugPort = -1;
 
 	CodewindApplication(CodewindConnection connection, String id, String name, 
 			ProjectType projectType, ProjectLanguage projectLanguage, IPath localPath)
@@ -349,6 +347,14 @@ public class CodewindApplication {
 	public synchronized int getDebugPort() {
 		return debugPort;
 	}
+	
+	public synchronized int getDebugConnectPort() {
+		return debugPort;
+	}
+	
+	public synchronized String getDebugConnectHost() {
+		return host;
+	}
 
 	public synchronized StartMode getStartMode() {
 		return startMode;
@@ -480,19 +486,19 @@ public class CodewindApplication {
 		debugPort = -1;
 	}
 	
-	public synchronized void setContainerAppPort(String port) {
+	public synchronized void setContainerAppPort(int port) {
 		this.containerAppPort = port;
 	}
 	
-	public synchronized String getContainerAppPort() {
+	public synchronized int getContainerAppPort() {
 		return this.containerAppPort;
 	}
 	
-	public synchronized void setContainerDebugPort(String port) {
+	public synchronized void setContainerDebugPort(int port) {
 		this.containerDebugPort = port;
 	}
 	
-	public synchronized String getContainerDebugPort() {
+	public synchronized int getContainerDebugPort() {
 		return this.containerDebugPort;
 	}
 	
@@ -556,6 +562,10 @@ public class CodewindApplication {
 	public void reconnectDebugger() {
 		// override as needed
 	}
+	
+	public void launchTerminated(ILaunch launch) {
+		// override as needed
+	}
 
 	public void dispose() {
 		// Override as needed
@@ -577,6 +587,10 @@ public class CodewindApplication {
 		// Check if the project supports restart in debug mode
 		ProjectCapabilities capabilities = getProjectCapabilities();
 		return (capabilities.supportsDebugMode() || capabilities.supportsDebugNoInitMode()) && capabilities.canRestart();
+	}
+	
+	public boolean readyForDebugSession() {
+		return StartMode.DEBUG_MODES.contains(getStartMode()) && getDebugPort() != -1;
 	}
 	
 	public void buildComplete() {

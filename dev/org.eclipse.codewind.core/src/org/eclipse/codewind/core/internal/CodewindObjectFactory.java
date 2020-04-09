@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -38,9 +38,12 @@ public class CodewindObjectFactory {
 		return new RemoteConnection(name, uri, conid, username, authToken);
 	}
 	
-	public static CodewindApplication createCodewindApplication(CodewindConnection connection,
-			String id, String name, ProjectType projectType, ProjectLanguage language, IPath localPath) throws Exception {
-		return new CodewindEclipseApplication(connection, id, name, projectType, language, localPath);
+	public static CodewindApplication createCodewindApplication(CodewindConnection connection, String id, String name,
+			ProjectType projectType, ProjectLanguage language, IPath localPath) throws Exception {
+		if (connection.isLocal()) {
+			return new CodewindEclipseApplication(connection, id, name, projectType, language, localPath);
+		} else {
+			return new RemoteEclipseApplication(connection, id, name, projectType, language, localPath);
+		}
 	}
-
 }

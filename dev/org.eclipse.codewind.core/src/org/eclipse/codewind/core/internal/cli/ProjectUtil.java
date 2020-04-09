@@ -36,6 +36,7 @@ public class ProjectUtil {
 	private static final String[] BIND_CMD = new String[] {PROJECT_CMD, "bind"};
 	private static final String[] REMOVE_CMD = new String[] {PROJECT_CMD, "remove"};
 	private static final String[] VALIDATE_CMD = new String[] {PROJECT_CMD, "validate"};
+	private static final String[] RESTART_CMD = new String[] {PROJECT_CMD, "restart"};
 	
 	private static final String URL_OPTION = "--url";
 	private static final String NAME_OPTION = "--name";
@@ -44,6 +45,7 @@ public class ProjectUtil {
 	private static final String PATH_OPTION = "--path";
 	private static final String PROJECT_ID_OPTION = "--id";
 	private static final String DELETE_OPTION = "--delete";
+	private static final String STARTMODE_OPTION = "--startmode";
 
 	public static void createProject(String name, String path, String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);
@@ -125,6 +127,21 @@ public class ProjectUtil {
 			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, REMOVE_CMD, options.toArray(new String[options.size()]));
 			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
 			CLIUtil.checkResult(REMOVE_CMD, result, false);
+		} finally {
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
+		}
+	}
+	
+	public static void restartProject(String name, String projectId, String startMode, String conid, IProgressMonitor monitor) throws IOException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.RestartProjectTaskLabel, name), 100);
+		Process process = null;
+		try {
+			String[] options = new String[] {PROJECT_ID_OPTION, projectId, STARTMODE_OPTION, startMode, CLIUtil.CON_ID_OPTION, conid};
+			process = CLIUtil.runCWCTL(CLIUtil.GLOBAL_JSON_INSECURE, RESTART_CMD, options);
+			ProcessResult result = ProcessHelper.waitForProcess(process, 500, 300, mon);
+			CLIUtil.checkResult(RESTART_CMD, result, false);
 		} finally {
 			if (process != null && process.isAlive()) {
 				process.destroy();

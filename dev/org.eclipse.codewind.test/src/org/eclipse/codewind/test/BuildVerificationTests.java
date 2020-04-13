@@ -17,17 +17,10 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	GoAutoBuildTest.class,
-	LagomAutoBuildTest.class,
 	NodeAutoBuildTest.class,
-	PythonAutoBuildTest.class,
-	SpringAutoBuildTest.class,
-	LibertyDebugTest.class,
-	SpringDebugTest.class,
-	AppsodyJavaMicroprofileAutoBuildTest.class,
-	AppsodyJavaSpringAutoBuildTest.class,
-	AppsodyNodeExpressAutoBuildTest.class
+	SpringDebugTest.class
 })
 
-public class AllTests {
+public class BuildVerificationTests {
 	// Empty
 }

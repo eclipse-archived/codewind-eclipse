@@ -82,6 +82,18 @@ build/dev/ant_build/artifacts/codewind-[Version].vYYYYMMDD_hhmm.zip
     3. For **Program to Run**, choose **Run a product** and select **org.eclipse.epp.package.jee.product** from the drop down list.
     4. You can work with different versions of the Codewind images by adding the **CW_TAG** environment variable in the **Environment** tab. Set it to **latest** to get the latest images or to a specific tag such as **0.3**.
     5. To launch the self-hosted Eclipse and begin your testing, click the **Debug** button when you are finished.
+
+## Running Tests on Codewind for Eclipse
+- The tests are located in the `org.eclipse.codewind.test` project and are JUnit tests.
+- Tests can be run individually or there are two test lists:
+    - **AllTests**: This includes all of the tests.
+    - **BuildVerificationTests**: This is the subset of tests that are run with the build.
+- To run the tests create a new run configuration in Eclipse of type **JUnit Plug-in Test**:
+    - Set **Test runner** to `JUnit 4`. Do this first otherwise the **Search** button for the test class will not work.
+    - Set **Project** to `org.eclipse.codewind.test`.
+    - Set **Test class** to the test case or test list you want to run.
+    - (Optional) Un-check **Run in UI thread**. This allows you to interact with the Eclipse instance running the test.
+    - Click the **Run** button.
     
 ## Developing Codewind images
 - Make sure to use the **Codewind Explorer** view in Eclipse to uninstall any current Codewind images before starting. If Codewind is installed, right click on **Codewind** in the view and select **Uninstall**.

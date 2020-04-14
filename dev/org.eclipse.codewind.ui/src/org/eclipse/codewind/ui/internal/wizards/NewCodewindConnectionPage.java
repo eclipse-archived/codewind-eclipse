@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -38,11 +39,20 @@ public class NewCodewindConnectionPage extends WizardPage implements CompositeCo
 
 	@Override
 	public void createControl(Composite parent) {
-		composite = new CodewindConnectionComposite(parent, this);
-		GridData data = new GridData(SWT.FILL, SWT.FILL);
+		Composite outer = new Composite(parent, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		layout.horizontalSpacing = 5;
+		layout.verticalSpacing = 7;
+		outer.setLayout(layout);
+		outer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		composite = new CodewindConnectionComposite(outer, this);
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		data.widthHint = 250;
 		composite.setLayoutData(data);
-		setControl(composite);
+		setControl(outer);
 	}
 	
 	@Override

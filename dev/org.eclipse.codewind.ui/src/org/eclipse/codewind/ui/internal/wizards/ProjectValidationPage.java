@@ -73,13 +73,13 @@ public class ProjectValidationPage extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		Composite composite = new Composite(parent, SWT.NULL);
+		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.horizontalSpacing = 5;
 		layout.verticalSpacing = 7;
 		layout.numColumns = 2;
 		composite.setLayout(layout);
-		composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL));
 		
 		validateMsg = new Text(composite, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		validateMsg.setText("");
@@ -88,36 +88,45 @@ public class ProjectValidationPage extends WizardPage {
 		validateMsg.setLayoutData(data);
 		IDEUtil.normalizeBackground(validateMsg, composite);
 		
-		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false, 2, 1));
+		new Label(composite, SWT.NONE).setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+		
+		Composite typeComp = new Composite(composite, SWT.NONE);
+		layout = new GridLayout();
+		layout.marginTop = 10;
+		layout.horizontalSpacing = 5;
+		layout.verticalSpacing = 7;
+		layout.numColumns = 2;
+		typeComp.setLayout(layout);
+		typeComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
 		
 		boldFont = IDEUtil.newFont(getShell(), getFont(), SWT.BOLD);
         
-		typeLabel = new Label(composite, SWT.NONE);
+		typeLabel = new Label(typeComp, SWT.NONE);
 		typeLabel.setText("Type:");
 		data = new GridData(GridData.END, GridData.CENTER, false, false);
 		data.horizontalIndent = 20;
 		typeLabel.setLayoutData(data);
 		
-		typeText = new Text(composite, SWT.READ_ONLY);
+		typeText = new Text(typeComp, SWT.READ_ONLY);
 		typeText.setFont(boldFont);
 		typeText.setText("");
 		typeText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
-		IDEUtil.normalizeBackground(typeText, composite);
+		IDEUtil.normalizeBackground(typeText, typeComp);
 		
-		languageLabel = new Label(composite, SWT.NONE);
+		languageLabel = new Label(typeComp, SWT.NONE);
 		languageLabel.setText("Language:");
 		data = new GridData(GridData.END, GridData.CENTER, false, false);
 		data.horizontalIndent = 20;
 		languageLabel.setLayoutData(data);
 		
-		languageText = new Text(composite, SWT.READ_ONLY);
+		languageText = new Text(typeComp, SWT.READ_ONLY);
 		languageText.setFont(boldFont);
 		languageText.setText("");
 		languageText.setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
-		IDEUtil.normalizeBackground(languageText, composite);
+		IDEUtil.normalizeBackground(languageText, typeComp);
 
 		// Manage registries link
-		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 2, 2));
+		new Label(composite, SWT.NONE).setLayoutData(new GridData(GridData.FILL, GridData.FILL, false, false, 2, 1));
 		manageRegistriesComp = new Composite(composite, SWT.NONE);
 		manageRegistriesComp.setLayout(new GridLayout(1, false));
 		manageRegistriesComp.setLayoutData(new GridData(GridData.BEGINNING, GridData.END, false, false, 2, 1));

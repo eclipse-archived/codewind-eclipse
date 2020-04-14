@@ -60,7 +60,7 @@ pipeline {
         stage("Create install-version.properties") {
             steps {
                 sh """
-                   dev/set-install-version.sh ${env.BRANCH_NAME} dev/src/main/resources
+                   dev/set-install-version.sh ${env.BRANCH_NAME} dev/org.eclipse.codewind.core/resources
                 """
             }
         }

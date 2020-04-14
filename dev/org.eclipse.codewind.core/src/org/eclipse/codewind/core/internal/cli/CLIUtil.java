@@ -32,9 +32,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.PlatformUtil.OperatingSystem;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -179,7 +177,7 @@ public class CLIUtil {
 	private static String getCLIInstallDir() {
 		IPath userHome = CoreUtil.getUserHome();
 		if (userHome != null) {
-			return userHome.append(CODEWIND_STORE_DIR).append(InstallUtil.DEFAULT_INSTALL_VERSION).toOSString();
+			return userHome.append(CODEWIND_STORE_DIR).append(InstallUtil.getDefaultInstallVersion()).toOSString();
 		}
 		IPath stateLoc = CodewindCorePlugin.getDefault().getStateLocation();
 		return stateLoc.append(INSTALLER_DIR).toOSString();

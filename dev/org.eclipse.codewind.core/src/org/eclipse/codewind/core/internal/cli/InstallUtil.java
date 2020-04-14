@@ -12,6 +12,9 @@
 package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -22,6 +25,7 @@ import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
+import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -52,15 +56,18 @@ public class InstallUtil {
 	private static final String[] REMOVE_CMD = new String[] {"remove", "local"};
 	private static final String[] UPGRADE_CMD = new String[] {"upgrade"};
 	
-	public static final String DEFAULT_INSTALL_VERSION = "latest";
-	
 	private static final String TAG_OPTION = "-t";
 	private static final String INSTALL_VERSION_VAR = "INSTALL_VERSION";
 	private static final String CW_TAG_VAR = "CW_TAG";
 	private static final String WORKSPACE_OPTION = "--workspace";
 	
+	private static final String INSTALL_VERSION_PROPS = "install-version.properties";
+	private static final String INSTALL_VERSION_PROPS_PATH = "resources/" + INSTALL_VERSION_PROPS;
+	private static final String INSTALL_VERSION_KEY = "install-version";
+	
 	private static String installVersion = null;
 	private static String requestedVersion = null;
+	private static String defaultInstallVersion = null;
 	
 	public static InstallStatus getInstallStatus(IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.CodewindStatusJobLabel, 100);
@@ -200,13 +207,44 @@ public class InstallUtil {
 	public static String getVersion() {
 		if (installVersion == null) {
 			String requestedVersion = getRequestedVersion();
-			installVersion = requestedVersion != null ? requestedVersion : DEFAULT_INSTALL_VERSION;
+			installVersion = requestedVersion != null ? requestedVersion : getDefaultInstallVersion();
 		}
 		return installVersion;
+	}
+
+	public static String getDefaultInstallVersion() {
+		if (defaultInstallVersion == null) {
+			URL url = CodewindCorePlugin.getDefault().getBundle().getEntry(INSTALL_VERSION_PROPS_PATH);
+			if (url != null) {
+				InputStream input = null;
+				try {
+					input = url.openStream();
+					Properties properties = new Properties();
+					properties.load(input);
+					String version = properties.getProperty(INSTALL_VERSION_KEY);
+					if (version != null && !version.isEmpty()) {
+						defaultInstallVersion = version;
+					}
+				} catch (IOException e) {
+					Logger.logError("Failed to read the properties file: " + url, e);
+				} finally {
+					if (input != null) {
+						try {
+							input.close();
+						} catch (IOException e) {
+							Logger.logError("Failed to close input stream for: " + url, e);
+						}
+					}
+				}
+			}
+			if (defaultInstallVersion == null) {
+				defaultInstallVersion = CoreConstants.VERSION_LATEST;
+			}
+		}
+		return defaultInstallVersion;
 	}
 	
 	private static IPreferenceStore getPrefs() {
 		return CodewindCorePlugin.getDefault().getPreferenceStore();
 	}
-
 }

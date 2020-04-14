@@ -96,7 +96,7 @@ public class CodewindConnection {
 		Logger.log("Codewind version is: " + env.getVersion());	// $NON-NLS-1$
 		if (!isSupportedVersion(env.getVersion())) {
 			Logger.logError("The detected version of Codewind is not supported: " + env.getVersion() + ", url: " + baseUri);	// $NON-NLS-1$	// $NON-NLS-2$
-			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION));
+			onInitFail(NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.getDefaultInstallVersion()));
 		}
 		if (mon.isCanceled()) {
 			return;
@@ -295,7 +295,7 @@ public class CodewindConnection {
 	
 	public static boolean isSupportedVersion(String versionStr) {
 		try {
-			return compareVersions(versionStr, InstallUtil.DEFAULT_INSTALL_VERSION) >= 0;
+			return compareVersions(versionStr, InstallUtil.getDefaultInstallVersion()) >= 0;
 		} catch (NumberFormatException e) {
 			Logger.logError("Invalid version: " + versionStr, e);
 			return false;
@@ -825,7 +825,7 @@ public class CodewindConnection {
 			env = new ConnectionEnv(getEnvData(baseUri));
 			if (!isSupportedVersion(env.getVersion())) {
 				Logger.logError("The detected version of Codewind after reconnect is not supported: " + env.getVersion());
-				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.DEFAULT_INSTALL_VERSION);
+				this.connectionErrorMsg = NLS.bind(Messages.Connection_ErrConnection_OldVersion, env.getVersion(), InstallUtil.getDefaultInstallVersion());
 				CoreUtil.updateConnection(this);
 				return;
 			}

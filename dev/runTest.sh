@@ -61,7 +61,7 @@ $ADDITIONAL_ENV_VARS \
 --launcher.appendVmargs  \
 -product org.eclipse.epp.package.jee.product  \
 -application $APPLICATION_TYPE  \
--data /tmp/workspace-location  \
+-data $CODE_TESTS_WORKSPACE/eclipse-workspace  \
 -testPluginName $TEST_PLUGIN_NAME  \
 -className $TEST_CLASS_NAME formatter=org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter,$SCRIPT_DIR/junit-results.xml  \
 -vmargs  \

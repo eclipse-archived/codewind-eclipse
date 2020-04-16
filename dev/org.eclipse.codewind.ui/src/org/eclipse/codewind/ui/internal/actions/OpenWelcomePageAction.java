@@ -52,19 +52,23 @@ public class OpenWelcomePageAction extends SelectionProviderAction {
 		openWelcomePage();
 	}
 
-	public static void openWelcomePage() {
+	public static IEditorPart openWelcomePage() {
 		IWorkbenchWindow workbenchWindow = CodewindUIPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
 		IWorkbenchPage page = workbenchWindow.getActivePage();
+		IEditorPart editorPart = null;
 
 		try {
 			WelcomePageEditorInput input = new WelcomePageEditorInput();
-			IEditorPart editorPart = page.openEditor(input, WelcomePageEditorInput.EDITOR_ID);
+			editorPart = page.openEditor(input, WelcomePageEditorInput.EDITOR_ID);
 			if (!(editorPart instanceof WelcomePageEditorPart)) {
 				// This should not happen
 				Logger.logError("Welcome page editor part is the wrong type: " + editorPart.getClass()); //$NON-NLS-1$
+				editorPart = null;
 			}
 		} catch (Exception e) {
 			Logger.logError("An error occurred opening the welcome page editor", e); //$NON-NLS-1$
 		}
+		
+		return editorPart;
 	}
 }

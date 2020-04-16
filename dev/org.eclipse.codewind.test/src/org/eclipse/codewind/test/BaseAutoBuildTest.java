@@ -121,32 +121,44 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     	pingApp(app, relativeURL, text3);
     }
     
+    @Test 
+    public void test08_appOverview() throws Exception {
+    	if (!extendedTest) return;
+    	TestUtil.print("Opening application overview page for: " + app.name);
+    	openAppOverview(app);
+    	assertTrue("App overview page should be open for: " + app.name, hasAppOverview(app));
+    }
+    
     @Test
-    public void test08_disableProject() throws Exception {
+    public void test09_disableProject() throws Exception {
     	if (!extendedTest) return;
     	URL appURL = getAppURL(app, relativeURL);
     	disableProject(app);
     	checkAppUnavailable(projectName, appURL);
+    	// The app overview should still be there
+    	assertTrue("App overview page should be open for: " + app.name, hasAppOverview(app));
     }
     
     @Test
-    public void test09_enableProject() throws Exception {
+    public void test10_enableProject() throws Exception {
     	if (!extendedTest) return;
     	enableProject(app);
     	checkApp(app, relativeURL, text3);
+    	assertTrue("App overview page should be open for: " + app.name, hasAppOverview(app));
     }
     
     @Test
-    public void test10_removeProject() throws Exception {
+    public void test11_removeProject() throws Exception {
     	if (!extendedTest) return;
     	URL appURL = getAppURL(app, relativeURL);
     	removeProject(app);
     	checkAppUnavailable(projectName, appURL);
+    	assertFalse("App overview page should be closed for: " + app.name, hasAppOverview(app));
     	app = null;
     }
     
     @Test
-    public void test11_addProject() throws Exception {
+    public void test12_addProject() throws Exception {
     	if (!extendedTest) return;
     	app = addProject(project, projectType, conn);
     	assertTrue("The application " + projectName + " should be running", CodewindUtil.waitForAppState(getApp(conn, projectName), AppStatus.STARTED, 600, 5));

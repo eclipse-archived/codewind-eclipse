@@ -41,6 +41,8 @@ import org.eclipse.codewind.test.util.Condition;
 import org.eclipse.codewind.test.util.ImportUtil;
 import org.eclipse.codewind.test.util.TestUtil;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
+import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
+import org.eclipse.codewind.ui.internal.editors.ApplicationOverviewEditorInput;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -54,7 +56,13 @@ import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.model.IDebugTarget;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IMarkerResolution;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleManager;
@@ -251,6 +259,35 @@ public abstract class BaseTest extends TestCase {
     		assertTrue("Expecting a good response code for ping of performance dashboard: " + url.toString(), pingURL(url).isGoodResponse);
     	}
     }
+    
+	protected void openAppOverview(CodewindApplication app) {
+		Display.getDefault().syncExec(() -> OpenAppOverviewAction.openAppOverview(app));
+	}
+
+	protected boolean hasAppOverview(CodewindApplication app) {
+		final Boolean[] result = new Boolean[] { Boolean.FALSE };
+		Display.getDefault().syncExec(() -> {
+			IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			IWorkbenchPage page = window == null ? null : window.getActivePage();
+			if (page != null) {
+				for (IEditorReference ref : page.getEditorReferences()) {
+					try {
+						if (ref.getEditorInput() instanceof ApplicationOverviewEditorInput) {
+							ApplicationOverviewEditorInput editorInput = (ApplicationOverviewEditorInput) ref.getEditorInput();
+							if (editorInput.connectionId.equals(app.connection.getConid()) && editorInput.projectID.equals(app.projectID)) {
+								TestUtil.print("Found application overview page for: " + app.name);
+								result[0] = Boolean.TRUE;
+								break;
+							}
+						}
+					} catch (PartInitException e) {
+						TestUtil.print("An error occurred while trying to get the editor input for: " + ref.getName(), e);
+					}
+				}
+			}
+		});
+		return result[0].booleanValue();
+	}
     
     protected HttpResult pingURL(URL url) throws Exception {
     	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());

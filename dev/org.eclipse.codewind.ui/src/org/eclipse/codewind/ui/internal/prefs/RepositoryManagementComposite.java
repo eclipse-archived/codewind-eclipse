@@ -11,12 +11,15 @@
 
 package org.eclipse.codewind.ui.internal.prefs;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.HttpUtil;
+import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
@@ -32,11 +35,14 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.wizard.ProgressMonitorPart;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -51,7 +57,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
@@ -61,6 +69,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.json.JSONObject;
 
 public class RepositoryManagementComposite extends Composite {
 	
@@ -504,9 +513,14 @@ public class RepositoryManagementComposite extends Composite {
 	
 	private static class AddDialog extends TitleAreaDialog {
 		
+		public static final String DETAILS_FILE_NAME = "templates.json"; //$NON-NLS-1$
+		public static final String NAME_KEY = "name"; //$NON-NLS-1$
+		public static final String DESCRIPTION_KEY = "description"; //$NON-NLS-1$
+		
 		private String name;
 		private String description;
 		private String url;
+		private ProgressMonitorPart progressMon;
 		
 		public AddDialog(Shell parentShell) {
 			super(parentShell);
@@ -538,7 +552,7 @@ public class RepositoryManagementComposite extends Composite {
 			layout.marginHeight = 11;
 			layout.marginWidth = 9;
 			layout.horizontalSpacing = 5;
-			layout.verticalSpacing = 7;
+			layout.verticalSpacing = 20;
 			layout.numColumns = 2;
 			composite.setLayout(layout);
 			GridData data = new GridData(GridData.FILL_BOTH);
@@ -553,25 +567,48 @@ public class RepositoryManagementComposite extends Composite {
 			Text urlText = new Text(composite, SWT.BORDER);
 			urlText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
-			label = new Label(composite, SWT.NONE);
+			Group infoGroup = new Group(composite, SWT.NONE);
+			infoGroup.setText("Template source details");
+			layout = new GridLayout();
+			layout.marginHeight = 11;
+			layout.marginWidth = 9;
+			layout.horizontalSpacing = 5;
+			layout.verticalSpacing = 7;
+			layout.numColumns = 2;
+			infoGroup.setLayout(layout);
+			infoGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+			
+			label = new Label(infoGroup, SWT.NONE);
 			label.setText(Messages.AddRepoDialogNameLabel);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			
-			Text nameText = new Text(composite, SWT.BORDER);
+			Text nameText = new Text(infoGroup, SWT.BORDER);
 			nameText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
-			label = new Label(composite, SWT.NONE);
+			label = new Label(infoGroup, SWT.NONE);
 			label.setText(Messages.AddRepoDialogDescriptionLabel);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			
-			Text descriptionText = new Text(composite, SWT.BORDER);
+			Text descriptionText = new Text(infoGroup, SWT.BORDER);
 			descriptionText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
+			
+			// Button to auto fill the name and description fields for the template source
+			Button autoFillButton = new Button(infoGroup, SWT.PUSH);
+			autoFillButton.setText(Messages.AddRepoDialogAutoFillButtonLabel);
+			autoFillButton.setToolTipText(Messages.AddRepoDialogAutoFillButtonTooltip);
+			autoFillButton.setLayoutData(new GridData(GridData.END, GridData.FILL, false, false, 2, 1));
+			
+			// Progress monitor widget
+			progressMon = new ProgressMonitorPart(parent, layout, true);
+			progressMon.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			progressMon.setVisible(false);
 			
 			urlText.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e) {
 					url = urlText.getText().trim();
 					enableOKButton(validate());
+					autoFillButton.setEnabled(url != null && !url.isEmpty());
 				}
 			});
 			
@@ -590,6 +627,56 @@ public class RepositoryManagementComposite extends Composite {
 					enableOKButton(validate());
 				}
 			});
+			
+			autoFillButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent event) {
+					try {
+						runWithProgress((IProgressMonitor monitor) -> {
+							try {
+								monitor.beginTask(Messages.AddRepoDialogAutoFillTaskLabel, IProgressMonitor.UNKNOWN);
+								
+								// Construct the URL for the details file from the template source URL
+								URL repoUrl = new URL(url);
+								String path = repoUrl.getPath();
+								path = path.substring(0, path.lastIndexOf("/") + 1) + DETAILS_FILE_NAME;
+								URL detailsUrl = new URL(repoUrl.getProtocol(), repoUrl.getHost(), path);
+								
+								// Try to get the template source details
+								HttpResult result = HttpUtil.get(detailsUrl.toURI());
+								if (result.isGoodResponse && result.response != null && !result.response.isEmpty()) {
+									JSONObject jsonObj = new JSONObject(result.response);
+									String name = jsonObj.has(NAME_KEY) ? jsonObj.getString(NAME_KEY) : null;
+									String description = jsonObj.has(DESCRIPTION_KEY) ? jsonObj.getString(DESCRIPTION_KEY) : null;
+									Display.getDefault().syncExec(() -> {
+										// The name should at least be set
+										if (name == null || name.isEmpty()) {
+											Logger.logError("Found the template source information but the name is null or empty: " + detailsUrl);
+											AddDialog.this.setErrorMessage(Messages.AddRepoDialogAutoFillNotAvailableMsg);
+										} else {
+											nameText.setText(name);
+											descriptionText.setText(description == null ? "" : description);
+										}
+									});
+								} else {
+									// Don't log this as an error as the template source may not provide details
+									Logger.log("Got error code " + result.error + " trying to retrieve the template source details for url: " + detailsUrl + ", and error: " + result.error); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+									Display.getDefault().syncExec(() -> AddDialog.this.setErrorMessage(Messages.AddRepoDialogAutoFillNotAvailableMsg));
+								}
+							} catch (Exception e) {
+								Logger.logError("An error occurred trying to retrieve the template source details for URL: " + url, e); //$NON-NLS-1$
+								Display.getDefault().syncExec(() -> AddDialog.this.setErrorMessage(Messages.AddRepoDialogAutoFillNotAvailableMsg));
+							} finally {
+								monitor.done();
+							}
+						});
+					} catch (Exception e) {
+						Logger.logError("An error occurred trying to get the template source details", e); //$NON-NLS-1$
+					}
+				}
+			});
+			
+			autoFillButton.setEnabled(false);
 			
 			return composite; 
 		}
@@ -629,6 +716,16 @@ public class RepositoryManagementComposite extends Composite {
 				return new RepoEntry(name, description, url);
 			}
 			return null;
+		}
+		
+		public void runWithProgress(IRunnableWithProgress runnable) throws InvocationTargetException, InterruptedException {
+			progressMon.setVisible(true);
+			try {
+				ModalContext.run(runnable, true, progressMon, getShell().getDisplay());
+			} finally {
+				progressMon.done();
+				progressMon.setVisible(false);
+			}
 		}
 	}
 	

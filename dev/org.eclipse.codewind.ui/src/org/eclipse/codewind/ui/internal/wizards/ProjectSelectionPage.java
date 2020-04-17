@@ -245,8 +245,9 @@ public class ProjectSelectionPage extends WizardPage {
 		if (visible) {
 			if (workspaceProject.getSelection()) {
 				filterText.setFocus();
+			} else {
+				pathText.setFocus();
 			}
-			pathText.setFocus();
 		}
 	}
 

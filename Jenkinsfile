@@ -159,11 +159,11 @@ pipeline {
                         export REPO_NAME="codewind-eclipse"
                         export OUTPUT_NAME="codewind"
                         export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
-                        export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
+                        export DOWNLOAD_AREA_URL="https://archive.eclipse.org/codewind/$REPO_NAME"
                         export LATEST_DIR="latest"
                         export BUILD_INFO="build_info.properties"
                         export sshHost="genie.codewind@projects-storage.eclipse.org"
-                        export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
+                        export deployDir="/home/data/httpd/archive.eclipse.org/codewind/$REPO_NAME"
                     
                         if [ -z $CHANGE_ID ]; then
                             UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"

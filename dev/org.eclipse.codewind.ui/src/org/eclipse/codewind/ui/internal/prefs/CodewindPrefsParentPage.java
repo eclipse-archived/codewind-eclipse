@@ -141,6 +141,18 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 			}
 		});
 	    
+	    Button enableKeyringButton = new Button(generalGroup, SWT.CHECK);
+	    enableKeyringButton.setText(Messages.PrefsParentPage_EnableKeyring);
+	    enableKeyringButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
+	    enableKeyringButton.setSelection(prefs.getBoolean(CodewindCorePlugin.ENABLE_KEYRING_ACCESS));
+	    
+	    enableKeyringButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				prefs.setValue(CodewindCorePlugin.ENABLE_KEYRING_ACCESS, enableKeyringButton.getSelection());
+			}
+		});
+	    
 	    Button supportFeaturesButton = new Button(generalGroup, SWT.CHECK);
 	    supportFeaturesButton.setText(Messages.PrefsParentPage_EnableSupportFeatures);
 	    supportFeaturesButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));

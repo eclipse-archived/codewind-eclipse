@@ -20,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindManager;
 import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
@@ -86,6 +87,23 @@ public class InstallUtil {
 	}
 	
 	public static ProcessResult startCodewind(String version, IProgressMonitor monitor) throws IOException, TimeoutException {
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
+		ProcessResult result = doStartCodewind(version, mon.split(75));
+		IPreferenceStore prefs = CodewindCorePlugin.getDefault().getPreferenceStore();
+		if (prefs.getBoolean(CodewindCorePlugin.ENABLE_KEYRING_ACCESS) && result.getExitValue() != 0
+				&& "sec_keyring".equals(CLIUtil.getErrorKey(result))) {
+			// Ask the user if they want to disable keyring access and try again
+			if (CoreUtil.openConfirmDialog(Messages.StartFailForKeyringTitle, Messages.StartFailForKeyringMsg)) {
+				prefs.setValue(CodewindCorePlugin.ENABLE_KEYRING_ACCESS, false);
+				result = doStartCodewind(version, mon.split(25));
+			} else {
+				mon.setCanceled(true);
+			}
+		}
+		return result;	
+	}
+	
+	private static ProcessResult doStartCodewind(String version, IProgressMonitor monitor) throws IOException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.StartCodewindJobLabel, 100);
 		Process process = null;
 		try {

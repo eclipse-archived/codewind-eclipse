@@ -43,6 +43,7 @@ public class CLIUtil {
 	// Global options
 	public static final String JSON_OPTION = "--json";
 	public static final String INSECURE_OPTION = "--insecure";
+	public static final String INSECURE_KEYRING_OPTION = "--insecureKeyring";
 	public static final String[] GLOBAL_JSON = new String[] {JSON_OPTION};
 	public static final String[] GLOBAL_INSECURE = new String[] {INSECURE_OPTION};
 	public static final String[] GLOBAL_JSON_INSECURE = new String[] {JSON_OPTION, INSECURE_OPTION};
@@ -89,6 +90,9 @@ public class CLIUtil {
 		
 		List<String> cmdList = new ArrayList<String>();
 		cmdList.add(codewindInfo.getInstallPath());
+		if (!CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.ENABLE_KEYRING_ACCESS)) {
+			cmdList.add(INSECURE_KEYRING_OPTION);
+		}
 		addOptions(cmdList, globalOptions);
 		addOptions(cmdList, cmd);
 		addOptions(cmdList, options);
@@ -219,5 +223,19 @@ public class CLIUtil {
 		}
 		
 		Logger.log(String.format("Result of the cwctl '%s' command: \n%s", CoreUtil.formatString(command, " "), Optional.ofNullable(result.getOutput()).orElse("<empty>")));
+	}
+	
+	public static String getErrorKey(ProcessResult result) {
+		try {
+			if (result.getOutput() != null && !result.getOutput().isEmpty()) {
+				JSONObject obj = new JSONObject(result.getOutput());
+				if (obj.has(ERROR_KEY)) {
+					return obj.getString(ERROR_KEY);
+				}
+			}
+		} catch (JSONException e) {
+			// Ignore
+		}
+		return null;
 	}
 }

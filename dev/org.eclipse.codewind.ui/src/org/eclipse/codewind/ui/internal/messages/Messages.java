@@ -27,6 +27,7 @@ public class Messages extends NLS {
 
 	public static String PrefsParentPage_GeneralGroup;
 	public static String PrefsParentPage_AutoOpenOverviewButton;
+	public static String PrefsParentPage_EnableKeyring;
 	public static String PrefsParentPage_EnableSupportFeatures;
 	public static String PrefsParentPage_StartupShutdownGroup;
 	public static String PrefsParentPage_InstallTimeout;

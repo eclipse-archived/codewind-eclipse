@@ -20,6 +20,7 @@ import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -36,6 +37,16 @@ import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 
 public class IDEUtil {
+	
+	private static final String TERMINAL_SERVICE_BUNDLE_ID = "org.eclipse.tm.terminal.view.core"; //$NON-NLS-1$
+	private static final String LAUNCHER_BUNDLE_ID = "org.eclipse.tm.terminal.connector.local"; //$NON-NLS-1$
+	public static final String LAUNCHER_DELEGATE_ID = "org.eclipse.tm.terminal.connector.local.launcher.local"; //$NON-NLS-1$
+	public static final String TERMINAL_VIEW_ID = "org.eclipse.tm.terminal.view.ui.TerminalsView"; //$NON-NLS-1$
+
+	public static boolean canOpenTerminal() {
+		// Check that the required bundles are installed
+	   return (Platform.getBundle(TERMINAL_SERVICE_BUNDLE_ID) != null && Platform.getBundle(LAUNCHER_BUNDLE_ID) != null);
+	}
 	
     /*
      * Dialog which asks the user a question and they can select Yes, No

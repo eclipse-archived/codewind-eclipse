@@ -440,31 +440,6 @@ public class CodewindConnection {
 		return "true".equals(result.response);
 	}
 
-	public void requestProjectRestart(CodewindApplication app, String launchMode)
-			throws JSONException, IOException {
-
-		String restartEndpoint = CoreConstants.APIPATH_PROJECT_LIST + "/" 	//$NON-NLS-1$
-				+ app.projectID + "/" 										//$NON-NLS-1$
-				+ CoreConstants.APIPATH_RESTART;
-
-        URI url = baseUri.resolve(restartEndpoint);
-
-		JSONObject restartProjectPayload = new JSONObject();
-		restartProjectPayload.put(CoreConstants.KEY_START_MODE, launchMode);
-
-		// This initiates the restart
-		HttpResult result = HttpUtil.post(url, getAuthToken(false), restartProjectPayload);
-		if (hasAuthFailure(result)) {
-			result = HttpUtil.post(url, getAuthToken(true), restartProjectPayload);
-		}
-		if (!result.isGoodResponse) {
-			final String msg = String.format("Received bad response from server %d with error message %s", //$NON-NLS-1$
-					result.responseCode, result.error);
-			throw new IOException(msg);
-		}
-		app.invalidatePorts();
-	}
-	
 	public void requestProjectOpenClose(CodewindApplication app, boolean enable)
 			throws JSONException, IOException {
 		

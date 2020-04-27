@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,8 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 	public static final String PROJECT_NAME_ATTR = "org.eclipse.codewind.core.internal.projectNameAttr";
 	public static final String HOST_ATTR = "org.eclipse.codewind.core.internal.hostAttr";
 	public static final String DEBUG_PORT_ATTR = "org.eclipse.codewind.core.internal.debugPort";
+	public static final String PROJECT_ID_ATTR = "org.eclipse.codewind.core.internal.projectIdAttr";
+	public static final String CONNECTION_ID_ATTR = "org.eclipse.codewind.core.internal.connectionIdAttr";
 	
 	@Override
 	public void launch(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor)
@@ -89,7 +91,9 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 	
 	public static void setConfigAttributes(ILaunchConfigurationWorkingCopy config, CodewindApplication app) {
 		config.setAttribute(PROJECT_NAME_ATTR, app.name);
-		config.setAttribute(HOST_ATTR, app.host);
-		config.setAttribute(DEBUG_PORT_ATTR, app.getDebugPort());
+		config.setAttribute(HOST_ATTR, app.getDebugConnectHost());
+		config.setAttribute(DEBUG_PORT_ATTR, app.getDebugConnectPort());
+		config.setAttribute(PROJECT_ID_ATTR, app.projectID);
+		config.setAttribute(CONNECTION_ID_ATTR, app.connection.getConid());
 	}
 }

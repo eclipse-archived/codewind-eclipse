@@ -245,45 +245,8 @@ public class CodewindApplicationFactory {
 			// Get the pod information
 			app.setPodInfo(getStringValue(appJso, CoreConstants.KEY_POD_NAME), getStringValue(appJso, CoreConstants.KEY_NAMESPACE));
 			
-			// Get the ports if they are available
-			try {
-				JSONObject portsObj = null;
-				if (appJso.has(CoreConstants.KEY_PORTS) && (appJso.get(CoreConstants.KEY_PORTS) instanceof JSONObject)) {
-					portsObj = appJso.getJSONObject(CoreConstants.KEY_PORTS);
-				}
-	
-				int httpPortNum = -1;
-				if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_PORT)) {
-					String httpPort = portsObj.getString(CoreConstants.KEY_EXPOSED_PORT);
-					if (httpPort != null && !httpPort.isEmpty()) {
-						httpPortNum = CoreUtil.parsePort(httpPort);
-					}
-				}
-				app.setHttpPort(httpPortNum);
-				
-				String internalAppPort = null;
-				if (portsObj != null && portsObj.has(CoreConstants.KEY_INTERNAL_PORT)) {
-					internalAppPort = portsObj.getString(CoreConstants.KEY_INTERNAL_PORT);
-				}
-				app.setContainerAppPort(internalAppPort);
-
-				int debugPortNum = -1;
-				if (portsObj != null && portsObj.has(CoreConstants.KEY_EXPOSED_DEBUG_PORT)) {
-					String debugPort = portsObj.getString(CoreConstants.KEY_EXPOSED_DEBUG_PORT);
-					if (debugPort != null && !debugPort.isEmpty()) {
-						debugPortNum = CoreUtil.parsePort(debugPort);
-					}
-				}
-				app.setDebugPort(debugPortNum);
-				
-				String internalDebugPort = null;
-				if (portsObj != null && portsObj.has(CoreConstants.KEY_INTERNAL_DEBUG_PORT)) {
-					internalDebugPort = portsObj.getString(CoreConstants.KEY_INTERNAL_DEBUG_PORT);
-				}
-				app.setContainerDebugPort(internalDebugPort);
-			} catch (Exception e) {
-				Logger.logError("Failed to get the ports for application: " + app.name, e); //$NON-NLS-1$
-			}
+			// Set the ports
+			setPorts(appJso, app);
 			
 			// Set the context root
 			String contextRoot = null;
@@ -336,6 +299,33 @@ public class CodewindApplicationFactory {
 		} catch (Exception e) {
 			Logger.logError("An error occurred while updating the log information for project: " + app.name, e);
 		}
+	}
+	
+	public static void setPorts(JSONObject appJso, CodewindApplication app) {
+		try {
+			JSONObject portsObj = null;
+			if (appJso.has(CoreConstants.KEY_PORTS) && (appJso.get(CoreConstants.KEY_PORTS) instanceof JSONObject)) {
+				portsObj = appJso.getJSONObject(CoreConstants.KEY_PORTS);
+			}
+
+			app.setHttpPort(getPort(portsObj, CoreConstants.KEY_EXPOSED_PORT));
+			app.setContainerAppPort(getPort(portsObj, CoreConstants.KEY_INTERNAL_PORT));
+			app.setDebugPort(getPort(portsObj, CoreConstants.KEY_EXPOSED_DEBUG_PORT));
+			app.setContainerDebugPort(getPort(portsObj, CoreConstants.KEY_INTERNAL_DEBUG_PORT));
+		} catch (Exception e) {
+			Logger.logError("Failed to get the ports for application: " + app.name, e); //$NON-NLS-1$
+		}
+	}
+	
+	private static int getPort(JSONObject portsObj, String key) throws JSONException {
+		int portNum = -1;
+		if (portsObj != null && portsObj.has(key)) {
+			String port = portsObj.getString(key);
+			if (port != null && !port.isEmpty()) {
+				portNum = CoreUtil.parsePort(port);
+			}
+		}
+		return portNum;
 	}
 	
 	private static String getStringValue(JSONObject obj, String key) throws JSONException {

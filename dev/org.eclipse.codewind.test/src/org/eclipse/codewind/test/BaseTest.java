@@ -189,7 +189,7 @@ public abstract class BaseTest extends TestCase {
     
     protected void switchMode(CodewindApplication app, StartMode mode) throws Exception {
     	TestUtil.print("Switching mode for " + app.name + " to: " + mode);
-    	app.connection.requestProjectRestart(app, mode.startMode);
+    	ProjectUtil.restartProject(app.name, app.projectID, mode.startMode, app.connection.getConid(), new NullProgressMonitor());
     	// For Java builds the states can go by quickly so don't do an assert on this
     	CodewindUtil.waitForAppState(app, AppStatus.STOPPED, 30, 1);
     	assertTrue("App should be in started state instead of: " + app.getAppStatus(), CodewindUtil.waitForAppState(app, AppStatus.STARTED, 120, 1));

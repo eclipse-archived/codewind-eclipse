@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -59,8 +59,8 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 	
 	@Override
 	public boolean canAttachDebugger(CodewindApplication app) {
-		String host = app.host;
-		int debugPort = app.getDebugPort();
+		String host = app.getDebugConnectHost();
+		int debugPort = app.getDebugConnectPort();
 		
 		// If a debugger is already attached then the devtools url field will not be included in the result
 		try {
@@ -88,8 +88,8 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 		IPreferenceStore prefs = CodewindCorePlugin.getDefault().getPreferenceStore();
 		int debugTimeout = prefs.getInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY);
 		
-		String host = app.host;
-		int debugPort = app.getDebugPort();
+		String host = app.getDebugConnectHost();
+		int debugPort = app.getDebugConnectPort();
 		
 		URI uri = new URI("http", null, host, debugPort, DEBUG_INFO, null, null); //$NON-NLS-1$
 		

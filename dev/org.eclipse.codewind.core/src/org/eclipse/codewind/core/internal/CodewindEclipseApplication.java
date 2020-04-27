@@ -140,7 +140,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 		if (!canInitiateDebugSession()) {
 			if (debugPortNotify) {
 				debugPortNotify = false;
-				CoreUtil.openDialog(CoreUtil.DialogType.INFO, NLS.bind(Messages.DebugPortNotifyTitle, name), NLS.bind(Messages.DebugPortNotifyMsg, new String[] {name, String.valueOf(getDebugPort())}));
+				CoreUtil.openDialog(CoreUtil.DialogType.INFO, NLS.bind(Messages.DebugPortNotifyTitle, name), NLS.bind(Messages.DebugPortNotifyMsg, new String[] {name, String.valueOf(getDebugConnectPort())}));
 			}
 			return;
 		}
@@ -165,7 +165,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 						}
 					}
 				} catch (Exception e) {
-					Logger.logError("An error occurred while trying to launch the debugger for project: " + app.name); //$NON-NLS-1$
+					Logger.logError("An error occurred while trying to launch the debugger for project: " + app.name, e); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID,
 							NLS.bind(Messages.DebugLaunchError, app.name), e);
 				}
@@ -211,15 +211,15 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	}
 	
 	public void attachDebugger() {
-		// Remove any existing launch such as for a disconnected debug target
+		// Check to see if already attached
 		if (launch != null) {
 			IDebugTarget debugTarget = launch.getDebugTarget();
 			if (debugTarget != null && !debugTarget.isDisconnected()) {
 				// Already attached
 				return;
 			}
-			clearDebugger();
 		}
+		clearDebugger();
 		connectDebugger();
 	}
 	

@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.HttpUtil;
@@ -74,8 +75,8 @@ import org.json.JSONObject;
 public class RepositoryManagementComposite extends Composite {
 	
 	private final CodewindConnection connection;
-	private final List<RepositoryInfo> repoList;
-	private List<RepoEntry> repoEntries;
+	private final List<RepositoryInfo> repoList; // Original set of repos
+	private List<RepoEntry> repoEntries; // Current set of repos (content of the table)
 	private CheckboxTableViewer repoViewer;
 	private Button removeButton;
 	private Font boldFont;
@@ -380,18 +381,19 @@ public class RepositoryManagementComposite extends Composite {
 		
 		// Check for the differences between the original repo set and the new set
 		for (RepositoryInfo info : repoList) {
-			RepoEntry entry = getRepoEntry(info.getURL());
-			if (entry == null) {
-				// Remove the repository
+			Optional<RepoEntry> entry = getRepoEntry(info);
+			if (!entry.isPresent()) {
+				// The new set does not contain the original repo so remove it
 				try {
 					TemplateUtil.removeTemplateSource(info.getURL(), connection.getConid(), mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to remove repository: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtRemoveFailed, info.getURL()), e));
 				}
-			} else if (info.getEnabled() != entry.enabled) {
+			} else if (info.getEnabled() != entry.get().enabled) {
+				// The new set contains the original repo but the enablement does not match so update it
 				try {
-					TemplateUtil.enableTemplateSource(entry.enabled, info.getURL(), connection.getConid(), mon.split(25));
+					TemplateUtil.enableTemplateSource(entry.get().enabled, info.getURL(), connection.getConid(), mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to update repository: " + info.getURL(), e); //$NON-NLS-1$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.RepoMgmtUpdateFailed, info.getURL()), e));
@@ -402,9 +404,9 @@ public class RepositoryManagementComposite extends Composite {
 			}
 			mon.setWorkRemaining(100);
 		}
+		// Check for new entries (RepositoryInfo is null) and add them
 		for (RepoEntry entry : repoEntries) {
-			RepositoryInfo info = getRepoInfo(entry.url);
-			if (info == null) {
+			if (entry.info == null) {
 				// Add the repository
 				try {
 					TemplateUtil.addTemplateSource(entry.url, entry.name, entry.description, connection.getConid(), mon.split(25));
@@ -425,41 +427,31 @@ public class RepositoryManagementComposite extends Composite {
 	}
 	
 	public boolean hasChanges() {
+		// For all pre-existing repos, if not in the current list then they
+		// need to be removed. If in the current list but the enablement is
+		// different then they need to be updated.
 		for (RepositoryInfo info : repoList) {
-			RepoEntry entry = getRepoEntry(info.getURL());
-			if (entry == null) {
+			Optional<RepoEntry> entry = getRepoEntry(info);
+			if (!entry.isPresent()) {
 				return true;
-			} else if (info.getEnabled() != entry.enabled) {
+			} else if (info.getEnabled() != entry.get().enabled) {
 				return true;
 			}
 		}
+		// For all entries that are not pre-existing (RepositoryInfo is null),
+		// they need to be added.
 		for (RepoEntry entry : repoEntries) {
-			RepositoryInfo info = getRepoInfo(entry.url);
-			if (info == null) {
+			if (entry.info == null) {
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	private RepoEntry getRepoEntry(String url) {
-		for (RepoEntry entry : repoEntries) {
-			if (url.equals(entry.url)) {
-				return entry;
-			}
-		}
-		return null;
+	private Optional<RepoEntry> getRepoEntry(RepositoryInfo info) {
+		return repoEntries.stream().filter(entry -> entry.info == info).findFirst();
 	}
-	
-	private RepositoryInfo getRepoInfo(String url) {
-		for (RepositoryInfo info : repoList) {
-			if (url.equals(info.getURL())) {
-				return info;
-			}
-		}
-		return null;
-	}
-	
+
 	private static class RepoEntry {
 		public final String name;
 		public final String description;

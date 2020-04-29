@@ -12,14 +12,26 @@
 package org.eclipse.codewind.core.internal.cli;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.launch.UtilityLaunchConfigDelegate;
 import org.eclipse.codewind.core.internal.messages.Messages;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationType;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.osgi.util.NLS;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,6 +39,10 @@ import org.json.JSONObject;
 public class OtherUtil {
 
 	private static final String[] LOGLEVELS_CMD = new String[] {"loglevels"};
+	private static final String[] DIAGNOSTICS_CMD = new String[] {"diagnostics"};
+	
+	private static final String ECLIPSE_WORKSPACE_OPTION = "--eclipseWorkspaceDir";
+	private static final String PROJECTS_OPTION = "--projects";
 	
 	public static LogLevels getLoglevels(String connectionName, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.FetchLogLevelsTaskLabel, connectionName), 100);
@@ -63,5 +79,27 @@ public class OtherUtil {
 				process.destroy();
 			}
 		}
+	}
+	
+	public static ILaunch startDiagnostics(String connectionName, String conid, boolean includeEclipseWorkspace, boolean includeProjectInfo, IProgressMonitor monitor) throws IOException, CoreException {
+		List<String> options = new ArrayList<String>();
+		options.add(CLIUtil.CON_ID_OPTION);
+		options.add(conid);
+		if (includeEclipseWorkspace) {
+			options.add(ECLIPSE_WORKSPACE_OPTION);
+			options.add(ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString());
+		}
+		if (includeProjectInfo) {
+			options.add(PROJECTS_OPTION);
+		}
+		List<String> command = CLIUtil.getCWCTLCommandList(null, DIAGNOSTICS_CMD, options.toArray(new String[options.size()]), null);
+		
+		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+		ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(UtilityLaunchConfigDelegate.LAUNCH_CONFIG_ID);
+		ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, connectionName);
+		workingCopy.setAttribute(UtilityLaunchConfigDelegate.TITLE_ATTR, Messages.UtilGenDiagnosticsTitle);
+		workingCopy.setAttribute(UtilityLaunchConfigDelegate.COMMAND_ATTR, command);
+		ILaunchConfiguration launchConfig = workingCopy.doSave();
+		return launchConfig.launch(ILaunchManager.RUN_MODE, monitor);
 	}
 }

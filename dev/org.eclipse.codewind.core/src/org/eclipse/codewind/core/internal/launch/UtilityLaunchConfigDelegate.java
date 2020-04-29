@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.IProcess;
@@ -43,6 +44,7 @@ public class UtilityLaunchConfigDelegate extends LaunchConfigurationDelegate {
 			throws CoreException {
 
 		String[] command = new String[0];
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
 
 		try {
 			List<String> commandList = config.getAttribute(COMMAND_ATTR, (List<String>) null);
@@ -53,14 +55,17 @@ public class UtilityLaunchConfigDelegate extends LaunchConfigurationDelegate {
 			}
 			command = commandList.toArray(new String[commandList.size()]);
 			String title = config.getAttribute(TITLE_ATTR, (String) null);
+			mon.worked(30);
 
 			ProcessBuilder builder = new ProcessBuilder(command);
 			Process p = builder.start();
+			mon.worked(30);
 
 			Map<String, String> attributes = new HashMap<String, String>();
 			attributes.put(IProcess.ATTR_PROCESS_TYPE, "codewind.utility");
 			IProcess process = new RuntimeProcess(launch, p, title, attributes);
 			launch.addProcess(process);
+			mon.worked(40);
 		} catch (Exception e) {
 			monitor.setCanceled(true);
 			DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);

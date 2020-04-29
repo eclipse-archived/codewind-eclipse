@@ -36,6 +36,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 	private ManageReposAction manageReposAction;
 	private LocalDoubleClickAction doubleClickAction;
 	private LogLevelAction logLevelAction;
+	private DiagnosticsAction diagnosticsAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
@@ -49,6 +50,7 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
         startStopAction = new InstallerAction(ActionType.START_STOP, selProvider);
         doubleClickAction = new LocalDoubleClickAction(selProvider);
         logLevelAction = new LogLevelAction(selProvider);
+        diagnosticsAction = new DiagnosticsAction(selProvider);
     }
     
 	@Override
@@ -69,9 +71,17 @@ public class LocalConnectionActionProvider extends CommonActionProvider {
 		if (status.isInstalled()) {
 			menu.add(startStopAction);
 		}
+		boolean supportSeparator = false;
 		if (logLevelAction.showAction()) {
 			menu.add(new Separator());
+			supportSeparator = true;
 			menu.add(logLevelAction);
+		}
+		if (diagnosticsAction.showAction()) {
+			if (!supportSeparator) {
+				menu.add(new Separator());
+			}
+			menu.add(diagnosticsAction);
 		}
 	}
 

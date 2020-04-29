@@ -116,12 +116,13 @@ public class Messages extends NLS {
 	public static String ErrorNoKubectlMsg;
 	
 	public static String UtilityLaunchError;
+	public static String UtilGenDiagnosticsTitle;
 	
 	public static String PortForwardTitle;
 	public static String PortForwardTerminateTitle;
 	public static String PortForwardTerminateMsg;
 	public static String PortForwardTerminateToggleMsg;
-
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

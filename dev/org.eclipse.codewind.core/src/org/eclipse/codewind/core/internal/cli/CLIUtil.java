@@ -81,6 +81,18 @@ public class CLIUtil {
 	}
 	
 	public static Process runCWCTL(String[] globalOptions, String[] cmd, String[] options, String[] args) throws IOException {
+		String[] command = getCWCTLCommand(globalOptions, cmd, options, args);
+		ProcessBuilder builder = new ProcessBuilder(command);
+		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
+			String pathVar = System.getenv("PATH");
+			pathVar = "/usr/local/bin:" + pathVar;
+			Map<String, String> env = builder.environment();
+			env.put("PATH", pathVar);
+		}
+		return builder.start();
+	}
+	
+	public static List<String> getCWCTLCommandList(String[] globalOptions, String[] cmd, String[] options, String[] args) throws IOException {
 		// Make sure the executables are installed
 		for (int i=0; i< cliInfos.length; i++) {
 			if (cliInfos[i] != null)
@@ -93,15 +105,12 @@ public class CLIUtil {
 		addOptions(cmdList, cmd);
 		addOptions(cmdList, options);
 		addOptions(cmdList, args);
-		String[] command = cmdList.toArray(new String[cmdList.size()]);
-		ProcessBuilder builder = new ProcessBuilder(command);
-		if (PlatformUtil.getOS() == PlatformUtil.OperatingSystem.MAC) {
-			String pathVar = System.getenv("PATH");
-			pathVar = "/usr/local/bin:" + pathVar;
-			Map<String, String> env = builder.environment();
-			env.put("PATH", pathVar);
-		}
-		return builder.start();
+		return cmdList;
+	}
+	
+	public static String[] getCWCTLCommand(String[] globalOptions, String[] cmd, String[] options, String[] args) throws IOException {
+		List<String> cmdList = getCWCTLCommandList(globalOptions, cmd, options, args);
+		return cmdList.toArray(new String[cmdList.size()]);
 	}
 	
 	private static void addOptions(List<String> cmdList, String[] options) {

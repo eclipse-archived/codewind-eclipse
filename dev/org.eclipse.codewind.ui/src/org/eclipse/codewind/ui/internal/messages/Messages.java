@@ -611,6 +611,19 @@ public class Messages extends NLS {
 	public static String WelcomePageLearnExtensionsOpenAPITooltip;
 	public static String WelcomePageLearnExtensionsDockerLink;
 	public static String WelcomePageLearnExtensionsDockerTooltip;
+	
+	public static String DiagnosticsActionLabel;
+	public static String DiagnosticsActionJobLabel;
+	public static String DiagnosticsErrorMsg;
+	public static String DiagnosticsDialogShell;
+	public static String DiagnosticsDialogTitle;
+	public static String DiagnosticsDialogMsg;
+	public static String DiagnosticsDialogAdditionalInfoText;
+	public static String DiagnosticsDialogAdditionalInfoGroup;
+	public static String DiagnosticsDialogEclipseWorkspaceButton;
+	public static String DiagnosticsDialogProjectInfoButton;
+	public static String DiagnosticsDialogSelectAllButton;
+	public static String DiagnosticsDialogClearAllButton;
 
 	static {
 		// initialize resource bundle

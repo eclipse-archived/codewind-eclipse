@@ -73,10 +73,8 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 			if (debugTarget != null) {
 				Logger.log("Debugger connect success. Application should go into Debugging state soon."); //$NON-NLS-1$
 				launch.addDebugTarget(debugTarget);
-			}
-			else {
+			} else if (!monitor.isCanceled()) {
 				Logger.logError("Debugger connect failure"); //$NON-NLS-1$
-
 				CoreUtil.openDialog(true,
 						Messages.DebuggerConnectFailureDialogTitle,
 						Messages.DebuggerConnectFailureDialogMsg);

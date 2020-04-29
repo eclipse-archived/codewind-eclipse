@@ -121,16 +121,6 @@ public class CodewindEclipseApplication extends CodewindApplication {
 					Logger.logError("An error occurred while disconnecting the debugger for project: " + name, e); //$NON-NLS-1$
 				}
 			}
-			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-			launchManager.removeLaunch(launch);
-			ILaunchConfiguration launchConfig = launch.getLaunchConfiguration();
-			if (launchConfig != null) {
-				try {
-					launchConfig.delete();
-				} catch (CoreException e) {
-					Logger.logError("An error occurred while deleting the launch configuration for project: " + name, e); //$NON-NLS-1$
-				}
-			}
 		}
 		setLaunch(null);
 	}

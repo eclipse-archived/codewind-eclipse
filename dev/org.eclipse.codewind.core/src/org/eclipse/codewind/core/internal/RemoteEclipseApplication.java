@@ -49,14 +49,17 @@ public class RemoteEclipseApplication extends CodewindEclipseApplication {
 		try {
 			debugPFInfo = KubeUtil.startPortForward(this, getContainerDebugPort());
 		} catch (Exception e) {
+			Logger.logError("An error occurred trying to port forward the debug port for application: " + name, e); //$NON-NLS-1$
 			CoreUtil.openDialog(CoreUtil.DialogType.ERROR, Messages.RemoteDebugErrorTitle, NLS.bind(Messages.RemoteDebugPortForwardErrorWithMsg, name, e.getMessage()));
 			return;
 		}
 		if (debugPFInfo == null || debugPFInfo.localPort == -1) {
+			Logger.logError("Port forwarding of the debug port returned -1 for the local port for application: " + name); //$NON-NLS-1$
 			CoreUtil.openDialog(CoreUtil.DialogType.ERROR, Messages.RemoteDebugErrorTitle, NLS.bind(Messages.RemoteDebugPortForwardError, name));
 			debugPFInfo = null;
 			return;
 		}
+		Logger.log("Port forwarding was successful for the debug port of the " + name + " application: " + debugPFInfo.localPort + ":" + debugPFInfo.remotePort); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		CoreUtil.updateApplication(this);
 		super.connectDebugger();
 	}
@@ -74,6 +77,7 @@ public class RemoteEclipseApplication extends CodewindEclipseApplication {
 			PortForwardInfo info = debugPFInfo;
 			debugPFInfo = null;
 			try {
+				Logger.log("Ending port forwarding for the " + name + " application: " + debugPFInfo.localPort + ":" + debugPFInfo.remotePort); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				KubeUtil.endPortForward(this, info);
 			} catch (Exception e) {
 				Logger.logError("An error occurred trying to terminate the debug port forward for: " + name, e); //$NON-NLS-1$

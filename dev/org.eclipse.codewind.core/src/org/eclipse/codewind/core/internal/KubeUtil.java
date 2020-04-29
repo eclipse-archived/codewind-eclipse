@@ -101,11 +101,6 @@ public class KubeUtil {
 			if (!pfInfo.launch.isTerminated()) {
 				pfInfo.launch.terminate();
 			}
-			DebugPlugin.getDefault().getLaunchManager().removeLaunch(pfInfo.launch);
-			ILaunchConfiguration launchConfig = pfInfo.launch.getLaunchConfiguration();
-			if (launchConfig != null) {
-				launchConfig.delete();
-			}
 		}
 	}
 	

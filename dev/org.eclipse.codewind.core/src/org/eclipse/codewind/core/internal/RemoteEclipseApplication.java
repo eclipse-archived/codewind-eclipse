@@ -73,11 +73,12 @@ public class RemoteEclipseApplication extends CodewindEclipseApplication {
 	
 	private void cleanupPortForwarding() {
 		if (debugPFInfo != null) {
+			Logger.log("Ending port forwarding for the " + name + " application: " + debugPFInfo.localPort + ":" + debugPFInfo.remotePort); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			
 			// Clear out the port forwarding info to indicate that it was ended internally
 			PortForwardInfo info = debugPFInfo;
 			debugPFInfo = null;
 			try {
-				Logger.log("Ending port forwarding for the " + name + " application: " + debugPFInfo.localPort + ":" + debugPFInfo.remotePort); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				KubeUtil.endPortForward(this, info);
 			} catch (Exception e) {
 				Logger.logError("An error occurred trying to terminate the debug port forward for: " + name, e); //$NON-NLS-1$

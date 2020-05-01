@@ -64,7 +64,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	public static final String QUICK_FIX_DESCRIPTION = "quickFixDescription";
 	
 	// in seconds
-	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 3;
+	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 10;
 	
 	// New consoles
 	private Set<SocketConsole> activeConsoles = new HashSet<SocketConsole>();

@@ -23,6 +23,8 @@ public class Messages extends NLS {
 	public static String ConnectionManager_RestoreJobLabel;
 	public static String ConnectionManager_RestoreGeneralError;
 	public static String ConnectionManager_RestoreConnError;
+	public static String ConnectionManager_RefreshGeneralError;
+	public static String ConnectionManager_CreateConnError;
 	
 	public static String Connection_JobLabel;
 	public static String Connection_JobError;

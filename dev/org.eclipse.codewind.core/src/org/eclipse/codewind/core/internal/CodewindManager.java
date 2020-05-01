@@ -18,6 +18,7 @@ import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.SubMonitor;
 
 public class CodewindManager {
@@ -100,13 +101,14 @@ public class CodewindManager {
 		return CodewindConnection.isSupportedVersion(version);
 	}
 	
-	public void refresh(IProgressMonitor monitor) {
-		refreshInstallStatus(monitor);
+	public IStatus refresh(IProgressMonitor monitor) {
+		IStatus status = CodewindConnectionManager.refreshConnections(monitor);
 		for (CodewindConnection conn : CodewindConnectionManager.activeConnections()) {
 			if (conn.isConnected()) {
 				conn.refreshApps(null);
 			}
 		}
+		return status;
 	}
 	
 	public boolean hasActiveApplications() {

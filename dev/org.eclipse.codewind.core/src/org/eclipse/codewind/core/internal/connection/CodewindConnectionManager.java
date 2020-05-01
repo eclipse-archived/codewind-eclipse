@@ -173,6 +173,52 @@ public class CodewindConnectionManager {
 		}
 	}
 	
+	public static IStatus refreshConnections(IProgressMonitor monitor) {
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
+		CodewindManager.getManager().refreshInstallStatus(mon.split(20));
+		try {
+			List<ConnectionInfo> infos = ConnectionUtil.listConnections(mon.split(20));
+			MultiStatus multiStatus = new MultiStatus(CodewindCorePlugin.PLUGIN_ID, 0, null, null);
+			if (infos.size() > 1) {
+				mon.setWorkRemaining(100);
+			}
+			// Look for new connections to add
+			for (ConnectionInfo info : infos) {
+				try {
+					if (!info.isLocal() && getConnectionById(info.getId()) == null) {
+						instance().createConnection(info, mon.split(50));
+						if (mon.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						mon.setWorkRemaining(100);
+					}
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to create the " + info.getLabel() + " connection at: " + info.getURL()); //$NON-NLS-1$ //$NON-NLS-2$
+					IStatus status = new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.ConnectionManager_CreateConnError, new String[] {info.getLabel(), info.getURL()}), e);
+					multiStatus.add(status);
+				} finally {
+					CoreUtil.updateAll();
+				}
+			}
+			// Look for connections that have been removed
+			for (CodewindConnection conn : activeRemoteConnections()) {
+				mon.setWorkRemaining(10);
+				if (!infos.stream().filter(info -> conn.getConid().equals(info.getId())).findFirst().isPresent()) {
+					instance().connections.remove(conn);
+					CoreUtil.updateAll();
+					if (mon.isCanceled()) {
+						return Status.CANCEL_STATUS;
+					}
+					mon.worked(5);
+				}
+			}
+			return multiStatus;
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to refresh the connections", e); //$NON-NLS-1$
+			return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, Messages.ConnectionManager_RefreshGeneralError, e);
+		}
+	}
+	
 	private void restoreConnections() {
 		Job job = new Job(Messages.ConnectionManager_RestoreJobLabel) {
 			@Override
@@ -199,21 +245,7 @@ public class CodewindConnectionManager {
 					for (ConnectionInfo info : infos) {
 						try {
 							if (!info.isLocal()) {
-								URI uri = new URI(info.getURL());
-								AuthToken auth = null;
-								try {
-									auth = AuthUtil.getAuthToken(info.getUsername(), info.getId(), mon.split(20));
-								} catch (Exception e) {
-									Logger.logError("An error occurred trying to get the authorization token for: " + info.getId(), e); //$NON-NLS-1$
-								}
-								if (mon.isCanceled()) {
-									return Status.CANCEL_STATUS;
-								}
-								CodewindConnection conn = CodewindObjectFactory.createRemoteConnection(info.getLabel(), uri, info.getId(), info.getUsername(), auth);
-								connections.add(conn);
-								if (auth != null) {
-									conn.connect(mon.split(80));
-								}
+								createConnection(info, mon.split(100));
 								if (mon.isCanceled()) {
 									return Status.CANCEL_STATUS;
 								}
@@ -238,5 +270,24 @@ public class CodewindConnectionManager {
 			}
 		};
 		job.schedule();
+	}
+	
+	private void createConnection(ConnectionInfo info, IProgressMonitor monitor) throws Exception {
+		SubMonitor mon = SubMonitor.convert(monitor, 100);
+		URI uri = new URI(info.getURL());
+		AuthToken auth = null;
+		try {
+			auth = AuthUtil.getAuthToken(info.getUsername(), info.getId(), mon.split(20));
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to get the authorization token for: " + info.getId(), e); //$NON-NLS-1$
+		}
+		if (mon.isCanceled()) {
+			return;
+		}
+		CodewindConnection conn = CodewindObjectFactory.createRemoteConnection(info.getLabel(), uri, info.getId(), info.getUsername(), auth);
+		connections.add(conn);
+		if (auth != null) {
+			conn.connect(mon.split(80));
+		}
 	}
 }

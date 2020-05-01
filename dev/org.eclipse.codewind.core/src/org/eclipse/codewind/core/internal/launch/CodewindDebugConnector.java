@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -48,23 +48,23 @@ public class CodewindDebugConnector {
 		String host = config.getAttribute(CodewindLaunchConfigDelegate.HOST_ATTR, (String)null);
 		int debugPort = config.getAttribute(CodewindLaunchConfigDelegate.DEBUG_PORT_ATTR, -1);
 		if (projectName == null || host == null || debugPort <= 0) {
-        	String msg = "The launch configuration did not contain the required attributes: " + config.getName();		// $NON-NLS-1$
+        	String msg = "The launch configuration did not contain the required attributes: " + config.getName(); // $NON-NLS-1$
             Logger.logError(msg);
-            return null;
+            throw new CoreException(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, msg));
         }
 		
-    	Logger.log("Debugging on port " + debugPort); //$NON-NLS-1$
+		Logger.log("Debugging on port " + debugPort); //$NON-NLS-1$
 
 		int timeout = CodewindCorePlugin.getDefault().getPreferenceStore()
-				.getInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY)
-				* 1000;
-		Logger.log("Debugger connect timeout is " + timeout + "ms"); //$NON-NLS-1$ //$NON-NLS-2$
+				.getInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY);
+		Logger.log("Debugger connect timeout is " + timeout + "s"); //$NON-NLS-1$ //$NON-NLS-2$
 
 		// Now prepare the Debug Connector, and try to attach it to the application
 		AttachingConnector connector = LaunchUtilities.getAttachingConnector();
 		if (connector == null) {
-			Logger.logError("Could not create debug connector"); //$NON-NLS-1$
-			return null;
+			String msg = "Could not create debug connector for launch configuration: " + config.getName(); //$NON-NLS-1$
+			Logger.logError(msg);
+			throw new CoreException(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, msg));
 		}
 
 		Map<String, Connector.Argument> connectorArgs = connector.defaultArguments();

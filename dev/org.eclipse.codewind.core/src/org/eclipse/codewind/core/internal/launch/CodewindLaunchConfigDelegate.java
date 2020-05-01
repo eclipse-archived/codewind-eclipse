@@ -11,11 +11,9 @@
 
 package org.eclipse.codewind.core.internal.launch;
 
-import java.io.IOException;
-
-import org.eclipse.codewind.core.internal.Logger;
-import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CoreUtil;
+import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -26,9 +24,6 @@ import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate;
 
-import com.sun.jdi.connect.IllegalConnectorArgumentsException;
-
-@SuppressWarnings("restriction")
 public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfigurationDelegate {
 	
 	public static final String LAUNCH_CONFIG_ID = "org.eclipse.codewind.core.internal.launchConfigurationType";
@@ -45,16 +40,19 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 
 		try {
 			launchInner(config, launchMode, launch, monitor);
-		}
-		catch(CoreException e) {
+		} catch (Exception e) {
+			String msg = "An error occurred trying to connect the debugger for launch configuration: " + config.getName(); // $NON-NLS-1$
+			Logger.logError(msg, e);
 			monitor.setCanceled(true);
 			getLaunchManager().removeLaunch(launch);
-			throw e;
+			if (e instanceof CoreException) {
+				throw (CoreException) e;
+			}
+			abort(msg, e, IStatus.ERROR);  
 		}
 	}
 
-	private void launchInner(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor)
-			throws CoreException {
+	private void launchInner(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor) throws Exception {
 		
 		String projectName = config.getAttribute(PROJECT_NAME_ATTR, (String)null);
 		String host = config.getAttribute(HOST_ATTR, (String)null);
@@ -67,21 +65,17 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 		
 		setDefaultSourceLocator(launch, config);
 		
-		Logger.log("Connecting the debugger"); //$NON-NLS-1$
-		try {
-			IDebugTarget debugTarget = CodewindDebugConnector.connectDebugger(launch, monitor);
-			if (debugTarget != null) {
-				Logger.log("Debugger connect success. Application should go into Debugging state soon."); //$NON-NLS-1$
-				launch.addDebugTarget(debugTarget);
-			} else if (!monitor.isCanceled()) {
-				Logger.logError("Debugger connect failure"); //$NON-NLS-1$
-				CoreUtil.openDialog(true,
-						Messages.DebuggerConnectFailureDialogTitle,
-						Messages.DebuggerConnectFailureDialogMsg);
-			}
-		} catch (IllegalConnectorArgumentsException | CoreException | IOException e) {
-			Logger.logError(e);
-
+		Logger.log("Connecting the debugger for project: " + projectName); //$NON-NLS-1$
+		IDebugTarget debugTarget = CodewindDebugConnector.connectDebugger(launch, monitor);
+		if (debugTarget != null) {
+			Logger.log("Debugger connect success. Application should go into Debugging state soon."); //$NON-NLS-1$
+			launch.addDebugTarget(debugTarget);
+		} else if (!monitor.isCanceled()) {
+			Logger.logError("Debugger connect timeout for project: " + projectName); //$NON-NLS-1$
+			CoreUtil.openDialog(true,
+					Messages.DebuggerConnectFailureDialogTitle,
+					Messages.DebuggerConnectFailureDialogMsg);
+			getLaunchManager().removeLaunch(launch);
 		}
 
         monitor.done();

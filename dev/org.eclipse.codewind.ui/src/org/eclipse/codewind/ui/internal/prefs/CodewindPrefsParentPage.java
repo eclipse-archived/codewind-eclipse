@@ -54,10 +54,8 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	
 	private static IPreferenceStore prefs;
 
-	private Text installTimeoutText;
-	private Text startTimeoutText;
-	private Text stopTimeoutText;
-	private Text uninstallTimeoutText;
+	private Button autoOpenOverviewButton, supportFeaturesButton;
+	private Text installTimeoutText, uninstallTimeoutText, startTimeoutText, stopTimeoutText;
 	private Text debugTimeoutText;
 	private Combo webBrowserCombo;
 	private Button[] stopAppsButtons = new Button[3];
@@ -129,29 +127,15 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	    generalGroup.setLayout(layout);
 	    generalGroup.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL));
 	    
-	    Button autoOpenOverviewButton = new Button(generalGroup, SWT.CHECK);
+	    autoOpenOverviewButton = new Button(generalGroup, SWT.CHECK);
 	    autoOpenOverviewButton.setText(Messages.PrefsParentPage_AutoOpenOverviewButton);
 	    autoOpenOverviewButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
 	    autoOpenOverviewButton.setSelection(prefs.getBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE));
 	    
-	    autoOpenOverviewButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				prefs.setValue(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE, autoOpenOverviewButton.getSelection());
-			}
-		});
-	    
-	    Button supportFeaturesButton = new Button(generalGroup, SWT.CHECK);
+	    supportFeaturesButton = new Button(generalGroup, SWT.CHECK);
 	    supportFeaturesButton.setText(Messages.PrefsParentPage_EnableSupportFeatures);
 	    supportFeaturesButton.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false));
 	    supportFeaturesButton.setSelection(prefs.getBoolean(CodewindCorePlugin.ENABLE_SUPPORT_FEATURES));
-	    
-	    supportFeaturesButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				prefs.setValue(CodewindCorePlugin.ENABLE_SUPPORT_FEATURES, supportFeaturesButton.getSelection());
-			}
-		});
 	    
 	    Group installGroup = new Group(composite, SWT.NONE);
 	    installGroup.setText(Messages.PrefsParentPage_StartupShutdownGroup);
@@ -311,6 +295,9 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 			}
 		}
 		
+		prefs.setValue(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE, autoOpenOverviewButton.getSelection());
+		prefs.setValue(CodewindCorePlugin.ENABLE_SUPPORT_FEATURES, supportFeaturesButton.getSelection());
+		
 		prefs.setValue(CodewindCorePlugin.CW_INSTALL_TIMEOUT, Integer.parseInt(installTimeoutText.getText().trim()));
 		prefs.setValue(CodewindCorePlugin.CW_UNINSTALL_TIMEOUT, Integer.parseInt(uninstallTimeoutText.getText().trim()));
 		prefs.setValue(CodewindCorePlugin.CW_START_TIMEOUT, Integer.parseInt(startTimeoutText.getText().trim()));
@@ -345,6 +332,15 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		if (CodewindInstall.ENABLE_STOP_APPS_OPTION) {
 			setStopAppsSelection(prefs.getDefaultString(InstallUtil.STOP_APP_CONTAINERS_PREFSKEY));
 		}
+		
+		autoOpenOverviewButton.setSelection(prefs.getDefaultBoolean(CodewindCorePlugin.AUTO_OPEN_OVERVIEW_PAGE));
+		supportFeaturesButton.setSelection(prefs.getDefaultBoolean(CodewindCorePlugin.ENABLE_SUPPORT_FEATURES));
+		
+		installTimeoutText.setText(Integer.toString(prefs.getDefaultInt(CodewindCorePlugin.CW_INSTALL_TIMEOUT)));
+		uninstallTimeoutText.setText(Integer.toString(prefs.getDefaultInt(CodewindCorePlugin.CW_UNINSTALL_TIMEOUT)));
+		startTimeoutText.setText(Integer.toString(prefs.getDefaultInt(CodewindCorePlugin.CW_START_TIMEOUT)));
+		stopTimeoutText.setText(Integer.toString(prefs.getDefaultInt(CodewindCorePlugin.CW_STOP_TIMEOUT)));
+		
 		debugTimeoutText.setText("" + 	//$NON-NLS-1$
 				prefs.getDefaultInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
 		webBrowserCombo.select(0);

@@ -23,6 +23,7 @@ Export-Package: io.socket.client,
  org.eclipse.codewind.core.internal.connection,
  org.eclipse.codewind.core.internal.console,
  org.eclipse.codewind.core.internal.constants,
+ org.eclipse.codewind.core.internal.launch,
  org.json
 Import-Package: org.eclipse.codewind.filewatchers.core,
  org.eclipse.codewind.filewatchers.eclipse

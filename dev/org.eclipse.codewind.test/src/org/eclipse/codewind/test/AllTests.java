@@ -23,9 +23,11 @@ import org.junit.runners.Suite;
 	SpringAutoBuildTest.class,
 	LibertyDebugTest.class,
 	SpringDebugTest.class,
-	AppsodyJavaMicroprofileAutoBuildTest.class,
-	AppsodyJavaSpringAutoBuildTest.class,
-	AppsodyNodeExpressAutoBuildTest.class
+	AppsodyOpenLibertyAutoBuildTest.class,
+	AppsodySpringAutoBuildTest.class,
+	AppsodyNodeExpressAutoBuildTest.class,
+	AppsodyOpenLibertyDebugTest.class,
+	AppsodySpringDebugTest.class
 })
 
 public class AllTests {

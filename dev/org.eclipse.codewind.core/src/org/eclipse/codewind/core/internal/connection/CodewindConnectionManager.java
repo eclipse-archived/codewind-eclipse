@@ -12,6 +12,9 @@
 package org.eclipse.codewind.core.internal.connection;
 
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -32,10 +35,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.osgi.util.NLS;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Singleton class to keep track of the list of current Codewind connections,
@@ -43,7 +49,10 @@ import org.eclipse.osgi.util.NLS;
  */
 public class CodewindConnectionManager {
 	
-	public static final String RESTORE_CONNECTIONS_FAMILY = CodewindCorePlugin.PLUGIN_ID + ".restoreConnectionsFamily";;
+	public static final String RESTORE_CONNECTIONS_FAMILY = CodewindCorePlugin.PLUGIN_ID + ".restoreConnectionsFamily";
+	
+	public static final String CONNECTIONS_DATA_FILE = "connectionsdata.json";
+	public static final String IS_CONNECTED_KEY = "isconnected";
 	
 	// Singleton instance. Never access this directly. Use the instance() method.
 	private static CodewindConnectionManager instance;
@@ -152,19 +161,23 @@ public class CodewindConnectionManager {
 		CoreUtil.updateAll();
 		return removeResult;
 	}
-
-	/**
-	 * Deletes all of the instance's connections. Called when the plugin is stopped.
-	 */
-	public synchronized static void clear() {
+	
+	public synchronized static void shutdown() {
 		if (instance == null) {
 			// Never initialized so just return
 			return;
 		}
-		
-		Logger.log("Clearing " + instance().connections.size() + " connections"); //$NON-NLS-1$ //$NON-NLS-2$
+		instance().saveConnectionData();
+		instance().clear();
+	}
 
-		Iterator<CodewindConnection> it = instance().connections.iterator();
+	/**
+	 * Deletes all of the connections. Called when the plugin is stopped.
+	 */
+	private synchronized void clear() {
+		Logger.log("Clearing " + connections.size() + " connections"); //$NON-NLS-1$ //$NON-NLS-2$
+
+		Iterator<CodewindConnection> it = connections.iterator();
 
 		while(it.hasNext()) {
 			CodewindConnection connection = it.next();
@@ -186,7 +199,7 @@ public class CodewindConnectionManager {
 			for (ConnectionInfo info : infos) {
 				try {
 					if (!info.isLocal() && getConnectionById(info.getId()) == null) {
-						instance().createConnection(info, mon.split(50));
+						instance().createConnection(info, true, mon.split(50));
 						if (mon.isCanceled()) {
 							return Status.CANCEL_STATUS;
 						}
@@ -239,13 +252,14 @@ public class CodewindConnectionManager {
 				try {
 					List<ConnectionInfo> infos = ConnectionUtil.listConnections(mon.split(20));
 					MultiStatus multiStatus = new MultiStatus(CodewindCorePlugin.PLUGIN_ID, 0, null, null);
+					ConnectionData connData = getConnectionData();
 					if (infos.size() > 1) {
 						mon.setWorkRemaining(100 * (infos.size() - 1));
 					}
 					for (ConnectionInfo info : infos) {
 						try {
 							if (!info.isLocal()) {
-								createConnection(info, mon.split(100));
+								createConnection(info, connData.isConnected(info.getId()), mon.split(100));
 								if (mon.isCanceled()) {
 									return Status.CANCEL_STATUS;
 								}
@@ -272,7 +286,7 @@ public class CodewindConnectionManager {
 		job.schedule();
 	}
 	
-	private void createConnection(ConnectionInfo info, IProgressMonitor monitor) throws Exception {
+	private void createConnection(ConnectionInfo info, boolean connect, IProgressMonitor monitor) throws Exception {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
 		URI uri = new URI(info.getURL());
 		AuthToken auth = null;
@@ -286,8 +300,65 @@ public class CodewindConnectionManager {
 		}
 		CodewindConnection conn = CodewindObjectFactory.createRemoteConnection(info.getLabel(), uri, info.getId(), info.getUsername(), auth);
 		connections.add(conn);
-		if (auth != null) {
+		if (connect && auth != null) {
 			conn.connect(mon.split(80));
+		}
+	}
+	
+	private synchronized void saveConnectionData() {
+		Logger.log("Saving connection data to plugin state location file: " + CONNECTIONS_DATA_FILE); //$NON-NLS-1$
+		try {
+			JSONObject jsonObj = new JSONObject();
+			for (CodewindConnection conn : activeRemoteConnections()) {
+				JSONObject connObj = new JSONObject();
+				connObj.put(IS_CONNECTED_KEY, conn.isConnected());
+				jsonObj.put(conn.getConid(), connObj);
+			}
+			Files.write(getConnectionDataPath(), jsonObj.toString().getBytes());
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to save the connection data", e); //$NON-NLS-1$
+		}
+	}
+	
+	private ConnectionData getConnectionData() {
+		Logger.log("Reading connection data from plugin state location file: " + CONNECTIONS_DATA_FILE); //$NON-NLS-1$
+		try {
+			Path connDataPath = getConnectionDataPath();
+			if (connDataPath.toFile().exists()) {
+				String jsonString = new String(Files.readAllBytes(connDataPath));
+				JSONObject jsonObj = new JSONObject(jsonString);
+				return new ConnectionData(jsonObj);
+			}
+		} catch (Exception e) {
+			Logger.logError("An error occurred trying to read the connection data", e); //$NON-NLS-1$
+		}
+		return new ConnectionData(new JSONObject());
+	}
+	
+	private Path getConnectionDataPath() {
+		return Paths.get(Platform.getStateLocation(CodewindCorePlugin.getDefault().getBundle()).append(CONNECTIONS_DATA_FILE).toOSString());
+	}
+	
+	private class ConnectionData {
+		public final JSONObject jsonObj;
+		
+		public ConnectionData(JSONObject jsonObj) {
+			this.jsonObj = jsonObj;
+		}
+		
+		public boolean isConnected(String conid) {
+			try {
+				if (jsonObj.has(conid)) {
+					JSONObject connObj = jsonObj.getJSONObject(conid);
+					if (connObj.has(IS_CONNECTED_KEY)) {
+						return connObj.getBoolean(IS_CONNECTED_KEY);
+					}
+				}
+			} catch (JSONException e) {
+				Logger.logError("The format of the connection data file is not valid", e); //$NON-NLS-1$
+			}
+			// Default to connected
+			return true;
 		}
 	}
 }

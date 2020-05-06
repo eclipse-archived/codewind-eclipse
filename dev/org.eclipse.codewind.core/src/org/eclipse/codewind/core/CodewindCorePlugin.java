@@ -100,7 +100,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(launchListener);
-		CodewindConnectionManager.clear();
+		CodewindConnectionManager.shutdown();
 		plugin = null;
 		super.stop(context);
 	}

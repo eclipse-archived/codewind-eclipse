@@ -373,7 +373,17 @@ public class JavaNioWatchService implements IPlatformWatchService {
 
 					// Context for directory entry event is the file name of entry
 					Path name = ((WatchEvent<Path>) event).context();
+					if (name == null) {
+						log.logInfo("Watch event of kind '" + (kind != null ? kind.name() : "N/A")
+								+ "' did not return a path, for " + projectToWatch.getProjectId());
+						continue;
+					}
 					Path child = dir.resolve(name);
+					if (child == null) {
+						log.logInfo("Watch event of name '" + name + "' could not resolve to a path, for "
+								+ projectToWatch.getProjectId());
+						continue;
+					}
 
 					boolean isDirectory = Files.isDirectory(child);
 

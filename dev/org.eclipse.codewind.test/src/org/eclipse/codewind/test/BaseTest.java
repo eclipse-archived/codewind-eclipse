@@ -36,6 +36,7 @@ import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.StartMode;
+import org.eclipse.codewind.core.internal.launch.CodewindLaunchConfigDelegate;
 import org.eclipse.codewind.test.util.CodewindUtil;
 import org.eclipse.codewind.test.util.Condition;
 import org.eclipse.codewind.test.util.ImportUtil;
@@ -54,7 +55,9 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.IDebugTarget;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorReference;
@@ -81,6 +84,7 @@ public abstract class BaseTest extends TestCase {
 	protected static final String PYTHON_ID = "pythonTemplate";
 	protected static final String SPRING_JAVA_ID = "springJavaTemplate";
 	protected static final String APPSODY_JAVA_MICROPROFILE_ID = "java-microprofile.*default";
+	protected static final String APPSODY_OPEN_LIBERTY_ID = "java-openliberty.*default";
 	protected static final String APPSODY_NODE_EXPRESS_ID = "nodejs-express.*simple";
 	protected static final String APPSODY_JAVA_SPRING_ID = "spring-boot2.*default";
 
@@ -176,14 +180,17 @@ public abstract class BaseTest extends TestCase {
     		Thread.sleep(1000);
     	}
     	assertTrue("App is in " + app.getStartMode() + " when it should be in " + mode + " mode.", app.getStartMode() == mode);
-    	ILaunch launch = ((CodewindEclipseApplication)app).getLaunch();
+    	ILaunch launch = getLaunch(app);
     	if (StartMode.DEBUG_MODES.contains(mode)) {
     		assertNotNull("There should be a launch for the app", launch);
         	IDebugTarget debugTarget = launch.getDebugTarget();
 	    	assertNotNull("The launch should have a debug target", debugTarget);
 	    	assertTrue("The debug target should have threads", debugTarget.hasThreads());
     	} else {
-    		assertNull("There should be no launch when in run mode", launch);
+    		// There could be a launch if the app was previously in debug mode, but it should be terminated
+    		if (launch != null) {
+    			assertTrue("Any launch from a previous debug session should be terminated", launch.isTerminated());
+    		}
     	}
     }
     
@@ -289,20 +296,33 @@ public abstract class BaseTest extends TestCase {
 		return result[0].booleanValue();
 	}
     
-    protected HttpResult pingURL(URL url) throws Exception {
-    	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
-    	for (int i = 0; i < 15 && !result.isGoodResponse; i++) {
-    		Thread.sleep(1000);
-    		result = HttpUtil.get(url.toURI());
-    	}
-    	if (!result.isGoodResponse) {
-    		String msg = result.error == null || result.error.isEmpty() ? result.response : result.error;
-    		TestUtil.print("Ping of " + url.toString() + " gave response code: " + result.responseCode + " and output: " + msg);
-    	} else {
-    		TestUtil.print("Ping of " + url.toString() + " was successful");
-    	}
-    	return result;
-    }
+	protected HttpResult pingURL(URL url) throws Exception {
+		HttpUtil.HttpResult result = null;
+		Exception exception = null;
+		for (int i = 0; i < 15; i++) {
+			exception = null;
+			try {
+				result = HttpUtil.get(url.toURI());
+				if (result.isGoodResponse) {
+					break;
+				}
+			} catch (IOException e) {
+				exception = e;
+			}
+			Thread.sleep(1000);
+		}
+		if (exception != null) {
+			TestUtil.print("Ping of " + url.toString() + " failed with an exception", exception);
+			throw exception;
+		} else if (!result.isGoodResponse) {
+			String msg = result.error == null || result.error.isEmpty() ? result.response : result.error;
+			TestUtil.print("Ping of " + url.toString() + " gave response code: " + result.responseCode + " and output: "
+					+ msg);
+		} else {
+			TestUtil.print("Ping of " + url.toString() + " was successful");
+		}
+		return result;
+	}
     
     protected HttpResult pingUnavailableURL(URL url) throws Exception {
     	HttpUtil.HttpResult result = HttpUtil.get(url.toURI());
@@ -444,5 +464,17 @@ public abstract class BaseTest extends TestCase {
 	
 	protected void checkResult(ProcessResult result) throws Exception {
 		assertTrue("The process failed with exit code: " + result.getExitValue() + ", and error: " + result.getErrorMsg(), result.getExitValue() == 0);
+	}
+	
+	protected ILaunch getLaunch(CodewindApplication app) throws Exception {
+		for (ILaunch launch : DebugPlugin.getDefault().getLaunchManager().getLaunches()) {
+			ILaunchConfiguration config = launch.getLaunchConfiguration();
+			if (config != null && CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID.equals(config.getType().getIdentifier()) &&
+					app.projectID.equals(config.getAttribute(CodewindLaunchConfigDelegate.PROJECT_ID_ATTR, "")) &&
+					app.connection.getConid().equals(config.getAttribute(CodewindLaunchConfigDelegate.CONNECTION_ID_ATTR, ""))) {
+				return launch;
+			}
+		}
+		return null;
 	}
 }

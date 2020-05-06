@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019, 2020 IBM Corporation and others.
+ * Copyright (c) 2020  IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,17 +11,17 @@
 
 package org.eclipse.codewind.test;
 
-public class AppsodyJavaSpringAutoBuildTest extends BaseAppsodyAutoBuildTest {
+public class AppsodySpringDebugTest extends BaseAppsodyDebugTest {
 
 	@Override
 	protected void doSetup() throws Exception {
-		projectName = "appsodyjavaspringautobuildtest";
+		projectName = "appsodyspringdebugtest";
 		projectType = APPSODY_PROJECT_TYPE;
 		templateId = APPSODY_JAVA_SPRING_ID;
 		relativeURL = "/actuator/liveness";
 		srcPath = "src/main/java/application/LivenessEndpoint.java";
-		text1 = "UP";
-		text2 = "ALIVE";
+		currentText = "UP";
+		newText = "ALIVE";
 		super.doSetup();
 	}
 }

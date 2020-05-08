@@ -13,7 +13,9 @@ package org.eclipse.codewind.ui.internal;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -22,6 +24,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.model.IProcess;
+import org.eclipse.ui.console.IConsole;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
@@ -35,6 +40,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.eclipse.ui.console.ConsolePlugin;
 
 public class IDEUtil {
 	
@@ -149,5 +155,13 @@ public class IDEUtil {
 			Logger.logError("An error occurred trying to open an external browser at: " + urlStr, e); //$NON-NLS-1$
 		}
 	}
-
+	
+	// Find the first console that matches a process in the launch
+	public static Optional<IConsole> getConsoleForLaunch(ILaunch launch) {
+		List<IProcess> processes = Arrays.asList(launch.getProcesses());
+		return Arrays.stream(ConsolePlugin.getDefault().getConsoleManager().getConsoles())
+				.filter(console -> console instanceof org.eclipse.debug.ui.console.IConsole
+						&& processes.contains(((org.eclipse.debug.ui.console.IConsole) console).getProcess()))
+				.findFirst();
+	}
 }

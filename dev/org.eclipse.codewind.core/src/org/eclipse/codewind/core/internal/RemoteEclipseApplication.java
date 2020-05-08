@@ -16,6 +16,7 @@ import java.net.MalformedURLException;
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.KubeUtil.PortForwardInfo;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
@@ -110,8 +111,24 @@ public class RemoteEclipseApplication extends CodewindEclipseApplication {
 					prefs.setValue(NOTIFY_PORT_FORWARD_TERMINATED_PREFSKEY, portForwardEndDialog.getToggleState());
 				});
 			}
+			debugPFInfo = null;
+			CoreUtil.updateApplication(this);
+		} else if (launch == getLaunch()) {
+			cleanupPortForwarding();
+			CoreUtil.updateApplication(this);
 		}
-		clearDebugger();
 	}
 
+	@Override
+	public synchronized void setAppStatus(String appStatus, String appStatusDetails) {
+		if (appStatus != null) {
+			AppStatus oldStatus = getAppStatus();
+			super.setAppStatus(appStatus, appStatusDetails);
+			// Reconnect the debugger if necessary
+			if (getAppStatus() == AppStatus.STARTING && oldStatus != AppStatus.STARTING
+					&& StartMode.DEBUG_MODES.contains(getStartMode()) && getContainerDebugPort() != -1) {
+				reconnectDebugger();
+			}
+		}
+	}
 }

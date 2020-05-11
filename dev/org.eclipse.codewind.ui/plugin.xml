@@ -45,6 +45,14 @@
 			id="org.eclipse.codewind.core.internal.launchConfigurationTypeImage"
 			configTypeID="org.eclipse.codewind.core.internal.launchConfigurationType"
 			icon="%DEFAULT_ICON_PATH"/>
+		<launchConfigurationTypeImage
+			id="org.eclipse.codewind.core.internal.remoteLaunchConfigurationTypeImage"
+			configTypeID="org.eclipse.codewind.core.internal.remoteLaunchConfigurationType"
+			icon="%DEFAULT_ICON_PATH"/>
+		<launchConfigurationTypeImage
+			id="org.eclipse.codewind.core.internal.utilityLaunchConfigurationTypeImage"
+			configTypeID="org.eclipse.codewind.core.internal.utilityLaunchConfigurationType"
+			icon="%DEFAULT_ICON_PATH"/>
 	</extension>
 	
 	<extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">

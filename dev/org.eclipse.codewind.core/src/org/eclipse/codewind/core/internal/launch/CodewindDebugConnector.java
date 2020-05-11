@@ -16,6 +16,7 @@ import java.io.InterruptedIOException;
 import java.util.Map;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
+import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.CoreException;
@@ -38,22 +39,14 @@ public class CodewindDebugConnector {
 	/**
 	 * From com.ibm.ws.st.core.internal.launch.BaseLibertyLaunchConfiguration.connectAndWait
 	 */
-    public static IDebugTarget connectDebugger(ILaunch launch, IProgressMonitor monitor)
+    public static IDebugTarget connectDebugger(ILaunch launch, CodewindApplication app, IProgressMonitor monitor)
     		throws IllegalConnectorArgumentsException, CoreException, IOException {
 
     	Logger.log("Beginning to try to connect debugger"); //$NON-NLS-1$
 
 		ILaunchConfiguration config = launch.getLaunchConfiguration();
-		String projectName = config.getAttribute(CodewindLaunchConfigDelegate.PROJECT_NAME_ATTR, (String)null);
-		String host = config.getAttribute(CodewindLaunchConfigDelegate.HOST_ATTR, (String)null);
-		int debugPort = config.getAttribute(CodewindLaunchConfigDelegate.DEBUG_PORT_ATTR, -1);
-		if (projectName == null || host == null || debugPort <= 0) {
-        	String msg = "The launch configuration did not contain the required attributes: " + config.getName(); // $NON-NLS-1$
-            Logger.logError(msg);
-            throw new CoreException(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, msg));
-        }
 		
-		Logger.log("Debugging on port " + debugPort); //$NON-NLS-1$
+		Logger.log("Debugging on port " + app.getDebugConnectPort()); //$NON-NLS-1$
 
 		int timeout = CodewindCorePlugin.getDefault().getPreferenceStore()
 				.getInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY);
@@ -68,7 +61,7 @@ public class CodewindDebugConnector {
 		}
 
 		Map<String, Connector.Argument> connectorArgs = connector.defaultArguments();
-        connectorArgs = LaunchUtilities.configureConnector(connectorArgs, host, debugPort);
+        connectorArgs = LaunchUtilities.configureConnector(connectorArgs, app.getDebugConnectHost(), app.getDebugConnectPort());
 
 		boolean retry = false;
 		do {
@@ -118,10 +111,10 @@ public class CodewindDebugConnector {
 					LaunchUtilities.setDebugTimeout(vm);
 
 					// This appears in the Debug view
-					final String debugName = getDebugLaunchName(projectName, host, String.valueOf(debugPort));
+					final String debugName = getDebugLaunchName(app.name, app.getDebugConnectHost(), String.valueOf(app.getDebugConnectPort()));
 
 					debugTarget = LaunchUtilities
-							.createLocalJDTDebugTarget(launch, debugPort, null, vm, debugName, false);
+							.createLocalJDTDebugTarget(launch, app.getDebugConnectPort(), null, vm, debugName, false);
 
 					monitor.worked(1);
 					monitor.done();

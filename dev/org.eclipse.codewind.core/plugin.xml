@@ -24,6 +24,14 @@
       sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
       sourcePathComputerId="org.eclipse.codewind.core.internal.CodewindSourcePathComputer"/>
     <launchConfigurationType
+      id="org.eclipse.codewind.core.internal.remoteLaunchConfigurationType"
+      name="%REMOTE_LAUNCH_CONFIG_NAME"
+      delegate="org.eclipse.codewind.core.internal.launch.RemoteLaunchConfigDelegate"
+      modes="run, debug"
+      public="false"
+      sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+      sourcePathComputerId="org.eclipse.codewind.core.internal.CodewindSourcePathComputer"/>
+    <launchConfigurationType
       id="org.eclipse.codewind.core.internal.utilityLaunchConfigurationType"
       name="%UTILITY_LAUNCH_CONFIG_NAME"
       delegate="org.eclipse.codewind.core.internal.launch.UtilityLaunchConfigDelegate"

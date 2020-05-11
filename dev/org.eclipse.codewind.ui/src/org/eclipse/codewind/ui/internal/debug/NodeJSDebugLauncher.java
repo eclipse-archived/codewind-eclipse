@@ -11,16 +11,21 @@
 
 package org.eclipse.codewind.ui.internal.debug;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
-import org.eclipse.codewind.core.internal.HttpUtil;
-import org.eclipse.codewind.core.internal.IDebugLauncher;
-import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.core.internal.IDebugLauncher;
+import org.eclipse.codewind.core.internal.KubeUtil;
+import org.eclipse.codewind.core.internal.KubeUtil.PortForwardInfo;
+import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.PlatformUtil;
+import org.eclipse.codewind.core.internal.RemoteEclipseApplication;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IStatus;
@@ -43,6 +48,21 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 	private static final String DEVTOOLS_URL_FIELD = "devtoolsFrontendUrl";
 	
 	public IStatus launchDebugger(CodewindApplication app) {
+		PortForwardInfo pfInfo = null;
+		if (app instanceof RemoteEclipseApplication && app.getDebugConnectPort() == -1) {
+			int port = PlatformUtil.findFreePort();
+			if (port <= 0) {
+				String msg = "Could not find a free port for port forwarding the debug port for project: " + app.name; //$NON-NLS-1$
+				Logger.logError(msg);
+				return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.NodeJSDebugPortForwardError, app.name), new IOException(msg));
+			}
+			try {
+				pfInfo = KubeUtil.launchPortForward(app, port, app.getContainerDebugPort());
+				((RemoteEclipseApplication)app).setDebugPFInfo(pfInfo);
+			} catch (Exception e) {
+				return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.NodeJSDebugPortForwardError, app.name), e);
+			}
+		}
 		String urlString = null;
 		Exception e = null;
 		try {
@@ -54,13 +74,24 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 			Logger.logError("Failed to get the debug URL for the " + app.name + " application.", e); //$NON-NLS-1$ //$NON-NLS-2$
 			return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.NodeJSDebugURLError, app.name), e);
 		}
-		return openNodeJSDebugger(urlString);
+		
+		IStatus status = openNodeJSDebugger(urlString);
+		if (status == Status.CANCEL_STATUS && pfInfo != null) {
+			// Terminate the port forward if the user canceled
+			pfInfo.terminateAndRemove();
+		}
+		return status;
 	}
 	
 	@Override
 	public boolean canAttachDebugger(CodewindApplication app) {
 		String host = app.getDebugConnectHost();
 		int debugPort = app.getDebugConnectPort();
+		
+		if (app instanceof RemoteEclipseApplication && debugPort == -1) {
+			// If the port forward is not running then the debugger cannot already be attached
+			return true;
+		}
 		
 		// If a debugger is already attached then the devtools url field will not be included in the result
 		try {

@@ -348,6 +348,7 @@ public class Messages extends NLS {
 	public static String NodeJSOpenBrowserTitle;
 	public static String NodeJSOpenBrowserDesc;
 	public static String NodeJSOpenBrowserJob;
+	public static String NodeJSDebugPortForwardError;
 	public static String NodeJSDebugURLError;
 	
 	public static String BrowserSelectionTitle;

@@ -12,8 +12,11 @@
 package org.eclipse.codewind.core.internal.launch;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.messages.Messages;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -29,8 +32,6 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 	public static final String LAUNCH_CONFIG_ID = "org.eclipse.codewind.core.internal.launchConfigurationType";
 	
 	public static final String PROJECT_NAME_ATTR = "org.eclipse.codewind.core.internal.projectNameAttr";
-	public static final String HOST_ATTR = "org.eclipse.codewind.core.internal.hostAttr";
-	public static final String DEBUG_PORT_ATTR = "org.eclipse.codewind.core.internal.debugPort";
 	public static final String PROJECT_ID_ATTR = "org.eclipse.codewind.core.internal.projectIdAttr";
 	public static final String CONNECTION_ID_ATTR = "org.eclipse.codewind.core.internal.connectionIdAttr";
 	
@@ -54,37 +55,52 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 
 	private void launchInner(ILaunchConfiguration config, String launchMode, ILaunch launch, IProgressMonitor monitor) throws Exception {
 		
-		String projectName = config.getAttribute(PROJECT_NAME_ATTR, (String)null);
-		String host = config.getAttribute(HOST_ATTR, (String)null);
-		int debugPort = config.getAttribute(DEBUG_PORT_ATTR, -1);
-		if (projectName == null || host == null || debugPort <= 0) {
-        	String msg = "The launch configuration did not contain the required attributes: " + config.getName();		// $NON-NLS-1$
-            Logger.logError(msg);
-            abort(msg, null, IStatus.ERROR);
-        }
+		CodewindEclipseApplication app = getApp(config);
 		
+		if (app.getDebugConnectHost() == null || app.getDebugConnectPort() <= 0) {
+			String msg = "The debug connect host or debug connect port is not set up for application: " + app.name; // $NON-NLS-1$
+			Logger.logError(msg);
+			abort(msg, null, IStatus.ERROR);
+		}
+		
+		// Make sure the saved launch is up to date in case this is a relaunch
+		app.setLaunch(launch);
+					
 		setDefaultSourceLocator(launch, config);
-		
-		Logger.log("Connecting the debugger for project: " + projectName); //$NON-NLS-1$
-		IDebugTarget debugTarget = CodewindDebugConnector.connectDebugger(launch, monitor);
+
+		Logger.log("Connecting the debugger for project: " + app.name); //$NON-NLS-1$
+		IDebugTarget debugTarget = CodewindDebugConnector.connectDebugger(launch, app, monitor);
 		if (debugTarget != null) {
 			Logger.log("Debugger connect success. Application should go into Debugging state soon."); //$NON-NLS-1$
 			launch.addDebugTarget(debugTarget);
 		} else if (!monitor.isCanceled()) {
-			Logger.logError("Debugger connect timeout for project: " + projectName); //$NON-NLS-1$
-			CoreUtil.openDialog(true,
-					Messages.DebuggerConnectFailureDialogTitle,
-					Messages.DebuggerConnectFailureDialogMsg);
+			Logger.logError("Debugger connect timeout for project: " + app.name); //$NON-NLS-1$
+			CoreUtil.openDialog(true, Messages.DebuggerConnectFailureDialogTitle, Messages.DebuggerConnectFailureDialogMsg);
 			getLaunchManager().removeLaunch(launch);
 		}
 
-        monitor.done();
+		monitor.done();
+	}
+	
+	protected CodewindEclipseApplication getApp(ILaunchConfiguration config) throws Exception {
+		String connId = config.getAttribute(CONNECTION_ID_ATTR, (String) null);
+		String projectId = config.getAttribute(PROJECT_ID_ATTR, (String) null);
+		if (connId == null || projectId == null) {
+			Logger.logError("Expected attributes were not found for launch configuration: " + config.getName());
+			return null;
+		}
+		CodewindConnection conn = CodewindConnectionManager.getConnectionById(connId);
+		CodewindApplication app = conn == null ? null : conn.getAppByID(projectId);
+		if (!(app instanceof CodewindEclipseApplication)) {
+			String msg = "Could not find the application associated with launch configuration: " + config.getName(); // $NON-NLS-1$
+			Logger.logError(msg);
+			abort(msg, null, IStatus.ERROR);
+		}
+		return (CodewindEclipseApplication) app;
 	}
 	
 	public static void setConfigAttributes(ILaunchConfigurationWorkingCopy config, CodewindApplication app) {
 		config.setAttribute(PROJECT_NAME_ATTR, app.name);
-		config.setAttribute(HOST_ATTR, app.getDebugConnectHost());
-		config.setAttribute(DEBUG_PORT_ATTR, app.getDebugConnectPort());
 		config.setAttribute(PROJECT_ID_ATTR, app.projectID);
 		config.setAttribute(CONNECTION_ID_ATTR, app.connection.getConid());
 	}

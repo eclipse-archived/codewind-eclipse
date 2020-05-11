@@ -141,7 +141,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 				try {
 					if (app.projectLanguage.isJava()) {
 						ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
-				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID);
+				        ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(getLaunchConfigId());
 				        ILaunchConfigurationWorkingCopy workingCopy = launchConfigurationType.newInstance((IContainer) null, app.name);
 				        CodewindLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
 				        ILaunchConfiguration launchConfig = workingCopy.doSave();
@@ -164,6 +164,10 @@ public class CodewindEclipseApplication extends CodewindApplication {
 		};
 		job.setPriority(Job.LONG);
 		job.schedule();
+	}
+	
+	public String getLaunchConfigId() {
+		return CodewindLaunchConfigDelegate.LAUNCH_CONFIG_ID;
 	}
 
 	@Override

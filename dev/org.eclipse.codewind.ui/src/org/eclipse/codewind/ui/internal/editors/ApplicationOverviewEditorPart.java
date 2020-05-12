@@ -285,6 +285,9 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 	}
 	
 	public void update(CodewindConnection conn, CodewindApplication app, boolean init) {
+		if (form.isDisposed()) {
+			return;
+		}
 		boolean changed = false;
 		if (conn == null || !conn.isConnected() || app == null) {
 			changed = !messageComp.getVisible();

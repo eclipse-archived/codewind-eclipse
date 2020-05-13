@@ -194,6 +194,7 @@ public class Messages extends NLS {
 	public static String ProjectDeployedDialogShell;
 	public static String ProjectDeployedDialogTitle;
 	public static String ProjectDeployedDialogMessage;
+	public static String ProjectDeployedDialogInstructions;
 	public static String ProjectDeployedDialogGroupLabel;
 	public static String ProjectDeployedDialogRemoveLabel;
 	public static String ProjectDeployedDialogRemoveTooltip;

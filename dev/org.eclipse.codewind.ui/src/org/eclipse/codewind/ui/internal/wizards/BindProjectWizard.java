@@ -198,7 +198,7 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 		// If the application is deployed on another connection, ask the user what they want to do
 		final ProjectDeployedDialog.Behaviour selectedBehaviour;
 		if (!existingDeployments.isEmpty()) {
-			ProjectDeployedDialog dialog = new ProjectDeployedDialog(getShell(), projectPath);
+			ProjectDeployedDialog dialog = new ProjectDeployedDialog(getShell(), projectPath, connection, existingDeployments);
 			if (dialog.open() == IStatus.OK) {
 				selectedBehaviour = dialog.getSelectedBehaviour();
 			} else {

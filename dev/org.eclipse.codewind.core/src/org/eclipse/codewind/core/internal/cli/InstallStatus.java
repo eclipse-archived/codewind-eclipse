@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,10 @@
 
 package org.eclipse.codewind.core.internal.cli;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.json.JSONArray;
@@ -144,12 +148,16 @@ public class InstallStatus {
 		return (startedVersions != null && startedVersions.length() > 0);
 	}
 	
-	public String getInstalledVersions() {
+	public List<String> getInstalledVersions() {
 		return getVersionList(installedVersions);
 	}
 	
-	public String getStartedVersions() {
-		return getVersionList(startedVersions);
+	public String getInstalledVersionsString() {
+		return getVersionString(installedVersions);
+	}
+	
+	public String getStartedVersionsString() {
+		return getVersionString(startedVersions);
 	}
 	
 	public boolean requiresWSUpgrade() {
@@ -172,21 +180,21 @@ public class InstallStatus {
 		// Assume the highest version is being used. If it is lower than the upgrade version, return true.
 		return (CodewindConnection.compareVersions(highestVersion, WS_UPGRADE_VERSION) < 0);
 	}
-
-	public String getVersionList(JSONArray versions) {
-		StringBuilder builder = new StringBuilder();
-		boolean start = true;
+	
+	private List<String> getVersionList(JSONArray versions) {
+		List<String> versionList = new ArrayList<String>();
 		for (int i = 0; i < versions.length(); i++) {
 			try {
-				if (!start) {
-					builder.append(", ");
-				}
-				builder.append(versions.getString(i));
-				start = false;
+				versionList.add(versions.getString(i));
 			} catch (JSONException e) {
 				Logger.logError("The Codewind installer status format is not recognized", e); //$NON-NLS-1$
 			}
 		}
-		return builder.toString();
+		return versionList;
+	}
+
+	private String getVersionString(JSONArray versions) {
+		List<String> versionList = getVersionList(versions);
+		return CoreUtil.formatString(versionList.toArray(new String[versionList.size()]), ", ");
 	}
 }

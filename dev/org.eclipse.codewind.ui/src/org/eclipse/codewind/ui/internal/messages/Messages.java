@@ -142,6 +142,7 @@ public class Messages extends NLS {
 	public static String UpgradeWorkspaceJobLabel;
 	public static String InstallingCodewindTask;
 	public static String UninstallingCodewindTask;
+	public static String UninstallingCodewindVersionTask;
 	public static String InstallCodewindDialogTitle;
 	public static String InstallCodewindDialogMessage;
 	public static String UpgradeCodewindDialogMessage;

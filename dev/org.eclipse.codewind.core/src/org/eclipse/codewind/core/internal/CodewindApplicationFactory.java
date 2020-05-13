@@ -18,6 +18,8 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus.Severity;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
@@ -159,28 +161,28 @@ public class CodewindApplicationFactory {
 			// Set the app status
 			if (appJso.has(CoreConstants.KEY_APP_STATUS)) {
 				String appStatus = appJso.getString(CoreConstants.KEY_APP_STATUS);
-				String detail = null;
+				DetailedAppStatus detail = null;
 				if (appJso.has(CoreConstants.KEY_DETAILED_APP_STATUS)) {
 					JSONObject detailObj = appJso.getJSONObject(CoreConstants.KEY_DETAILED_APP_STATUS);
-					if (detailObj != null && detailObj.has(CoreConstants.KEY_MESSAGE)) {
-						detail = detailObj.getString(CoreConstants.KEY_MESSAGE);
-						String notificationID = getStringValue(detailObj, CoreConstants.KEY_NOTIFICATION_ID);
+					detail = detailObj == null ? null : new DetailedAppStatus(detailObj);
+					if (detail != null && detail.getMessage() != null) {
+						String notificationID = detail.getNotificationID();
 						if (notificationID == null) {
 							// If there is no notification id then clear the list
 							app.clearNotificationIDs();
 						} else if (!app.hasNotificationID(notificationID)) {
-							// If there is a new notifiction id then need to notify the user
+							// If there is a new notification id then need to notify the user
 							
 							// First store the notification id so the user does not get the same notification twice
 							app.addNotificationID(notificationID);
 							
 							// Notify the user in a dialog with a link to more information if available
 							CoreUtil.DialogType type = CoreUtil.DialogType.ERROR;
-							if (detailObj.has(CoreConstants.KEY_SEVERITY)) {
-								String severity = detailObj.getString(CoreConstants.KEY_SEVERITY);
-								if (CoreConstants.VALUE_WARN.equals(severity)) {
+							Severity severity = detail.getSeverity();
+							if (severity != null) {
+								if (severity == Severity.WARNING) {
 									type = CoreUtil.DialogType.WARN;
-								} else if (CoreConstants.VALUE_INFO.equals(severity)) {
+								} else if (severity == Severity.INFO) {
 									type = CoreUtil.DialogType.INFO;
 								}
 							}
@@ -191,9 +193,9 @@ public class CodewindApplicationFactory {
 								linkLabel = detailObj.getString(CoreConstants.KEY_LINK_LABEL);
 							}
 							if (link != null && !link.isEmpty() && linkLabel != null && !linkLabel.isEmpty()) {
-								CoreUtil.openDialogWithLink(type, app.name, detail, linkLabel, link);
+								CoreUtil.openDialogWithLink(type, app.name, detail.getMessage(), linkLabel, link);
 							} else {
-								CoreUtil.openDialog(type, app.name, detail);
+								CoreUtil.openDialog(type, app.name, detail.getMessage());
 							}
 						}
 					}

@@ -20,6 +20,8 @@ import org.eclipse.codewind.core.internal.connection.LocalConnection;
 import org.eclipse.codewind.core.internal.connection.RemoteConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus.Severity;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
@@ -28,6 +30,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.JFacePreferences;
 import org.eclipse.jface.resource.FontDescriptor;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
+import org.eclipse.jface.viewers.IToolTipProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.StyledString.Styler;
@@ -43,7 +46,7 @@ import org.eclipse.ui.navigator.IDescriptionProvider;
 /**
  * Label provider for the Codewind view.
  */
-public class CodewindNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider, IDescriptionProvider {
+public class CodewindNavigatorLabelProvider extends LabelProvider implements IStyledLabelProvider, IDescriptionProvider, IToolTipProvider {
 
 	static final Styler BOLD_FONT_STYLER = new BoldFontStyler();
 	
@@ -133,7 +136,17 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					builder.append(" [" + Messages.CodewindProjectNoStatus + "]");
 				} else {
 					if (appStatus != AppStatus.UNKNOWN) {
-						builder.append(" [" + appStatus.getDisplayString(app.getStartMode()) + "]");
+						DetailedAppStatus details = app.getAppStatusDetails();
+						if (details != null && details.getMessage() != null) {
+						    builder.append(" [" + appStatus.getDisplayString(app.getStartMode()) + ": ");
+							if (details.getSeverity() != null) {
+								builder.append("(" + details.getSeverity().displayString + ") ");
+							}
+							builder.append(Messages.CodewindHoverForDetails);
+							builder.append("]");
+						} else {
+							builder.append(" [" + appStatus.getDisplayString(app.getStartMode()) + "]");
+						}
 					}
 					
 					if (buildStatus != BuildStatus.UNKOWN) {
@@ -243,7 +256,19 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					styledString.append(" [" + Messages.CodewindProjectNoStatus + "]", StyledString.DECORATIONS_STYLER);
 				} else {
 					if (appStatus != AppStatus.UNKNOWN) {
-						styledString.append(" [" + appStatus.getDisplayString(app.getStartMode()) + "]", StyledString.DECORATIONS_STYLER);
+						DetailedAppStatus details = app.getAppStatusDetails();
+						if (details != null && details.getMessage() != null) {
+							styledString.append(" [" + appStatus.getDisplayString(app.getStartMode()) + ": ", StyledString.DECORATIONS_STYLER);
+							Styler styler = details.getSeverity() != null && details.getSeverity() == Severity.ERROR ? ERROR_STYLER : StyledString.QUALIFIER_STYLER;
+							if (details.getSeverity() != null) {
+								styledString.append("(" + details.getSeverity().displayString + ") ", styler);
+							}
+							styledString.append(Messages.CodewindHoverForDetails, styler);
+							styledString.append("]", StyledString.DECORATIONS_STYLER);
+						} else {
+							styledString.append(" [" + appStatus.getDisplayString(app.getStartMode()) + "]", StyledString.DECORATIONS_STYLER);
+						}
+						
 					}
 					
 					if (buildStatus != BuildStatus.UNKOWN) {
@@ -265,7 +290,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 		}
 		return styledString;
 	}
-	
+
 	@Override
 	public Image getImage(Object element) {
 		return getCodewindImage(element);
@@ -321,14 +346,25 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
     		}
     	} else if (element instanceof CodewindApplication) {
 			CodewindApplication app = (CodewindApplication)element;
-			if (app.getAppStatusDetails() != null) {
-				return app.getAppStatusDetails();
+			if (app.getAppStatusDetails() != null && app.getAppStatusDetails().getMessage() != null) {
+				return app.getAppStatusDetails().getMessage();
 			} else if (app.getRootUrl() != null && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED)) {
 				return NLS.bind(Messages.CodewindDescriptionContextRoot, app.getRootUrl());
 			}
     	}
     	return null;
     }
+
+	@Override
+	public String getToolTipText(Object element) {
+		if (element instanceof CodewindApplication) {
+			DetailedAppStatus details = ((CodewindApplication)element).getAppStatusDetails();
+			if (details != null && details.getMessage() != null) {
+				return (details.getSeverity() == null ? "" : details.getSeverity().displayString + ": ") + details.getMessage();
+			}
+		}
+		return getDescription(element);
+	}
 
 	static class BoldFontStyler extends Styler {
 	    @Override

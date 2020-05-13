@@ -13,6 +13,7 @@ package org.eclipse.codewind.ui.internal.actions;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -21,6 +22,7 @@ import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.cli.CLIUtil;
 import org.eclipse.codewind.core.internal.cli.InstallStatus;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.UpgradeResult;
@@ -287,7 +289,7 @@ public class CodewindInstall {
 		};
 	}
 	
-	public static void updateCodewind(String version, boolean removeOldVersion, Runnable prompt) {
+	public static void updateCodewind(String version, boolean removeOldVersions, Runnable prompt) {
 		try {
 			Job job = new Job(Messages.UpdatingCodewindJobLabel) {
 				@Override
@@ -314,18 +316,24 @@ public class CodewindInstall {
 						mon.setWorkRemaining(170);
 						
 						// Remove if requested
-						if (removeOldVersion) {
-							mon.setTaskName(Messages.UninstallingCodewindTask);
-							try {
-								ProcessResult result = InstallUtil.removeCodewind(null, mon.split(20));
-								if (mon.isCanceled()) {
-									return Status.CANCEL_STATUS;
+						if (removeOldVersions) {
+							List<String> oldVersions = status.getInstalledVersions();
+							int ticks = 20/oldVersions.size();
+							for(String oldVersion : oldVersions) {
+								mon.setTaskName(NLS.bind(Messages.UninstallingCodewindVersionTask, oldVersion));
+								try {
+									ProcessResult result = InstallUtil.removeCodewind(oldVersion, mon.split(ticks));
+									if (mon.isCanceled()) {
+										return Status.CANCEL_STATUS;
+									}
+									if (result.getExitValue() != 0) {
+										return getErrorStatus(result, Messages.CodewindUninstallFail);
+									}
+									// Remove cwctl commands
+									CLIUtil.removeCWCTL(oldVersion);
+								} catch (TimeoutException e) {
+									return getErrorStatus(Messages.CodewindUninstallTimeout, e);
 								}
-								if (result.getExitValue() != 0) {
-									return getErrorStatus(result, Messages.CodewindUninstallFail);
-								}
-							} catch (TimeoutException e) {
-								return getErrorStatus(Messages.CodewindUninstallTimeout, e);
 							}
 						}
 						mon.setWorkRemaining(150);

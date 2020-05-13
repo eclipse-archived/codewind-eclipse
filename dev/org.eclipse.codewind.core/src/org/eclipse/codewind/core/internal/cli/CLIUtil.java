@@ -229,4 +229,23 @@ public class CLIUtil {
 		
 		Logger.log(String.format("Result of the cwctl '%s' command: \n%s", CoreUtil.formatString(command, " "), Optional.ofNullable(result.getOutput()).orElse("<empty>")));
 	}
+	
+	public static void removeCWCTL(String version) throws IOException {
+		if (version == null) {
+			Logger.logError("Version was null on request to remove cwctl commands");
+			return;
+		}
+		Logger.log("Remove cwctl commands for version: " + version);
+		IPath userHome = CoreUtil.getUserHome();
+		if (userHome == null) {
+			// Nothing to remove
+			return;
+		}
+		File cwctlFolder = userHome.append(CODEWIND_STORE_DIR).append(version).toFile();
+		if (!cwctlFolder.exists() || !cwctlFolder.isDirectory()) {
+			return;
+		}
+		Logger.log("Removing folder: " + cwctlFolder.getAbsolutePath());
+		FileUtil.deleteDirectory(cwctlFolder.getAbsolutePath(), true);
+	}
 }

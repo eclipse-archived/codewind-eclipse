@@ -90,13 +90,13 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 				} else if (status.isInstalled()) {
 					if (status.hasStartedVersions()) {
 						// An older version is running
-						return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "] (" +
+						return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersionsString()) + "] (" +
 								NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
 					}
 					return name + " [" + Messages.CodewindNotStartedQualifier + "] (" + Messages.CodewindNotStartedMsg + ")";
 				} else if (status.hasInstalledVersions()) {
 					// An older version is installed
-					return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "] (" +
+					return name + "[" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersionsString()) + "] (" +
 							NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion());
 				} else if (status.isUnknown()) {
 					String errorMsg = manager.getInstallerErrorMsg() != null ? Messages.CodewindErrorMsgWithDetails : Messages.CodewindErrorMsg;
@@ -192,7 +192,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 				} else if (status.isInstalled()) {
 					if (status.hasStartedVersions()) {
 						// An older version is running
-						styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersions()) + "]", StyledString.DECORATIONS_STYLER);
+						styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getStartedVersionsString()) + "]", StyledString.DECORATIONS_STYLER);
 						styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
 					} else {
 						styledString.append(" [" + Messages.CodewindNotStartedQualifier + "]", StyledString.DECORATIONS_STYLER);
@@ -200,7 +200,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 					}
 				} else if (status.hasInstalledVersions()) {
 					// An older version is installed
-					styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersions()) + "]", StyledString.DECORATIONS_STYLER);
+					styledString.append(" [" + NLS.bind(Messages.CodewindWrongVersionQualifier, status.getInstalledVersionsString()) + "]", StyledString.DECORATIONS_STYLER);
 					styledString.append(" (" + NLS.bind(Messages.CodewindWrongVersionMsg, InstallUtil.getVersion()) + ")", StyledString.QUALIFIER_STYLER);
 				} else if (status.isUnknown()) {
 					styledString.append(" [" + Messages.CodewindErrorQualifier + "]", StyledString.DECORATIONS_STYLER);

@@ -69,7 +69,14 @@ public class CodewindUtil {
 		TestUtil.waitForJobs(30, 5);
 		
 		if (!connection.isLocal()) {
+			String conid = connection.getConid();
+			TestUtil.print("Removing connection: " + conid);
 			CodewindConnectionManager.remove(connection.getBaseURI().toString());
+			// Make sure the connection is removed
+			CodewindConnectionManager.refreshConnections(new NullProgressMonitor());
+			if (CodewindConnectionManager.getConnectionById(conid) != null) {
+				TestUtil.print("The connection with id " + conid + " was not removed");
+			}
 		}
 	}
 	

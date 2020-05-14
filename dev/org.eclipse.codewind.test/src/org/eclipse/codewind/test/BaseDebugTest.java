@@ -42,7 +42,7 @@ public abstract class BaseDebugTest extends BaseTest {
 	
 	protected void doSetup() throws Exception {
         setup();
-        conn = getLocalConnection();
+        conn = getConnection();
         
         app = createProject(conn, projectType, templateId, projectName);
         projectType = app.projectType.getId();

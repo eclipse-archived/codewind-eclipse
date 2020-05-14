@@ -43,7 +43,7 @@ public abstract class BaseAutoBuildTest extends BaseTest {
 	
 	protected void doSetup() throws Exception {
         setup();
-        conn = getLocalConnection();
+        conn = getConnection();
         
         app = createProject(conn, projectType, templateId, projectName);
         TestUtil.print("Application created: " + projectName);
@@ -69,7 +69,9 @@ public abstract class BaseAutoBuildTest extends BaseTest {
     
     @Test
     public void test03_checkDashboards() throws Exception {
-    	checkDashboards(app);
+    	if (app.connection.isLocal()) {
+    		checkDashboards(app);
+    	}
     }
     
     @Test

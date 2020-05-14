@@ -86,6 +86,14 @@
 					pattern="org.eclipse.codewind.ui.navigatorContent"/>
 			</includes>
 		</viewerContentBinding>
+		<viewer
+			viewerId="org.eclipse.codewind.ui.explorerView">
+			<options>
+				<property
+					name="org.eclipse.ui.navigator.enableTooltipSupport"
+					value="true" />
+			</options>
+		</viewer>
 	</extension>
 
 	<extension point="org.eclipse.ui.navigator.navigatorContent">

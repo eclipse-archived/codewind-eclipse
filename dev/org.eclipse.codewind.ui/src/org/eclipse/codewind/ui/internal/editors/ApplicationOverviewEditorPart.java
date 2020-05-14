@@ -19,6 +19,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.UIConstants;
@@ -399,8 +400,8 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 		public void update(CodewindApplication app) {
 			autoBuildEntry.setValue(app.isAutoBuild() ? Messages.AppOverviewEditorAutoBuildOn : Messages.AppOverviewEditorAutoBuildOff, true);
 			injectMetricsEntry.setValue(metricsInjectionState(app.canInjectMetrics(), app.isMetricsInjected()), true);
-			appStatusEntry.setValue(app.isAvailable() ? app.getAppStatus().getDisplayString(app.getStartMode()) : Messages.AppOverviewEditorStatusDisabled, true);
-			buildStatusEntry.setValue(app.isAvailable() ? app.getBuildStatus().getDisplayString() : null, true);
+			appStatusEntry.setValue(getAppStatusString(app), true);
+			buildStatusEntry.setValue(getBuildStatusString(app), true);
 			long lastImageBuild = app.getLastImageBuild();
 			String lastImageBuildStr = Messages.AppOverviewEditorImageNeverBuilt;
 			if (lastImageBuild > 0) {
@@ -413,6 +414,34 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 				lastBuildStr = formatTimestamp(lastBuild);
 			}
 			lastBuildEntry.setValue(lastBuildStr, true);
+		}
+		
+		private String getAppStatusString(CodewindApplication app) {
+			if (app.isAvailable()) {
+				StringBuilder builder = new StringBuilder();
+				builder.append(app.getAppStatus().getDisplayString(app.getStartMode()));
+				DetailedAppStatus details = app.getAppStatusDetails();
+				if (details != null && details.getMessage() != null) {
+					builder.append(": ");
+					if (details.getSeverity() != null) {
+						builder.append("(" + details.getSeverity().displayString + ") ");
+					}
+					builder.append(details.getMessage());
+				}
+				return builder.toString();
+			}
+			return Messages.AppOverviewEditorStatusDisabled;
+		}
+		
+		private String getBuildStatusString(CodewindApplication app) {
+			if (app.isAvailable()) {
+				String buildStatusStr = app.getBuildStatus().getDisplayString();
+				if (app.getBuildDetails() != null) {
+					buildStatusStr += " (" + app.getBuildDetails() + ")";
+				}
+				return buildStatusStr;
+			}
+			return null;
 		}
 	}
 	

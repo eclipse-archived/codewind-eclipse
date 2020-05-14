@@ -25,6 +25,7 @@ import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectCapabilities;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
@@ -48,7 +49,7 @@ public class CodewindApplication {
 	private String contextRoot;	// can be null
 	private StartMode startMode;
 	private AppStatus appStatus;
-	private String appStatusDetails;
+	private DetailedAppStatus appStatusDetails;
 	private BuildStatus buildStatus;
 	private String buildDetails;
 	private boolean autoBuild = true;
@@ -123,14 +124,10 @@ public class CodewindApplication {
 		}
 	}
 
-	public synchronized void setAppStatus(String appStatus, String appStatusDetails) {
+	public synchronized void setAppStatus(String appStatus, DetailedAppStatus appStatusDetails) {
 		if (appStatus != null) {
 			this.appStatus = AppStatus.get(appStatus);
-			if (appStatusDetails == null || appStatusDetails.trim().isEmpty()) {
-				this.appStatusDetails = null;
-			} else {
-				this.appStatusDetails = appStatusDetails;
-			}
+			this.appStatusDetails = appStatusDetails;
 		}
 	}
 	
@@ -139,7 +136,7 @@ public class CodewindApplication {
 			BuildStatus newStatus = BuildStatus.get(buildStatus);
 			boolean hasChanged = newStatus != this.buildStatus;
 			this.buildStatus = newStatus;
-			if (buildDetails != null && buildDetails.trim().isEmpty()) {
+			if (buildDetails == null || buildDetails.trim().isEmpty()) {
 				this.buildDetails = null;
 			} else {
 				this.buildDetails = buildDetails;
@@ -328,7 +325,7 @@ public class CodewindApplication {
 		return appStatus;
 	}
 	
-	public synchronized String getAppStatusDetails() {
+	public synchronized DetailedAppStatus getAppStatusDetails() {
 		return appStatusDetails;
 	}
 	

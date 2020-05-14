@@ -69,6 +69,10 @@ public class Messages extends NLS {
 	public static String AppStatusUnknown;
 	public static String AppStatusDebugging;
 	
+	public static String SeverityError;
+	public static String SeverityWarning;
+	public static String SeverityInfo;
+	
 	public static String BuildStateQueued;
 	public static String BuildStateInProgress;
 	public static String BuildStateSuccess;

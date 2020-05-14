@@ -17,6 +17,7 @@ import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.KubeUtil.PortForwardInfo;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
 import org.eclipse.codewind.core.internal.constants.ProjectLanguage;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.core.internal.constants.StartMode;
@@ -102,7 +103,7 @@ public class RemoteEclipseApplication extends CodewindEclipseApplication {
 	}
 
 	@Override
-	public synchronized void setAppStatus(String appStatus, String appStatusDetails) {
+	public synchronized void setAppStatus(String appStatus, DetailedAppStatus appStatusDetails) {
 		if (appStatus != null) {
 			AppStatus oldStatus = getAppStatus();
 			super.setAppStatus(appStatus, appStatusDetails);

@@ -240,12 +240,16 @@ public class CodewindConnectionManager {
 				
 				// Make sure the local connection is first in the list
 				localConnection = CodewindObjectFactory.createLocalConnection(null);
-				connections.add(localConnection);
 				try {
 					// This will connect if Codewind is running
 					CodewindManager.getManager().refreshInstallStatus(mon.split(20));
 				} catch (Exception e) {
 					Logger.logError("An error occurred trying to connect to the local Codewind instance", e); //$NON-NLS-1$
+				}
+				connections.add(localConnection);
+				CoreUtil.updateAll();
+				if (mon.isCanceled()) {
+					return Status.CANCEL_STATUS;
 				}
 				
 				// Add the rest of the connections, skipping local
@@ -257,18 +261,18 @@ public class CodewindConnectionManager {
 						mon.setWorkRemaining(100 * (infos.size() - 1));
 					}
 					for (ConnectionInfo info : infos) {
-						try {
-							if (!info.isLocal()) {
+						if (!info.isLocal()) {
+							try {
 								createConnection(info, connData.isConnected(info.getId()), mon.split(100));
-								if (mon.isCanceled()) {
-									return Status.CANCEL_STATUS;
-								}
+							} catch (Exception e) {
+								IStatus status = new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.ConnectionManager_RestoreConnError, new String[] {info.getLabel(), info.getURL()}), e);
+								multiStatus.add(status);
+							} finally {
+								CoreUtil.updateAll();
 							}
-						} catch (Exception e) {
-							IStatus status = new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.ConnectionManager_RestoreConnError, new String[] {info.getLabel(), info.getURL()}), e);
-							multiStatus.add(status);
-						} finally {
-							CoreUtil.updateAll();
+							if (mon.isCanceled()) {
+								return Status.CANCEL_STATUS;
+							}
 						}
 					}
 					return multiStatus;

@@ -12,6 +12,7 @@
 package org.eclipse.codewind.test;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.List;
@@ -20,9 +21,13 @@ import java.util.Set;
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.CodewindManager;
+import org.eclipse.codewind.core.internal.CodewindObjectFactory;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.ProcessHelper.ProcessResult;
+import org.eclipse.codewind.core.internal.cli.AuthToken;
+import org.eclipse.codewind.core.internal.cli.AuthUtil;
+import org.eclipse.codewind.core.internal.cli.ConnectionUtil;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.core.internal.cli.TemplateUtil;
@@ -76,7 +81,12 @@ import junit.framework.TestCase;
 
 public abstract class BaseTest extends TestCase {
 	
-	protected static final String APPSODY_PROJECT_TYPE="appsodyExtension";
+	protected static final String CONNECTION_TYPE_PROPERTY = "cwtest.connectionType";
+	protected static final String REMOTE_URL_PROPERTY = "cwtest.remoteURL";
+	protected static final String REMOTE_USER_PROPERTY = "cwtest.remoteUser";
+	protected static final String REMOTE_PASSWORD_PROPERTY = "cwtest.remotePassword";
+	
+	protected static final String APPSODY_PROJECT_TYPE = "appsodyExtension";
 	protected static final String LAGOM_ID = "lagomJavaTemplate";
 	protected static final String GO_ID = "goTemplate";
 	protected static final String JAVA_MICROPROFILE_ID = "javaMicroProfileTemplate";
@@ -94,6 +104,20 @@ public abstract class BaseTest extends TestCase {
 	
 	protected static Boolean origAutoBuildSetting = null;
 	
+	enum ConnectionType {
+		LOCAL,
+		REMOTE;
+		
+		public static ConnectionType get(String typeStr) {
+			for (ConnectionType type : ConnectionType.values()) {
+				if (type.name().equalsIgnoreCase(typeStr)) {
+					return type;
+				}
+			}
+			return LOCAL;
+		}
+	}
+	
 	public void setup() {
 		// Disable workspace auto build
     	origAutoBuildSetting = setWorkspaceAutoBuild(false);
@@ -106,7 +130,21 @@ public abstract class BaseTest extends TestCase {
 		}
 	}
 	
+	public CodewindConnection getConnection() throws Exception {
+		if (getConnectionType() == ConnectionType.REMOTE) {
+			RemoteProperties props = RemoteProperties.getRemoteProperties();
+			if (props.isValid()) {
+				return getRemoteConnection(props);
+			} else {
+				TestUtil.print("Properties for remote connection were not valid, creating a local connection instead.");
+			}
+		}
+		return getLocalConnection();
+	}
+	
 	public CodewindConnection getLocalConnection() throws Exception {
+		TestUtil.print("Setting up a local connection");
+		
 		// Check that Codewind is installed
     	CodewindManager.getManager().refreshInstallStatus(new NullProgressMonitor());
     	if (!CodewindManager.getManager().getInstallStatus().isInstalled()) {
@@ -129,6 +167,21 @@ public abstract class BaseTest extends TestCase {
         }
         assertNotNull("The connection should not be null.", conn);
         return conn;
+	}
+	
+	public CodewindConnection getRemoteConnection(RemoteProperties props) throws Exception {
+		TestUtil.print("Setting up a remote connection: " + props.remoteURL);
+		
+		String name = "Remote" + ((int) (Math.random() * Integer.MAX_VALUE));
+		URI uri = new URI(props.remoteURL);
+		String conid = ConnectionUtil.addConnection(name, uri.toString(), props.remoteUser, new NullProgressMonitor());
+		CodewindConnection connection = CodewindObjectFactory.createRemoteConnection(name, uri, conid, props.remoteUser, null);
+		
+		AuthToken token = AuthUtil.genAuthToken(props.remoteUser, props.remotePassword, conid, new NullProgressMonitor());
+		connection.setAuthToken(token);
+		
+		connection.connect(new NullProgressMonitor());
+		return connection;
 	}
 	
 	public void cleanupConnection(CodewindConnection conn) {
@@ -476,5 +529,33 @@ public abstract class BaseTest extends TestCase {
 			}
 		}
 		return null;
+	}
+	
+	protected static ConnectionType getConnectionType() {
+		return ConnectionType.get(System.getProperty(CONNECTION_TYPE_PROPERTY, "local"));
+	}
+
+	protected static class RemoteProperties {
+		public final String remoteURL;
+		public final String remoteUser;
+		public final String remotePassword;
+		
+		private RemoteProperties(String remoteURL, String remoteUser, String remotePassword) {
+			this.remoteURL = remoteURL;
+			this.remoteUser = remoteUser;
+			this.remotePassword = remotePassword;
+		}
+		
+		public boolean isValid() {
+			return remoteURL != null && !remoteURL.isEmpty() && remoteUser != null
+					&& !remoteUser.isEmpty() && remotePassword != null && !remotePassword.isEmpty();
+		}
+		
+		public static RemoteProperties getRemoteProperties() {
+			String remoteURL = System.getProperty(REMOTE_URL_PROPERTY, (String) null);
+			String remoteUser = System.getProperty(REMOTE_USER_PROPERTY, (String) null);
+			String remotePassword = System.getProperty(REMOTE_PASSWORD_PROPERTY, (String) null);
+			return new RemoteProperties(remoteURL, remoteUser, remotePassword);
+		}
 	}
 }

@@ -45,7 +45,7 @@ public abstract class BaseValidationTest extends BaseTest {
 	
 	protected void doSetup() throws Exception {
         setup();
-        conn = getLocalConnection();
+        conn = getConnection();
         
         app = createProject(conn, projectType, templateId, projectName);
         if (projectType == null) {

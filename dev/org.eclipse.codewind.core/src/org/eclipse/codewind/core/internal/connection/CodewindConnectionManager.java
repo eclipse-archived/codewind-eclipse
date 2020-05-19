@@ -247,6 +247,10 @@ public class CodewindConnectionManager {
 					Logger.logError("An error occurred trying to connect to the local Codewind instance", e); //$NON-NLS-1$
 				}
 				connections.add(localConnection);
+				if (CodewindManager.getManager().getInstallStatus().isStarted()) {
+					// Refresh again to make sure no incorrect project link errors
+					localConnection.refreshApps(null);
+				}
 				CoreUtil.updateAll();
 				if (mon.isCanceled()) {
 					return Status.CANCEL_STATUS;
@@ -306,6 +310,10 @@ public class CodewindConnectionManager {
 		connections.add(conn);
 		if (connect && auth != null) {
 			conn.connect(mon.split(80));
+			if (conn.isConnected()) {
+				// Refresh again to make sure no incorrect project link errors
+				conn.refreshApps(null);
+			}
 		}
 	}
 	

@@ -16,10 +16,14 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
+import org.eclipse.codewind.core.internal.cli.ProjectLinks;
+import org.eclipse.codewind.core.internal.cli.ProjectLinks.LinkInfo;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ExtensionConfig;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
@@ -75,7 +79,7 @@ public class CodewindApplication {
 	private boolean deleteContents = false;
 	private final Vector<String> activeNotificationIDs = new Vector<String>();
 	private ExtensionConfig extensionConfig;
-	
+	private ProjectLinks projectLinks;	
 
 	// Must be updated whenever httpPort changes. Can be null
 	private URL baseUrl;
@@ -460,6 +464,25 @@ public class CodewindApplication {
 	
 	public synchronized long getLastImageBuild() {
 		return lastImageBuild;
+	}
+	
+	public synchronized void setProjectLinks(ProjectLinks projectLinks) {
+		this.projectLinks = projectLinks;
+	}
+	
+	public synchronized ProjectLinks getProjectLinks() {
+		return projectLinks;
+	}
+
+	public Map<CodewindApplication, List<LinkInfo>> getLinksToThisProject() {
+		Map<CodewindApplication, List<LinkInfo>> linkMap = new HashMap<CodewindApplication, List<LinkInfo>>();
+		connection.getApps().stream().forEach(app -> {
+			List<LinkInfo> links = app.getProjectLinks().getLinkedProjects(projectID);
+			if (!links.isEmpty()) {
+				linkMap.put(app, links);
+			}
+		});
+		return linkMap;
 	}
 
 	public synchronized void setHttpPort(int httpPort) {

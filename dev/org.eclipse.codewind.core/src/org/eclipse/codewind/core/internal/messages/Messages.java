@@ -104,6 +104,10 @@ public class Messages extends NLS {
 	public static String DeleteProjectError;
 	public static String FetchLogLevelsTaskLabel;
 	public static String SetLogLevelTaskLabel;
+	public static String GetProjectLinksTaskLabel;
+	public static String CreateProjectLinkTaskLabel;
+	public static String RemoveProjectLinkTaskLabel;
+	public static String RenameProjectLinkTaskLabel;
 	
 	public static String ProjectSettingsUpdateErrorTitle;
 	

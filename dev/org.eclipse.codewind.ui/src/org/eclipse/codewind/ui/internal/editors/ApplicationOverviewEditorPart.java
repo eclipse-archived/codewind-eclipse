@@ -12,12 +12,17 @@
 package org.eclipse.codewind.ui.internal.editors;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.ProjectLinks;
+import org.eclipse.codewind.core.internal.cli.ProjectLinks.LinkInfo;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
@@ -28,6 +33,7 @@ import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.UIConstants;
+import org.eclipse.codewind.ui.internal.actions.ManageLinksAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.CodewindPrefsParentPage;
@@ -44,13 +50,16 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.preference.PreferenceDialog;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -58,9 +67,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -99,6 +112,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 	private Composite sectionComp = null;
 	private ProjectInfoSection projectInfoSection = null;
 	private ProjectStatusSection projectStatusSection = null;
+	private ProjectLinkSection projectLinkSection = null;
 	private AppInfoSection appInfoSection = null;
 	
 	private Font boldFont;
@@ -201,6 +215,8 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 		projectInfoSection = new ProjectInfoSection(sectionComp, toolkit, 2, 1);
 		addSpacer(sectionComp, toolkit, 2, 1);
 		projectStatusSection = new ProjectStatusSection(sectionComp, toolkit, 2, 1);
+		addSpacer(sectionComp, toolkit, 2, 1);
+		projectLinkSection = new ProjectLinkSection(sectionComp, toolkit, 2, 1);
 		addSpacer(sectionComp, toolkit, 2, 1);
 		appInfoSection = new AppInfoSection(sectionComp, toolkit, 2, 1);
 		addSpacer(sectionComp, toolkit, 2, 1);
@@ -328,6 +344,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			((GridData)sectionComp.getLayoutData()).exclude = false;
 			projectInfoSection.update(app);
 			projectStatusSection.update(app);
+			projectLinkSection.update(app);
 			appInfoSection.update(app);
 		}
 
@@ -547,6 +564,187 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 		}
 	}
 	
+	private class ProjectLinkSection {
+		
+		private final Text toLinkDescriptionText, fromLinkDescriptionText;
+		private final LinkTable toLinkTable, fromLinkTable;
+		
+		public ProjectLinkSection(Composite parent, FormToolkit toolkit, int hSpan, int vSpan) {
+			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR);
+	        section.setText(Messages.AppOverviewEditorProjectLinksSection);
+	        section.setLayoutData(new GridData(SWT.FILL,SWT.FILL, true, false, hSpan, vSpan));
+	        section.setExpanded(true);
+
+	        Composite composite = toolkit.createComposite(section);
+	        GridLayout layout = new GridLayout();
+	        layout.numColumns = 2;
+	        layout.marginHeight = 5;
+	        layout.marginWidth = 10;
+	        layout.verticalSpacing = 10;
+	        layout.horizontalSpacing = 10;
+	        composite.setLayout(layout);
+	        composite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_FILL));
+	        toolkit.paintBordersFor(composite);
+	        section.setClient(composite);
+	        
+			// Link description and manage link
+			toLinkDescriptionText = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+			toLinkDescriptionText.setText(Messages.AppOverviewEditorProjectLinksNoLinks);
+			toLinkDescriptionText.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
+			toLinkDescriptionText.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, false));
+			IDEUtil.paintBackgroundToMatch(toLinkDescriptionText, composite);
+
+			Hyperlink manageLink = toolkit.createHyperlink(composite, Messages.AppOverviewEditorProjectLinksManageLinks, SWT.WRAP);
+			GridData data = new GridData(GridData.END, GridData.BEGINNING, false, false);
+			manageLink.setLayoutData(data);
+
+			manageLink.addHyperlinkListener(new HyperlinkAdapter() {
+				@Override
+				public void linkActivated(org.eclipse.ui.forms.events.HyperlinkEvent e) {
+					final CodewindConnection conn = getConn();
+					final CodewindApplication app = getApp(conn);
+					ManageLinksAction.openManageLinksDialog(app);
+				}
+			});
+
+			// Link table
+			toLinkTable = new LinkTable(composite, toolkit, Messages.LinkMgmtProjectColumn);
+
+			// From link description
+			fromLinkDescriptionText = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
+			fromLinkDescriptionText.setText(Messages.AppOverviewEditorProjectLinksNoFromLinks);
+			fromLinkDescriptionText.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
+			fromLinkDescriptionText.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, false, 2, 1));
+			IDEUtil.paintBackgroundToMatch(fromLinkDescriptionText, composite);
+
+			// From link table
+			fromLinkTable = new LinkTable(composite, toolkit, Messages.AppOverviewEditorProjectLinksSourceProject);
+
+			// Initialize
+			toLinkTable.tableComp.setVisible(false);
+			((GridData) toLinkTable.tableComp.getLayoutData()).exclude = true;
+
+			fromLinkTable.tableComp.setVisible(false);
+			((GridData) fromLinkTable.tableComp.getLayoutData()).exclude = true;
+		}
+		
+		public void update(CodewindApplication app) {
+			// Update links
+			int itemCount = toLinkTable.linkTable.getItemCount();
+			toLinkTable.linkTable.removeAll();
+			ProjectLinks links = app.getProjectLinks();
+			if (links != null) {
+				links.getLinks().forEach(linkInfo -> {
+					CodewindApplication targetApp = app.connection.getAppByID(linkInfo.getProjectId());
+					TableItem item = new TableItem(toLinkTable.linkTable, SWT.NONE);
+					item.setData(linkInfo);
+					if (targetApp != null) {
+						item.setText(0, targetApp.name);
+					} else {
+						String text = Messages.LinkMgmtErrorTargetMissing;
+						String projectName = linkInfo.getProjectName();
+						if (projectName != null && !projectName.isEmpty()) {
+							text += " (" + projectName + ")";
+						}
+						item.setText(0, text);
+						item.setImage(0, PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJS_ERROR_TSK));
+					}
+					item.setText(1, linkInfo.getEnvVar());
+				});
+			}
+			toLinkTable.updateTable(itemCount, toLinkDescriptionText, Messages.AppOverviewEditorProjectLinksNoLinks, Messages.AppOverviewEditorProjectLinksDescription);
+			
+			
+			// Update from links
+			itemCount = fromLinkTable.linkTable.getItemCount();
+			fromLinkTable.linkTable.removeAll();
+			Map<CodewindApplication, List<LinkInfo>> fromLinkMap = app.getLinksToThisProject();
+			if (fromLinkMap != null) {
+				fromLinkMap.entrySet().stream().forEach(entry -> {
+					entry.getValue().stream().forEach(linkInfo -> {
+						TableItem item = new TableItem(fromLinkTable.linkTable, SWT.NONE);
+						item.setData(linkInfo);
+						item.setText(0, entry.getKey().name);
+						item.setText(1, linkInfo.getEnvVar());
+					});
+				});
+			}
+			fromLinkTable.updateTable(itemCount, fromLinkDescriptionText, Messages.AppOverviewEditorProjectLinksNoFromLinks, Messages.AppOverviewEditorProjectLinksFromDescription);
+			
+		}
+		
+		private class LinkTable {
+			public final Composite tableComp;
+			public final Table linkTable;
+			public final TableColumn projectColumn, envVarColumn;
+			
+			public LinkTable(Composite composite, FormToolkit toolkit, String projectColumnLabel) {
+				// Create a composite for the table so can use TableColumnLayout
+				tableComp = toolkit.createComposite(composite, SWT.NONE);
+				TableColumnLayout tableColumnLayout = new TableColumnLayout();
+				tableComp.setLayout(tableColumnLayout);
+				tableComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+				
+				linkTable = toolkit.createTable(tableComp, SWT.BORDER | SWT.H_SCROLL | SWT.MULTI | SWT.FULL_SELECTION);
+				GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
+				data.heightHint = 100;
+				linkTable.setLayoutData(data);
+				
+				linkTable.setHeaderBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
+				
+				// Columns
+				projectColumn = new TableColumn(linkTable, SWT.NONE);
+				projectColumn.setText(projectColumnLabel);
+				projectColumn.setResizable(true);
+				
+				envVarColumn = new TableColumn(linkTable, SWT.NONE);
+				envVarColumn.setText(Messages.LinkMgmtEnvVarColumn);
+				envVarColumn.setResizable(true);
+				
+				linkTable.setHeaderVisible(true);
+				linkTable.setLinesVisible(true);
+				
+				Arrays.stream(linkTable.getColumns()).forEach(TableColumn::pack);
+				tableColumnLayout.setColumnData(projectColumn, new ColumnWeightData(10, Math.max(50, projectColumn.getWidth()), true));
+				tableColumnLayout.setColumnData(envVarColumn, new ColumnWeightData(10, Math.max(50, envVarColumn.getWidth()), true));
+			}
+			
+			public void updateTable(int itemCount, Text descriptionText, String emptyMsg, String descMsg) {
+				boolean changed = false;
+				if (linkTable.getItemCount() > 0) {
+					if (!tableComp.getVisible()) {
+						changed = true;
+						descriptionText.setText(descMsg);
+						tableComp.setVisible(true);
+						((GridData)tableComp.getLayoutData()).exclude = false;
+					}
+					
+					// Resize the table if necessary
+					if (itemCount != linkTable.getItemCount()) {
+						changed = true;
+						int clientWidth = projectColumn.getWidth() + envVarColumn.getWidth();
+						int clientHeight = linkTable.getItemHeight() * linkTable.getItemCount();
+						if (linkTable.getLinesVisible() && linkTable.getItemCount() > 0) {
+							clientHeight += linkTable.getGridLineWidth() * (linkTable.getItemCount() - 1);
+						}
+						Rectangle bounds = linkTable.computeTrim(0, 0, clientWidth, clientHeight);
+						((GridData)linkTable.getLayoutData()).heightHint = bounds.y;
+					}
+				}
+				if (linkTable.getItemCount() == 0 && tableComp.getVisible()) {
+					changed = true;
+					descriptionText.setText(emptyMsg);
+					tableComp.setVisible(false);
+					((GridData)tableComp.getLayoutData()).exclude = true;
+				}
+				if (changed) {
+					descriptionText.requestLayout();
+					tableComp.requestLayout();
+				}
+			}
+		}
+	}
+	
 	private class AppInfoSection {
 		private final StringEntry containerIdEntry;
 		private final StringEntry podNameEntry;
@@ -722,6 +920,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	private String formatTimestamp(long timestamp) {
 		// Temporary - improve by showing how long ago the build happened
 		Date date = new Date(timestamp);

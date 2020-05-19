@@ -102,6 +102,8 @@ public class CoreConstants {
 			VALUE_METRICS_HOSTING_PERF_CONTAINER = "performanceContainer",
 			KEY_METRICS_PATH = "path",
 			KEY_PERF_DASHBOARD_PATH = "perfDashboardPath",
+			KEY_LINKS = "links",
+			KEY_LINKS_ARRAY = "_links",
 			
 			VALUE_INFO = "INFO",
 			VALUE_WARN = "WARN",

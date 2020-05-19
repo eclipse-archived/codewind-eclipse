@@ -63,6 +63,8 @@ public class UpdateHandler implements IUpdateHandler {
 		ViewHelper.refreshCodewindExplorerView(app.connection);
 		ViewHelper.expandConnection(app.connection);
 		updateListeners(UpdateType.REMOVE, app);
+		// This could affect links on other applications
+		updateListeners(UpdateType.MODIFY, app.connection);
 	}
 	
 	private void updateListeners(UpdateType type, Object element) {

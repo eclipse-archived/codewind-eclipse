@@ -51,6 +51,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 	private HideAllLogsAction hideAllLogsAction;
 	private StartBuildAction startBuildAction;
 	private OpenAppDoubleClickAction openAppDoubleClickAction;
+	private ManageLinksAction manageLinksAction;
 	
     @Override
     public void init(ICommonActionExtensionSite aSite) {
@@ -74,6 +75,7 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
         importProjectAction = new ImportProjectAction(selProvider);
         startBuildAction = new StartBuildAction(selProvider);
         openAppDoubleClickAction = new OpenAppDoubleClickAction(selProvider);
+        manageLinksAction = new ManageLinksAction(selProvider);
     }
     
 	@Override
@@ -118,6 +120,9 @@ public class CodewindApplicationActionProvider extends CommonActionProvider {
 		if (menu.getItems().length > numItems) {
 			menu.add(new Separator());
 		}
+		
+		menu.add(manageLinksAction);
+		menu.add(new Separator());
 
 		menu.add(startBuildAction);
 //		if (validateAction.showAction()) {

@@ -504,6 +504,7 @@ public class Messages extends NLS {
 	public static String AddRepoDialogNoDescription;
 	public static String AddRepoDialogNoUrl;
 	
+	public static String RepoListTask;
 	public static String RepoUpdateTask;
 	public static String RepoUpdateErrorTitle;
 	public static String RepoListErrorTitle;
@@ -555,6 +556,7 @@ public class Messages extends NLS {
 	public static String RegMgmtNamespaceDialogTitle;
 	public static String RegMgmtNamespaceDialogMessage;
 	
+	public static String RegListTask;
 	public static String RegUpdateTask;
 	public static String RegUpdateErrorTitle;
 	public static String RegListErrorTitle;

@@ -87,27 +87,31 @@ public class CoreUtil {
 				MessageDialog dialog = new MessageDialog(Display.getDefault().getActiveShell(), title, null, msg, type.getValue(), 0, IDialogConstants.OK_LABEL) {
 					@Override
 					protected Control createCustomArea(Composite parent) {
-						Link link = new Link(parent, SWT.WRAP);
-						link.setText("<a>" + linkLabel + "</a>"); //$NON-NLS-1$ //$NON-NLS-2$
-						link.addSelectionListener(new SelectionAdapter() {
-							@Override
-							public void widgetSelected(SelectionEvent event) {
-								try {
-									IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
-									IWebBrowser browser = browserSupport.getExternalBrowser();
-									URL url = new URL(linkUrl);
-									browser.openURL(url);
-								} catch (Exception e) {
-									Logger.logError("An error occurred trying to open an external browser at: " + link, e); //$NON-NLS-1$
-								}
-							}
-						});
-						return link;
+						return addLinkToDialog(parent, linkLabel, linkUrl);
 					}
 				};
 				dialog.open();
 			}
 		});
+	}
+	
+	public static Control addLinkToDialog(Composite parent, String linkLabel, String linkUrl) {
+		Link link = new Link(parent, SWT.WRAP);
+		link.setText("<a>" + linkLabel + "</a>"); //$NON-NLS-1$ //$NON-NLS-2$
+		link.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
+					IWebBrowser browser = browserSupport.getExternalBrowser();
+					URL url = new URL(linkUrl);
+					browser.openURL(url);
+				} catch (Exception e) {
+					Logger.logError("An error occurred trying to open an external browser at: " + link, e); //$NON-NLS-1$
+				}
+			}
+		});
+		return link;
 	}
 
 	public static boolean openConfirmDialog(String title, String msg) {
@@ -120,8 +124,7 @@ public class CoreUtil {
 		});
 		return result[0];
 	}
-
-
+	
 	public static String readAllFromStream(InputStream stream) {
 		Scanner s = new Scanner(stream);
 		// end-of-stream

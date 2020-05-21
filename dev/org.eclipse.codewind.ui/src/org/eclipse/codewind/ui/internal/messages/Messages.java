@@ -417,6 +417,7 @@ public class Messages extends NLS {
 	public static String NoPushRegistryTitle;
 	public static String NoPushRegistryMessage;
 	public static String NoPushRegistryError;
+	public static String ImageRegistryDocLinkLabel;
 	
 	public static String AppOverviewEditorCreateError;
 	public static String AppOverviewEditorPartName;

@@ -33,6 +33,7 @@ import org.eclipse.codewind.core.internal.connection.ProjectTypeInfo.ProjectSubt
 import org.eclipse.codewind.core.internal.constants.ProjectInfo;
 import org.eclipse.codewind.core.internal.constants.ProjectType;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.UIConstants;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
 import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
@@ -47,12 +48,15 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
@@ -224,7 +228,13 @@ public class BindProjectWizard extends Wizard implements INewWizard {
 						Display.getDefault().syncExec(new Runnable() {
 							@Override
 							public void run() {
-								if (MessageDialog.openConfirm(getShell(), Messages.NoPushRegistryTitle, Messages.NoPushRegistryMessage)) {
+								MessageDialog dialog = new MessageDialog(Display.getDefault().getActiveShell(), Messages.NoPushRegistryTitle, null, Messages.NoPushRegistryMessage, MessageDialog.CONFIRM, 0, IDialogConstants.OK_LABEL, IDialogConstants.CANCEL_LABEL) {
+									@Override
+									protected Control createCustomArea(Composite parent) {
+										return CoreUtil.addLinkToDialog(parent, Messages.ImageRegistryDocLinkLabel, UIConstants.REGISTRY_INFO_URL);
+									}
+								};
+								if (dialog.open() == MessageDialog.OK) {
 									RegistryManagementDialog.open(getShell(), connection, mon.split(40));
 								} else {
 									mon.setCanceled(true);

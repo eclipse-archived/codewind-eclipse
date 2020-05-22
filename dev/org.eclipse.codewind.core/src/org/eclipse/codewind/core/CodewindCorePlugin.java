@@ -50,6 +50,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 			// Int option for debug timeout in seconds
 			DEBUG_CONNECT_TIMEOUT_PREFSKEY = "serverDebugTimeout"; //$NON-NLS-1$
 	
+	public static final String USE_BUILTIN_NODEJS_DEBUG_PREFSKEY = "useBuiltinNodejsDebug"; //$NON-NLS-1$
 	public static final String NODEJS_DEBUG_BROWSER_PREFSKEY = "nodejsDebugBrowserName"; //$NON-NLS-1$
 
 	// The shared instance
@@ -91,6 +92,7 @@ public class CodewindCorePlugin extends AbstractUIPlugin {
 		getPreferenceStore().setDefault(CW_STOP_TIMEOUT, InstallUtil.STOP_TIMEOUT_DEFAULT);
 		getPreferenceStore().setDefault(AUTO_OPEN_OVERVIEW_PAGE, true);
 		getPreferenceStore().setDefault(ENABLE_SUPPORT_FEATURES, false);
+		getPreferenceStore().setDefault(USE_BUILTIN_NODEJS_DEBUG_PREFSKEY, true);
 	}
 
 	/*

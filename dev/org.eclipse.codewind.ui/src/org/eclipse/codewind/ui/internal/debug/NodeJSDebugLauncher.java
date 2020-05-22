@@ -13,11 +13,15 @@ package org.eclipse.codewind.ui.internal.debug;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.IDebugLauncher;
@@ -26,10 +30,24 @@ import org.eclipse.codewind.core.internal.KubeUtil.PortForwardInfo;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.PlatformUtil;
 import org.eclipse.codewind.core.internal.RemoteEclipseApplication;
+import org.eclipse.codewind.core.internal.launch.CodewindLaunchConfigDelegate;
+import org.eclipse.codewind.core.internal.launch.RemoteLaunchConfigDelegate;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.messages.Messages;
+import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationType;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.core.model.IDebugTarget;
+import org.eclipse.debug.core.model.IProcess;
+import org.eclipse.debug.core.model.RuntimeProcess;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -44,10 +62,19 @@ import org.json.JSONObject;
 @SuppressWarnings("restriction") //$NON-NLS-1$
 public class NodeJSDebugLauncher implements IDebugLauncher {
 	
+	private static final String NODEJS_LAUNCH_CONFIG_ID = "org.eclipse.wildwebdeveloper.launchConfiguration.nodeDebugAttach";
+	private static final String ADDRESS_ATTR = "address";
+	private static final String PORT_ATTR = "port";
+	private static final String LOCAL_ROOT_ATTR = "localRoot";
+	private static final String REMOTE_ROOT_ATTR = "remoteRoot";
+	
+	
 	private static final String DEBUG_INFO = "/json/list";
 	private static final String DEVTOOLS_URL_FIELD = "devtoolsFrontendUrl";
 	
-	public IStatus launchDebugger(CodewindApplication app) {
+	private static Optional<ILaunchConfigurationType> launchConfigType = null;
+	
+	public IStatus launchDebugger(CodewindEclipseApplication app, IProgressMonitor monitor) {
 		PortForwardInfo pfInfo = null;
 		if (app instanceof RemoteEclipseApplication && app.getDebugConnectPort() == -1) {
 			int port = PlatformUtil.findFreePort();
@@ -57,12 +84,56 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 				return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.NodeJSDebugPortForwardError, app.name), new IOException(msg));
 			}
 			try {
-				pfInfo = KubeUtil.launchPortForward(app, port, app.getContainerDebugPort());
+				if (useBuiltinDebugger()) {
+					pfInfo = KubeUtil.startPortForward(app, port, app.getContainerDebugPort());
+				} else {
+					pfInfo = KubeUtil.launchPortForward(app, port, app.getContainerDebugPort());
+				}
 				((RemoteEclipseApplication)app).setDebugPFInfo(pfInfo);
 			} catch (Exception e) {
 				return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.NodeJSDebugPortForwardError, app.name), e);
 			}
 		}
+		
+		IStatus status;
+		if (useBuiltinDebugger()) {
+			status = launchInternalDebugSession(app, pfInfo, monitor);
+		} else {
+			status = launchBrowserDebugSession(app);
+		}
+
+		if (status == Status.CANCEL_STATUS && pfInfo != null) {
+			// Terminate the port forward if the user canceled
+			pfInfo.terminateAndRemove();
+		}
+		return status;
+	}
+	
+	private IStatus launchInternalDebugSession(CodewindEclipseApplication app, PortForwardInfo pfInfo, IProgressMonitor monitor) {
+		try {
+			ILaunchConfigurationWorkingCopy workingCopy = getLaunchConfigType().get().newInstance((IContainer) null, app.name);
+			workingCopy.setAttribute(ADDRESS_ATTR, app.getDebugConnectHost());
+			workingCopy.setAttribute(PORT_ATTR, app.getDebugConnectPort());
+			workingCopy.setAttribute(LOCAL_ROOT_ATTR, app.fullLocalPath.toOSString());
+			workingCopy.setAttribute(REMOTE_ROOT_ATTR, "/app");
+			CodewindLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
+			ILaunchConfiguration launchConfig = workingCopy.doSave();
+			ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);
+			if (pfInfo != null && pfInfo.process != null) {
+				Map<String, String> attributes = new HashMap<String, String>();
+				attributes.put(IProcess.ATTR_PROCESS_TYPE, "codewind.utility");
+				String title = NLS.bind(Messages.PortForwardTitle, pfInfo.localPort + ":" + app.getContainerDebugPort());
+				launch.addProcess(new RuntimeProcess(launch, pfInfo.process, title, attributes));
+				RemoteLaunchConfigDelegate.addDebugEventListener(launch);
+			}
+			app.setLaunch(launch);
+		} catch (CoreException e) {
+			return e.getStatus();
+		}
+		return Status.OK_STATUS;
+	}
+
+	private IStatus launchBrowserDebugSession(CodewindApplication app) {
 		String urlString = null;
 		Exception e = null;
 		try {
@@ -74,17 +145,35 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 			Logger.logError("Failed to get the debug URL for the " + app.name + " application.", e); //$NON-NLS-1$ //$NON-NLS-2$
 			return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, NLS.bind(Messages.NodeJSDebugURLError, app.name), e);
 		}
-		
+
 		IStatus status = openNodeJSDebugger(urlString);
-		if (status == Status.CANCEL_STATUS && pfInfo != null) {
-			// Terminate the port forward if the user canceled
-			pfInfo.terminateAndRemove();
-		}
 		return status;
+	}
+
+	private static Optional<ILaunchConfigurationType> getLaunchConfigType() {
+		if (launchConfigType == null) {
+			ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
+			launchConfigType = Optional.ofNullable(launchManager.getLaunchConfigurationType(NODEJS_LAUNCH_CONFIG_ID));
+		}
+		return launchConfigType;
+	}
+	
+	public static boolean useBuiltinDebugger() {
+		return hasBuiltinDebugger() && CodewindCorePlugin.getDefault().getPreferenceStore().getBoolean(CodewindCorePlugin.USE_BUILTIN_NODEJS_DEBUG_PREFSKEY);
+	}
+	
+	public static boolean hasBuiltinDebugger() {
+		return getLaunchConfigType().isPresent();
 	}
 	
 	@Override
-	public boolean canAttachDebugger(CodewindApplication app) {
+	public boolean canAttachDebugger(CodewindEclipseApplication app) {
+		if (useBuiltinDebugger()) {
+			ILaunch launch = app.getLaunch();
+			IDebugTarget debugTarget = launch == null ? null : launch.getDebugTarget();
+			return (debugTarget == null || debugTarget.isDisconnected());
+		}
+		
 		String host = app.getDebugConnectHost();
 		int debugPort = app.getDebugConnectPort();
 		

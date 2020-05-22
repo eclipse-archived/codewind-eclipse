@@ -84,6 +84,13 @@ public class RemoteLaunchConfigDelegate extends CodewindLaunchConfigDelegate {
 		String title = NLS.bind(Messages.PortForwardTitle, localPort + ":" + app.getContainerDebugPort());
 		launch.addProcess(new RuntimeProcess(launch, pfInfo.process, title, attributes));
 
+		addDebugEventListener(launch);
+
+		// Launch the debug session
+		super.launch(config, launchMode, launch, monitor);
+	}
+	
+	public static void addDebugEventListener(final ILaunch launch) {
 		// Add the debug listener
 		DebugPlugin.getDefault().addDebugEventListener(new IDebugEventSetListener() {
 			@Override
@@ -109,8 +116,6 @@ public class RemoteLaunchConfigDelegate extends CodewindLaunchConfigDelegate {
 				}
 			}
 		});
-
-		// Launch the debug session
-		super.launch(config, launchMode, launch, monitor);
 	}
+	
 }

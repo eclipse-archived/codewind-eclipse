@@ -14,6 +14,7 @@ package org.eclipse.codewind.ui.internal.actions;
 import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
+import org.eclipse.codewind.ui.internal.debug.NodeJSDebugLauncher;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -40,7 +41,7 @@ public class AttachDebuggerAction extends SelectionProviderAction {
 			if (obj instanceof CodewindEclipseApplication) {
             	app = (CodewindEclipseApplication) obj;
             	if (app.projectLanguage.isJavaScript()) {
-            		this.setText(Messages.LaunchDebugSessionLabel);
+            		this.setText(NodeJSDebugLauncher.useBuiltinDebugger() ? Messages.AttachDebuggerLabel : Messages.LaunchDebugSessionLabel);
             	} else {
             		this.setText(Messages.AttachDebuggerLabel);
             	}

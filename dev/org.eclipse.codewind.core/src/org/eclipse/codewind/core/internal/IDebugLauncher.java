@@ -11,12 +11,13 @@
 
 package org.eclipse.codewind.core.internal;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 
 public interface IDebugLauncher {
 	
-	public IStatus launchDebugger(CodewindApplication app);
+	public IStatus launchDebugger(CodewindEclipseApplication app, IProgressMonitor monitor);
 	
-	public boolean canAttachDebugger(CodewindApplication app);
+	public boolean canAttachDebugger(CodewindEclipseApplication app);
 	
 }

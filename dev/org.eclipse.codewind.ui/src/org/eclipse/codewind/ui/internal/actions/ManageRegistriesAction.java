@@ -11,6 +11,7 @@
 
 package org.eclipse.codewind.ui.internal.actions;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.eclipse.codewind.core.internal.Logger;
@@ -22,7 +23,7 @@ import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -30,6 +31,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionProviderAction;
 
 /**
@@ -66,9 +68,18 @@ public class ManageRegistriesAction extends SelectionProviderAction {
 			return;
 		}
 		try {
-			List<RegistryInfo> regList = RegistryUtil.listRegistrySecrets(connection.getConid(), new NullProgressMonitor());
+			@SuppressWarnings (value="unchecked")
+			List<RegistryInfo>[] regListArray = new List[1];
+			PlatformUI.getWorkbench().getProgressService().busyCursorWhile((monitor) -> {
+				try {
+					SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.RegListTask, connection.getName()), 100);
+					regListArray[0] = RegistryUtil.listRegistrySecrets(connection.getConid(), mon.split(100));
+				} catch (Exception e) {
+					throw new InvocationTargetException(e, "An error occurred trying to get the image registries for: " + connection.getName() + ": " + e.getMessage()); //$NON-NLS-1$  //$NON-NLS-2$
+				}
+			});
 			ImagePushRegistryInfo pushReg = connection.requestGetPushRegistry();
-			RegistryManagementDialog regDialog = new RegistryManagementDialog(Display.getDefault().getActiveShell(), connection, regList, pushReg);
+			RegistryManagementDialog regDialog = new RegistryManagementDialog(Display.getDefault().getActiveShell(), connection, regListArray[0], pushReg);
 			if (regDialog.open() == Window.OK && regDialog.hasChanges()) {
 				Job job = new Job(Messages.RegUpdateTask) {
 					@Override

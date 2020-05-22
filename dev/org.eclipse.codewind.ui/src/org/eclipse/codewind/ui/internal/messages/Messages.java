@@ -354,6 +354,8 @@ public class Messages extends NLS {
 	public static String NodeJSDebugPortForwardError;
 	public static String NodeJSDebugURLError;
 	
+	public static String PortForwardTitle;
+	
 	public static String BrowserSelectionTitle;
 	public static String BrowserSelectionDescription;
 	public static String BrowserSelectionLabel;
@@ -504,6 +506,7 @@ public class Messages extends NLS {
 	public static String AddRepoDialogNoDescription;
 	public static String AddRepoDialogNoUrl;
 	
+	public static String RepoListTask;
 	public static String RepoUpdateTask;
 	public static String RepoUpdateErrorTitle;
 	public static String RepoListErrorTitle;
@@ -555,6 +558,7 @@ public class Messages extends NLS {
 	public static String RegMgmtNamespaceDialogTitle;
 	public static String RegMgmtNamespaceDialogMessage;
 	
+	public static String RegListTask;
 	public static String RegUpdateTask;
 	public static String RegUpdateErrorTitle;
 	public static String RegListErrorTitle;

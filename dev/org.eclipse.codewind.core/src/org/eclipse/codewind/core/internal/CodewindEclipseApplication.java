@@ -151,7 +151,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 					} else {
 						IDebugLauncher launcher = CodewindCorePlugin.getDebugLauncher(app.projectLanguage.getId());
 						if (launcher != null) {
-							return launcher.launchDebugger(app);
+							return launcher.launchDebugger(app, monitor);
 						}
 					}
 				} catch (Exception e) {

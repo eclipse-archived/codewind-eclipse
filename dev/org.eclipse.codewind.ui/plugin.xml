@@ -60,6 +60,10 @@
 			id="org.eclipse.codewind.ui.internal.launchConfigTabGroup"
 			type="org.eclipse.codewind.core.internal.launchConfigurationType"
 			class="org.eclipse.codewind.ui.internal.CodewindLaunchConfigTabGroup"/>
+		<launchConfigurationTabGroup
+			id="org.eclipse.codewind.ui.internal.remoteLaunchConfigTabGroup"
+			type="org.eclipse.codewind.core.internal.remoteLaunchConfigurationType"
+			class="org.eclipse.codewind.ui.internal.CodewindLaunchConfigTabGroup"/>
 	</extension>
 
 	<!--  Extensions for Codewind Explorer View -->

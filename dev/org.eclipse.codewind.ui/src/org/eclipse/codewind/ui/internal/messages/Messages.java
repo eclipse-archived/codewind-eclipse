@@ -354,6 +354,8 @@ public class Messages extends NLS {
 	public static String NodeJSDebugPortForwardError;
 	public static String NodeJSDebugURLError;
 	
+	public static String PortForwardTitle;
+	
 	public static String BrowserSelectionTitle;
 	public static String BrowserSelectionDescription;
 	public static String BrowserSelectionLabel;

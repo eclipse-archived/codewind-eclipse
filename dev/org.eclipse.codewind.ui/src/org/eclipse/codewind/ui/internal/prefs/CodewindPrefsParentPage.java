@@ -19,6 +19,7 @@ import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.InstallUtil;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
+import org.eclipse.codewind.ui.internal.debug.NodeJSDebugLauncher;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
@@ -57,8 +58,12 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 	private Button autoOpenOverviewButton, supportFeaturesButton;
 	private Text installTimeoutText, uninstallTimeoutText, startTimeoutText, stopTimeoutText;
 	private Text debugTimeoutText;
+	private Label browserSelectionLabel;
 	private Combo webBrowserCombo;
+	private Link addBrowserButton;
 	private Button[] stopAppsButtons = new Button[3];
+	private Button useBuiltinDebugButton;
+	private Composite selectWebBrowserComposite;
 		
 	private String browserName = null;
 
@@ -183,18 +188,25 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 				validate();
 			}
 		});
+		
+	    if (NodeJSDebugLauncher.hasBuiltinDebugger()) {
+	    	useBuiltinDebugButton = new Button(debugGroup, SWT.CHECK);
+	    	useBuiltinDebugButton.setText("Use Eclipse builtin node.js debugger");
+	    	useBuiltinDebugButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1));
+	    	useBuiltinDebugButton.setSelection(prefs.getBoolean(CodewindCorePlugin.USE_BUILTIN_NODEJS_DEBUG_PREFSKEY));
+	    }
 		 	    
-	    final Composite selectWebBrowserComposite = new Composite(debugGroup, SWT.NONE);
+	    selectWebBrowserComposite = new Composite(debugGroup, SWT.NONE);
 	    layout = new GridLayout();
 		layout.horizontalSpacing = convertHorizontalDLUsToPixels(4);
 		layout.verticalSpacing = convertVerticalDLUsToPixels(3);
-		layout.marginWidth = 3;
-		layout.marginHeight = 2;
+		layout.marginWidth = 15;
+		layout.marginHeight = 0;
 	    layout.numColumns = 2;
 	    selectWebBrowserComposite.setLayout(layout);
 	    selectWebBrowserComposite.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false, 2, 1));
 	    
-	    Label browserSelectionLabel = new Label(selectWebBrowserComposite, SWT.NONE);
+	    browserSelectionLabel = new Label(selectWebBrowserComposite, SWT.NONE);
 	    browserSelectionLabel.setText(Messages.BrowserSelectionLabel);
 	    browserSelectionLabel.setLayoutData(new GridData(GridData.BEGINNING, GridData.FILL, false, false, 2, 1));
         
@@ -202,7 +214,7 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
         
 	    refreshPreferencesPage();
 	    	    
-		Link addBrowserButton = new Link(selectWebBrowserComposite, SWT.NONE);
+		addBrowserButton = new Link(selectWebBrowserComposite, SWT.NONE);
 		addBrowserButton.setText("<a href=\"org.eclipse.ui.browser.preferencePage\">"+Messages.BrowserSelectionManageButtonText+"</a>"); //$NON-NLS-1$ //$NON-NLS-2$
 		addBrowserButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {				
@@ -210,14 +222,31 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 						.getShell(), e.text, null, null);
 				composite.layout();				
 			}
-		});	   
+		});
+		
+		if (useBuiltinDebugButton != null) {
+			useBuiltinDebugButton.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					enableBrowserControls();
+				}
+			});
+		}
 		
 		Label endSpacer = new Label(composite, SWT.NONE);
 		endSpacer.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1));
 		// this last label just moves the Default and Apply buttons over
 		new Label(composite, SWT.NONE);
 
+		enableBrowserControls();
 		return composite;
+	}
+	
+	private void enableBrowserControls() {
+		boolean enable = useBuiltinDebugButton == null || !useBuiltinDebugButton.getSelection();
+		browserSelectionLabel.setEnabled(enable);
+		webBrowserCombo.setEnabled(enable);
+		addBrowserButton.setEnabled(enable);
 	}
 	
 	private Text createCWTimeoutEntry(Composite comp, String label, String prefKey) {
@@ -310,6 +339,8 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		// removes any trimmed space
 		debugTimeoutText.setText("" + debugTimeout); //$NON-NLS-1$
 		
+		prefs.setValue(CodewindCorePlugin.USE_BUILTIN_NODEJS_DEBUG_PREFSKEY, useBuiltinDebugButton.getSelection());
+		
 		if (this.webBrowserCombo != null) {
 			// The first option in the webBrowserCombo is to not use the default browser.
 			// As a result, if the first option is selected, then remove the preference
@@ -343,7 +374,14 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		
 		debugTimeoutText.setText("" + 	//$NON-NLS-1$
 				prefs.getDefaultInt(CodewindCorePlugin.DEBUG_CONNECT_TIMEOUT_PREFSKEY));
+		
+		if (useBuiltinDebugButton != null) {
+			useBuiltinDebugButton.setSelection(prefs.getDefaultBoolean(CodewindCorePlugin.USE_BUILTIN_NODEJS_DEBUG_PREFSKEY));
+			webBrowserCombo.setEnabled(!useBuiltinDebugButton.getSelection());
+			addBrowserButton.setEnabled(!useBuiltinDebugButton.getSelection());
+		}
 		webBrowserCombo.select(0);
+		enableBrowserControls();
 	}
 	
 	// Refreshes all changes

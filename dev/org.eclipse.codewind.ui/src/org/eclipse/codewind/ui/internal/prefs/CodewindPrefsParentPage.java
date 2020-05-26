@@ -339,7 +339,9 @@ public class CodewindPrefsParentPage extends PreferencePage implements IWorkbenc
 		// removes any trimmed space
 		debugTimeoutText.setText("" + debugTimeout); //$NON-NLS-1$
 		
-		prefs.setValue(CodewindCorePlugin.USE_BUILTIN_NODEJS_DEBUG_PREFSKEY, useBuiltinDebugButton.getSelection());
+		if (useBuiltinDebugButton != null) {
+			prefs.setValue(CodewindCorePlugin.USE_BUILTIN_NODEJS_DEBUG_PREFSKEY, useBuiltinDebugButton.getSelection());
+		}
 		
 		if (this.webBrowserCombo != null) {
 			// The first option in the webBrowserCombo is to not use the default browser.

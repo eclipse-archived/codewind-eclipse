@@ -13,12 +13,17 @@ package org.eclipse.codewind.ui.internal.editors;
 
 import java.net.URL;
 import java.util.Date;
+import java.util.Optional;
 
 import org.eclipse.codewind.core.internal.CodewindApplication;
+import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.LocalConnection;
+import org.eclipse.codewind.core.internal.console.CodewindConsoleFactory;
+import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
+import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.IDEUtil;
@@ -51,6 +56,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
@@ -59,6 +65,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
+import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.forms.ManagedForm;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
@@ -278,6 +285,21 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 					break;
 				}
 			});
+		} else if (element == null) {
+			// A null element means update everything
+			CodewindApplication app = getApp(getConn());
+			if (app != null) {
+				Display.getDefault().asyncExec(() -> {
+					switch(type) {
+					case MODIFY:
+						ApplicationOverviewEditorPart.this.update(app.connection, app);
+						break;
+					case REMOVE:
+						// Do nothing. There should never be a top level remove event.
+						break;
+					}
+				});
+			}
 		}
 	}
 
@@ -370,6 +392,8 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 		private final StringEntry buildStatusEntry;
 		private final StringEntry lastBuildEntry;
 		private final StringEntry lastImageBuildEntry;
+		private final Link projectLogs;
+		private final Text noProjectLogs;
 		
 		public ProjectStatusSection(Composite parent, FormToolkit toolkit, int hSpan, int vSpan) {
 			Section section = toolkit.createSection(parent, ExpandableComposite.TWISTIE | ExpandableComposite.TITLE_BAR);
@@ -395,6 +419,48 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 	        buildStatusEntry = new StringEntry(composite, Messages.AppOverviewEditorBuildStatusEntry);
 	        lastImageBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastImageBuildEntry);
 	        lastBuildEntry = new StringEntry(composite, Messages.AppOverviewEditorLastBuildEntry);
+	        
+			Label label = new Label(composite, SWT.NONE);
+			label.setFont(boldFont);
+			label.setText(Messages.AppOverviewEditorProjectLogs);
+			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			projectLogs = new Link(composite, SWT.NONE);
+			projectLogs.setVisible(false);
+			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, true, false);
+			data.horizontalIndent = 2;
+			data.exclude = true;
+			projectLogs.setLayoutData(data);
+			projectLogs.addListener(SWT.Selection, event -> {
+				CodewindEclipseApplication app = (CodewindEclipseApplication) getApp(getConn());
+				if (app == null) {
+					Logger.logError("A log link was selected but could not find the application for the " + connectionId //$NON-NLS-1$
+							+ " connection with name: " + projectId); //$NON-NLS-1$
+					return;
+				}
+				Optional<ProjectLogInfo> logInfo = app.getLogInfos().stream().filter(info -> info.logName.equals(event.text)).findFirst();
+				if (logInfo.isPresent()) {
+					try {
+						SocketConsole console = app.getConsole(logInfo.get());
+						if (console == null) {
+							console = CodewindConsoleFactory.createLogFileConsole(app, logInfo.get());
+							app.addConsole(console);
+						}
+						ConsolePlugin.getDefault().getConsoleManager().showConsoleView(console);
+					} catch (Exception e) {
+						Logger.logError("An error occurred trying to open the " + logInfo.get().logName //$NON-NLS-1$
+								+ "log file for application: " + projectId, e); //$NON-NLS-1$
+						MessageDialog.openError(parent.getShell(), Messages.AppOverviewEditorOpenLogErrorTitle,
+								NLS.bind(Messages.AppOverviewEditorOpenLogErrorMsg, new String[] {logInfo.get().logName, app.name, e.getMessage()}));
+					}
+				} else {
+					Logger.logError("The " + event.text + " was selected but the associated log info could not be found for the " + projectId + " project."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
+			});
+			noProjectLogs = new Text(composite, SWT.READ_ONLY);
+			noProjectLogs.setText(Messages.AppOverviewEditorNoProjectLogs);
+			noProjectLogs.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
+			noProjectLogs.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, false));
+			IDEUtil.paintBackgroundToMatch(noProjectLogs, composite);
 		}
 		
 		public void update(CodewindApplication app) {
@@ -414,6 +480,31 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 				lastBuildStr = formatTimestamp(lastBuild);
 			}
 			lastBuildEntry.setValue(lastBuildStr, true);
+			
+			if (app.isAvailable() && !app.getLogInfos().isEmpty()) {
+				StringBuilder builder = new StringBuilder();
+				app.getLogInfos().stream().forEach(info -> {
+					if (builder.length() > 0) {
+						builder.append(", ");
+					}
+					builder.append("<a>" + info.logName + "</a>"); //$NON-NLS-1$ //$NON-NLS-2$
+				});
+				boolean changed = !projectLogs.getVisible() || !builder.toString().equals(projectLogs.getText());
+				projectLogs.setText(builder.toString());
+				projectLogs.setToolTipText(Messages.AppOverviewEditorProjectLogsTooltip);
+				IDEUtil.setControlVisibility(projectLogs, true);
+				IDEUtil.setControlVisibility(noProjectLogs, false);
+				if (changed) {
+					projectLogs.requestLayout();
+				}
+			} else {
+				boolean changed = !noProjectLogs.getVisible();
+				IDEUtil.setControlVisibility(projectLogs, false);
+				IDEUtil.setControlVisibility(noProjectLogs, true);
+				if (changed) {
+					noProjectLogs.requestLayout();
+				}
+			}
 		}
 		
 		private String getAppStatusString(CodewindApplication app) {

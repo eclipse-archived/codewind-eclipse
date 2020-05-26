@@ -456,6 +456,11 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorLastImageBuildEntry;
 	public static String AppOverviewEditorProjectNeverBuilt;
 	public static String AppOverviewEditorImageNeverBuilt;
+	public static String AppOverviewEditorProjectLogs;
+	public static String AppOverviewEditorNoProjectLogs;
+	public static String AppOverviewEditorProjectLogsTooltip;
+	public static String AppOverviewEditorOpenLogErrorTitle;
+	public static String AppOverviewEditorOpenLogErrorMsg;
 	public static String AppOverviewEditorRefreshButton;
 	public static String AppOverviewEditorNotAvailable;
 	public static String AppOverviewEditorDebugNotSupported;

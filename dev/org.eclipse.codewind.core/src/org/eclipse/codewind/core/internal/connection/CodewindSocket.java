@@ -527,6 +527,7 @@ public class CodewindSocket {
 			List<ProjectLogInfo> logInfos = CodewindConnection.getLogs(logs, type);
 			app.addLogInfos(logInfos);
 		}
+		CoreUtil.updateApplication(app);
 	}
 	
 	private void onValidationEvent(JSONObject event) throws JSONException {

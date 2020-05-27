@@ -431,7 +431,17 @@ public class CodewindSocket {
 							app.name, status));
 			return;
 		}
-
+		
+		// Set the application base URL
+		if (event.has(CoreConstants.KEY_APP_BASE_URL)) {
+			app.setAppBaseUrl(event.getString(CoreConstants.KEY_APP_BASE_URL));
+		}
+		
+		// Set the pod name
+		if (event.has(CoreConstants.KEY_POD_NAME)) {
+			app.setPodName(event.getString(CoreConstants.KEY_POD_NAME));
+		}
+		
 		// Update the ports
 		CodewindApplicationFactory.setPorts(event, app);
 		

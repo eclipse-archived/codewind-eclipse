@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ExtensionConfig;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
 import org.eclipse.codewind.core.internal.constants.DetailedAppStatus;
@@ -120,6 +121,8 @@ public class CodewindApplicationFactory {
 			localPath = CoreUtil.getHostPath(localPath);
 			
 			CodewindApplication app = CodewindObjectFactory.createCodewindApplication(connection, id, name, type, language, new Path(localPath));
+			
+			app.setExtensionConfig(ExtensionConfig.getExtensionConfig(appJso));
 			
 			updateApp(app, appJso);
 			return app;

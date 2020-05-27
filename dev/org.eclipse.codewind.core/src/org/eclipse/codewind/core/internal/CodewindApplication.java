@@ -201,6 +201,10 @@ public class CodewindApplication {
 		this.namespace = namespace;
 	}
 	
+	public synchronized void setPodName(String podName) {
+		this.podName = podName;
+	}
+	
 	public synchronized void setAction(String action) {
 		this.action = action;
 	}

@@ -137,7 +137,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 				} else {
 					if (appStatus != AppStatus.UNKNOWN) {
 						DetailedAppStatus details = app.getAppStatusDetails();
-						if (details != null && details.getMessage() != null) {
+						if (details != null && details.getMessage() != null && details.getSeverity() != Severity.INFO) {
 						    builder.append(" [" + appStatus.getDisplayString(app.getStartMode()) + ": ");
 							if (details.getSeverity() != null) {
 								builder.append("(" + details.getSeverity().displayString + ") ");
@@ -257,7 +257,7 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 				} else {
 					if (appStatus != AppStatus.UNKNOWN) {
 						DetailedAppStatus details = app.getAppStatusDetails();
-						if (details != null && details.getMessage() != null) {
+						if (details != null && details.getMessage() != null && details.getSeverity() != Severity.INFO) {
 							styledString.append(" [" + appStatus.getDisplayString(app.getStartMode()) + ": ", StyledString.DECORATIONS_STYLER);
 							Styler styler = details.getSeverity() != null && details.getSeverity() == Severity.ERROR ? ERROR_STYLER : StyledString.QUALIFIER_STYLER;
 							if (details.getSeverity() != null) {
@@ -346,8 +346,9 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
     		}
     	} else if (element instanceof CodewindApplication) {
 			CodewindApplication app = (CodewindApplication)element;
-			if (app.getAppStatusDetails() != null && app.getAppStatusDetails().getMessage() != null) {
-				return app.getAppStatusDetails().getMessage();
+			DetailedAppStatus details = app.getAppStatusDetails();
+			if (details != null && details.getMessage() != null) {
+				return (details.getSeverity() == null ? "" : details.getSeverity().displayString + ": ") + details.getMessage();
 			} else if (app.getRootUrl() != null && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED)) {
 				return NLS.bind(Messages.CodewindDescriptionContextRoot, app.getRootUrl());
 			}
@@ -357,12 +358,6 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 
 	@Override
 	public String getToolTipText(Object element) {
-		if (element instanceof CodewindApplication) {
-			DetailedAppStatus details = ((CodewindApplication)element).getAppStatusDetails();
-			if (details != null && details.getMessage() != null) {
-				return (details.getSeverity() == null ? "" : details.getSeverity().displayString + ": ") + details.getMessage();
-			}
-		}
 		return getDescription(element);
 	}
 

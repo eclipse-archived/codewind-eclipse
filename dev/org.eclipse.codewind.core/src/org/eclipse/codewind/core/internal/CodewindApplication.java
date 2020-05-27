@@ -21,6 +21,7 @@ import java.util.Vector;
 
 import org.eclipse.codewind.core.internal.HttpUtil.HttpResult;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
+import org.eclipse.codewind.core.internal.connection.ExtensionConfig;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.constants.AppStatus;
 import org.eclipse.codewind.core.internal.constants.BuildStatus;
@@ -73,6 +74,7 @@ public class CodewindApplication {
 	private boolean isHttps = false;
 	private boolean deleteContents = false;
 	private final Vector<String> activeNotificationIDs = new Vector<String>();
+	private ExtensionConfig extensionConfig;
 	
 
 	// Must be updated whenever httpPort changes. Can be null
@@ -514,6 +516,14 @@ public class CodewindApplication {
 	
 	public synchronized boolean getIsHttps() {
 		return isHttps;
+	}
+	
+	public synchronized void setExtensionConfig(ExtensionConfig config) {
+		extensionConfig = config;
+	}
+	
+	public synchronized String getContainerAppRoot() {
+		return extensionConfig == null ? null : extensionConfig.getContainerAppRoot();
 	}
 	
 	public synchronized void setDeleteContents(boolean value) {

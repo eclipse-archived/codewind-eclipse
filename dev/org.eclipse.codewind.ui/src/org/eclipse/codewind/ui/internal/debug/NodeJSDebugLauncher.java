@@ -115,7 +115,7 @@ public class NodeJSDebugLauncher implements IDebugLauncher {
 			workingCopy.setAttribute(ADDRESS_ATTR, app.getDebugConnectHost());
 			workingCopy.setAttribute(PORT_ATTR, app.getDebugConnectPort());
 			workingCopy.setAttribute(LOCAL_ROOT_ATTR, app.fullLocalPath.toOSString());
-			workingCopy.setAttribute(REMOTE_ROOT_ATTR, "/app");
+			workingCopy.setAttribute(REMOTE_ROOT_ATTR, app.getContainerAppRoot() == null ? "/app" : app.getContainerAppRoot());
 			CodewindLaunchConfigDelegate.setConfigAttributes(workingCopy, app);
 			ILaunchConfiguration launchConfig = workingCopy.doSave();
 			ILaunch launch = launchConfig.launch(ILaunchManager.DEBUG_MODE, monitor);

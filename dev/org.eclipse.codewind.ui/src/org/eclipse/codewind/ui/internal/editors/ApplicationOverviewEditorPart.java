@@ -430,6 +430,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			data.horizontalIndent = 2;
 			data.exclude = true;
 			projectLogs.setLayoutData(data);
+			IDEUtil.paintBackgroundToMatch(projectLogs, composite);
 			projectLogs.addListener(SWT.Selection, event -> {
 				CodewindEclipseApplication app = (CodewindEclipseApplication) getApp(getConn());
 				if (app == null) {

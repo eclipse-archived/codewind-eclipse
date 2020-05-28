@@ -425,6 +425,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			label.setText(Messages.AppOverviewEditorProjectLogs);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			projectLogs = new Link(composite, SWT.NONE);
+			projectLogs.setText("");
 			projectLogs.setVisible(false);
 			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, true, false);
 			data.horizontalIndent = 2;
@@ -499,6 +500,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 				}
 			} else {
 				boolean changed = !noProjectLogs.getVisible();
+				projectLogs.setText("");
 				IDEUtil.setControlVisibility(projectLogs, false);
 				IDEUtil.setControlVisibility(noProjectLogs, true);
 				if (changed) {

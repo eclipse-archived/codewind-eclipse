@@ -37,6 +37,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
@@ -163,5 +164,9 @@ public class IDEUtil {
 				.filter(console -> console instanceof org.eclipse.debug.ui.console.IConsole
 						&& processes.contains(((org.eclipse.debug.ui.console.IConsole) console).getProcess()))
 				.findFirst();
+	}
+	
+	public static String getTextValue(Text text) {
+		return text.getText() == null || text.getText().trim().isEmpty() ? null : text.getText().trim();
 	}
 }

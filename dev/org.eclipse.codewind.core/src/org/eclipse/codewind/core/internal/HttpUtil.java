@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corporation and others.
+ * Copyright (c) 2018, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.eclipse.codewind.core.internal.cli.AuthToken;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -142,55 +141,55 @@ public class HttpUtil {
 		return get(uri, null);
 	}
 	
-	public static HttpResult get(URI uri, AuthToken auth) throws IOException {
+	public static HttpResult get(URI uri, IAuthInfo auth) throws IOException {
 		return sendRequest("GET", uri, auth, null);
 	}
 	
-	public static HttpResult get(URI uri, AuthToken auth, int connectTimeoutMS, int readTimeoutMS) throws IOException {
+	public static HttpResult get(URI uri, IAuthInfo auth, int connectTimeoutMS, int readTimeoutMS) throws IOException {
 		return sendRequest("GET", uri, auth, null, connectTimeoutMS, readTimeoutMS);
 	}
 	
-	public static HttpResult post(URI uri, AuthToken auth, JSONObject payload) throws IOException {
+	public static HttpResult post(URI uri, IAuthInfo auth, JSONObject payload) throws IOException {
 		return sendRequest("POST", uri, auth, payload, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_READ_TIMEOUT_MS);
 	}
 
-	public static HttpResult post(URI uri, AuthToken auth, JSONObject payload, int readTimeoutSeconds) throws IOException {
+	public static HttpResult post(URI uri, IAuthInfo auth, JSONObject payload, int readTimeoutSeconds) throws IOException {
 		return sendRequest("POST", uri, auth, payload, DEFAULT_CONNECT_TIMEOUT_MS, readTimeoutSeconds * 1000);
 	}
 	
-	public static HttpResult post(URI uri, AuthToken auth) throws IOException {
+	public static HttpResult post(URI uri, IAuthInfo auth) throws IOException {
 		return sendRequest("POST", uri, auth, null);
 	}
 
-	public static HttpResult put(URI uri, AuthToken auth) throws IOException {
+	public static HttpResult put(URI uri, IAuthInfo auth) throws IOException {
 		return sendRequest("PUT", uri, auth, null);
 	}
 	
-	public static HttpResult put(URI uri, AuthToken auth, JSONObject payload) throws IOException {
+	public static HttpResult put(URI uri, IAuthInfo auth, JSONObject payload) throws IOException {
 		return sendRequest("PUT", uri, auth, payload, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_READ_TIMEOUT_MS);
 	}
 	
-	public static HttpResult put(URI uri, AuthToken auth, JSONObject payload, int readTimoutSeconds) throws IOException {
+	public static HttpResult put(URI uri, IAuthInfo auth, JSONObject payload, int readTimoutSeconds) throws IOException {
 		return sendRequest("PUT", uri, auth, payload, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_READ_TIMEOUT_MS);
 	}
 
-	public static HttpResult head(URI uri, AuthToken auth) throws IOException {
+	public static HttpResult head(URI uri, IAuthInfo auth) throws IOException {
 		return sendRequest("HEAD", uri, auth, null);
 	}
 	
-	public static HttpResult delete(URI uri, AuthToken auth) throws IOException {
+	public static HttpResult delete(URI uri, IAuthInfo auth) throws IOException {
 		return delete(uri, auth, null);
 	}
 	
-	public static HttpResult delete(URI uri, AuthToken auth, JSONObject payload) throws IOException {
+	public static HttpResult delete(URI uri, IAuthInfo auth, JSONObject payload) throws IOException {
 		return sendRequest("DELETE", uri, auth, payload);
 	}
 
-	public static HttpResult sendRequest(String method, URI uri, AuthToken auth, JSONObject payload) throws IOException {
+	public static HttpResult sendRequest(String method, URI uri, IAuthInfo auth, JSONObject payload) throws IOException {
 		return sendRequest(method, uri, auth, payload, DEFAULT_CONNECT_TIMEOUT_MS, DEFAULT_READ_TIMEOUT_MS);
 	}
 
-	public static HttpResult sendRequest(String method, URI uri, AuthToken auth, JSONObject payload, int connectTimeoutMS, int readTimeoutMS) throws IOException {
+	public static HttpResult sendRequest(String method, URI uri, IAuthInfo auth, JSONObject payload, int connectTimeoutMS, int readTimeoutMS) throws IOException {
 		HttpURLConnection connection = null;
 		if (payload != null) {
 			Logger.log("Making a " + method + " request on " + uri + " with payload: " + payload.toString());
@@ -222,11 +221,11 @@ public class HttpUtil {
 		}
 	}
 	
-	private static void addAuthorization(HttpURLConnection connection, AuthToken auth) {
-		if (sslContext == null || auth == null || auth.getToken() == null || auth.getTokenType() == null || !(connection instanceof HttpsURLConnection)) {
+	private static void addAuthorization(HttpURLConnection connection, IAuthInfo auth) {
+		if (sslContext == null || auth == null || !auth.isValid() || !(connection instanceof HttpsURLConnection)) {
 			return;
 		}
-		connection.setRequestProperty("Authorization", auth.getTokenType() + " " + auth.getToken());
+		connection.setRequestProperty("Authorization", auth.getHttpAuthorization());
 		((HttpsURLConnection)connection).setSSLSocketFactory(sslContext.getSocketFactory());
 		((HttpsURLConnection)connection).setHostnameVerifier(hostnameVerifier);
 	}

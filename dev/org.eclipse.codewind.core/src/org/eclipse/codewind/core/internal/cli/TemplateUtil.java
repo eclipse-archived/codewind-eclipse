@@ -41,6 +41,9 @@ public class TemplateUtil {
 	private static final String URL_OPTION = "--url";
 	private static final String NAME_OPTION = "--name";
 	private static final String DESCRIPTION_OPTION = "--description";
+	private static final String USERNAME_OPTION = "--username";
+	private static final String PASSWORD_OPTION = "--password";
+	private static final String PERSONAL_ACCESS_TOKEN_OPTION = "--personalAccessToken";
 
 	public static List<ProjectTemplateInfo> listTemplates(boolean enabledOnly, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, 100);
@@ -83,8 +86,26 @@ public class TemplateUtil {
 		}
 	}
 	
-	public static void addTemplateSource(String url, String name, String description, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
-		runTemplateSourceCmd(REPO_ADD_CMD, new String[] {URL_OPTION, url, NAME_OPTION, name, DESCRIPTION_OPTION, description, CLIUtil.CON_ID_OPTION, conid}, null, monitor);
+	public static void addTemplateSource(String url, String username, String password, String accessToken, String name, String description, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
+		List<String> options = new ArrayList<String>();
+		options.add(URL_OPTION);
+		options.add(url);
+		if (username != null && password != null) {
+			options.add(USERNAME_OPTION);
+			options.add(username);
+			options.add(PASSWORD_OPTION);
+			options.add(password);
+		} else if (accessToken != null) {
+			options.add(PERSONAL_ACCESS_TOKEN_OPTION);
+			options.add(accessToken);
+		}
+		options.add(NAME_OPTION);
+		options.add(name);
+		options.add(DESCRIPTION_OPTION);
+		options.add(description);
+		options.add(CLIUtil.CON_ID_OPTION);
+		options.add(conid);
+		runTemplateSourceCmd(REPO_ADD_CMD, options.toArray(new String[options.size()]), null, monitor);
 	}
 	
 	public static void removeTemplateSource(String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {

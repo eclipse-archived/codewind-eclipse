@@ -23,6 +23,8 @@ public class RepositoryInfo extends JSONObjectResult {
 	public static final String ENABLED_KEY = "enabled";
 	public static final String PROTECTED_KEY = "protected";
 	public static final String STYLES_KEY = "projectStyles";
+	public static final String AUTHENTICATION_KEY = "authentication";
+	public static final String USERNAME_KEY = "username";
 	
 	public RepositoryInfo(JSONObject repo) {
 		super(repo, "repository");
@@ -50,5 +52,18 @@ public class RepositoryInfo extends JSONObjectResult {
 	
 	public List<String> getStyles() {
 		return getStringArray(STYLES_KEY);
+	}
+	
+	public boolean hasAuthentication() {
+		return hasKey(AUTHENTICATION_KEY);
+	}
+	
+	public String getUsername() {
+		JSONObject obj = hasAuthentication() ? getObject(AUTHENTICATION_KEY) : null;
+		if (obj != null) {
+			JSONObjectResult authObj = new JSONObjectResult(obj, "template source auth");
+			return authObj.getString(USERNAME_KEY);
+		}
+		return null;
 	}
 }

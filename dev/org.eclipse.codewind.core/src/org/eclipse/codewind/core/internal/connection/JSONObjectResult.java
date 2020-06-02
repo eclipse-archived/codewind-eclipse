@@ -19,7 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public abstract class JSONObjectResult {
+public class JSONObjectResult {
 	
 	protected final JSONObject result;
 	protected final String type;

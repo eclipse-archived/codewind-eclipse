@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -11,10 +11,11 @@
 
 package org.eclipse.codewind.core.internal.cli;
 
+import org.eclipse.codewind.core.internal.IAuthInfo;
 import org.eclipse.codewind.core.internal.connection.JSONObjectResult;
 import org.json.JSONObject;
 
-public class AuthToken extends JSONObjectResult {
+public class AuthToken extends JSONObjectResult implements IAuthInfo {
 	
 	private static final String ACCESS_TOKEN_KEY = "access_token";
 	private static final String TOKEN_TYPE_KEY = "token_type";
@@ -57,6 +58,16 @@ public class AuthToken extends JSONObjectResult {
 	
 	public boolean recentlyCreated() {
 		return (createTimeMillis + CREATE_BUFFER) > System.currentTimeMillis();
+	}
+
+	@Override
+	public boolean isValid() {
+		return getToken() != null && getTokenType() != null;
+	}
+
+	@Override
+	public String getHttpAuthorization() {
+		return getTokenType() + " " + getToken();
 	}
 
 }

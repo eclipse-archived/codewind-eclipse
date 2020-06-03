@@ -423,11 +423,11 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			Label label = new Label(composite, SWT.NONE);
 			label.setFont(boldFont);
 			label.setText(Messages.AppOverviewEditorProjectLogs);
-			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, false, false));
 			projectLogs = new Link(composite, SWT.NONE);
 			projectLogs.setText("");
 			projectLogs.setVisible(false);
-			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, true, false);
+			GridData data = new GridData(GridData.BEGINNING, GridData.BEGINNING, true, false);
 			data.horizontalIndent = 2;
 			data.exclude = true;
 			projectLogs.setLayoutData(data);
@@ -461,7 +461,7 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			noProjectLogs = new Text(composite, SWT.READ_ONLY);
 			noProjectLogs.setText(Messages.AppOverviewEditorNoProjectLogs);
 			noProjectLogs.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
-			noProjectLogs.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, false));
+			noProjectLogs.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, false));
 			IDEUtil.paintBackgroundToMatch(noProjectLogs, composite);
 		}
 		
@@ -732,11 +732,11 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			label = new Label(composite, SWT.NONE);
 			label.setFont(boldFont);
 			label.setText(name);
-			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, false, false));
 	        
 	        text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 	        text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
-	        text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, true, false));
+	        text.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, true, false));
 	        IDEUtil.paintBackgroundToMatch(text, composite);
 		}
 		
@@ -777,12 +777,12 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			text = new Text(composite, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY);
 			text.setData(FormToolkit.KEY_DRAW_BORDER, Boolean.FALSE);
 			text.setText(Messages.AppOverviewEditorNotAvailable);
-			text.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
+			text.setLayoutData(new GridData(GridData.BEGINNING, GridData.BEGINNING, false, false));
 			IDEUtil.paintBackgroundToMatch(text, composite);
 	        
 			link = toolkit.createHyperlink(composite, "", SWT.WRAP);
 			link.setVisible(false);
-			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, true, false);
+			GridData data = new GridData(GridData.BEGINNING, GridData.BEGINNING, true, false);
 			data.horizontalIndent = 2;
 			data.exclude = true;
 			link.setLayoutData(data);

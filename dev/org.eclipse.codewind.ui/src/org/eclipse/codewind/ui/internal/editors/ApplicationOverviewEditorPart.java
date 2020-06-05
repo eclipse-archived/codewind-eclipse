@@ -50,6 +50,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -329,8 +330,15 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 			projectStatusSection.update(app);
 			appInfoSection.update(app);
 		}
+
+		Point currentSize = form.getBody().getSize();
+		form.layout(true, true);
+		Point newSize = form.getBody().computeSize(SWT.DEFAULT, SWT.DEFAULT);
+		if (!newSize.equals(currentSize)) {
+			changed = true;
+		}
+		
 		if (init || changed) {
-			form.layout(true, true);
 			form.reflow(true);
 		}
 	}

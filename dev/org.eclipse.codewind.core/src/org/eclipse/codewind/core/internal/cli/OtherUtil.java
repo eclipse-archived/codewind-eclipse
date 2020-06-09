@@ -39,7 +39,7 @@ import org.json.JSONObject;
 public class OtherUtil {
 
 	private static final String[] LOGLEVELS_CMD = new String[] {"loglevels"};
-	private static final String[] DIAGNOSTICS_CMD = new String[] {"diagnostics"};
+	private static final String[] DIAGNOSTICS_COLLECT_CMD = new String[] {"diagnostics", "collect"};
 	
 	private static final String ECLIPSE_WORKSPACE_OPTION = "--eclipseWorkspaceDir";
 	private static final String PROJECTS_OPTION = "--projects";
@@ -92,7 +92,7 @@ public class OtherUtil {
 		if (includeProjectInfo) {
 			options.add(PROJECTS_OPTION);
 		}
-		List<String> command = CLIUtil.getCWCTLCommandList(null, DIAGNOSTICS_CMD, options.toArray(new String[options.size()]), null);
+		List<String> command = CLIUtil.getCWCTLCommandList(null, DIAGNOSTICS_COLLECT_CMD, options.toArray(new String[options.size()]), null);
 		
 		ILaunchManager launchManager = DebugPlugin.getDefault().getLaunchManager();
 		ILaunchConfigurationType launchConfigurationType = launchManager.getLaunchConfigurationType(UtilityLaunchConfigDelegate.LAUNCH_CONFIG_ID);

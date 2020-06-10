@@ -45,7 +45,7 @@ public class Messages extends NLS {
 
 	public static String DebugLaunchConfigName;
 	public static String DebuggerConnectFailureDialogTitle;
-	public static String DebuggerConnectFailureDialogMsg;
+	public static String DebuggerConnectFailureTimeoutMsg;
 	
 	public static String RemoteDebugErrorTitle;
 	public static String RemoteDebugPortForwardErrorWithMsg;

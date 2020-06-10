@@ -64,7 +64,7 @@ public class CodewindEclipseApplication extends CodewindApplication {
 	public static final String QUICK_FIX_DESCRIPTION = "quickFixDescription";
 	
 	// in seconds
-	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 10;
+	public static final int DEFAULT_DEBUG_CONNECT_TIMEOUT = 180;
 	
 	// New consoles
 	private Set<SocketConsole> activeConsoles = new HashSet<SocketConsole>();
@@ -154,6 +154,8 @@ public class CodewindEclipseApplication extends CodewindApplication {
 							return launcher.launchDebugger(app, monitor);
 						}
 					}
+				} catch (CoreException e) {
+					return e.getStatus();
 				} catch (Exception e) {
 					Logger.logError("An error occurred while trying to launch the debugger for project: " + app.name, e); //$NON-NLS-1$
 					return new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID,

@@ -33,6 +33,7 @@ import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.AttachingConnector;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.spi.ClosedConnectionException;
 
 @SuppressWarnings("restriction")
 public class CodewindDebugConnector {
@@ -94,6 +95,15 @@ public class CodewindDebugConnector {
 					} catch (InterruptedException e1) {
 						// do nothing
 					}
+				}
+				
+				// Check for timeout
+				if (itr <= 0 && vm == null && (ex == null || ex instanceof ClosedConnectionException)) {
+					// Log any exception
+					if (ex != null) {
+						Logger.logError("Debug connect timed out. Last exception was: " + ex.toString(), ex);
+					}
+					throw new CoreException(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, Messages.DebuggerConnectFailureTimeoutMsg, ex));
 				}
 
 				if (ex instanceof IllegalConnectorArgumentsException) {

@@ -75,7 +75,7 @@ public class CodewindLaunchConfigDelegate extends AbstractJavaLaunchConfiguratio
 			launch.addDebugTarget(debugTarget);
 		} else if (!monitor.isCanceled()) {
 			Logger.logError("Debugger connect timeout for project: " + app.name); //$NON-NLS-1$
-			CoreUtil.openDialog(true, Messages.DebuggerConnectFailureDialogTitle, Messages.DebuggerConnectFailureDialogMsg);
+			CoreUtil.openDialog(true, Messages.DebuggerConnectFailureDialogTitle, Messages.DebuggerConnectFailureTimeoutMsg);
 			getLaunchManager().removeLaunch(launch);
 		}
 

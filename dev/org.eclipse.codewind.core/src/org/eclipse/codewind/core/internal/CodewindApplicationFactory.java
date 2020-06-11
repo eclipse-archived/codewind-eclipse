@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.codewind.core.internal.cli.ProjectLinks;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.ExtensionConfig;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
@@ -290,6 +291,17 @@ public class CodewindApplicationFactory {
 			// Set perf dashboard info
 			if (appJso.has(CoreConstants.KEY_PERF_DASHBOARD_PATH)) {
 				app.setPerfDashboardInfo(getStringValue(appJso, CoreConstants.KEY_PERF_DASHBOARD_PATH));
+			}
+			
+			// Set project links
+			if (appJso.has(CoreConstants.KEY_LINKS)) {
+				JSONObject links = appJso.getJSONObject(CoreConstants.KEY_LINKS);
+				if (links != null && links.has(CoreConstants.KEY_LINKS_ARRAY)) {
+					JSONArray linksArray = links.getJSONArray(CoreConstants.KEY_LINKS_ARRAY);
+					if (linksArray != null) {
+						app.setProjectLinks(new ProjectLinks(linksArray));
+					}
+				}
 			}
 		} catch(JSONException e) {
 			Logger.logError("Error parsing project json: " + appJso, e); //$NON-NLS-1$

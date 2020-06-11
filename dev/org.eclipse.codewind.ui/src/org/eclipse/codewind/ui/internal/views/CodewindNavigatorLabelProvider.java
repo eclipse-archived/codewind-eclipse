@@ -157,6 +157,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 							builder.append(" [" + buildStatus.getDisplayString() + "]");
 						}
 					}
+					
+					if (!app.getProjectLinks().getBrokenLinks(app.connection).isEmpty()) {
+						builder.append(" (" + Messages.CodewindBrokenLinksError + ")");
+					}
 				}
 			} else {
 				builder.append(" [" + Messages.CodewindProjectDisabled + "]");
@@ -281,6 +285,10 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 							styledString.append(" [" + buildStatus.getDisplayString() + "]", StyledString.DECORATIONS_STYLER);
 						}
 					}
+					
+					if (!app.getProjectLinks().getBrokenLinks(app.connection).isEmpty()) {
+						styledString.append(" (" + Messages.CodewindBrokenLinksError + ")", ERROR_STYLER);
+					}
 				}
 			} else {
 				styledString.append(" [" + Messages.CodewindProjectDisabled + "]", StyledString.DECORATIONS_STYLER);
@@ -349,6 +357,15 @@ public class CodewindNavigatorLabelProvider extends LabelProvider implements ISt
 			DetailedAppStatus details = app.getAppStatusDetails();
 			if (details != null && details.getMessage() != null) {
 				return (details.getSeverity() == null ? "" : details.getSeverity().displayString + ": ") + details.getMessage();
+			} else if (!app.getProjectLinks().getBrokenLinks(app.connection).isEmpty()) {
+				StringBuilder builder = new StringBuilder();
+				app.getProjectLinks().getBrokenLinks(app.connection).stream().forEach(link -> {
+					if (builder.length() > 0) {
+						builder.append(", ");
+					}
+					builder.append(link.getProjectName() + "(" + link.getEnvVar() + ")");
+				});
+				return (NLS.bind(Messages.CodewindBrokenLinksDetails, builder.toString()));
 			} else if (app.getRootUrl() != null && (app.getAppStatus() == AppStatus.STARTING || app.getAppStatus() == AppStatus.STARTED)) {
 				return NLS.bind(Messages.CodewindDescriptionContextRoot, app.getRootUrl());
 			}

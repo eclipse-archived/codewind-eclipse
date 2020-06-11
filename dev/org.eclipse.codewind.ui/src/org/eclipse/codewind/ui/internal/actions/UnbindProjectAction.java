@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
+ * Copyright (c) 2019, 2020 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v2.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import org.eclipse.codewind.core.internal.CodewindEclipseApplication;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -128,7 +129,7 @@ public class UnbindProjectAction extends SelectionProviderAction {
 		}
 	}
 	
-	public static class RemoveDialog extends MessageDialog {
+	private static class RemoveDialog extends MessageDialog {
 		
 		List<CodewindEclipseApplication> apps;
 		boolean deleteContent = false;
@@ -213,12 +214,44 @@ public class UnbindProjectAction extends SelectionProviderAction {
 			}
 			locationList.setText(buffer.toString());
 			
+
+			// Add broken links warning if necessary
+			String brokenLinks = getBrokenLinks();
+			if (!brokenLinks.isEmpty()) {
+				Text text = new Text(composite, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+				if (apps.size() == 1) {
+					text.setText(NLS.bind(Messages.UnbindActionBrokenLinksErrorSingle, brokenLinks));
+				} else {
+					text.setText(NLS.bind(Messages.UnbindActionBrokenLinksErrorMulti, brokenLinks));
+				}
+				text.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+				IDEUtil.normalizeBackground(text, composite);
+			}
+			
+			
 			return composite;
 		}
 		
-		public boolean getDeleteContent() {
+		private boolean getDeleteContent() {
 			return deleteContent;
 		}
 		
+		private String getBrokenLinks() {
+			StringBuilder builder = new StringBuilder();
+			apps.stream().forEach(app -> app.getLinksToThisProject().entrySet().stream().forEach(entry -> {
+				entry.getValue().stream().forEach(linkInfo -> {
+					// Don't warn if the source app is also being removed
+					if (!appIsInRemoveList(entry.getKey().projectID)) {
+						builder.append("\n\t" + entry.getKey().name + " -> " + app.name + " (" + linkInfo.getEnvVar() + ")");
+					}
+				});
+			}));
+			return builder.toString();
+		}
+		
+		private boolean appIsInRemoveList(String projectId) {
+			return apps.stream().filter(app -> app.projectID.equals(projectId)).findFirst().isPresent();
+		}
+		 
 	}
 }

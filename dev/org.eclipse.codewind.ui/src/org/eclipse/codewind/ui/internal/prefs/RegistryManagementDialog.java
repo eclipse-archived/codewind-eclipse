@@ -115,6 +115,8 @@ public class RegistryManagementDialog extends TitleAreaDialog {
 					return;
 				}
 			}
+		} catch (InvocationTargetException e) {
+			MessageDialog.openError(shell, Messages.RegUpdateErrorTitle, e.getMessage());
 		} catch (Exception e) {
 			MessageDialog.openError(shell, Messages.RegListErrorTitle, NLS.bind(Messages.RegListErrorMsg, e));
 		}

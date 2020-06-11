@@ -116,6 +116,8 @@ public class Messages extends NLS {
 	public static String CodewindConnectionNoProjects;
 	public static String CodewindDescriptionContextRoot;
 	public static String CodewindHoverForDetails;
+	public static String CodewindBrokenLinksError;
+	public static String CodewindBrokenLinksDetails;
 	
 	public static String InstallerActionInstallLabel;
 	public static String InstallerActionUninstallLabel;
@@ -134,6 +136,8 @@ public class Messages extends NLS {
 	public static String UnbindActionJobTitle;
 	public static String UnbindActionMultipleJobTitle;
 	public static String UnbindActionError;
+	public static String UnbindActionBrokenLinksErrorSingle;
+	public static String UnbindActionBrokenLinksErrorMulti;
 	
 	public static String InstallCodewindJobLabel;
 	public static String StartingCodewindJobLabel;
@@ -471,6 +475,13 @@ public class Messages extends NLS {
 	public static String AppOverviewEditorNoApplication;
 	public static String AppOverviewEditorAppStatusEntry;
 	public static String AppOverviewEditorBuildStatusEntry;
+	public static String AppOverviewEditorProjectLinksSection;
+	public static String AppOverviewEditorProjectLinksNoLinks;
+	public static String AppOverviewEditorProjectLinksManageLinks;
+	public static String AppOverviewEditorProjectLinksDescription;
+	public static String AppOverviewEditorProjectLinksSourceProject;
+	public static String AppOverviewEditorProjectLinksNoFromLinks;
+	public static String AppOverviewEditorProjectLinksFromDescription;
 	
 	public static String StopAllDialog_Title;
 	public static String StopAllDialog_Message;
@@ -638,6 +649,44 @@ public class Messages extends NLS {
 	public static String DiagnosticsDialogProjectInfoButton;
 	public static String DiagnosticsDialogSelectAllButton;
 	public static String DiagnosticsDialogClearAllButton;
+	
+	public static String LinkMgmtActionLabel;
+
+	public static String LinkMgmtDialogTitle;
+	public static String LinkMgmtDialogMessage;
+	public static String LinkMgmtDescription;
+	public static String LinkMgmtLearnMoreLink;
+	public static String LinkMgmtAddButton;
+	public static String LinkMgmtRenameButton;
+	public static String LinkMgmtRemoveButton;
+	public static String LinkMgmtProjectColumn;
+	public static String LinkMgmtEnvVarColumn;
+	public static String LinkMgmtErrorTargetMissing;
+
+	public static String LinkMgmtAddDialogShell;
+	public static String LinkMgmtAddDialogTitle;
+	public static String LinkMgmtAddDialogMessage;
+	public static String LinkMgmtAddDialogProjectFilterText;
+	public static String LinkMgmtAddDialogEnvVarLabel;
+	public static String LinkMgmtAddDialogNoProjects;
+	public static String LinkMgmtAddDialogNoProject;
+	public static String LinkMgmtAddDialogNoEnvVar;
+	public static String LinkMgmtAddDialogEnvVarInvalid;
+	public static String LinkMgmtAddDialogLinkExist;
+	public static String LinkMgmtUpdateError;
+	public static String LinkMgmtRemoveFailed;
+	public static String LinkMgmtAddFailed;
+	public static String LinkMgmtLinkRefreshFailed;
+	
+	public static String LinkMgmtRenameDialogShell;
+	public static String LinkMgmtRenameDialogTitle;
+	public static String LinkMgmtRenameDialogMessage;
+	
+	public static String LinkListTask;
+	public static String LinkUpdateTask;
+	public static String LinkUpdateErrorTitle;
+	public static String LinkListErrorTitle;
+	public static String LinkListErrorMsg;
 
 	static {
 		// initialize resource bundle

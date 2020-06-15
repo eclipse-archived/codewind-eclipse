@@ -67,12 +67,10 @@ public class RepositoryManagementComposite extends Composite {
 	private List<RepoEntry> repoEntries; // Current set of repos (content of the table)
 	private CheckboxTableViewer repoViewer;
 	private Button editButton, removeButton;
+	private ScrolledComposite detailsScroll;
 	private Font boldFont;
-	private Label descLabel;
-	private Text descText;
-	private Label styleLabel;
-	private Text styleText;
-	private Label linkLabel;
+	private Label descLabel, styleLabel, linkLabel, secureLabel;
+	private Text descText, styleText, secureText;
 	private Link urlLink;
 	
 	public RepositoryManagementComposite(Composite parent, CodewindConnection connection, List<RepositoryInfo> repoList) {
@@ -192,7 +190,7 @@ public class RepositoryManagementComposite extends Composite {
 			}
 		});
 		
-		ScrolledComposite detailsScroll = new ScrolledComposite(this, SWT.V_SCROLL);
+		detailsScroll = new ScrolledComposite(this, SWT.V_SCROLL);
 		GridData data = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
 		data.widthHint = 300;
 		detailsScroll.setLayoutData(data);
@@ -210,7 +208,7 @@ public class RepositoryManagementComposite extends Composite {
 		descLabel.setText(Messages.RepoMgmtDescriptionLabel);
 		descText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		descText.setText("");
-		GridData descData = new GridData(GridData.FILL, GridData.FILL, false, false);
+		GridData descData = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
 		descText.setLayoutData(descData);
 		IDEUtil.normalizeBackground(descText, detailsComp);
 
@@ -219,7 +217,7 @@ public class RepositoryManagementComposite extends Composite {
 		styleLabel.setText(Messages.RepoMgmtStylesLabel);
 		styleText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 		styleText.setText("");
-		GridData styleData = new GridData(GridData.FILL, GridData.FILL, false, false);
+		GridData styleData = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
 		styleText.setLayoutData(styleData);
 		IDEUtil.normalizeBackground(styleText, detailsComp);
 		
@@ -228,7 +226,7 @@ public class RepositoryManagementComposite extends Composite {
 		linkLabel.setText(Messages.RepoMgmtUrlLabel);
 		urlLink = new Link(detailsComp, SWT.WRAP);
 		urlLink.setText("");
-		GridData linkData = new GridData(GridData.FILL, GridData.FILL, false, false);
+		GridData linkData = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
 		urlLink.setLayoutData(linkData);
 		
 		urlLink.addSelectionListener(new SelectionAdapter() {
@@ -250,16 +248,26 @@ public class RepositoryManagementComposite extends Composite {
 					}
 				}
 			}
-		});	   
+		});	
+		
+		secureLabel = new Label(detailsComp, SWT.NONE);
+		secureLabel.setFont(boldFont);
+		secureLabel.setText(Messages.RepoMgmtSecureLabel);
+		secureText = new Text(detailsComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+		secureText.setText("");
+		GridData secureData = new GridData(GridData.BEGINNING, GridData.FILL, false, false);
+		secureText.setLayoutData(secureData);
+		IDEUtil.normalizeBackground(secureText, detailsComp);
 		
 		detailsScroll.addListener(SWT.Resize, (event) -> {
-			  int width = detailsScroll.getClientArea().width;
-			  descData.widthHint = width - detailsLayout.marginWidth;
-			  styleData.widthHint = width - detailsLayout.marginWidth;
-			  linkData.widthHint = width - detailsLayout.marginWidth;
-			  Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-			  detailsScroll.setMinSize(size);
-			});
+			int width = detailsScroll.getClientArea().width;
+			descData.widthHint = width - detailsLayout.marginWidth;
+			styleData.widthHint = width - detailsLayout.marginWidth;
+			linkData.widthHint = width - detailsLayout.marginWidth;
+			secureData.widthHint = width - detailsLayout.marginWidth;
+			Point size = detailsComp.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+			detailsScroll.setMinSize(size);
+		});
 		
 		detailsScroll.setContent(detailsComp);
 		detailsScroll.setExpandHorizontal(true);
@@ -308,6 +316,7 @@ public class RepositoryManagementComposite extends Composite {
 		String desc = "";
 		String styles = "";
 		String url = "";
+		boolean secure = false;
 		RepoEntry entry = null;
 		boolean enabled = false;
 		if (items.length == 1) {
@@ -316,6 +325,7 @@ public class RepositoryManagementComposite extends Composite {
 			desc = entry.description;
 			styles = entry.getStyles();
 			url = entry.url;
+			secure = entry.requiresAuthentication;
 		}
 		descLabel.setEnabled(enabled);
 		descText.setText(desc);
@@ -326,10 +336,15 @@ public class RepositoryManagementComposite extends Composite {
 		if (entry != null) {
 			urlLink.setData(entry);
 		}
+		secureLabel.setEnabled(enabled);
+		secureText.setText(secure ? Messages.RepoMgmtYesValue : Messages.RepoMgmtNoValue);
 		
 		resizeEntry(descText);
 		resizeEntry(styleText);
 		resizeEntry(urlLink);
+		resizeEntry(secureText);
+		
+		detailsScroll.requestLayout();
 	}
 	
 	private void resizeEntry(Control control) {
@@ -471,6 +486,7 @@ public class RepositoryManagementComposite extends Composite {
 
 	public static class RepoEntry {
 		public final String url;
+		public final boolean requiresAuthentication;
 		public final String username;
 		public final String password;
 		public final String accessToken;
@@ -478,13 +494,10 @@ public class RepositoryManagementComposite extends Composite {
 		public final String description;
 		public boolean enabled;
 		public RepositoryInfo info;
-		
-		public RepoEntry(String url, String name, String description) {
-			this(url, null, null, null, name, description);
-		}
-		
-		public RepoEntry(String url, String username, String password, String accessToken, String name, String description) {
+
+		public RepoEntry(String url, boolean requiresAuthentication, String username, String password, String accessToken, String name, String description) {
 			this.url = url;
+			this.requiresAuthentication = requiresAuthentication;
 			this.username = username;
 			this.password = password;
 			this.accessToken = accessToken;
@@ -495,13 +508,18 @@ public class RepositoryManagementComposite extends Composite {
 		
 		public RepoEntry(RepositoryInfo info) {
 			this.url = info.getURL();
-			this.username = null;
+			this.requiresAuthentication = info.hasAuthentication();
+			this.username = info.getUsername();
 			this.password = null;
 			this.accessToken = null;
 			this.name = info.getName();
 			this.description = info.getDescription();
 			this.enabled = info.getEnabled();
 			this.info = info;
+		}
+		
+		public boolean isLogonMethod() {
+			return !requiresAuthentication || username != null;
 		}
 		
 		public boolean isProtected() {

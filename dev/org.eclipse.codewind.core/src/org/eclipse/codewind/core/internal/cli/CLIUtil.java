@@ -204,7 +204,7 @@ public class CLIUtil {
 				if (obj.has(ERROR_KEY) && obj.has(ERROR_DESCRIPTION_KEY)) {
 					String msg = String.format("The cwctl '%s' command failed with error: %s", CoreUtil.formatString(command, " "), obj.getString(ERROR_DESCRIPTION_KEY)); //$NON-NLS-1$
 					Logger.logError(msg);
-					throw new IOException(obj.getString(ERROR_DESCRIPTION_KEY));
+					throw new CLIException(obj.getString(ERROR_KEY), obj.getString(ERROR_DESCRIPTION_KEY));
 				}
 			}
 		} catch (JSONException e) {
@@ -247,5 +247,18 @@ public class CLIUtil {
 		}
 		Logger.log("Removing folder: " + cwctlFolder.getAbsolutePath());
 		FileUtil.deleteDirectory(cwctlFolder.getAbsolutePath(), true);
+	}
+	
+	@SuppressWarnings("serial")
+	public static class CLIException extends IOException {
+		
+		public final String errorId;
+		public final String errorMsg;
+		
+		public CLIException(String errorId, String errorMsg) {
+			super(errorMsg);
+			this.errorId = errorId;
+			this.errorMsg = errorMsg;
+		}
 	}
 }

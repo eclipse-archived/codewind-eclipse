@@ -12,7 +12,9 @@
 package org.eclipse.codewind.ui.internal.wizards;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.codewind.core.CodewindCorePlugin;
@@ -22,10 +24,13 @@ import org.eclipse.codewind.core.internal.CodewindManager.InstallerStatus;
 import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.FileUtil;
 import org.eclipse.codewind.core.internal.Logger;
+import org.eclipse.codewind.core.internal.cli.CLIUtil.CLIException;
 import org.eclipse.codewind.core.internal.cli.ProjectUtil;
+import org.eclipse.codewind.core.internal.cli.TemplateUtil;
 import org.eclipse.codewind.core.internal.connection.CodewindConnection;
 import org.eclipse.codewind.core.internal.connection.CodewindConnectionManager;
 import org.eclipse.codewind.core.internal.connection.ProjectTemplateInfo;
+import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
 import org.eclipse.codewind.ui.internal.UIConstants;
 import org.eclipse.codewind.ui.internal.actions.CodewindInstall;
@@ -33,6 +38,7 @@ import org.eclipse.codewind.ui.internal.actions.ImportProjectAction;
 import org.eclipse.codewind.ui.internal.actions.OpenAppOverviewAction;
 import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.prefs.RegistryManagementDialog;
+import org.eclipse.codewind.ui.internal.prefs.TemplateSourceAuthDialog;
 import org.eclipse.codewind.ui.internal.views.ViewHelper;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -153,7 +159,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					SubMonitor mon = SubMonitor.convert(monitor, 140);
+					SubMonitor mon = SubMonitor.convert(monitor, 220);
 					
 					// Check for a push registry if Codewind style project
 					if (!connection.isLocal() && info.isCodewindStyle() && !connection.requestHasPushRegistry()) {
@@ -180,20 +186,77 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 							return new Status(IStatus.ERROR, CodewindUIPlugin.PLUGIN_ID, Messages.NoPushRegistryError, null);
 						}
 					}
-					mon.setWorkRemaining(100);
+					mon.setWorkRemaining(160);
 					
-					// Create and bind the project
-					ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), connection.getConid(), mon.split(40));
+					// Create the project - allow user to update template source credentials if necessary
+					try {
+						ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), connection.getConid(), mon.split(40));
+					} catch (CLIException e) {
+						if (mon.isCanceled()) {
+							return Status.CANCEL_STATUS;
+						}
+						
+						// Check for the error id that indicates an authorization failure and allow the
+						// user to update their credentials
+						if ("change_me_to_the_auth_error_id".equals(e.errorId)) {
+							// Find the template source associated with the selected template
+							String sourceName = info.getSource();
+							Optional<RepositoryInfo> repoResult = TemplateUtil
+									.listTemplateSources(connection.getConid(), mon.split(10)).stream()
+									.filter(repo -> repo.getName().equals(sourceName)).findFirst();
+							if (!repoResult.isPresent()) {
+								Logger.logError("Could not find a template source with the name: " + sourceName);
+								throw e;
+							}
+							
+							// Display the dialog
+							URI uri = new URI(repoResult.get().getURL());
+							Display.getDefault().syncExec(() -> {
+								TemplateSourceAuthDialog dialog = new TemplateSourceAuthDialog(Display.getDefault().getActiveShell(), uri, repoResult.get());
+								if (dialog.open() == MessageDialog.OK) {
+									try {
+										TemplateUtil.removeTemplateSource(repoResult.get().getURL(), connection.getConid(), mon.split(10));
+										TemplateUtil.addTemplateSource(repoResult.get().getURL(), dialog.getUsername(),
+												dialog.getPassword(), dialog.getToken(), repoResult.get().getName(),
+												repoResult.get().getDescription(), connection.getConid(), mon.split(10));
+									} catch (Exception e1) {
+										Logger.logError("An error occurred while trying to update the authentication details for the tempate source: " + repoResult.get().getURL(), e1);
+										MessageDialog.openError(Display.getDefault().getActiveShell(),
+												"Template Source Update Error",
+												"An error occurred while trying to update the authentication details for the "
+														+ repoResult.get().getName() + " template source: "
+														+ e1.toString());
+										mon.setCanceled(true);
+									}
+								} else {
+									mon.setCanceled(true);
+								}
+							});
+							
+							if (mon.isCanceled()) {
+								return Status.CANCEL_STATUS;
+							}
+							
+							// Try to create the project again
+							ProjectUtil.createProject(projectName, projectPath.toOSString(), info.getUrl(), connection.getConid(), mon.split(40));
+						} else {
+							throw e;
+						}
+					}
 					if (mon.isCanceled()) {
 						cleanup(projectName, projectPath, connection);
 						return Status.CANCEL_STATUS;
 					}
+					mon.setWorkRemaining(70);
+					
+					// Bind the project
 					ProjectUtil.bindProject(projectName, projectPath.toOSString(), info.getLanguage(), info.getProjectType(), connection.getConid(), mon.split(40));
 					if (mon.isCanceled()) {
 						cleanup(projectName, projectPath, connection);
 						return Status.CANCEL_STATUS;
 					}
 					mon.split(10);
+					
 					connection.refreshApps(null);
 					if (mon.isCanceled()) {
 						return Status.CANCEL_STATUS;

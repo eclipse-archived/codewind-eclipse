@@ -262,13 +262,17 @@ public class LinkManagementComposite extends Composite {
 		SubMonitor mon = SubMonitor.convert(monitor, Messages.LinkUpdateTask, 100);
 		MultiStatus multiStatus = new MultiStatus(CodewindCorePlugin.PLUGIN_ID, IStatus.ERROR, Messages.LinkMgmtUpdateError, null);
 		
+		// Keep track of any target project ids so they can be updated as well
+		List<String> targetProjects = new ArrayList<String>();
+		
 		// Check for the differences between the original link set and the new set
 		for (LinkInfo info : projectLinks.getLinks()) {
 			Optional<LinkEntry> entry = getLinkEntry(info);
 			if (!entry.isPresent()) {
 				// Remove the link
 				try {
-					ProjectUtil.removeLink(srcApp.name, srcApp.projectID, info.getProjectId(), info.getEnvVar(), mon.split(25));
+					targetProjects.add(info.getProjectId());
+					ProjectUtil.removeLink(srcApp.name, srcApp.projectID, info.getProjectName(), info.getEnvVar(), mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to remove link for " + srcApp.name + " with variable: " + info.getEnvVar(), e); //$NON-NLS-1$ //$NON-NLS-2$
 					multiStatus.add(new Status(IStatus.ERROR, CodewindCorePlugin.PLUGIN_ID, NLS.bind(Messages.LinkMgmtRemoveFailed, srcApp.name, info.getEnvVar()), e));
@@ -276,6 +280,7 @@ public class LinkManagementComposite extends Composite {
 			} else if (!entry.get().envVar.equals(info.getEnvVar())) {
 				// Rename the link
 				try {
+					targetProjects.add(info.getProjectId());
 					ProjectUtil.renameLink(srcApp.name, srcApp.projectID, info.getEnvVar(), entry.get().envVar, mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to remove link for " + srcApp.name + " with variable: " + info.getEnvVar(), e); //$NON-NLS-1$ //$NON-NLS-2$
@@ -291,6 +296,7 @@ public class LinkManagementComposite extends Composite {
 			if (entry.info == null) {
 				// Create the link
 				try {
+					targetProjects.add(entry.targetApp.projectID);
 					ProjectUtil.createLink(srcApp.name, srcApp.projectID, entry.targetApp.name, entry.targetApp.projectID, entry.envVar, mon.split(25));
 				} catch (Exception e) {
 					Logger.logError("Failed to create a link from " + srcApp.name + " to " + entry.targetApp.name + " with variable: " + entry.envVar, e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -305,6 +311,14 @@ public class LinkManagementComposite extends Composite {
 		
 		// Update the application
 		CodewindUIPlugin.getUpdateHandler().updateApplication(srcApp);
+		
+		// Update target projects
+		targetProjects.stream().forEach(projectID -> {
+			CodewindApplication targetApp = srcApp.connection.getAppByID(projectID);
+			if (targetApp != null) {
+				CodewindUIPlugin.getUpdateHandler().updateApplication(targetApp);
+			}
+		});
 		
 		if (multiStatus.getChildren().length > 0) {
 			return multiStatus;
@@ -487,6 +501,9 @@ public class LinkManagementComposite extends Composite {
 			});
 			
 			createItems(projectList, "");
+			if (projectList.getItemCount() > 0) {
+				projectList.setSelection(0);
+			}
 			filterText.setFocus();
 			filterText.selectAll();
 			if (projectList.getItemCount() == 0) {

@@ -310,6 +310,7 @@ public class LinkManagementComposite extends Composite {
 		}
 		
 		// Update the application
+		srcApp.connection.refreshApps(srcApp.projectID);
 		CodewindUIPlugin.getUpdateHandler().updateApplication(srcApp);
 		
 		// Update target projects

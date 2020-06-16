@@ -504,6 +504,9 @@ public class Messages extends NLS {
 	public static String RepoMgmtDescriptionLabel;
 	public static String RepoMgmtStylesLabel;
 	public static String RepoMgmtUrlLabel;
+	public static String RepoMgmtSecureLabel;
+	public static String RepoMgmtYesValue;
+	public static String RepoMgmtNoValue;
 	public static String RepoMgmtUpdateError;
 	public static String RepoMgmtRemoveFailed;
 	public static String RepoMgmtUpdateFailed;

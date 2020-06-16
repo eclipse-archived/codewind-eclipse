@@ -55,6 +55,8 @@ public class ProjectUtil {
 	private static final String TARGET_ID_OPTION = "--targetID";
 	private static final String ENV_OPTION = "--env";
 	private static final String NEW_ENV_OPTION = "--newEnv";
+	
+	public static final String TEMPLATE_AUTH_ERROR_ID = "invalid_git_credentials";
 
 	public static void createProject(String name, String path, String url, String conid, IProgressMonitor monitor) throws IOException, JSONException, TimeoutException {
 		SubMonitor mon = SubMonitor.convert(monitor, NLS.bind(Messages.CreateProjectTaskLabel, name), 100);

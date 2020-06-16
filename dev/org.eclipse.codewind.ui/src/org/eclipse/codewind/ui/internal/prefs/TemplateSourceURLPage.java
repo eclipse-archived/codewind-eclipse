@@ -40,9 +40,10 @@ public class TemplateSourceURLPage extends WizardPage {
 		setDescription(Messages.AddRepoURLPageMessage);
 	}
 	
-	protected TemplateSourceURLPage(String shellTitle, String pageTitle, String url) {
+	protected TemplateSourceURLPage(String shellTitle, String pageTitle, String url, boolean requiresAuthentication) {
 		this(shellTitle, pageTitle);
 		this.urlValue = url;
+		this.authRequiredValue = requiresAuthentication;
 	}
 
 	@Override

@@ -198,7 +198,7 @@ public class NewCodewindProjectWizard extends Wizard implements INewWizard {
 						
 						// Check for the error id that indicates an authorization failure and allow the
 						// user to update their credentials
-						if ("change_me_to_the_auth_error_id".equals(e.errorId)) {
+						if (ProjectUtil.TEMPLATE_AUTH_ERROR_ID.equals(e.errorId)) {
 							// Find the template source associated with the selected template
 							String sourceName = info.getSource();
 							Optional<RepositoryInfo> repoResult = TemplateUtil

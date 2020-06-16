@@ -153,7 +153,7 @@ public class AddTemplateSourceWizard extends Wizard implements INewWizard {
 		if (name != null && !name.isEmpty() &&
 			description != null && !description.isEmpty() &&
 			url != null && !url.isEmpty()) {
-			return new RepoEntry(url, authPage.getUsername(), authPage.getPassword(), authPage.getToken(), name, description);
+			return new RepoEntry(url, authPageIncluded, authPage.getUsername(), authPage.getPassword(), authPage.getToken(), name, description);
 		}
 		return null;
 	}

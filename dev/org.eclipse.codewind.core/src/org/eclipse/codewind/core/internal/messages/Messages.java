@@ -131,6 +131,8 @@ public class Messages extends NLS {
 	public static String PortForwardTerminateMsg;
 	public static String PortForwardTerminateToggleMsg;
 	
+	public static String ProjectLinkErrorTitle;
+	
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

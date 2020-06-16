@@ -25,6 +25,7 @@ import org.eclipse.codewind.core.internal.CoreUtil;
 import org.eclipse.codewind.core.internal.HttpUtil;
 import org.eclipse.codewind.core.internal.Logger;
 import org.eclipse.codewind.core.internal.cli.AuthToken;
+import org.eclipse.codewind.core.internal.cli.ProjectLinks.LinkInfo;
 import org.eclipse.codewind.core.internal.console.ProjectLogInfo;
 import org.eclipse.codewind.core.internal.console.SocketConsole;
 import org.eclipse.codewind.core.internal.constants.CoreConstants;
@@ -79,6 +80,7 @@ public class CodewindSocket {
 			EVENT_PROJECT_LOGS_LIST_CHANGED = "projectLogsListChanged",		//$NON-NLS-1$
 			EVENT_PROJECT_SETTINGS_CHANGED = "projectSettingsChanged",	//$NON-NLS-1$
 			EVENT_PROJECT_WATCH_STATUS_CHANGED = "projectWatchStatusChanged",	//$NON-NLS-1$
+			EVENT_PROJECT_LINK = "projectLink", //$NON-NLS-1$
 			EVENT_AUTHENTICATED = "authenticated", //$NON-NLS-1$
 			EVENT_UNAUTHORIZED = "unauthorized"; //$NON-NLS-1$
 
@@ -315,6 +317,18 @@ public class CodewindSocket {
 				try {
 					JSONObject event = new JSONObject(arg0[0].toString());
 					onProjectWatchStatusChanged(event);
+				} catch (JSONException e) {
+					Logger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
+				}
+			}
+		}).on(EVENT_PROJECT_LINK, new Emitter.Listener() {
+			@Override
+			public void call(Object... arg0) {
+				Logger.log(EVENT_PROJECT_LINK + ": " + arg0[0].toString()); //$NON-NLS-1$
+
+				try {
+					JSONObject event = new JSONObject(arg0[0].toString());
+					onProjectLink(event);
 				} catch (JSONException e) {
 					Logger.logError("Error parsing JSON: " + arg0[0].toString(), e); //$NON-NLS-1$
 				}
@@ -602,6 +616,39 @@ public class CodewindSocket {
 		if (event.has(CoreConstants.KEY_STATUS) && !CoreConstants.VALUE_STATUS_SUCCESS.equals(event.getString(CoreConstants.KEY_STATUS))) {
 			// Just log for now until the JSON object includes the path that caused the issue
 			Logger.logError("Project watch status failure for: " + app.name + ", with id: " + app.projectID); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+	
+	private void onProjectLink(JSONObject event) throws JSONException {
+		String projectID = event.getString(CoreConstants.KEY_PROJECT_ID);
+		CodewindApplication app = connection.getAppByID(projectID);
+		if (app == null) {
+			Logger.logError("No application found matching the project id for the project link event: " + projectID); //$NON-NLS-1$
+			return;
+		}
+		
+		app.setEnabled(true);
+		
+		// Make sure the source and target are updated
+		connection.refreshApps(app.projectID);
+		CoreUtil.updateApplication(app);
+		JSONObject link = event.has(CoreConstants.KEY_LINK) ? event.getJSONObject(CoreConstants.KEY_LINK) : null;
+		if (link != null) {
+			LinkInfo linkInfo = new LinkInfo(link);
+			CodewindApplication targetApp = connection.getAppByID(linkInfo.getProjectId());
+			if (targetApp != null) {
+				CoreUtil.updateApplication(targetApp);
+			}
+		}
+		String status = event.has(CoreConstants.KEY_STATUS) ? event.getString(CoreConstants.KEY_STATUS) : null;
+		String error = event.has(CoreConstants.KEY_ERROR) ? event.getString(CoreConstants.KEY_ERROR) : null;
+		if (!CoreConstants.VALUE_STATUS_SUCCESS.equals(status)) {
+			// Show the error to the user
+			if (error != null && !error.isEmpty()) {
+				CoreUtil.openDialog(CoreUtil.DialogType.ERROR, Messages.ProjectLinkErrorTitle, error);
+			} else {
+				Logger.logError("Project link event had failed status but the error message is null."); //$NON-NLS-1$
+			}
 		}
 	}
 	

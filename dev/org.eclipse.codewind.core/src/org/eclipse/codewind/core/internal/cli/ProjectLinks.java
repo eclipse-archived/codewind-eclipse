@@ -26,7 +26,7 @@ public class ProjectLinks {
 	
 	private List<LinkInfo> links = new ArrayList<LinkInfo>();
 	
-	public class LinkInfo extends JSONObjectResult {
+	public static class LinkInfo extends JSONObjectResult {
 		
 		private static final String PROJECT_ID_KEY = "projectID";
 		private static final String ENV_NAME_KEY = "envName";

@@ -437,7 +437,7 @@ public class LinkManagementComposite extends Composite {
 			label.setText(Messages.LinkMgmtAddDialogEnvVarLabel);
 			label.setLayoutData(new GridData(GridData.BEGINNING, GridData.CENTER, false, false));
 			
-			envVarText = new Text(composite, SWT.NONE);
+			envVarText = new Text(composite, SWT.BORDER);
 			envVarText.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false));
 			
 			filterText.addModifyListener(new ModifyListener() {

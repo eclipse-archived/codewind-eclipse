@@ -690,8 +690,6 @@ public class ApplicationOverviewEditorPart extends EditorPart implements UpdateL
 				data.heightHint = 100;
 				linkTable.setLayoutData(data);
 				
-				linkTable.setHeaderBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
-				
 				// Columns
 				projectColumn = new TableColumn(linkTable, SWT.NONE);
 				projectColumn.setText(projectColumnLabel);

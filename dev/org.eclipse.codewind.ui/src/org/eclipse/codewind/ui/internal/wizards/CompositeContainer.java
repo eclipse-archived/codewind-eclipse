@@ -22,7 +22,7 @@ public interface CompositeContainer {
 	
 	public void setMessage(String msg);
 	
-	public void update();
+	public void validate();
 	
 	public void run(IRunnableWithProgress runnable) throws InvocationTargetException, InterruptedException;
 }

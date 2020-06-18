@@ -79,9 +79,10 @@ public class NewCodewindConnectionPage extends WizardPage implements CompositeCo
 	public IStatus createConnection(IProgressMonitor monitor) {
 		return composite.createConnection(monitor);
 	}
-	
+
 	@Override
-	public void update() {
+	public void validate() {
+		composite.validate();
 		getWizard().getContainer().updateButtons();
 	}
 	

@@ -26,10 +26,8 @@ public class EditTemplateSourceWizard extends AddTemplateSourceWizard {
 	@Override
 	public void addPages() {
 		setWindowTitle(Messages.EditRepoDialogShell);
-		urlPage = new TemplateSourceURLPage(Messages.EditRepoDialogShell, Messages.EditRepoDialogTitle, repo.url, repo.requiresAuthentication);
+		urlPage = new TemplateSourceURLPage(Messages.EditRepoDialogShell, Messages.EditRepoDialogTitle, repo.url, repo.requiresAuthentication, repo.isLogonMethod(), repo.username);
 		addPage(urlPage);
-		authPage = new TemplateSourceAuthPage(Messages.EditRepoDialogShell, Messages.EditRepoDialogTitle, repo.isLogonMethod(), repo.username);
-		addPage(authPage);
 		detailsPage = new TemplateSourceDetailsPage(Messages.EditRepoDialogShell, Messages.EditRepoDialogTitle, repo.name, repo.description);
 		addPage(detailsPage);
 	}

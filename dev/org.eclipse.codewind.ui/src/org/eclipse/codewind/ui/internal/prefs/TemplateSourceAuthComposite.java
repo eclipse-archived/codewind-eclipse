@@ -37,6 +37,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -50,7 +51,7 @@ public class TemplateSourceAuthComposite extends Composite {
 	private Composite logonComposite, tokenComposite;
 	private Text usernameText, passwordText, tokenText;
 	private String usernameValue, passwordValue, tokenValue;
-	private URI uri;
+	private String url;
 
 	protected TemplateSourceAuthComposite(Composite parent, CompositeContainer container, boolean isLogonMethod, String username) {
 		super(parent, SWT.NONE);
@@ -67,7 +68,7 @@ public class TemplateSourceAuthComposite extends Composite {
 		setLayout(layout);
 		
 		Group authGroup = new Group(this, SWT.NONE);
-		authGroup.setText("Authentication method");
+		authGroup.setText(Messages.AddRepoDialogAuthGroup);
 		layout = new GridLayout();
 		layout.horizontalSpacing = 5;
 		layout.verticalSpacing = 15;
@@ -83,7 +84,7 @@ public class TemplateSourceAuthComposite extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				setEnablement(logonButton.getSelection());
-				validate();
+				container.validate();
 			}
 		});
 
@@ -95,7 +96,10 @@ public class TemplateSourceAuthComposite extends Composite {
 
 		usernameText = new Text(logonComposite, SWT.BORDER);
 		usernameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		usernameText.addModifyListener((event) -> validate());
+		usernameText.addModifyListener((event) -> {
+			usernameValue = IDEUtil.getTextValue(usernameText);
+			container.validate();
+		});
 
 		label = new Label(logonComposite, SWT.NONE);
 		label.setText(Messages.AddRepoDialogPasswordLabel);
@@ -103,7 +107,10 @@ public class TemplateSourceAuthComposite extends Composite {
 
 		passwordText = new Text(logonComposite, SWT.BORDER | SWT.PASSWORD);
 		passwordText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		passwordText.addModifyListener((event) -> validate());
+		passwordText.addModifyListener((event) -> {
+			passwordValue = IDEUtil.getTextValue(passwordText);
+			container.validate();
+		});
 
 		// Token button and composite
 		tokenButton = new Button(authGroup, SWT.RADIO);
@@ -113,7 +120,7 @@ public class TemplateSourceAuthComposite extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				setEnablement(!tokenButton.getSelection());
-				validate();
+				container.validate();
 			}
 		});
 
@@ -125,7 +132,10 @@ public class TemplateSourceAuthComposite extends Composite {
 
 		tokenText = new Text(tokenComposite, SWT.BORDER | SWT.PASSWORD);
 		tokenText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		tokenText.addModifyListener((event) -> validate());
+		tokenText.addModifyListener((event) -> {
+			tokenValue = IDEUtil.getTextValue(tokenText);
+			container.validate();
+		});
 		
 		testButton = new Button(this, SWT.PUSH);
 		testButton.setText(Messages.AddRepoDialogAuthTestButtonLabel);
@@ -138,7 +148,8 @@ public class TemplateSourceAuthComposite extends Composite {
 					@Override
 					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 						try {
-							SubMonitor.convert(monitor, NLS.bind(Messages.AddRepoDialogAuthTestTaskLabel, uri), IProgressMonitor.UNKNOWN);
+							SubMonitor.convert(monitor, NLS.bind(Messages.AddRepoDialogAuthTestTaskLabel, url), IProgressMonitor.UNKNOWN);
+							URI uri = new URI(url);
 							HttpResult result = HttpUtil.get(uri, getAuthInfo());
 							if (!result.isGoodResponse) {
 								String errorMsg = result.error;
@@ -147,7 +158,9 @@ public class TemplateSourceAuthComposite extends Composite {
 								}
 								throw new InvocationTargetException(new IOException(errorMsg));
 							}
-						} catch (IOException e) {
+						} catch (InvocationTargetException e) {
+							throw e;
+						} catch (Exception e) {
 							throw new InvocationTargetException(e, e.toString());
 						}
 					}
@@ -158,7 +171,7 @@ public class TemplateSourceAuthComposite extends Composite {
 					container.setMessage(Messages.AddRepoDialogAuthTestSuccessMsg);
 				} catch (Exception e) {
 					String msg = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getCause().toString() : e.toString();
-					IDEUtil.openInfoDialog(Messages.AddRepoDialogAuthTestFailedTitle, NLS.bind(Messages.AddRepoDialogAuthTestFailedError, uri, msg));
+					IDEUtil.openInfoDialog(Messages.AddRepoDialogAuthTestFailedTitle, NLS.bind(Messages.AddRepoDialogAuthTestFailedError, url, msg));
 					container.setErrorMessage(Messages.AddRepoDialogAuthTestFailedMsg);
 				}
 			}
@@ -201,8 +214,13 @@ public class TemplateSourceAuthComposite extends Composite {
 		}
 	}
 	
-	void updatePage(URI uri) {
-		this.uri = uri;
+	void updatePage(String url) {
+		this.url = url;
+	}
+	
+	void hideTestButton() {
+		testButton.setVisible(false);
+		((GridData) testButton.getLayoutData()).exclude = true;
 	}
 
 	private void setEnablement(boolean isLogonMethod) {
@@ -210,28 +228,25 @@ public class TemplateSourceAuthComposite extends Composite {
 		Arrays.stream(tokenComposite.getChildren()).forEach(c -> c.setEnabled(!isLogonMethod));
 	}
 
-	private void validate() {
+	String validate() {
 		String errorMsg = null;
-		isLogonMethod = logonButton.getSelection();
-		if (isLogonMethod) {
-			usernameValue = IDEUtil.getTextValue(usernameText);
-			passwordValue = IDEUtil.getTextValue(passwordText);
-			if (usernameValue == null) {
-				errorMsg = Messages.AddRepoDialogNoUsername;
-			} else if (passwordValue == null) {
-				errorMsg = Messages.AddRepoDialogNoPassword;
+		if (isCompositeEnabled()) {
+			isLogonMethod = logonButton.getSelection();
+			if (isLogonMethod) {
+				if (usernameValue == null) {
+					errorMsg = Messages.AddRepoDialogNoUsername;
+				} else if (passwordValue == null) {
+					errorMsg = Messages.AddRepoDialogNoPassword;
+				}
+			} else {
+				if (tokenValue == null) {
+					errorMsg = Messages.AddRepoDialogNoAccessToken;
+				}
 			}
-		} else {
-			tokenValue = IDEUtil.getTextValue(tokenText);
-			if (tokenValue == null) {
-				errorMsg = Messages.AddRepoDialogNoAccessToken;
-			}
+			testButton.setEnabled(url != null && errorMsg == null);
 		}
-
-		container.setMessage(null);
-		container.setErrorMessage(errorMsg);
-		testButton.setEnabled(errorMsg == null);
-		container.update();
+		
+		return errorMsg;
 	}
 
 	boolean canFinish() {
@@ -241,24 +256,42 @@ public class TemplateSourceAuthComposite extends Composite {
 		return tokenValue != null;
 	}
 
-	boolean isLogonMethod() {
-		return isLogonMethod;
-	}
-
 	String getUsername() {
-		return usernameValue;
+		return isLogonMethod ? usernameValue : null;
 	}
 
 	String getPassword() {
-		return passwordValue;
+		return isLogonMethod ? passwordValue : null;
 	}
 
 	String getToken() {
-		return tokenValue;
+		return !isLogonMethod ? tokenValue : null;
 	}
 	
 	IAuthInfo getAuthInfo() {
 		return isLogonMethod ? new LogonAuth(usernameValue, passwordValue) : new TokenAuth(tokenValue);
+	}
+	
+	private boolean isCompositeEnabled() {
+		return logonButton.isEnabled();
+	}
+	
+	void setCompositeEnabled(boolean enabled) {
+		if (enabled) {
+			logonButton.setEnabled(true);
+			tokenButton.setEnabled(true);
+			setEnablement(isLogonMethod);
+		} else {
+			disableAll(this);
+		}
+	}
+	
+	private void disableAll(Control control) {
+		if (control instanceof Composite) {
+			Arrays.stream(((Composite) control).getChildren()).forEach(c -> disableAll(c));
+		} else {
+			control.setEnabled(false);
+		}
 	}
 	
 	public static class LogonAuth implements IAuthInfo {

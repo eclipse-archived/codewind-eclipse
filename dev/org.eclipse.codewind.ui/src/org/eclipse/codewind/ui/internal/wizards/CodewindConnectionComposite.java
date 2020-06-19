@@ -137,7 +137,7 @@ public class CodewindConnectionComposite extends Composite {
 					return;
 				}
 				isChanged = true;
-				validateAndUpdate();
+				container.validate();
 			}
 		});
 		return text;
@@ -158,12 +158,7 @@ public class CodewindConnectionComposite extends Composite {
 		}
 	}
 	
-	private void validateAndUpdate() {
-		validate();
-		container.update();
-	}
-	
-	private void validate() {
+	void validate() {
 		String errorMsg = validateConnectionInfo();
 		container.setErrorMessage(errorMsg);
 	}

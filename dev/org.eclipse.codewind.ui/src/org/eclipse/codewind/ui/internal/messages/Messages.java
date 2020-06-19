@@ -525,13 +525,16 @@ public class Messages extends NLS {
 	public static String AddRepoDialogInvalidUrlTitle;
 	public static String AddRepoDialogInvalidUrlError;
 	public static String AddRepoDialogInvalidUrlMsg;
-	public static String AddRepoDialogUrlPingTask;
-	public static String AddRepoDialogUrlPingFailedDefaultMsg;
-	public static String AddRepoDialogUrlPingFailedTitle;
-	public static String AddRepoDialogUrlPingFailedError;
-	public static String AddRepoDialogUrlPingFailedMsg;
 	public static String AddRepoDialogAuthRequiredCheckboxLabel;
 	public static String AddRepoDialogAuthRequiredCheckboxTooltip;
+	public static String AddRepoDialogTestButtonLabel;
+	public static String AddRepoDialogTestTaskLabel;
+	public static String AddRepoDialogTestFailedTitle;
+	public static String AddRepoDialogTestFailedDefaultMsg;
+	public static String AddRepoDialogTestFailedError;
+	public static String AddRepoDialogTestSuccessMsg;
+	public static String AddRepoDialogTestFailedMsg;
+	public static String AddRepoDialogAuthGroup;
 	public static String AddRepoDialogLogonAuthButton;
 	public static String AddRepoDialogAccessTokenAuthButton;
 	public static String AddRepoDialogUsernameLabel;
@@ -554,6 +557,11 @@ public class Messages extends NLS {
 	public static String AddRepoDialogNoUsername;
 	public static String AddRepoDialogNoPassword;
 	public static String AddRepoDialogNoAccessToken;
+	
+	public static String RepoAuthDialogShell;
+	public static String RepoAuthDialogTitle;
+	public static String RepoAuthDialogMsg;
+	public static String RepoAuthDialogDescription;
 	
 	public static String RepoListTask;
 	public static String RepoUpdateTask;

@@ -16,12 +16,15 @@ import java.net.URI;
 
 import org.eclipse.codewind.core.internal.connection.RepositoryInfo;
 import org.eclipse.codewind.ui.CodewindUIPlugin;
+import org.eclipse.codewind.ui.internal.IDEUtil;
+import org.eclipse.codewind.ui.internal.messages.Messages;
 import org.eclipse.codewind.ui.internal.wizards.CompositeContainer;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.operation.ModalContext;
 import org.eclipse.jface.wizard.ProgressMonitorPart;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -29,6 +32,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 public class TemplateSourceAuthDialog extends TitleAreaDialog implements CompositeContainer {
 	
@@ -46,7 +50,7 @@ public class TemplateSourceAuthDialog extends TitleAreaDialog implements Composi
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		newShell.setText("Template Source Authorization");
+		newShell.setText(Messages.RepoAuthDialogShell);
 	}
 	
 	@Override
@@ -56,12 +60,17 @@ public class TemplateSourceAuthDialog extends TitleAreaDialog implements Composi
 	
 	protected Control createDialogArea(Composite parent) {
 		setTitleImage(CodewindUIPlugin.getImage(CodewindUIPlugin.CODEWIND_BANNER));
-		setTitle("Update Template Source Authorization");
-		setMessage("Update the authorization details for the template source.");
+		setTitle(Messages.RepoAuthDialogTitle);
+		setMessage(Messages.RepoAuthDialogMsg);
 		
 		Composite content = (Composite) super.createDialogArea(parent);
 		content.setLayout(new GridLayout(1, false));
 		content.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		
+		Text descriptionText = new Text(content, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
+		descriptionText.setText(NLS.bind(Messages.RepoAuthDialogDescription, uri.toString()));
+		descriptionText.setLayoutData(new GridData(SWT.BEGINNING, SWT.FILL, true, false));
+		IDEUtil.normalizeBackground(descriptionText, content);
 		
 		String username = repo.getUsername();
 		composite = new TemplateSourceAuthComposite(content, this, !repo.hasAuthentication() || username != null, username);
@@ -75,7 +84,7 @@ public class TemplateSourceAuthDialog extends TitleAreaDialog implements Composi
 		progressMon.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		progressMon.setVisible(false);
 		
-		composite.updatePage(uri);
+		composite.updatePage(uri.toString());
 		
 		return parent;
 	}
@@ -87,7 +96,9 @@ public class TemplateSourceAuthDialog extends TitleAreaDialog implements Composi
 	}
 
 	@Override
-	public void update() {
+	public void validate() {
+		setMessage(Messages.RepoAuthDialogMsg);
+		setErrorMessage(composite.validate());
 		getButton(IDialogConstants.OK_ID).setEnabled(composite.canFinish());
 	}
 
@@ -105,13 +116,9 @@ public class TemplateSourceAuthDialog extends TitleAreaDialog implements Composi
 	@Override
 	protected Point getInitialSize() {
 		Point point = super.getInitialSize();
-		return new Point(650, point.y);
+		return new Point(650, point.y + 100);
 	}
 	
-	public boolean isLogonMethod() {
-		return composite.isLogonMethod();
-	}
-
 	public String getUsername() {
 		return composite.getUsername();
 	}

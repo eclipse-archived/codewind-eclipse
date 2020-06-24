@@ -28,7 +28,9 @@ public class UIConstants {
 		TEMPLATES_INFO_URL = DOC_BASE_URL + "/workingwithtemplates.html",
 		REGISTRY_INFO_URL = DOC_BASE_URL + "/remote-setupregistries.html",
 		REMOTE_SETUP_URL =  DOC_BASE_URL + "/remotedeploy-eclipse.html",
-		COMMANDS_OVERVIEW_URL = DOC_BASE_URL + "/project-actions.html";
+		COMMANDS_OVERVIEW_URL = DOC_BASE_URL + "/project-actions.html",
+		PROJECT_LINK_INFO_URL = DOC_BASE_URL + "/linking-your-projects.html";
+	
 	
 	private static String getDocBaseUrl() {
 		String docBaseUrl = System.getenv(DOC_BASE_URL_ENV_VAR);

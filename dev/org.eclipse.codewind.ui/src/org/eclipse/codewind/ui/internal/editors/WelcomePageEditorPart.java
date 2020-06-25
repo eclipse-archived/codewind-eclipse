@@ -284,7 +284,7 @@ public class WelcomePageEditorPart extends EditorPart implements UpdateListener 
 		data = new GridData(GridData.FILL, GridData.FILL, true, false);
 		data.horizontalIndent = 40;
 		remoteDocLink.setLayoutData(data);
-		setHyperlinkAction(remoteDocLink, () -> IDEUtil.openExternalBrowser(UIConstants.REMOTE_SETUP_URL));
+		setHyperlinkAction(remoteDocLink, () -> IDEUtil.openExternalBrowser(UIConstants.REMOTE_DEPLOY_URL));
 		
 		// Spacer
 		toolkit.createLabel(learnInnerComp, "", SWT.NONE);

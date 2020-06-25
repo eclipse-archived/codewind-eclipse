@@ -27,6 +27,7 @@ public class UIConstants {
 		CWSETTINGS_INFO_URL = DOC_BASE_URL + "/project-settings.html",
 		TEMPLATES_INFO_URL = DOC_BASE_URL + "/workingwithtemplates.html",
 		REGISTRY_INFO_URL = DOC_BASE_URL + "/remote-setupregistries.html",
+		REMOTE_DEPLOY_URL =  DOC_BASE_URL + "/remote-deploying-codewind.html",
 		REMOTE_SETUP_URL =  DOC_BASE_URL + "/remotedeploy-eclipse.html",
 		COMMANDS_OVERVIEW_URL = DOC_BASE_URL + "/project-actions.html";
 	

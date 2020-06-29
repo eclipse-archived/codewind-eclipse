@@ -115,10 +115,10 @@ public class LinkManagementComposite extends Composite {
 				try {
 					IWorkbenchBrowserSupport browserSupport = PlatformUI.getWorkbench().getBrowserSupport();
 					IWebBrowser browser = browserSupport.getExternalBrowser();
-					URL url = new URL(UIConstants.REGISTRY_INFO_URL);
+					URL url = new URL(UIConstants.PROJECT_LINK_INFO_URL);
 					browser.openURL(url);
 				} catch (Exception e) {
-					Logger.logError("An error occurred trying to open an external browser at: " + UIConstants.TEMPLATES_INFO_URL, e); //$NON-NLS-1$
+					Logger.logError("An error occurred trying to open an external browser at: " + UIConstants.PROJECT_LINK_INFO_URL, e); //$NON-NLS-1$
 				}
 			}
 		});

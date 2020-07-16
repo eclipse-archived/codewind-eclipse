@@ -10,7 +10,7 @@
 -->
 
 <project name="cw_build" default="generateOpenCWUpdateSite">
-    <property name="level_tag" value="0.14.0"/>
+    <property name="level_tag" value="0.14.1"/>
     <property name="delegate.build.dir" location="${basedir}/../" />
     <property name="disable.run.executeMetatypeValidation" value="true"/>
     <property name="disable.run.unzipIfixReleaseZip" value="true"/>
